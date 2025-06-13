@@ -22,7 +22,8 @@
     "postcss-nested": "^7.0.2",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
-    "tailwindcss": "^4.1.10",
-    "vite-tsconfig-paths": "^5.1.4"
+    "tailwindcss": "^3.4.17",
+    "vite-tsconfig-paths": "^5.1.4",
+    "postcss": "^8.5.1"
   }
 }

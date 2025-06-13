@@ -1,6 +1,9 @@
 import { onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
 import { tryConnect } from '../utils/tryConnect'
+import { wakuNode } from '../utils/waku'
+
+console.log('Debug', wakuNode.isStarted())
 
 export const QRScanner = () => {
   let videoEl: HTMLVideoElement | undefined = undefined

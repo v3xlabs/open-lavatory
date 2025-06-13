@@ -16,6 +16,8 @@
     "vite-plugin-solid": "^2.11.6"
   },
   "dependencies": {
+    "@waku/sdk": "^0.0.31",
+    "protobufjs": "^7.5.3",
     "qr-scanner": "^1.4.2",
     "solid-js": "^1.9.5"
   }

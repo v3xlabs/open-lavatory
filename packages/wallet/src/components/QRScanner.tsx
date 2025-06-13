@@ -1,34 +1,41 @@
-import { onCleanup } from 'solid-js'
+import { onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
+import { tryConnect } from '../utils/tryConnect'
 
 export const QRScanner = () => {
-  let videoEl: HTMLVideoElement | undefined
-  let scanner: QrScanner | undefined
+  let videoEl: HTMLVideoElement | undefined = undefined
+  let scanner: QrScanner
 
-  const initScanner = () => {
-    if (!videoEl) return
-
-    scanner = new QrScanner(videoEl, result => {
-      alert('Scanned: ' + result.data)
-    }, {
+  onMount(() => {
+    scanner = new QrScanner(videoEl!, tryConnect, {
       highlightScanRegion: true,
       highlightCodeOutline: true,
     })
 
     scanner.start()
-  }
+      .then(() => {
+        console.log('Scanner started')
+        console.log('Video stream:', videoEl!.srcObject)
+      })
+      .catch(err => {
+        console.error('Failed to start scanner:', err)
+      })
+  })
 
-  // Proper ref assignment in SolidJS
-  const setRef = (el: HTMLVideoElement) => {
-    videoEl = el
-    initScanner()
-  }
-
-  // Clean up scanner on component destroy
   onCleanup(() => {
     scanner?.stop()
     scanner?.destroy()
   })
 
-  return <video ref={setRef} width={500} height={500} />
+  return (
+    <video
+      ref={videoEl!}
+      width={500}
+      height={500}
+      autoplay
+      muted
+      playsinline
+      style="border: 2px solid black;"
+    />
+  )
 }

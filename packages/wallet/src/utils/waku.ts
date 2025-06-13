@@ -5,3 +5,9 @@ export const wakuNode = await createLightNode({
 })
 
 await wakuNode.start()
+
+
+await wakuNode.waitForPeers()
+
+
+console.log(await wakuNode.getConnectedPeers())

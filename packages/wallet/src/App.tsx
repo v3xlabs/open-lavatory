@@ -1,5 +1,6 @@
 import type { Component } from 'solid-js';
 import { createSignal, Show } from 'solid-js'
+import './utils/waku'
 
 import logo from './logo.svg';
 import styles from './App.module.css';

@@ -7,7 +7,9 @@
     "start": "vite",
     "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview"
+    "serve": "vite preview",
+    "lint": "pnpm eslint -c eslint.config.js .",
+    "lint:fix": "pnpm eslint -c eslint.config.js . --fix"
   },
   "license": "MIT",
   "devDependencies": {
@@ -24,6 +26,18 @@
     "react-dom": "^19.1.0",
     "tailwindcss": "^3.4.17",
     "vite-tsconfig-paths": "^5.1.4",
+    "@eslint/js": "^9.23.0",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-sonarjs": "^3.0.2",
+    "eslint-plugin-unicorn": "^58.0.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "eslint-config-prettier": "^10.1.2",
+    "globals": "^16.0.0",
+    "prettier": "^3.5.3",
+    "typescript-eslint": "^8.28.0",
     "postcss": "^8.5.1"
   }
 }

@@ -3,9 +3,7 @@ export default {
     content: ['./src/**/*.{html,tsx,ts,css}'],
     theme: {
         extend: {
-            colors: {
-
-            },
+            colors: {},
         },
     },
 };

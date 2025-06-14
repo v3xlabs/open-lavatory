@@ -26,6 +26,6 @@ export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
         this.#conn?.disconnect();
     }
     request(params: EIP1193Parameters<EIP1474Methods>) {
-        this.#conn?.sendMessage(JSON.stringify(params))
+        this.#conn?.sendMessage(JSON.stringify(params));
     }
 }

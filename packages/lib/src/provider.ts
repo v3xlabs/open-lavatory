@@ -25,11 +25,7 @@ export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
     disconnect() {
         this.#conn?.disconnect();
     }
-    request({ method }: EIP1193Parameters<EIP1474Methods>) {
-        switch (method) {
-            case 'eth_requestAccounts':
-            case 'eth_accounts':
-                this.#conn?.sendMessage('eth_accounts');
-        }
+    request(params: EIP1193Parameters<EIP1474Methods>) {
+        this.#conn?.sendMessage(JSON.stringify(params))
     }
 }

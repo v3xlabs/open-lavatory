@@ -18,7 +18,16 @@ This repository includes the following packages:
 > [!IMPORTANT]  
 > This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept.
 
-You can find the specification in [spec.md](./spec.md).
+You can find the entire specification in [spec.md](./spec.md).
+
+In short detail, the protocol works as follows:
+
+1. Peer A (the dApp) chooses a protocol, server, and generate a keypair.
+2. Peer A shares this information via URL (QR Code or Copy/Paste) with Peer B (the wallet).
+3. Peer A & B both connect with the chosen signaling server.
+4. A hybrid homo-to-asymmetric encryption scheme is used to perform a handshake and securely exchange keys.
+5. Asymmetric encryption is used to negotiate webRTC connection.
+6. Peer A & Peer B now securely communicate JSON-RPC requests via encrypted local-preferred webRTC.
 
 ### Known issues
 

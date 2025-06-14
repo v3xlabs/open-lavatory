@@ -5,8 +5,9 @@ export const openLvConnector = createConnector((config) => ({
     connect: async (parameters) => {
         return { accounts:[], chainId:1 }
     },
-    disconnect: async () => { 
-        
+    async disconnect() { 
+        const provider = await this.getProvider({})
+        provider.disconnect()
     },
     id: 'openLv',
     name: 'OpenLV',

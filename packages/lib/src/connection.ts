@@ -678,14 +678,28 @@ export class OpenLVConnection {
         });
     }
 
-    async sendMessage(message: JsonRpcRequest | JsonRpcResponse): Promise<void> {
+    async sendMessage(message: JsonRpcRequest | JsonRpcResponse | string): Promise<void> {
+        let jsonRpcMessage: JsonRpcRequest | JsonRpcResponse;
+
+        // If it's a string, wrap it in a custom JSON-RPC method
+        if (typeof message === 'string') {
+            jsonRpcMessage = {
+                jsonrpc: '2.0',
+                id: Date.now(),
+                method: 'lv_rawText',
+                params: [message],
+            };
+        } else {
+            jsonRpcMessage = message;
+        }
+
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
             // Send via WebRTC
-            this.dataChannel.send(JSON.stringify(message));
+            this.dataChannel.send(JSON.stringify(jsonRpcMessage));
         } else if (this.peerPublicKey && this.signaling.connected) {
             // Send via encrypted MQTT
             const encryptedMessage = await EncryptionUtils.encryptMessage(
-                message,
+                jsonRpcMessage,
                 this.peerPublicKey,
                 this.privateKey!,
                 this.publicKey!

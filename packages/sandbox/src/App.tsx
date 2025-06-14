@@ -191,16 +191,31 @@ const App = () => {
                 ]);
             });
 
+            // Add message handler
+            connection.onMessage((request) => {
+                const timestamp = new Date().toLocaleTimeString();
+
+                // Handle different JSON-RPC methods
+                if (request.method === 'lv_rawText') {
+                    // Extract the text message from params
+                    const textMessage = request.params?.[0] || 'Empty message';
+
+                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
+                } else {
+                    // Handle other JSON-RPC methods
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] Received JSON-RPC: ${request.method}`,
+                    ]);
+                }
+
+                // Return a simple acknowledgment for JSON-RPC
+                return { status: 'received' };
+            });
+
             const { openLVUrl } = await connection.initSession();
 
             setOpenLVUrl(openLVUrl);
-
-            // Add message handler
-            connection.onMessage((message) => {
-                const timestamp = new Date().toLocaleTimeString();
-
-                setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
-            });
 
             // Start monitoring connection status
             startStatusMonitoring();
@@ -239,10 +254,25 @@ const App = () => {
             });
 
             // Add message handler
-            connection.onMessage((message) => {
+            connection.onMessage((request) => {
                 const timestamp = new Date().toLocaleTimeString();
 
-                setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
+                // Handle different JSON-RPC methods
+                if (request.method === 'lv_rawText') {
+                    // Extract the text message from params
+                    const textMessage = request.params?.[0] || 'Empty message';
+
+                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
+                } else {
+                    // Handle other JSON-RPC methods
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] Received JSON-RPC: ${request.method}`,
+                    ]);
+                }
+
+                // Return a simple acknowledgment for JSON-RPC
+                return { status: 'received' };
             });
 
             // Connect to session with just the URL

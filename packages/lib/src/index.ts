@@ -15,7 +15,9 @@ export const contentTopic = ({ sessionId }: {sessionId: string}) => `/my/topic/g
 // openlv://{sessionId}?sharedKey={sharedKey}
 // openlv://abcdefg?sharedKey=1234567890
 export const decodeConnectionURL = (url: string): ConnectionPayload => {
-  const [, sessionId, sharedKey] = url.split('?');
+  // openlv://abcdefg?sharedKey=1234567890
+  // regex to get sessionId and sharedKey
+  const [, sessionId, sharedKey] = url.match(/openlv:\/\/([^\?]+)\?sharedKey=([^\&]+)/) ?? [];
 
   return {
     sessionId,
@@ -26,7 +28,6 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
 export const encodeConnectionURL = (payload: ConnectionPayload) => {
   return `openlv://${payload.sessionId}?sharedKey=${payload.sharedKey}`;
 };
-
 
 export const startConnection = (url?: string) => {
   const client = mqtt.connect(url ?? 'wss://test.mosquitto.org:8081/mqtt');

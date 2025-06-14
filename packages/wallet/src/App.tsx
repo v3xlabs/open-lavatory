@@ -4,7 +4,7 @@ import styles from './App.module.css'
 import { QRScanner } from './components/QRScanner'
 import { config } from '../lib/wagmi'
 import { useWalletBalance } from '../lib/useBalance'
-import { BlockTag, EIP1193Parameters, EIP1474Methods, formatEther } from 'viem'
+import { BlockTag, EIP1193Parameters, EIP1474Methods, formatEther, numberToHex } from 'viem'
 import { ANVIL_ACCOUNT_0 } from '../lib/const'
 import { getBalance, getBlockNumber } from 'viem/actions'
 import { Portal } from 'solid-js/web'
@@ -59,7 +59,7 @@ const App: Component = () => {
                   setShow(false)
                   setIsConnected(true)
                 }}
-                onMessage={(payload) => {
+                onMessage={async (payload) => {
                   const client = config.getClient()
 
                   console.log('Payload: ', payload)
@@ -72,21 +72,22 @@ const App: Component = () => {
                       switch (method) {
                         case 'eth_requestAccounts':
                         case 'eth_accounts':
-                          setPayload(payload as any)
+                          return [ANVIL_ACCOUNT_0]
                         case 'eth_chainId':
-                          return client.chain.id
+                          return numberToHex(client.chain.id)
                         case 'eth_getBalance':
-                          return getBalance(client, {
+                          return numberToHex(await getBalance(client, {
                             address: params[0],
                             blockTag: params[1] as BlockTag,
-                          })
+                          }))
                         case 'eth_blockNumber':
-                          return getBlockNumber(client)
+                          return numberToHex(await getBlockNumber(client))
                       }
                     } else {
                       return []
                     }
                   } else if (payload.method.startsWith('lv_')) {
+                    
                   }
                 }}
               />

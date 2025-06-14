@@ -43,6 +43,7 @@ export class OpenLVConnection {
     client: mqtt.MqttClient;
     private sessionId?: string;
     private sharedKey?: string;
+    private cryptoKey?: CryptoKey;
     private peerConnection?: RTCPeerConnection;
     private dataChannel?: RTCDataChannel;
     private messageHandlers: MessageHandler[] = [];
@@ -264,37 +265,122 @@ export class OpenLVConnection {
         });
     }
 
+    private async deriveEncryptionKey(sharedKey: string): Promise<CryptoKey> {
+        const encoder = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(sharedKey),
+            { name: 'PBKDF2' },
+            false,
+            ['deriveKey']
+        );
+
+        return crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: encoder.encode('openlv-salt'),
+                iterations: 100000,
+                hash: 'SHA-256',
+            },
+            keyMaterial,
+            { name: 'AES-GCM', length: 256 },
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    private async encryptMessage(message: string): Promise<string> {
+        if (!this.cryptoKey) {
+            throw new Error('Encryption key not available');
+        }
+
+        const encoder = new TextEncoder();
+        const data = encoder.encode(message);
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        const encrypted = await crypto.subtle.encrypt(
+            { name: 'AES-GCM', iv },
+            this.cryptoKey,
+            data
+        );
+
+        // Combine IV and encrypted data
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(encrypted), iv.length);
+
+        // Return as base64
+        return btoa(String.fromCharCode.apply(null, Array.from(combined)));
+    }
+
+    private async decryptMessage(encryptedMessage: string): Promise<string> {
+        if (!this.cryptoKey) {
+            throw new Error('Encryption key not available');
+        }
+
+        try {
+            // Decode from base64
+            const combined = new Uint8Array(
+                atob(encryptedMessage)
+                    .split('')
+                    .map((char) => char.charCodeAt(0))
+            );
+
+            // Extract IV and encrypted data
+            const iv = combined.slice(0, 12);
+            const encrypted = combined.slice(12);
+
+            const decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                this.cryptoKey,
+                encrypted
+            );
+
+            const decoder = new TextDecoder();
+
+            return decoder.decode(decrypted);
+        } catch (error) {
+            console.error('Failed to decrypt message:', error);
+            throw new Error('Message decryption failed');
+        }
+    }
+
     private async sendMQTTMessage(message: WebRTCMessage) {
-        if (!this.sessionId) return;
+        if (!this.sessionId || !this.cryptoKey) return;
 
         try {
             await this.waitForMQTTConnection();
 
             const topic = contentTopic({ sessionId: this.sessionId });
 
-            console.log('Sending MQTT message:', message.type, 'to topic:', topic);
+            // Encrypt the entire message payload
+            const encryptedPayload = await this.encryptMessage(JSON.stringify(message));
 
-            this.client.publish(topic, JSON.stringify(message), (error) => {
+            console.log('Sending encrypted MQTT message:', message.type, 'to topic:', topic);
+
+            this.client.publish(topic, encryptedPayload, (error) => {
                 if (error) {
                     console.error('Error publishing MQTT message:', error);
                 } else {
-                    console.log('MQTT message sent successfully:', message.type);
+                    console.log('Encrypted MQTT message sent successfully:', message.type);
                 }
             });
         } catch (error) {
-            console.error('Failed to send MQTT message:', error);
+            console.error('Failed to send encrypted MQTT message:', error);
         }
     }
 
-    private async handleMQTTMessage(messageStr: string) {
+    private async handleMQTTMessage(encryptedMessageStr: string) {
         try {
-            const message: WebRTCMessage = JSON.parse(messageStr);
+            // Decrypt the message payload
+            const decryptedMessageStr = await this.decryptMessage(encryptedMessageStr);
+            const message: WebRTCMessage = JSON.parse(decryptedMessageStr);
 
-            console.log('Processing MQTT message:', message.type);
+            console.log('Processing decrypted MQTT message:', message.type);
 
-            // Verify shared key
+            // Verify shared key (additional security layer)
             if (message.sharedKey !== this.sharedKey) {
-                console.warn('Invalid shared key, ignoring message');
+                console.warn('Invalid shared key in decrypted message, ignoring');
 
                 return;
             }
@@ -310,7 +396,7 @@ export class OpenLVConnection {
 
                 case 'webrtc-offer':
                     if (!this.isInitiator) {
-                        console.log('Received WebRTC offer from Peer A');
+                        console.log('Received WebRTC offer from Peer B');
                         await this.handleWebRTCOffer(message.payload);
                     }
 
@@ -334,7 +420,7 @@ export class OpenLVConnection {
                     break;
             }
         } catch (error) {
-            console.error('Error handling MQTT message:', error);
+            console.error('Error handling encrypted MQTT message:', error);
         }
     }
 
@@ -489,6 +575,10 @@ export class OpenLVConnection {
         this.isInitiator = true;
         this.sessionId = this._generateSessionId();
         this.sharedKey = this._generateSharedKey();
+
+        // Derive encryption key from shared key
+        this.cryptoKey = await this.deriveEncryptionKey(this.sharedKey);
+
         const topic = contentTopic({ sessionId: this.sessionId });
 
         console.log('Initializing session with topic:', topic);
@@ -521,6 +611,9 @@ export class OpenLVConnection {
 
         this.sessionId = sessionId;
         this.sharedKey = sharedKey;
+
+        // Derive encryption key from shared key
+        this.cryptoKey = await this.deriveEncryptionKey(this.sharedKey);
 
         console.log('Connecting to session:', sessionId);
 

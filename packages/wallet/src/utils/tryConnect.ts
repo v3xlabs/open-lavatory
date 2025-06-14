@@ -1,8 +1,8 @@
 import { contentTopic, decodeConnectionURL, startConnection } from "lib"
 
-export const tryConnect = async (result: unknown) => {
+export const tryConnect = async (result: {data: string}) => {
     try {
-        const {sessionId, sharedKey } = decodeConnectionURL(result as string)
+        const {sessionId, sharedKey } = decodeConnectionURL(result.data)
        
         const topic = contentTopic({sessionId})
 

@@ -11,6 +11,7 @@ export const QRScanner = () => {
     scanner = new QrScanner(videoEl!, tryConnect, {
       highlightScanRegion: true,
       highlightCodeOutline: true,
+      maxScansPerSecond: 1,
     })
 
     scanner.start()

@@ -337,6 +337,13 @@ export class OpenLVConnection {
         return btoa(String.fromCharCode.apply(null, Array.from(shortHash)));
     }
 
+    private async computePublicKeyHashFromRaw(publicKeyData: Uint8Array): Promise<string> {
+        const hashBuffer = await crypto.subtle.digest('SHA-256', publicKeyData);
+        const hashArray = new Uint8Array(hashBuffer);
+        const shortHash = hashArray.slice(0, 8); // First 8 bytes
+        return btoa(String.fromCharCode.apply(null, Array.from(shortHash)));
+    }
+
     private async deriveSharedKey(
         privateKey: CryptoKey,
         peerPublicKey: CryptoKey
@@ -515,10 +522,8 @@ export class OpenLVConnection {
                                 .map((char) => char.charCodeAt(0))
                         );
 
-                        this.peerPublicKey = await this.importPublicKey(publicKeyData.buffer);
-
-                        // Verify the public key hash
-                        const computedHash = await this.computePublicKeyHash(this.peerPublicKey);
+                        // Verify the public key hash directly from raw data (before importing)
+                        const computedHash = await this.computePublicKeyHashFromRaw(publicKeyData);
 
                         console.log(
                             'Expected hash:',
@@ -538,7 +543,8 @@ export class OpenLVConnection {
                             return;
                         }
 
-                        console.log('Public key verified, sending hello message...');
+                        console.log('Public key verified, importing and sending hello message...');
+                        this.peerPublicKey = await this.importPublicKey(publicKeyData.buffer);
                         // Send hello message encrypted with dApp's public key
                         await this.sendHelloMessage();
                     } else {

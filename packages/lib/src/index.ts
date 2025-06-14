@@ -47,6 +47,13 @@ export class OpenLVConnection {
     private dataChannel?: RTCDataChannel;
     private messageHandlers: MessageHandler[] = [];
     private isInitiator = false;
+    private isConnected = false;
+    private messageHandlerSetup = false;
+    private pendingICECandidates: RTCIceCandidateInit[] = [];
+    private webrtcRetryCount = 0;
+    private maxWebrtcRetries = 5;
+    private webrtcRetryInterval?: NodeJS.Timeout;
+    private connectionTimeout?: NodeJS.Timeout;
 
     constructor(config?: SessionConfig) {
         this.client = mqtt.connect(config?.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt');
@@ -56,17 +63,59 @@ export class OpenLVConnection {
     private setupMQTTHandlers() {
         this.client.on('connect', () => {
             console.log('Connected to MQTT broker');
+            this.isConnected = true;
         });
 
         this.client.on('error', (error) => {
             console.error('MQTT connection error:', error);
+            this.isConnected = false;
+        });
+
+        this.client.on('disconnect', () => {
+            console.log('Disconnected from MQTT broker');
+            this.isConnected = false;
         });
     }
 
-    private setupPeerConnection() {
-        this.peerConnection = new RTCPeerConnection({
-            iceServers: [{ urls: 'stun:stun.l.google.com:19302' }],
+    private setupMessageHandler() {
+        if (this.messageHandlerSetup || !this.sessionId) return;
+
+        const topic = contentTopic({ sessionId: this.sessionId });
+        
+        this.client.on('message', (receivedTopic, message) => {
+            if (receivedTopic === topic) {
+                console.log('Received MQTT message on topic', receivedTopic, message.toString());
+                this.handleMQTTMessage(message.toString());
+            }
         });
+
+        this.messageHandlerSetup = true;
+    }
+
+    private setupPeerConnection() {
+        if (this.peerConnection) {
+            this.peerConnection.close();
+        }
+
+        this.peerConnection = new RTCPeerConnection({
+            iceServers: [
+                { urls: 'stun:stun.l.google.com:19302' },
+                { urls: 'stun:stun1.l.google.com:19302' },
+            ],
+        });
+
+        // Add connection state change handler
+        this.peerConnection.onconnectionstatechange = () => {
+            console.log('WebRTC connection state:', this.peerConnection?.connectionState);
+            
+            if (this.peerConnection?.connectionState === 'connected') {
+                this.clearWebRTCRetry();
+                this.clearConnectionTimeout();
+            } else if (this.peerConnection?.connectionState === 'failed') {
+                console.warn('WebRTC connection failed, attempting retry...');
+                this.retryWebRTCConnection();
+            }
+        };
 
         // Set up data channel for peer-to-peer messaging
         if (this.isInitiator) {
@@ -82,6 +131,7 @@ export class OpenLVConnection {
         // Handle ICE candidates
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
+                console.log('Sending ICE candidate');
                 this.sendMQTTMessage({
                     type: 'ice-candidate',
                     payload: event.candidate,
@@ -90,11 +140,18 @@ export class OpenLVConnection {
                 });
             }
         };
+
+        // Handle ICE connection state changes
+        this.peerConnection.oniceconnectionstatechange = () => {
+            console.log('ICE connection state:', this.peerConnection?.iceConnectionState);
+        };
     }
 
     private setupDataChannelHandlers(dataChannel: RTCDataChannel) {
         dataChannel.onopen = () => {
             console.log('WebRTC data channel opened');
+            this.clearWebRTCRetry();
+            this.clearConnectionTimeout();
         };
 
         dataChannel.onmessage = (event) => {
@@ -105,53 +162,92 @@ export class OpenLVConnection {
         dataChannel.onerror = (error) => {
             console.error('Data channel error:', error);
         };
+
+        dataChannel.onclose = () => {
+            console.log('WebRTC data channel closed');
+        };
     }
 
-    private sendMQTTMessage(message: WebRTCMessage) {
+    private waitForMQTTConnection(): Promise<void> {
+        return new Promise((resolve, reject) => {
+            if (this.isConnected) {
+                resolve();
+                return;
+            }
+
+            const timeout = setTimeout(() => {
+                reject(new Error('MQTT connection timeout'));
+            }, 10000);
+
+            const checkConnection = () => {
+                if (this.isConnected) {
+                    clearTimeout(timeout);
+                    resolve();
+                } else {
+                    setTimeout(checkConnection, 100);
+                }
+            };
+
+            checkConnection();
+        });
+    }
+
+    private async sendMQTTMessage(message: WebRTCMessage) {
         if (!this.sessionId) return;
 
-        const topic = contentTopic({ sessionId: this.sessionId });
-
-        this.client.publish(topic, JSON.stringify(message));
+        try {
+            await this.waitForMQTTConnection();
+            
+            const topic = contentTopic({ sessionId: this.sessionId });
+            console.log('Sending MQTT message:', message.type, 'to topic:', topic);
+            
+            this.client.publish(topic, JSON.stringify(message), (error) => {
+                if (error) {
+                    console.error('Error publishing MQTT message:', error);
+                } else {
+                    console.log('MQTT message sent successfully:', message.type);
+                }
+            });
+        } catch (error) {
+            console.error('Failed to send MQTT message:', error);
+        }
     }
 
     private async handleMQTTMessage(messageStr: string) {
         try {
             const message: WebRTCMessage = JSON.parse(messageStr);
+            console.log('Processing MQTT message:', message.type);
 
             // Verify shared key
             if (message.sharedKey !== this.sharedKey) {
                 console.warn('Invalid shared key, ignoring message');
-
                 return;
             }
 
             switch (message.type) {
                 case 'hello':
                     if (this.isInitiator) {
-                        // Peer A receives hello from Peer B, start WebRTC offer
+                        console.log('Received hello from Peer B, starting WebRTC offer');
                         await this.createWebRTCOffer();
                     }
-
                     break;
 
                 case 'webrtc-offer':
                     if (!this.isInitiator) {
-                        // Peer B receives offer from Peer A
+                        console.log('Received WebRTC offer from Peer A');
                         await this.handleWebRTCOffer(message.payload);
                     }
-
                     break;
 
                 case 'webrtc-answer':
                     if (this.isInitiator) {
-                        // Peer A receives answer from Peer B
+                        console.log('Received WebRTC answer from Peer B');
                         await this.handleWebRTCAnswer(message.payload);
                     }
-
                     break;
 
                 case 'ice-candidate':
+                    console.log('Received ICE candidate');
                     await this.handleICECandidate(message.payload);
                     break;
 
@@ -167,44 +263,133 @@ export class OpenLVConnection {
     private async createWebRTCOffer() {
         if (!this.peerConnection) return;
 
-        const offer = await this.peerConnection.createOffer();
+        try {
+            console.log('Creating WebRTC offer...');
+            const offer = await this.peerConnection.createOffer();
+            await this.peerConnection.setLocalDescription(offer);
 
-        await this.peerConnection.setLocalDescription(offer);
+            console.log('Sending WebRTC offer');
+            await this.sendMQTTMessage({
+                type: 'webrtc-offer',
+                payload: offer,
+                sessionId: this.sessionId!,
+                sharedKey: this.sharedKey!,
+            });
 
-        this.sendMQTTMessage({
-            type: 'webrtc-offer',
-            payload: offer,
-            sessionId: this.sessionId!,
-            sharedKey: this.sharedKey!,
-        });
+            // Set connection timeout
+            this.setConnectionTimeout();
+        } catch (error) {
+            console.error('Error creating WebRTC offer:', error);
+            this.retryWebRTCConnection();
+        }
     }
 
     private async handleWebRTCOffer(offer: RTCSessionDescriptionInit) {
         if (!this.peerConnection) return;
 
-        await this.peerConnection.setRemoteDescription(offer);
-        const answer = await this.peerConnection.createAnswer();
+        try {
+            console.log('Handling WebRTC offer...');
+            await this.peerConnection.setRemoteDescription(offer);
+            
+            // Process any pending ICE candidates
+            for (const candidate of this.pendingICECandidates) {
+                await this.peerConnection.addIceCandidate(candidate);
+            }
+            this.pendingICECandidates = [];
 
-        await this.peerConnection.setLocalDescription(answer);
+            const answer = await this.peerConnection.createAnswer();
+            await this.peerConnection.setLocalDescription(answer);
 
-        this.sendMQTTMessage({
-            type: 'webrtc-answer',
-            payload: answer,
-            sessionId: this.sessionId!,
-            sharedKey: this.sharedKey!,
-        });
+            console.log('Sending WebRTC answer');
+            await this.sendMQTTMessage({
+                type: 'webrtc-answer',
+                payload: answer,
+                sessionId: this.sessionId!,
+                sharedKey: this.sharedKey!,
+            });
+
+            // Set connection timeout
+            this.setConnectionTimeout();
+        } catch (error) {
+            console.error('Error handling WebRTC offer:', error);
+            this.retryWebRTCConnection();
+        }
     }
 
     private async handleWebRTCAnswer(answer: RTCSessionDescriptionInit) {
         if (!this.peerConnection) return;
 
-        await this.peerConnection.setRemoteDescription(answer);
+        try {
+            console.log('Handling WebRTC answer...');
+            await this.peerConnection.setRemoteDescription(answer);
+            
+            // Process any pending ICE candidates
+            for (const candidate of this.pendingICECandidates) {
+                await this.peerConnection.addIceCandidate(candidate);
+            }
+            this.pendingICECandidates = [];
+        } catch (error) {
+            console.error('Error handling WebRTC answer:', error);
+            this.retryWebRTCConnection();
+        }
     }
 
     private async handleICECandidate(candidate: RTCIceCandidateInit) {
         if (!this.peerConnection) return;
 
-        await this.peerConnection.addIceCandidate(candidate);
+        try {
+            if (this.peerConnection.remoteDescription) {
+                await this.peerConnection.addIceCandidate(candidate);
+                console.log('Added ICE candidate');
+            } else {
+                // Queue ICE candidate for later processing
+                this.pendingICECandidates.push(candidate);
+                console.log('Queued ICE candidate (no remote description yet)');
+            }
+        } catch (error) {
+            console.error('Error handling ICE candidate:', error);
+        }
+    }
+
+    private retryWebRTCConnection() {
+        if (this.webrtcRetryCount >= this.maxWebrtcRetries) {
+            console.error('Max WebRTC retry attempts reached');
+            return;
+        }
+
+        this.webrtcRetryCount++;
+        console.log(`Retrying WebRTC connection (attempt ${this.webrtcRetryCount}/${this.maxWebrtcRetries})`);
+
+        this.webrtcRetryInterval = setTimeout(() => {
+            this.setupPeerConnection();
+            
+            if (this.isInitiator) {
+                this.createWebRTCOffer();
+            }
+        }, 2000 * this.webrtcRetryCount); // Exponential backoff
+    }
+
+    private clearWebRTCRetry() {
+        if (this.webrtcRetryInterval) {
+            clearTimeout(this.webrtcRetryInterval);
+            this.webrtcRetryInterval = undefined;
+        }
+        this.webrtcRetryCount = 0;
+    }
+
+    private setConnectionTimeout() {
+        this.clearConnectionTimeout();
+        this.connectionTimeout = setTimeout(() => {
+            console.warn('WebRTC connection timeout, retrying...');
+            this.retryWebRTCConnection();
+        }, 15000); // 15 second timeout
+    }
+
+    private clearConnectionTimeout() {
+        if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = undefined;
+        }
     }
 
     _generateSessionId(): string {
@@ -222,14 +407,17 @@ export class OpenLVConnection {
         this.sharedKey = this._generateSharedKey();
         const topic = contentTopic({ sessionId: this.sessionId });
 
-        this.client.subscribe(topic);
-        this.client.on('message', (receivedTopic, message) => {
-            if (receivedTopic === topic) {
-                console.log('Received MQTT message on topic', receivedTopic);
-                this.handleMQTTMessage(message.toString());
+        console.log('Initializing session with topic:', topic);
+
+        this.client.subscribe(topic, (error) => {
+            if (error) {
+                console.error('Error subscribing to topic:', error);
+            } else {
+                console.log('Successfully subscribed to topic:', topic);
             }
         });
 
+        this.setupMessageHandler();
         this.setupPeerConnection();
 
         const openLVUrl = encodeConnectionURL({
@@ -246,9 +434,10 @@ export class OpenLVConnection {
     connectToSession(config: { openLVUrl: string; onMessage?: (message: string) => void }) {
         this.isInitiator = false;
         const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
-
         this.sessionId = sessionId;
         this.sharedKey = sharedKey;
+
+        console.log('Connecting to session:', sessionId);
 
         if (config.onMessage) {
             this.messageHandlers.push(config.onMessage);
@@ -256,23 +445,26 @@ export class OpenLVConnection {
 
         const topic = contentTopic({ sessionId });
 
-        this.client.subscribe(topic);
-        this.client.on('message', (receivedTopic, message) => {
-            if (receivedTopic === topic) {
-                console.log('Received MQTT message on topic', receivedTopic);
-                this.handleMQTTMessage(message.toString());
+        this.client.subscribe(topic, (error) => {
+            if (error) {
+                console.error('Error subscribing to topic:', error);
+            } else {
+                console.log('Successfully subscribed to topic:', topic);
+                
+                // Send hello message after successful subscription
+                setTimeout(() => {
+                    this.sendMQTTMessage({
+                        type: 'hello',
+                        payload: 'Hello from Peer B',
+                        sessionId,
+                        sharedKey,
+                    });
+                }, 1000); // Give MQTT time to fully connect
             }
         });
 
+        this.setupMessageHandler();
         this.setupPeerConnection();
-
-        // Send hello message to notify Peer A
-        this.sendMQTTMessage({
-            type: 'hello',
-            payload: 'Hello from Peer B',
-            sessionId,
-            sharedKey,
-        });
     }
 
     // Add message handler for peer-to-peer communication
@@ -311,6 +503,9 @@ export class OpenLVConnection {
 
     // Cleanup
     disconnect() {
+        this.clearWebRTCRetry();
+        this.clearConnectionTimeout();
+        
         if (this.dataChannel) {
             this.dataChannel.close();
         }
@@ -322,6 +517,11 @@ export class OpenLVConnection {
         if (this.client) {
             this.client.end();
         }
+
+        // Reset state
+        this.messageHandlerSetup = false;
+        this.webrtcRetryCount = 0;
+        this.pendingICECandidates = [];
     }
 }
 

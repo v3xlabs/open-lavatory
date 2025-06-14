@@ -96,33 +96,6 @@ export class OpenLVConnection {
         return typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox');
     }
 
-    private async fetchCloudflareCredentials(): Promise<{
-        username: string;
-        credential: string;
-    } | null> {
-        try {
-            // Try to get Cloudflare TURN credentials if available
-            const response = await fetch('https://speed.cloudflare.com/turn-creds', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-            });
-
-            if (response.ok) {
-                const data = await response.json();
-
-                if (data.username && data.credential) {
-                    console.log('Successfully obtained Cloudflare TURN credentials');
-
-                    return { username: data.username, credential: data.credential };
-                }
-            }
-        } catch (error) {
-            console.log('Could not fetch Cloudflare TURN credentials:', error);
-        }
-
-        return null;
-    }
-
     private async setupPeerConnection() {
         if (this.peerConnection) {
             this.peerConnection.close();
@@ -168,33 +141,9 @@ export class OpenLVConnection {
             },
         ];
 
-        // Try to get Cloudflare TURN credentials
-        const cloudflareCredentials = await this.fetchCloudflareCredentials();
-
-        if (cloudflareCredentials) {
-            iceServers.push({
-                urls: [
-                    'turn:turn.cloudflare.com:3478',
-                    'turn:turn.cloudflare.com:3478?transport=tcp',
-                    'turn:turn.cloudflare.com:5349?transport=tcp',
-                ],
-                username: cloudflareCredentials.username,
-                credential: cloudflareCredentials.credential,
-            });
-        }
-
-        // Filter out TURN servers with empty credentials
-        const validIceServers = iceServers.filter((server) => {
-            if ('username' in server && 'credential' in server) {
-                return server.username && server.credential;
-            }
-
-            return true; // STUN servers don't need credentials
-        });
-
         // Firefox-specific configuration
         const rtcConfig: RTCConfiguration = {
-            iceServers: validIceServers,
+            iceServers,
             iceCandidatePoolSize: this.isFirefox() ? 15 : 10, // More candidates for Firefox
             iceTransportPolicy: 'all', // Allow both STUN and TURN
             bundlePolicy: 'max-bundle', // Bundle all media on one transport
@@ -203,9 +152,9 @@ export class OpenLVConnection {
 
         this.peerConnection = new RTCPeerConnection(rtcConfig);
 
-        console.log('WebRTC PeerConnection created with', validIceServers.length, 'ICE servers');
-        console.log('STUN servers:', validIceServers.filter((s) => !('username' in s)).length);
-        console.log('TURN servers:', validIceServers.filter((s) => 'username' in s).length);
+        console.log('WebRTC PeerConnection created with', iceServers.length, 'ICE servers');
+        console.log('STUN servers:', iceServers.filter((s) => !('username' in s)).length);
+        console.log('TURN servers:', iceServers.filter((s) => 'username' in s).length);
 
         // Add connection state change handler
         this.peerConnection.onconnectionstatechange = () => {

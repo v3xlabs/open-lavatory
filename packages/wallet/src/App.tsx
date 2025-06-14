@@ -39,10 +39,12 @@ const App: Component = () => {
           Connect to dApp
         </button>
       )}
-      {/* <RequestModal
+      {
+        /* <RequestModal
         payload={{ method: 'eth_requestAccounts' }}
         setResponse={setResponse}
-      /> */}
+      /> */
+      }
       {/* {payload() && <RequestModal payload={payload()!} setResponse={setResponse} />} */}
       <Portal>
         <Show when={show()}>
@@ -60,32 +62,31 @@ const App: Component = () => {
                 onMessage={(payload) => {
                   const client = config.getClient()
 
-                  console.log('Payload: ',payload)
+                  console.log('Payload: ', payload)
 
                   if (payload.method.startsWith('eth_')) {
                     if (isAuthorized()) {
                       const { method, params } = payload as EIP1193Parameters<
-                      EIP1474Methods
-                    >
-                    switch (method) {
-                      case 'eth_requestAccounts':
-                      case 'eth_accounts':
-                        setPayload(payload as any)
-                      case 'eth_chainId':
-                        return client.chain.id
-                      case 'eth_getBalance':
-                        return getBalance(client, {
-                          address: params[0],
-                          blockTag: params[1] as BlockTag,
-                        })
-                      case 'eth_blockNumber':
-                        return getBlockNumber(client)
-                    }
+                        EIP1474Methods
+                      >
+                      switch (method) {
+                        case 'eth_requestAccounts':
+                        case 'eth_accounts':
+                          setPayload(payload as any)
+                        case 'eth_chainId':
+                          return client.chain.id
+                        case 'eth_getBalance':
+                          return getBalance(client, {
+                            address: params[0],
+                            blockTag: params[1] as BlockTag,
+                          })
+                        case 'eth_blockNumber':
+                          return getBlockNumber(client)
+                      }
                     } else {
                       return []
                     }
                   } else if (payload.method.startsWith('lv_')) {
-                     
                   }
                 }}
               />

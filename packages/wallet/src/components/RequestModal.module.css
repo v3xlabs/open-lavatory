@@ -32,36 +32,35 @@
 }
 
 .connect div {
-    display: flex;
-    flex-direction: row;
-    width: 100%;
-    gap: 10px;
+  display: flex;
+  flex-direction: row;
+  width: 100%;
+  gap: 10px;
 }
 
-
 .connect div button {
-    width: 50%;
-    font-size: 24px;
-    font-weight: bold;
-    color: white;
-    border: none;
-    border-radius: 4px;
-    padding: 10px;
-    cursor: pointer;
+  width: 50%;
+  font-size: 24px;
+  font-weight: bold;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 10px;
+  cursor: pointer;
 }
 
 .connect div button:first-child {
-    background-color: green;
+  background-color: green;
 }
 
 .connect div button:first-child:hover {
-    background-color: darkgreen;
+  background-color: darkgreen;
 }
 
 .connect div button:last-child {
-    background-color: red;
+  background-color: red;
 }
 
 .connect div button:last-child:hover {
-    background-color: darkred;
+  background-color: darkred;
 }

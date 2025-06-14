@@ -36,6 +36,7 @@
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
     "lib": "workspace:^",
+    "mqtt": "^5.13.1",
     "postcss": "^8.5.1",
     "postcss-nested": "^7.0.2",
     "prettier": "^3.5.3",

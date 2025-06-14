@@ -54,7 +54,7 @@ In short detail, the protocol works as follows:
 5. **🌐 WebRTC**: Asymmetric encryption negotiates direct P2P connection
 6. **💬 Communication**: Encrypted JSON-RPC over local-preferred WebRTC
 
-### ⚠️ Known Limitations
+## ⚠️ Known Limitations
 
 As always there is room for improvement;
 
@@ -62,7 +62,7 @@ The current specification implements a full homo-to-asymmetric encryption scheme
 
 In a similar manner, the `h` parameter specifies a hash of the public key, which allows for double verification when initiating a handshake during the signaling phase. This too could use improvements.
 
-#### Browser support
+### Browser support
 
 - ✅ **Chromium-based browsers**: Full support with & w/out TURN servers
 - ⚠️ **Firefox**: Requires TURN servers (potential centralization point)

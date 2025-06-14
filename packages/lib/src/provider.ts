@@ -1,6 +1,4 @@
-import { EventEmitter } from "eventemitter3";
-import { OpenLVConnection } from "./index.js";
-import type { EIP1193Provider } from "viem";
+import { EventEmitter } from 'eventemitter3';
 
 export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
     #conn: OpenLVConnection | undefined
@@ -8,10 +6,10 @@ export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
         super();
     }
     async init() {
-       this.#conn = new OpenLVConnection()
-       const { openLVUrl } = await this.#conn.initSession()
+        this.#conn = new OpenLVConnection();
+        const { openLVUrl } = await this.#conn.initSession();
 
-       this.emit('display_uri', openLVUrl)
+        this.emit('display_uri', openLVUrl);
     }
     async connect(uri: string) {
         this.#conn?.connectToSession({

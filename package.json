@@ -2,5 +2,8 @@
   "name": "open-lavatory",
   "version": "1.0.0",
   "private":true,
-  "packageManager": "pnpm@10.10.0"
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "sandbox": "pnpm --filter lib build && pnpm --filter sandbox dev"
+  }
 }

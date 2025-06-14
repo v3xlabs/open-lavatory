@@ -4,6 +4,9 @@
   "private":true,
   "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "sandbox": "pnpm --filter lib build && pnpm --filter sandbox dev"
+    "sandbox": "pnpm build:lib && pnpm --filter sandbox dev",
+    "dapp": "pnpm build:lib && pnpm build:connector && pnpm --filter dapp dev",
+    "build:lib": "pnpm --filter lib build",
+    "build:connector": "pnpm --filter connector build"
   }
 }

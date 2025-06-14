@@ -9,7 +9,7 @@ export type ConnectionPayload = {
   sharedKey: string;
 };
 
-export const contentTopic = (v: string) => `/my/topic/goes/here/${v}`;
+export const contentTopic = ({ sessionId }: {sessionId: string}) => `/my/topic/goes/here/${sessionId}`;
 
 // include 'wss://test.mosquitto.org:8081/mqtt' later
 // openlv://{sessionId}?sharedKey={sharedKey}
@@ -27,4 +27,29 @@ export const encodeConnectionURL = (payload: ConnectionPayload) => {
   return `openlv://${payload.sessionId}?sharedKey=${payload.sharedKey}`;
 };
 
-export const startConnection = (url?: string) => mqtt.connect(url ?? 'wss://test.mosquitto.org:8081/mqtt');
+
+export const startConnection = (url?: string) => {
+  const client = mqtt.connect(url ?? 'wss://test.mosquitto.org:8081/mqtt');
+
+  return {
+    client,
+    // topic is the content topic
+    subscribe: (topic: string) => {
+      client.subscribe(topic, (err, granted) => {
+        if (err) {
+          console.error('Error subscribing to topic', err);
+        }
+
+        console.log('Subscribed to topic', topic, granted);
+      });
+    },
+    // topic is the content topic
+    publish: (topic: string, message: string) => {
+      client.publish(topic, message, { qos: 1 }, (err) => {
+        if (err) {
+          console.error('Error publishing message', err);
+        }
+      });
+    },
+  };
+};

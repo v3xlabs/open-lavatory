@@ -7,7 +7,6 @@ import { useWalletBalance } from '../lib/useBalance'
 import { formatEther } from 'viem'
 import { ANVIL_ACCOUNT_0 } from '../lib/const'
 
-
 const App: Component = () => {
   const [show, setShow] = createSignal(false)
 

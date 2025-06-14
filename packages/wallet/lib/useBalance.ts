@@ -1,26 +1,27 @@
 import { createSignal, onCleanup, onMount } from 'solid-js'
-import { Config, getBalance, watchAccount } from '@wagmi/core'
+import { Config, getBalance, watchAccount, watchBlocks } from '@wagmi/core'
 import type { Address } from 'viem'
 
 export function useWalletBalance(config: Config, address: Address) {
   const [balance, setBalance] = createSignal<bigint>(0n)
 
-  let stopAccountWatch: (() => void) | undefined
+  let stopBlockWatch: (() => void) | undefined
 
   onMount(() => {
-    stopAccountWatch = watchAccount(config, {
-      onChange(account) {
-        if (account?.address) {
+
+    // Watch for new blocks
+    stopBlockWatch = watchBlocks(config, {
+      onBlock(block) {
+        console.log('New block:', block)
+        if (address) {
           fetchBalance(address)
-        } else {
-          setBalance(0n)
         }
       },
     })
   })
 
   onCleanup(() => {
-    stopAccountWatch?.()
+    stopBlockWatch?.()
   })
 
   async function fetchBalance(address: Address) {
@@ -32,7 +33,6 @@ export function useWalletBalance(config: Config, address: Address) {
       setBalance(0n)
     }
   }
-  
 
-    return balance
+  return balance
 }

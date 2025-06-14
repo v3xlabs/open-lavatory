@@ -5,8 +5,8 @@ import { QRScanner } from './components/QRScanner'
 import { config } from '../lib/wagmi'
 import { useWalletBalance } from '../lib/useBalance'
 import { formatEther } from 'viem'
+import { ANVIL_ACCOUNT_0 } from '../lib/const'
 
-const ANVIL_ACCOUNT_0 = '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
 
 const App: Component = () => {
   const [show, setShow] = createSignal(false)

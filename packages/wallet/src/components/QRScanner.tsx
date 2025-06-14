@@ -14,7 +14,10 @@ export const QRScanner = () => {
       conn.connectToSession({
         openLVUrl: data,
         onMessage: (message) => {
-          console.log('Received message', message)
+          switch (message) {
+            case 'eth_accounts':
+              return []
+          }
         },
       })
     }, {

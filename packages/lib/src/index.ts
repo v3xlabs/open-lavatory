@@ -34,14 +34,8 @@ export const startConnection = (url?: string) => {
   return {
     client,
     // topic is the content topic
-    subscribe: (topic: string) => {
-      client.subscribe(topic, (err, granted) => {
-        if (err) {
-          console.error('Error subscribing to topic', err);
-        }
-
-        console.log('Subscribed to topic', topic, granted);
-      });
+    subscribe: (topic: string, callback: mqtt.ClientSubscribeCallback) => {
+      client.subscribe(topic, callback);
     },
     // topic is the content topic
     publish: (topic: string, message: string) => {

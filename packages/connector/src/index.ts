@@ -136,24 +136,62 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     };
 
                     const handleMessage = (message: any) => {
-                        // Handle account response
-                        if (message.method === 'eth_accounts' && message.result?.length > 0) {
-                            cleanup();
+                        console.log('OpenLV: Received message:', message);
+                        
+                        // Handle account response - check for both proper JSON-RPC response and malformed message
+                        const isAccountMessage = (
+                            (message.method === 'eth_accounts' && message.result?.length > 0) || // Malformed: has both method and result
+                            (message.method === 'eth_accounts' && Array.isArray(message.params) && message.params.length > 0) || // Request with params
+                            (!message.method && message.result && Array.isArray(message.result) && message.result.length > 0) // Proper response
+                        );
+
+                        if (isAccountMessage) {
+                            // Extract accounts from various possible formats
+                            let accountsArray: string[] = [];
                             
-                            const newAccounts = message.result.map((addr: string) => getAddress(addr));
-                            accounts = newAccounts;
-                            currentChainId = targetChainId!;
-                            isConnected = true;
+                            if (message.result && Array.isArray(message.result)) {
+                                accountsArray = message.result;
+                            } else if (message.params && Array.isArray(message.params)) {
+                                accountsArray = message.params;
+                            }
 
-                            closeOpenLVModal();
+                            // Validate that these look like Ethereum addresses
+                            if (accountsArray.length > 0 && accountsArray.every(addr => 
+                                typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42
+                            )) {
+                                cleanup();
+                                
+                                const newAccounts = accountsArray.map((addr: string) => getAddress(addr));
+                                accounts = newAccounts;
+                                currentChainId = targetChainId!;
+                                isConnected = true;
 
-                            resolve({
-                                accounts: newAccounts,
-                                chainId: targetChainId!,
-                            });
+                                console.log('OpenLV: Connection successful, accounts:', newAccounts);
+                                closeOpenLVModal();
+
+                                // Emit connect event to Wagmi
+                                config.emitter.emit('connect', { 
+                                    accounts: newAccounts, 
+                                    chainId: targetChainId! 
+                                });
+
+                                // Also trigger accountsChanged to ensure UI updates
+                                setTimeout(() => {
+                                    if (accountsChanged) {
+                                        accountsChanged(accountsArray);
+                                    }
+                                }, 100);
+
+                                resolve({
+                                    accounts: newAccounts,
+                                    chainId: targetChainId!,
+                                });
+                                return;
+                            }
                         }
-                        // Handle other responses that might contain account info
-                        else if (message.result && Array.isArray(message.result) && message.result.length > 0) {
+
+                        // Handle other responses that might contain account info (fallback)
+                        if (message.result && Array.isArray(message.result) && message.result.length > 0) {
                             // Check if this looks like an account array
                             const firstItem = message.result[0];
                             if (typeof firstItem === 'string' && firstItem.startsWith('0x') && firstItem.length === 42) {
@@ -164,7 +202,21 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                                 currentChainId = targetChainId!;
                                 isConnected = true;
 
+                                console.log('OpenLV: Connection successful (fallback), accounts:', newAccounts);
                                 closeOpenLVModal();
+
+                                // Emit connect event to Wagmi
+                                config.emitter.emit('connect', { 
+                                    accounts: newAccounts, 
+                                    chainId: targetChainId! 
+                                });
+
+                                // Also trigger accountsChanged to ensure UI updates
+                                setTimeout(() => {
+                                    if (accountsChanged) {
+                                        accountsChanged(message.result);
+                                    }
+                                }, 100);
 
                                 resolve({
                                     accounts: newAccounts,
@@ -183,20 +235,23 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     }
                 });
 
-                // Set up event listeners
+                // Set up event listeners for ongoing communication
                 if (!accountsChanged) {
                     accountsChanged = this.onAccountsChanged.bind(this);
                     provider.on('accountsChanged', accountsChanged);
+                    console.log('OpenLV: Set up accountsChanged listener');
                 }
 
                 if (!chainChanged) {
                     chainChanged = this.onChainChanged.bind(this);
                     provider.on('chainChanged', chainChanged);
+                    console.log('OpenLV: Set up chainChanged listener');
                 }
 
                 if (!disconnect) {
                     disconnect = this.onDisconnect.bind(this);
                     provider.on('disconnect', disconnect);
+                    console.log('OpenLV: Set up disconnect listener');
                 }
 
                 return result;
@@ -254,7 +309,9 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
 
         async isAuthorized() {
             try {
-                return isConnected && accounts.length > 0;
+                const authorized = isConnected && accounts.length > 0;
+                console.log('OpenLV: isAuthorized check:', { isConnected, accountsLength: accounts.length, authorized });
+                return authorized;
             } catch {
                 return false;
             }
@@ -282,11 +339,17 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
             }
         },
 
-        onAccountsChanged(accounts: string[]) {
-            if (accounts.length === 0) {
+        onAccountsChanged(newAccounts: string[]) {
+            console.log('OpenLV: Accounts changed:', newAccounts);
+            
+            if (newAccounts.length === 0) {
                 this.onDisconnect();
             } else {
-                const addresses = accounts.map((addr) => getAddress(addr));
+                const addresses = newAccounts.map((addr) => getAddress(addr));
+                // Update internal state
+                accounts = addresses;
+                isConnected = true;
+                
                 config.emitter.emit('change', { accounts: addresses });
             }
         },

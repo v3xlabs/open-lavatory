@@ -12,10 +12,10 @@ export const openLvConnector = createConnector((config) => ({
     id: 'openLv',
     name: 'OpenLV',
     getAccounts: async () => {
-        return []
+        return [];
     },
     getChainId: async () => {
-        return 1
+        return 1;
     },
     getProvider: async (parameters) => {
         const provider = new OpenLVProvider()

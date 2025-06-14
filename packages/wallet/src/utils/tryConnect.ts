@@ -1,9 +1,4 @@
-import {
-  contentTopic,
-  decodeConnectionURL,
-  OpenLVConnection,
-  startConnection,
-} from 'lib'
+import { OpenLVConnection } from 'lib'
 
 export const tryConnect = async (result: { data: string }) => {
   try {
@@ -12,7 +7,8 @@ export const tryConnect = async (result: { data: string }) => {
     conn.connectToSession({
       openLVUrl: result.data,
       onMessage: (message) => {
-        console.log('Received message', message)
+        const pc = new RTCPeerConnection()
+        
       },
     })
   } catch (error) {

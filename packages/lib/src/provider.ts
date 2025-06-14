@@ -43,18 +43,22 @@ export class OpenLVProvider extends EventEmitter<
 
         // Set up message handler for incoming JSON-RPC messages
         this.#conn.onMessage(async (request: JsonRpcRequest) => {
+            console.log('Provider: Received message:', request);
             this.emit('message', request);
 
             // Handle responses to our requests
             if ('result' in request || 'error' in request) {
                 const response = request as any as JsonRpcResponse;
+                console.log('Provider: Processing response:', response);
 
                 // Check for account changes
                 if (response.result && Array.isArray(response.result)) {
                     const newAccounts = response.result;
+                    console.log('Provider: Found accounts in response:', newAccounts);
 
                     if (JSON.stringify(newAccounts) !== JSON.stringify(this.#accounts)) {
                         this.#accounts = newAccounts;
+                        console.log('Provider: Emitting accountsChanged:', newAccounts);
                         this.emit('accountsChanged', newAccounts);
                     }
                 }
@@ -155,11 +159,36 @@ export class OpenLVProvider extends EventEmitter<
         switch (params.method) {
             case 'eth_requestAccounts':
                 // This will be handled by the wallet, so we need to wait for response
-                return new Promise((resolve) => {
+                return new Promise((resolve, reject) => {
+                    const timeout = setTimeout(() => {
+                        this.removeListener('message', handleResponse);
+                        reject(new Error('Request timeout'));
+                    }, 30000);
+
                     const handleResponse = (message: any) => {
-                        if (message.method === 'eth_accounts' && message.result) {
-                            this.#accounts = message.result;
+                        console.log('Provider: Checking response for eth_requestAccounts:', message);
+                        
+                        // Check if this is the response to our request
+                        if (message.id === jsonRpcRequest.id) {
+                            clearTimeout(timeout);
                             this.removeListener('message', handleResponse);
+                            
+                            if (message.error) {
+                                reject(new Error(message.error.message));
+                            } else if (message.result && Array.isArray(message.result)) {
+                                this.#accounts = message.result;
+                                console.log('Provider: Updated accounts:', this.#accounts);
+                                resolve(message.result);
+                            } else {
+                                reject(new Error('Invalid response format'));
+                            }
+                        }
+                        // Legacy support for malformed responses
+                        else if (message.method === 'eth_accounts' && message.result) {
+                            clearTimeout(timeout);
+                            this.removeListener('message', handleResponse);
+                            this.#accounts = message.result;
+                            console.log('Provider: Updated accounts (legacy):', this.#accounts);
                             resolve(message.result);
                         }
                     };

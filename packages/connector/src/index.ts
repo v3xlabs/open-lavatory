@@ -137,6 +137,15 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
 
                     const handleMessage = (message: any) => {
                         console.log('OpenLV: Received message:', message);
+                        console.log('OpenLV: Message analysis:', {
+                            hasMethod: !!message.method,
+                            method: message.method,
+                            hasResult: !!message.result,
+                            resultType: Array.isArray(message.result) ? 'array' : typeof message.result,
+                            resultLength: Array.isArray(message.result) ? message.result.length : 'N/A',
+                            hasParams: !!message.params,
+                            hasId: !!message.id
+                        });
                         
                         // Handle account response - look for proper JSON-RPC response with account data
                         const isAccountMessage = (
@@ -242,6 +251,21 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     console.log('OpenLV: Set up accountsChanged listener');
                 }
 
+                // Also set up a direct listener for immediate account updates
+                const directAccountHandler = (newAccounts: string[]) => {
+                    console.log('OpenLV: Direct account update received:', newAccounts);
+                    if (newAccounts.length > 0) {
+                        const addresses = newAccounts.map((addr) => getAddress(addr));
+                        accounts = addresses;
+                        isConnected = true;
+                        
+                        // Emit change event to update Wagmi UI
+                        config.emitter.emit('change', { accounts: addresses });
+                        console.log('OpenLV: Emitted change event with accounts:', addresses);
+                    }
+                };
+                provider.on('accountsChanged', directAccountHandler);
+
                 if (!chainChanged) {
                     chainChanged = this.onChainChanged.bind(this);
                     provider.on('chainChanged', chainChanged);
@@ -293,6 +317,7 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
         },
 
         async getAccounts() {
+            console.log('OpenLV: getAccounts called, returning:', accounts);
             return accounts;
         },
 

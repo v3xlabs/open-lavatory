@@ -4,7 +4,13 @@ import styles from './App.module.css'
 import { QRScanner } from './components/QRScanner'
 import { config } from '../lib/wagmi'
 import { useWalletBalance } from '../lib/useBalance'
-import { BlockTag, EIP1193Parameters, EIP1474Methods, formatEther, numberToHex } from 'viem'
+import {
+  BlockTag,
+  EIP1193Parameters,
+  EIP1474Methods,
+  formatEther,
+  numberToHex,
+} from 'viem'
 import { ANVIL_ACCOUNT_0 } from '../lib/const'
 import { getBalance, getBlockNumber, signMessage } from 'viem/actions'
 import { Portal } from 'solid-js/web'
@@ -64,7 +70,10 @@ const App: Component = () => {
 
                   console.log('Payload: ', payload)
 
-                  if (payload.method.startsWith('eth_') || payload.method.startsWith('personal_')) {
+                  if (
+                    payload.method.startsWith('eth_') ||
+                    payload.method.startsWith('personal_')
+                  ) {
                     if (isAuthorized()) {
                       const { method, params } = payload as EIP1193Parameters<
                         EIP1474Methods
@@ -76,23 +85,28 @@ const App: Component = () => {
                         case 'eth_chainId':
                           return numberToHex(client.chain.id)
                         case 'eth_getBalance':
-                          return numberToHex(await getBalance(client, {
-                            address: params[0],
-                            blockTag: params[1] as BlockTag,
-                          }))
+                          return numberToHex(
+                            await getBalance(client, {
+                              address: params[0],
+                              blockTag: params[1] as BlockTag,
+                            }),
+                          )
                         case 'eth_blockNumber':
                           return numberToHex(await getBlockNumber(client))
                         case 'personal_sign':
                           return await signMessage(client, {
                             message: params[0],
-                            account: params[1]
+                            account: params[1],
                           })
+                        case 'eth_sendTransaction':
+                        case 'eth_sendRawTransaction':
+                        case 'wallet_sendTransaction':
+                          alert(`${method} not implemented yet`)
                       }
                     } else {
                       return []
                     }
                   } else if (payload.method.startsWith('lv_')) {
-                    
                   }
                 }}
               />

@@ -1,4 +1,5 @@
 import { createConnector } from '@wagmi/core'
+import { anvil } from '@wagmi/core/chains'
 
 import { OpenLVProvider } from 'lib/provider'
 
@@ -17,7 +18,7 @@ export const openLvConnector = createConnector(() => ({
     return []
   },
   getChainId: async () => {
-    return 1
+    return anvil.id
   },
   async setup() {
     const provider = await this.getProvider()

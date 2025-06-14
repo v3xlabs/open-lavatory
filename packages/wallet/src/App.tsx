@@ -1,24 +1,11 @@
 import type { Component } from 'solid-js';
 import { createSignal, onMount, Show } from 'solid-js'
-import { createWakuNode, pairExchange, subscribeToMessages } from 'lib'
 import styles from './App.module.css';
 import { QRScanner } from './components/QRScanner';
 
 const App: Component = () => {
 
   const [show, setShow] = createSignal(false)
-
-  onMount(async () => {
-    const node = await createWakuNode()
-
-    await pairExchange(node)
-
-    console.log(`Peer ID: ${node.libp2p.peerId}`)
-
-    subscribeToMessages({node, contentTopic: '/light-guide/1/message/proto', cb(message) {
-      console.log(message)
-    },})
-  })
 
   return (
     <main class={styles.main}>

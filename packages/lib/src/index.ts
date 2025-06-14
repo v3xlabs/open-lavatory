@@ -1,3 +1,5 @@
+import mqtt from 'mqtt';
+
 export type PubSubPayload = {
 
 };
@@ -24,3 +26,5 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
 export const encodeConnectionURL = (payload: ConnectionPayload) => {
   return `openlv://${payload.sessionId}?sharedKey=${payload.sharedKey}`;
 };
+
+export const startConnection = (url?: string) => mqtt.connect(url ?? 'wss://test.mosquitto.org:8081/mqtt');

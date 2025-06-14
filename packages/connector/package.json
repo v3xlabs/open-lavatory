@@ -9,6 +9,7 @@
   },
   "dependencies": {
     "lib": "workspace:*",
+    "qrcode-generator": "^1.5.0",
     "viem": "^2.31.2"
   },
   "devDependencies": {

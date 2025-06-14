@@ -4,6 +4,7 @@ import { mainnet } from '@wagmi/core/chains';
 import type { Chain } from '@wagmi/core/chains';
 import type { Address, ProviderConnectInfo } from 'viem';
 import { getAddress } from 'viem';
+import * as QRCode from 'qrcode-generator';
 
 import { OpenLVProvider } from 'lib/provider';
 
@@ -14,6 +15,214 @@ export interface OpenLVParameters {
 type OpenLVConnector = Connector & {
     onDisplayUri(uri: string): void;
 };
+
+// Lightweight QR Modal Web Component
+class OpenLVModalElement extends HTMLElement {
+    public shadowRoot: ShadowRoot;
+    private uri: string = '';
+    private onClose: () => void = () => {};
+
+    constructor() {
+        super();
+        this.shadowRoot = this.attachShadow({ mode: 'closed' });
+    }
+
+    connectedCallback() {
+        this.render();
+        this.setupEventListeners();
+    }
+
+    setProps(uri: string, onClose: () => void) {
+        this.uri = uri;
+        this.onClose = onClose;
+        if (this.isConnected) {
+            this.render();
+        }
+    }
+
+    private generateQRCode(text: string): string {
+        const qr = QRCode.default(0, 'M');
+        qr.addData(text);
+        qr.make();
+        return qr.createSvgTag(4, 0);
+    }
+
+    private render() {
+        const qrSvg = this.generateQRCode(this.uri);
+        
+        this.shadowRoot.innerHTML = `
+            <style>
+                :host {
+                    position: fixed;
+                    top: 0;
+                    left: 0;
+                    width: 100%;
+                    height: 100%;
+                    background: rgba(0, 0, 0, 0.8);
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    z-index: 10000;
+                    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+                }
+
+                .modal-content {
+                    background: white;
+                    border-radius: 16px;
+                    padding: 32px;
+                    max-width: 400px;
+                    width: 90%;
+                    text-align: center;
+                    box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+                }
+
+                .modal-title {
+                    margin: 0 0 16px 0;
+                    font-size: 24px;
+                    color: #1f2937;
+                    font-weight: 600;
+                }
+
+                .modal-subtitle {
+                    margin: 0 0 24px 0;
+                    color: #6b7280;
+                    font-size: 14px;
+                }
+
+                .qr-container {
+                    margin: 24px 0;
+                    padding: 16px;
+                    background: #f9fafb;
+                    border-radius: 12px;
+                }
+
+                .qr-wrapper {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    margin: 0 auto;
+                    background: white;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    padding: 16px;
+                    width: fit-content;
+                    transition: filter 0.3s ease;
+                    filter: blur(4px);
+                    cursor: pointer;
+                }
+
+                .qr-wrapper:hover {
+                    filter: blur(0px);
+                }
+
+                .qr-wrapper svg {
+                    display: block;
+                    width: 200px;
+                    height: 200px;
+                }
+
+                .url-container {
+                    background: #f3f4f6;
+                    border-radius: 8px;
+                    padding: 12px;
+                    margin: 16px 0;
+                }
+
+                .url-label {
+                    margin: 0 0 8px 0;
+                    font-size: 12px;
+                    color: #374151;
+                    font-weight: 600;
+                }
+
+                .url-text {
+                    margin: 0;
+                    font-size: 10px;
+                    color: #6b7280;
+                    word-break: break-all;
+                    font-family: 'SF Mono', Monaco, 'Cascadia Code', 'Roboto Mono', Consolas, 'Courier New', monospace;
+                }
+
+                .cancel-button {
+                    background: #ef4444;
+                    color: white;
+                    border: none;
+                    border-radius: 8px;
+                    padding: 12px 24px;
+                    font-size: 14px;
+                    cursor: pointer;
+                    font-weight: 500;
+                    transition: background-color 0.2s ease;
+                }
+
+                .cancel-button:hover {
+                    background: #dc2626;
+                }
+
+                .protocol-badge {
+                    margin: 16px 0 0 0;
+                    font-size: 12px;
+                    color: #9ca3af;
+                }
+
+                .blur-hint {
+                    margin: 8px 0 0 0;
+                    font-size: 11px;
+                    color: #9ca3af;
+                    font-style: italic;
+                }
+            </style>
+            
+            <div class="modal-content">
+                <h2 class="modal-title">Connect OpenLV Wallet</h2>
+                <p class="modal-subtitle">Scan QR code or copy URL to connect</p>
+                
+                <div class="qr-container">
+                    <div class="qr-wrapper" title="Hover to reveal QR code">
+                        ${qrSvg}
+                    </div>
+                    <p class="blur-hint">Hover to reveal QR code</p>
+                </div>
+                
+                <div class="url-container">
+                    <p class="url-label">Connection URL:</p>
+                    <p class="url-text">${this.uri}</p>
+                </div>
+                
+                <button class="cancel-button" id="cancel-btn">Cancel</button>
+                
+                <p class="protocol-badge">🔐 OpenLV Protocol</p>
+            </div>
+        `;
+    }
+
+    private setupEventListeners() {
+        // Close on backdrop click
+        this.addEventListener('click', (e) => {
+            if (e.target === this) {
+                this.onClose();
+            }
+        });
+
+        // Close on cancel button
+        const cancelBtn = this.shadowRoot.querySelector('#cancel-btn');
+        cancelBtn?.addEventListener('click', () => {
+            this.onClose();
+        });
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                this.onClose();
+            }
+        });
+    }
+}
+
+// Register the custom element
+if (!customElements.get('openlv-modal')) {
+    customElements.define('openlv-modal', OpenLVModalElement);
+}
 
 openLvConnector.type = 'openLv' as const;
 
@@ -40,6 +249,9 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
     let disconnect: OpenLVConnector['onDisconnect'] | undefined;
     let accountsChanged: OpenLVConnector['onAccountsChanged'] | undefined;
     let chainChanged: OpenLVConnector['onChainChanged'] | undefined;
+
+    // Modal state
+    let modalElement: OpenLVModalElement | null = null;
 
     return createConnector<Provider, Properties>((config) => ({
         id: 'openLv',
@@ -309,51 +521,20 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
             config.emitter.emit('message', { type: 'display_uri', data: uri });
         },
     }));
-}
 
-// Simple QR Modal
-function showOpenLVModal(uri: string) {
-    closeOpenLVModal();
+    // Web Component Modal functions
+    function showOpenLVModal(uri: string) {
+        closeOpenLVModal();
 
-    const modal = document.createElement('div');
-    modal.id = 'openlv-modal';
-    modal.style.cssText = `
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: rgba(0,0,0,0.8); display: flex; justify-content: center; align-items: center;
-        z-index: 10000; font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-    `;
+        modalElement = new OpenLVModalElement();
+        modalElement.setProps(uri, closeOpenLVModal);
+        document.body.appendChild(modalElement);
+    }
 
-    modal.innerHTML = `
-        <div style="background: white; border-radius: 16px; padding: 32px; max-width: 400px; width: 90%; text-align: center;">
-            <h2 style="margin: 0 0 16px 0; font-size: 24px; color: #1f2937;">Connect OpenLV Wallet</h2>
-            <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">Scan QR code or copy URL to connect</p>
-            
-            <div style="margin: 24px 0; padding: 16px; background: #f9fafb; border-radius: 12px;">
-                <div style="width: 200px; height: 200px; margin: 0 auto; background: white; border: 2px solid #e5e7eb; border-radius: 8px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: #6b7280;">
-                    📱 QR Code Here
-                </div>
-            </div>
-            
-            <div style="background: #f3f4f6; border-radius: 8px; padding: 12px; margin: 16px 0;">
-                <p style="margin: 0 0 8px 0; font-size: 12px; color: #374151; font-weight: 600;">Connection URL:</p>
-                <p style="margin: 0; font-size: 10px; color: #6b7280; word-break: break-all; font-family: monospace;">${uri}</p>
-            </div>
-            
-            <button id="close-openlv-modal" style="background: #ef4444; color: white; border: none; border-radius: 8px; padding: 12px 24px; font-size: 14px; cursor: pointer;">Cancel</button>
-            
-            <p style="margin: 16px 0 0 0; font-size: 12px; color: #9ca3af;">🔐 OpenLV Protocol</p>
-        </div>
-    `;
-
-    document.body.appendChild(modal);
-
-    modal.querySelector('#close-openlv-modal')?.addEventListener('click', closeOpenLVModal);
-    modal.addEventListener('click', (e) => {
-        if (e.target === modal) closeOpenLVModal();
-    });
-}
-
-function closeOpenLVModal() {
-    const modal = document.getElementById('openlv-modal');
-    if (modal) modal.remove();
+    function closeOpenLVModal() {
+        if (modalElement) {
+            document.body.removeChild(modalElement);
+            modalElement = null;
+        }
+    }
 } 

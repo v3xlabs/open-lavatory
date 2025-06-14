@@ -1,11 +1,11 @@
 import { onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
 import styles from './QRScanner.module.css'
-import { OpenLVConnection } from 'lib'
+import { JsonRpcRequest, OpenLVConnection } from 'lib'
 
 export const QRScanner = (
   { onMessage, onConnect }: {
-    onMessage: (message: string) => void
+    onMessage: (message: JsonRpcRequest) => void
     onConnect: () => void
   },
 ) => {
@@ -20,10 +20,9 @@ export const QRScanner = (
 
       onConnect()
 
-      conn.connectToSession({
-        openLVUrl: data,
-        onMessage,
-      })
+      conn.connectToSession(data)
+
+      conn.onMessage(onMessage)
     }, {
       highlightScanRegion: true,
       highlightCodeOutline: true,

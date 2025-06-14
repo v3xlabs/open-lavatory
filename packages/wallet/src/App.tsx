@@ -57,8 +57,7 @@ const App: Component = () => {
                   setShow(false)
                   setIsConnected(true)
                 }}
-                onMessage={(message) => {
-                  const payload = JSON.parse(message)
+                onMessage={(payload) => {
                   const client = config.getClient()
 
                   console.log('Payload: ',payload)
@@ -71,7 +70,7 @@ const App: Component = () => {
                     switch (method) {
                       case 'eth_requestAccounts':
                       case 'eth_accounts':
-                        setPayload(payload)
+                        setPayload(payload as any)
                       case 'eth_chainId':
                         return client.chain.id
                       case 'eth_getBalance':

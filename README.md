@@ -19,7 +19,8 @@
 ## 🌟 Overview
 
 > [!NOTE]  
-> This project was built during 48 hours at [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin. It is to be treated as a proof of concept.
+> This project was built during 48 hours at [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin.
+> It is to be treated as a proof of concept.
 
 A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
 
@@ -40,7 +41,7 @@ This repository includes the following packages:
 ## 📋 Specification
 
 > [!IMPORTANT]  
-> This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept.
+> This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#-known-limitations) section for more details.
 
 You can find the entire specification in [spec.md](./spec.md).
 

@@ -69,11 +69,7 @@ export const startSession = async (connection: SessionConfig) => {
 
     console.log('client', client);
 
-    client.subscribe(topic, (err, granted) => {
-        if (err) {
-            console.error('Error subscribing to topic', err);
-        }
-    });
+    client.subscribe(topic);
 
     const payload = encodeConnectionURL({
         sessionId: 'abcdefg',

@@ -84,7 +84,7 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     await provider.init();
                 }
 
-                // Wait for wallet connection
+                // Wait for wallet connection and proper connection state
                 const result = await new Promise<{ accounts: readonly Address[]; chainId: number }>((resolve, reject) => {
                     const timeout = setTimeout(() => {
                         reject(new Error('Connection timeout after 60 seconds'));
@@ -94,9 +94,35 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     const cleanup = () => {
                         clearTimeout(timeout);
                         provider.removeListener('message', handleMessage);
+                        provider.removeListener('connect', handleConnect);
                         if (displayUri) {
                             provider.removeListener('display_uri', displayUri);
                             displayUri = undefined;
+                        }
+                    };
+
+                    let connectionEstablished = false;
+                    let accountsRequested = false;
+
+                    const handleConnect = () => {
+                        connectionEstablished = true;
+                        console.log('OpenLV: Connection established, requesting accounts...');
+                        
+                        // Only request accounts once we have a proper connection
+                        if (!accountsRequested) {
+                            accountsRequested = true;
+                            setTimeout(async () => {
+                                try {
+                                    await provider.request({
+                                        method: 'eth_requestAccounts',
+                                        params: undefined,
+                                    });
+                                } catch (error) {
+                                    console.error('Failed to request accounts:', error);
+                                    cleanup();
+                                    reject(error);
+                                }
+                            }, 1000); // Give a bit more time for the connection to stabilize
                         }
                     };
 
@@ -140,19 +166,12 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     };
 
                     provider.on('message', handleMessage);
+                    provider.on('connect', handleConnect);
 
-                    // Request accounts after a short delay
-                    setTimeout(async () => {
-                        try {
-                            await provider.request({
-                                method: 'eth_requestAccounts',
-                                params: undefined,
-                            });
-                        } catch (error) {
-                            cleanup();
-                            reject(error);
-                        }
-                    }, 2000);
+                    // If already connected, trigger the connect handler
+                    if (provider.connected) {
+                        handleConnect();
+                    }
                 });
 
                 // Set up event listeners

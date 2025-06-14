@@ -25,7 +25,14 @@ export class OpenLVProvider extends EventEmitter<
 
         // Set up connection handlers
         this.#conn.onPhaseChange((phase) => {
+            console.log(`OpenLV Provider: Connection state changed to ${phase.state}`);
+
             if (phase.state === 'webrtc-connected') {
+                this.#isConnected = true;
+                this.emit('connect');
+            } else if (phase.state === 'key-exchange') {
+                // We can also send messages via encrypted MQTT once we have the peer's public key
+                // This happens before WebRTC is established
                 this.#isConnected = true;
                 this.emit('connect');
             } else if (phase.state === 'disconnected') {
@@ -69,7 +76,14 @@ export class OpenLVProvider extends EventEmitter<
 
         // Set up connection handlers
         this.#conn.onPhaseChange((phase) => {
+            console.log(`OpenLV Provider: Connection state changed to ${phase.state}`);
+
             if (phase.state === 'webrtc-connected') {
+                this.#isConnected = true;
+                this.emit('connect');
+            } else if (phase.state === 'key-exchange') {
+                // We can also send messages via encrypted MQTT once we have the peer's public key
+                // This happens before WebRTC is established
                 this.#isConnected = true;
                 this.emit('connect');
             } else if (phase.state === 'disconnected') {

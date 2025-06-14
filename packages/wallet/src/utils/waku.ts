@@ -1,4 +1,4 @@
-import { createLightNode } from "@waku/sdk";
+import { createLightNode, Protocols } from "@waku/sdk";
 
 export const wakuNode = await createLightNode({
     defaultBootstrap: false,
@@ -8,7 +8,15 @@ export const wakuNode = await createLightNode({
     
 })
 
-await wakuNode.start()
+export const pairExchange = async () => {
+    await wakuNode.start()
 
+    await wakuNode.waitForPeers([Protocols.LightPush, Protocols.Filter])
 
-await wakuNode.waitForPeers()
+    const peers = wakuNode.libp2p.getPeers();
+    console.log(
+      "Peers:",
+      peers.map((p: any) => p.toString())
+    );
+    
+}

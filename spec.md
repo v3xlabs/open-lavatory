@@ -2,7 +2,7 @@
 
 ## Abstract
 
-Open Lavatory is a decentralized, privacy-first protocol for establishing secure peer-to-peer connections between decentralized applications (dApps) and cryptocurrency wallets.
+Open Lavatory is a secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
 It serves as a drop-in replacement for WalletConnect, addressing the centralization issues introduced in WalletConnect v2 while maintaining compatibility with existing wallet standards such as [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) & [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193).
 
 ## 1. Introduction

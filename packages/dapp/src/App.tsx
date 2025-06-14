@@ -85,56 +85,74 @@ const App = () => {
     // Peer A: Initialize session
     const initSession = async () => {
         setIsConnecting(true);
-        const connection = new OpenLVConnection();
+        try {
+            const connection = new OpenLVConnection();
+            connectionRef.current = connection;
 
-        connectionRef.current = connection;
+            const { openLVUrl } = await connection.initSession();
+            setOpenLVUrl(openLVUrl);
 
-        const { openLVUrl } = connection.initSession();
+            // Add message handler
+            connection.onMessage((message) => {
+                const timestamp = new Date().toLocaleTimeString();
+                setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
+            });
 
-        setOpenLVUrl(openLVUrl);
+            // Start monitoring connection status
+            startStatusMonitoring();
 
-        // Add message handler
-        connection.onMessage((message) => {
-            const timestamp = new Date().toLocaleTimeString();
+            // Add a status message
+            setMessages((prev) => [
+                ...prev,
+                `[${new Date().toLocaleTimeString()}] Session initialized, waiting for peer to connect...`,
+            ]);
 
-            setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
-        });
-
-        // Start monitoring connection status
-        startStatusMonitoring();
-
-        // Add a status message
-        setMessages((prev) => [
-            ...prev,
-            `[${new Date().toLocaleTimeString()}] Session initialized, waiting for peer to connect...`,
-        ]);
+            addDebugMessage('Session initialized successfully');
+        } catch (error) {
+            console.error('Failed to initialize session:', error);
+            setMessages((prev) => [
+                ...prev,
+                `[${new Date().toLocaleTimeString()}] Error: Failed to initialize session`,
+            ]);
+            setIsConnecting(false);
+        }
     };
 
     // Peer B: Connect to session
-    const connectToSession = () => {
+    const connectToSession = async () => {
         if (!connectedAsUrl.trim()) return;
 
         setIsConnecting(true);
-        const connection = new OpenLVConnection();
+        try {
+            const connection = new OpenLVConnection();
+            connectionRef.current = connection;
 
-        connectionRef.current = connection;
+            await connection.connectToSession({
+                openLVUrl: connectedAsUrl.trim(),
+                onMessage: (message) => {
+                    const timestamp = new Date().toLocaleTimeString();
+                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
+                },
+            });
 
-        connection.connectToSession({
-            openLVUrl: connectedAsUrl.trim(),
-            onMessage: (message) => {
-                const timestamp = new Date().toLocaleTimeString();
+            // Start monitoring connection status
+            startStatusMonitoring();
 
-                setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
-            },
-        });
+            const browserInfo = navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other';
+            setMessages((prev) => [
+                ...prev,
+                `[${new Date().toLocaleTimeString()}] Connecting to session on ${browserInfo}, establishing WebRTC connection...`,
+            ]);
 
-        // Start monitoring connection status
-        startStatusMonitoring();
-
-        setMessages((prev) => [
-            ...prev,
-            `[${new Date().toLocaleTimeString()}] Connecting to session, establishing WebRTC connection...`,
-        ]);
+            addDebugMessage(`Connecting from ${browserInfo} browser`);
+        } catch (error) {
+            console.error('Failed to connect to session:', error);
+            setMessages((prev) => [
+                ...prev,
+                `[${new Date().toLocaleTimeString()}] Error: Failed to connect to session`,
+            ]);
+            setIsConnecting(false);
+        }
     };
 
     // Send message
@@ -172,18 +190,26 @@ const App = () => {
     };
 
     // Force WebRTC retry
-    const forceRetryWebRTC = () => {
+    const forceRetryWebRTC = async () => {
         if (!connectionRef.current) return;
 
         addDebugMessage('Forcing WebRTC retry...');
         // Disconnect and reconnect to force retry
         connectionRef.current.disconnect();
 
-        setTimeout(() => {
-            if (connectedAsUrl) {
-                connectToSession();
-            } else {
-                initSession();
+        setTimeout(async () => {
+            try {
+                if (connectedAsUrl) {
+                    await connectToSession();
+                } else {
+                    await initSession();
+                }
+            } catch (error) {
+                console.error('Retry failed:', error);
+                setMessages((prev) => [
+                    ...prev,
+                    `[${new Date().toLocaleTimeString()}] Retry failed: ${error.message}`,
+                ]);
             }
         }, 1000);
     };
@@ -447,8 +473,20 @@ const App = () => {
 
                         {connectionStatus === 'mqtt-only' && (
                             <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
-                                ⚠️ WebRTC connection in progress. Check browser console for details.
-                                If stuck, try the "Retry WebRTC" button.
+                                ⚠️ WebRTC connection in progress. 
+                                {navigator.userAgent.includes('Firefox') 
+                                    ? ' Firefox requires TURN servers for some network configurations. This may take longer than Chrome.'
+                                    : ' Check browser console for details.'
+                                }
+                                {' '}If stuck, try the &quot;Retry WebRTC&quot; button.
+                            </div>
+                        )}
+
+                        {debugMode && connectionStatus === 'mqtt-only' && (
+                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-600">
+                                🔧 Debug: Using {navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other'} browser. 
+                                WebRTC is attempting to connect through STUN/TURN servers. 
+                                Check console for ICE candidate details.
                             </div>
                         )}
                     </div>

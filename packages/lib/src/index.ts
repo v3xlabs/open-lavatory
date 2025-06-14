@@ -81,7 +81,7 @@ export class OpenLVConnection {
         if (this.messageHandlerSetup || !this.sessionId) return;
 
         const topic = contentTopic({ sessionId: this.sessionId });
-        
+
         this.client.on('message', (receivedTopic, message) => {
             if (receivedTopic === topic) {
                 console.log('Received MQTT message on topic', receivedTopic, message.toString());
@@ -92,22 +92,125 @@ export class OpenLVConnection {
         this.messageHandlerSetup = true;
     }
 
-    private setupPeerConnection() {
+    private isFirefox(): boolean {
+        return typeof navigator !== 'undefined' && navigator.userAgent.includes('Firefox');
+    }
+
+    private async fetchCloudflareCredentials(): Promise<{
+        username: string;
+        credential: string;
+    } | null> {
+        try {
+            // Try to get Cloudflare TURN credentials if available
+            const response = await fetch('https://speed.cloudflare.com/turn-creds', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+            });
+
+            if (response.ok) {
+                const data = await response.json();
+
+                if (data.username && data.credential) {
+                    console.log('Successfully obtained Cloudflare TURN credentials');
+
+                    return { username: data.username, credential: data.credential };
+                }
+            }
+        } catch (error) {
+            console.log('Could not fetch Cloudflare TURN credentials:', error.message);
+        }
+
+        return null;
+    }
+
+    private async setupPeerConnection() {
         if (this.peerConnection) {
             this.peerConnection.close();
         }
 
-        this.peerConnection = new RTCPeerConnection({
-            iceServers: [
-                { urls: 'stun:stun.l.google.com:19302' },
-                { urls: 'stun:stun1.l.google.com:19302' },
-            ],
+        console.log(
+            'Setting up WebRTC PeerConnection for',
+            this.isFirefox() ? 'Firefox' : 'Other browser'
+        );
+
+        // Enhanced ICE servers configuration for better Firefox compatibility
+        const iceServers = [
+            // Google STUN servers (multiple for redundancy)
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun1.l.google.com:19302' },
+            { urls: 'stun:stun2.l.google.com:19302' },
+            { urls: 'stun:stun3.l.google.com:19302' },
+            { urls: 'stun:stun4.l.google.com:19302' },
+
+            // Additional reliable STUN servers
+            { urls: 'stun:stun.services.mozilla.com:3478' },
+            { urls: 'stun:stun.nextcloud.com:443' },
+            { urls: 'stun:stun.ekiga.net:3478' },
+            { urls: 'stun:stun.stunprotocol.org:3478' },
+
+            // OpenRelay Project TURN servers (free, reliable)
+            {
+                urls: [
+                    'turn:openrelay.metered.ca:80',
+                    'turn:openrelay.metered.ca:80?transport=tcp',
+                    'turn:openrelay.metered.ca:443',
+                    'turn:openrelay.metered.ca:443?transport=tcp',
+                ],
+                username: 'openrelayproject',
+                credential: 'openrelayproject',
+            },
+
+            // Additional public TURN servers as fallbacks
+            {
+                urls: ['turn:freestun.net:3478', 'turn:freestun.net:3478?transport=tcp'],
+                username: 'free',
+                credential: 'free',
+            },
+        ];
+
+        // Try to get Cloudflare TURN credentials
+        const cloudflareCredentials = await this.fetchCloudflareCredentials();
+
+        if (cloudflareCredentials) {
+            iceServers.push({
+                urls: [
+                    'turn:turn.cloudflare.com:3478',
+                    'turn:turn.cloudflare.com:3478?transport=tcp',
+                    'turn:turn.cloudflare.com:5349?transport=tcp',
+                ],
+                username: cloudflareCredentials.username,
+                credential: cloudflareCredentials.credential,
+            });
+        }
+
+        // Filter out TURN servers with empty credentials
+        const validIceServers = iceServers.filter((server) => {
+            if ('username' in server && 'credential' in server) {
+                return server.username && server.credential;
+            }
+
+            return true; // STUN servers don't need credentials
         });
+
+        // Firefox-specific configuration
+        const rtcConfig: RTCConfiguration = {
+            iceServers: validIceServers,
+            iceCandidatePoolSize: this.isFirefox() ? 15 : 10, // More candidates for Firefox
+            iceTransportPolicy: 'all', // Allow both STUN and TURN
+            bundlePolicy: 'max-bundle', // Bundle all media on one transport
+            rtcpMuxPolicy: 'require', // Required for modern WebRTC
+        };
+
+        this.peerConnection = new RTCPeerConnection(rtcConfig);
+
+        console.log('WebRTC PeerConnection created with', validIceServers.length, 'ICE servers');
+        console.log('STUN servers:', validIceServers.filter((s) => !('username' in s)).length);
+        console.log('TURN servers:', validIceServers.filter((s) => 'username' in s).length);
 
         // Add connection state change handler
         this.peerConnection.onconnectionstatechange = () => {
             console.log('WebRTC connection state:', this.peerConnection?.connectionState);
-            
+
             if (this.peerConnection?.connectionState === 'connected') {
                 this.clearWebRTCRetry();
                 this.clearConnectionTimeout();
@@ -131,7 +234,11 @@ export class OpenLVConnection {
         // Handle ICE candidates
         this.peerConnection.onicecandidate = (event) => {
             if (event.candidate) {
-                console.log('Sending ICE candidate');
+                console.log(
+                    'Sending ICE candidate:',
+                    event.candidate.type,
+                    event.candidate.protocol
+                );
                 this.sendMQTTMessage({
                     type: 'ice-candidate',
                     payload: event.candidate,
@@ -144,6 +251,21 @@ export class OpenLVConnection {
         // Handle ICE connection state changes
         this.peerConnection.oniceconnectionstatechange = () => {
             console.log('ICE connection state:', this.peerConnection?.iceConnectionState);
+
+            if (
+                this.peerConnection?.iceConnectionState === 'connected' ||
+                this.peerConnection?.iceConnectionState === 'completed'
+            ) {
+                console.log('ICE connection established successfully');
+            } else if (this.peerConnection?.iceConnectionState === 'failed') {
+                console.warn('ICE connection failed, retrying...');
+                this.retryWebRTCConnection();
+            }
+        };
+
+        // Handle ICE gathering state changes
+        this.peerConnection.onicegatheringstatechange = () => {
+            console.log('ICE gathering state:', this.peerConnection?.iceGatheringState);
         };
     }
 
@@ -172,6 +294,7 @@ export class OpenLVConnection {
         return new Promise((resolve, reject) => {
             if (this.isConnected) {
                 resolve();
+
                 return;
             }
 
@@ -197,10 +320,11 @@ export class OpenLVConnection {
 
         try {
             await this.waitForMQTTConnection();
-            
+
             const topic = contentTopic({ sessionId: this.sessionId });
+
             console.log('Sending MQTT message:', message.type, 'to topic:', topic);
-            
+
             this.client.publish(topic, JSON.stringify(message), (error) => {
                 if (error) {
                     console.error('Error publishing MQTT message:', error);
@@ -216,11 +340,13 @@ export class OpenLVConnection {
     private async handleMQTTMessage(messageStr: string) {
         try {
             const message: WebRTCMessage = JSON.parse(messageStr);
+
             console.log('Processing MQTT message:', message.type);
 
             // Verify shared key
             if (message.sharedKey !== this.sharedKey) {
                 console.warn('Invalid shared key, ignoring message');
+
                 return;
             }
 
@@ -230,6 +356,7 @@ export class OpenLVConnection {
                         console.log('Received hello from Peer B, starting WebRTC offer');
                         await this.createWebRTCOffer();
                     }
+
                     break;
 
                 case 'webrtc-offer':
@@ -237,6 +364,7 @@ export class OpenLVConnection {
                         console.log('Received WebRTC offer from Peer A');
                         await this.handleWebRTCOffer(message.payload);
                     }
+
                     break;
 
                 case 'webrtc-answer':
@@ -244,6 +372,7 @@ export class OpenLVConnection {
                         console.log('Received WebRTC answer from Peer B');
                         await this.handleWebRTCAnswer(message.payload);
                     }
+
                     break;
 
                 case 'ice-candidate':
@@ -266,6 +395,7 @@ export class OpenLVConnection {
         try {
             console.log('Creating WebRTC offer...');
             const offer = await this.peerConnection.createOffer();
+
             await this.peerConnection.setLocalDescription(offer);
 
             console.log('Sending WebRTC offer');
@@ -290,7 +420,7 @@ export class OpenLVConnection {
         try {
             console.log('Handling WebRTC offer...');
             await this.peerConnection.setRemoteDescription(offer);
-            
+
             // Process any pending ICE candidates
             for (const candidate of this.pendingICECandidates) {
                 await this.peerConnection.addIceCandidate(candidate);
@@ -298,6 +428,7 @@ export class OpenLVConnection {
             this.pendingICECandidates = [];
 
             const answer = await this.peerConnection.createAnswer();
+
             await this.peerConnection.setLocalDescription(answer);
 
             console.log('Sending WebRTC answer');
@@ -322,7 +453,7 @@ export class OpenLVConnection {
         try {
             console.log('Handling WebRTC answer...');
             await this.peerConnection.setRemoteDescription(answer);
-            
+
             // Process any pending ICE candidates
             for (const candidate of this.pendingICECandidates) {
                 await this.peerConnection.addIceCandidate(candidate);
@@ -354,17 +485,20 @@ export class OpenLVConnection {
     private retryWebRTCConnection() {
         if (this.webrtcRetryCount >= this.maxWebrtcRetries) {
             console.error('Max WebRTC retry attempts reached');
+
             return;
         }
 
         this.webrtcRetryCount++;
-        console.log(`Retrying WebRTC connection (attempt ${this.webrtcRetryCount}/${this.maxWebrtcRetries})`);
+        console.log(
+            `Retrying WebRTC connection (attempt ${this.webrtcRetryCount}/${this.maxWebrtcRetries})`
+        );
 
-        this.webrtcRetryInterval = setTimeout(() => {
-            this.setupPeerConnection();
-            
+        this.webrtcRetryInterval = setTimeout(async () => {
+            await this.setupPeerConnection();
+
             if (this.isInitiator) {
-                this.createWebRTCOffer();
+                await this.createWebRTCOffer();
             }
         }, 2000 * this.webrtcRetryCount); // Exponential backoff
     }
@@ -374,6 +508,7 @@ export class OpenLVConnection {
             clearTimeout(this.webrtcRetryInterval);
             this.webrtcRetryInterval = undefined;
         }
+
         this.webrtcRetryCount = 0;
     }
 
@@ -401,7 +536,7 @@ export class OpenLVConnection {
     }
 
     // Peer A: Initialize session and generate openLVUrl
-    initSession(): { openLVUrl: string } {
+    async initSession(): Promise<{ openLVUrl: string }> {
         this.isInitiator = true;
         this.sessionId = this._generateSessionId();
         this.sharedKey = this._generateSharedKey();
@@ -418,7 +553,7 @@ export class OpenLVConnection {
         });
 
         this.setupMessageHandler();
-        this.setupPeerConnection();
+        await this.setupPeerConnection();
 
         const openLVUrl = encodeConnectionURL({
             sessionId: this.sessionId,
@@ -431,9 +566,10 @@ export class OpenLVConnection {
     }
 
     // Peer B: Connect to session using openLVUrl
-    connectToSession(config: { openLVUrl: string; onMessage?: (message: string) => void }) {
+    async connectToSession(config: { openLVUrl: string; onMessage?: (message: string) => void }) {
         this.isInitiator = false;
         const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
+
         this.sessionId = sessionId;
         this.sharedKey = sharedKey;
 
@@ -450,7 +586,7 @@ export class OpenLVConnection {
                 console.error('Error subscribing to topic:', error);
             } else {
                 console.log('Successfully subscribed to topic:', topic);
-                
+
                 // Send hello message after successful subscription
                 setTimeout(() => {
                     this.sendMQTTMessage({
@@ -464,7 +600,7 @@ export class OpenLVConnection {
         });
 
         this.setupMessageHandler();
-        this.setupPeerConnection();
+        await this.setupPeerConnection();
     }
 
     // Add message handler for peer-to-peer communication
@@ -505,7 +641,7 @@ export class OpenLVConnection {
     disconnect() {
         this.clearWebRTCRetry();
         this.clearConnectionTimeout();
-        
+
         if (this.dataChannel) {
             this.dataChannel.close();
         }

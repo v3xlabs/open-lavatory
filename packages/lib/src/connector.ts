@@ -1,32 +1,24 @@
-import { createConnector } from 'wagmi'
+import { createConnector } from 'wagmi';
 
 export const openLvConnector = createConnector((config) => ({
     connect: async (parameters) => {
-        return { accounts:[], chainId:1 }
+        return { accounts: [], chainId: 1 };
     },
-    disconnect: async () => { 
-        
-    },
+    disconnect: async () => {},
     id: 'openLv',
     name: 'OpenLV',
     getAccounts: async () => {
-        return []
+        return [];
     },
     getChainId: async () => {
-        return 1
+        return 1;
     },
- getProvider(parameters) {
-     
- },
-   isAuthorized: async () => {
-       return true
-   },
-   type: 'wallet',
-   onAccountsChanged: async () => {
-       
-   },
-   onChainChanged: async () => {
-       
-   },
-   onDisconnect: async () => { },
-}))
+    getProvider(parameters) {},
+    isAuthorized: async () => {
+        return true;
+    },
+    type: 'wallet',
+    onAccountsChanged: async () => {},
+    onChainChanged: async () => {},
+    onDisconnect: async () => {},
+}));

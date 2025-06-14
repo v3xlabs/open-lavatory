@@ -44,7 +44,7 @@ class OpenLVModalElement extends HTMLElement {
         const qr = QRCode.default(0, 'M');
         qr.addData(text);
         qr.make();
-        return qr.createSvgTag(4, 0);
+        return qr.createSvgTag(5, 0);
     }
 
     private render() {
@@ -97,6 +97,7 @@ class OpenLVModalElement extends HTMLElement {
                 }
 
                 .qr-wrapper {
+                    position: relative;
                     display: flex;
                     justify-content: center;
                     align-items: center;
@@ -106,19 +107,63 @@ class OpenLVModalElement extends HTMLElement {
                     border-radius: 8px;
                     padding: 16px;
                     width: fit-content;
-                    transition: filter 0.3s ease;
-                    filter: blur(4px);
                     cursor: pointer;
+                    overflow: hidden;
                 }
 
-                .qr-wrapper:hover {
+                .qr-code {
+                    display: flex;
+                    justify-content: center;
+                    align-items: center;
+                    width: 200px;
+                    height: 200px;
+                    transition: filter 0.4s ease;
+                    filter: blur(8px);
+                }
+
+                .qr-wrapper:hover .qr-code {
                     filter: blur(0px);
                 }
 
-                .qr-wrapper svg {
-                    display: block;
-                    width: 200px;
-                    height: 200px;
+                .qr-overlay {
+                    position: absolute;
+                    top: 0;
+                    left: 0;
+                    right: 0;
+                    bottom: 0;
+                    background: rgba(255, 255, 255, 0.85);
+                    display: flex;
+                    flex-direction: column;
+                    justify-content: center;
+                    align-items: center;
+                    transition: opacity 0.4s ease;
+                    pointer-events: none;
+                    border-radius: 6px;
+                }
+
+                .qr-wrapper:hover .qr-overlay {
+                    opacity: 0;
+                }
+
+                .overlay-text-primary {
+                    font-size: 14px;
+                    font-weight: 600;
+                    color: #374151;
+                    margin: 0 0 4px 0;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                }
+
+                .overlay-text-secondary {
+                    font-size: 12px;
+                    color: #6b7280;
+                    margin: 0;
+                    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+                }
+
+                .privacy-icon {
+                    font-size: 20px;
+                    margin-bottom: 8px;
+                    opacity: 0.7;
                 }
 
                 .url-container {
@@ -165,7 +210,7 @@ class OpenLVModalElement extends HTMLElement {
                     color: #9ca3af;
                 }
 
-                .blur-hint {
+                .interaction-hint {
                     margin: 8px 0 0 0;
                     font-size: 11px;
                     color: #9ca3af;
@@ -179,9 +224,14 @@ class OpenLVModalElement extends HTMLElement {
                 
                 <div class="qr-container">
                     <div class="qr-wrapper" title="Hover to reveal QR code">
-                        ${qrSvg}
+                        <div class="qr-code">${qrSvg}</div>
+                        <div class="qr-overlay">
+                            <div class="privacy-icon">🔒</div>
+                            <p class="overlay-text-primary">Hover to reveal</p>
+                            <p class="overlay-text-secondary">Hidden for privacy</p>
+                        </div>
                     </div>
-                    <p class="blur-hint">Hover to reveal QR code</p>
+                    <p class="interaction-hint">QR code is blurred for privacy protection</p>
                 </div>
                 
                 <div class="url-container">

@@ -9,7 +9,7 @@ export type ConnectionPayload = {
   sharedKey: string;
 };
 
-export const contentTopic = ({ sessionId }: {sessionId: string}) => `/my/topic/goes/here/${sessionId}`;
+export const contentTopic = ({ sessionId }: { sessionId: string }) => `/my/topic/goes/here/${sessionId}`;
 
 // include 'wss://test.mosquitto.org:8081/mqtt' later
 // openlv://{sessionId}?sharedKey={sharedKey}
@@ -40,7 +40,7 @@ export const startConnection = (url?: string) => {
     },
     // topic is the content topic
     publish: (topic: string, message: string) => {
-      client.publish(topic, message, { qos: 1 }, (err) => {
+      client.publish(topic, message, (err) => {
         if (err) {
           console.error('Error publishing message', err);
         }

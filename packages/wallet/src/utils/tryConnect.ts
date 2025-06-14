@@ -1,15 +1,10 @@
-import { wakuNode } from "./waku"
+import { contentTopic, decodeConnectionURL } from "lib"
 
 export const tryConnect = async (result: unknown) => {
     try {
-        const offer: RTCSessionDescriptionInit = JSON.parse(result as string)
-        const pc = new RTCPeerConnection()  
-
-        await pc.setRemoteDescription(offer)
-
-        const answer = await pc.createAnswer()
-        await pc.setLocalDescription(answer)
-
+        const {sessionId, sharedKey } = decodeConnectionURL(result as string)
+       
+        const topic = contentTopic(sessionId)
 
     } catch (error) {
         throw new Error(`Failed to pair with host: ${error}`, {cause: error})

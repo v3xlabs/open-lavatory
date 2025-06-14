@@ -8,9 +8,16 @@ const App: Component = () => {
 
   return (
     <main class={styles.main}>
-      <button class={styles.connect} onclick={() => setShow((s) => !s)}>
-        {show() ? 'Hide modal' : 'Connect Wallet'}
-      </button>
+      <h1>"Mobile" App</h1>
+      <h2>1 ETH</h2>
+      {!show() && (
+        <button
+          class={styles.connect}
+          onclick={() => setShow((s) => !s)}
+        >
+          Connect to dApp
+        </button>
+      )}
       <Show when={show()}>
         <div class={styles.camera}>
           <button class={styles.close} onclick={() => setShow((s) => !s)}>

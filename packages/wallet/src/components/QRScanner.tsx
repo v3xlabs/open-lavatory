@@ -8,15 +8,15 @@ export const QRScanner = () => {
   let scanner: QrScanner
 
   onMount(() => {
-    scanner = new QrScanner(videoEl!, ({data}: {data: string}) => {
-        const conn = new OpenLVConnection()
+    scanner = new QrScanner(videoEl!, ({ data }: { data: string }) => {
+      const conn = new OpenLVConnection()
 
-        conn.connectToSession({
-          openLVUrl: data,
-          onMessage: (message) => {
-            console.log('Received message', message)
-          },
-        })
+      conn.connectToSession({
+        openLVUrl: data,
+        onMessage: (message) => {
+          console.log('Received message', message)
+        },
+      })
     }, {
       highlightScanRegion: true,
       highlightCodeOutline: true,

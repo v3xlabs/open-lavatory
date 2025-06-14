@@ -608,7 +608,10 @@ export class OpenLVConnection {
     }
 
     // Peer B: Connect to session using openLVUrl
-    async connectToSession(config: { openLVUrl: string; onMessage?: (message: EIP1474Method) => void }) {
+    async connectToSession(config: {
+        openLVUrl: string;
+        onMessage?: (message: EIP1474Method) => void;
+    }) {
         this.isInitiator = false;
         const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
 

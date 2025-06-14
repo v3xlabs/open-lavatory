@@ -7,7 +7,7 @@ export const openLvConnector = createConnector(() => ({
         return { accounts: [], chainId: 1 };
     },
     async disconnect() {
-        const provider = await this.getProvider({});
+        const provider = await this.getProvider();
 
         provider.disconnect();
     },
@@ -20,11 +20,11 @@ export const openLvConnector = createConnector(() => ({
         return 1;
     },
     async setup() {
-        const provider = await this.getProvider({});
+        const provider = await this.getProvider();
 
         await provider.init();
     },
-    getProvider: async (parameters) => {
+    getProvider: async () => {
         const provider = new OpenLVProvider();
 
         return provider;

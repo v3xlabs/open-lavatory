@@ -8,7 +8,6 @@ export const tryConnect = async (result: { data: string }) => {
       openLVUrl: result.data,
       onMessage: (message) => {
         const pc = new RTCPeerConnection()
-        
       },
     })
   } catch (error) {

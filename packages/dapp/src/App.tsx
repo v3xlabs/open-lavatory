@@ -1,496 +1,382 @@
-import { OpenLVConnection } from 'lib';
-import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
+import {
+    useAccount,
+    useBalance,
+    useChainId,
+    useConnect,
+    useDisconnect,
+    useSwitchChain,
+} from 'wagmi';
+import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
 
-// let connection;
-// Choose a content topic
-// const contentTopic = '/light-guide/1/message/proto';
-// const encoder = createEncoder({ contentTopic, ephemeral: true });
-// const decoder = createDecoder(contentTopic);
-
-// const contentTopic = '/light-guide/1/message/proto'
+interface WalletInfo {
+    address: string;
+    ensName?: string;
+    connector: string;
+    chainId: number;
+    isConnected: boolean;
+}
 
 const App = () => {
-    const [openLVUrl, setOpenLVUrl] = useState<string>('');
-    const [connectionStatus, setConnectionStatus] = useState<
-        'disconnected' | 'mqtt-only' | 'webrtc-connected'
-    >('disconnected');
-    const [messages, setMessages] = useState<string[]>([]);
-    const [inputMessage, setInputMessage] = useState<string>('');
-    const [connectedAsUrl, setConnectedAsUrl] = useState<string>('');
-    const [connectionQuality, setConnectionQuality] = useState<'excellent' | 'good' | 'poor'>(
-        'excellent'
-    );
-    const [isConnecting, setIsConnecting] = useState(false);
-    const [debugMode, setDebugMode] = useState(false);
-    const connectionRef = useRef<OpenLVConnection | null>(null);
-    const statusIntervalRef = useRef<NodeJS.Timeout | null>(null);
+    const [refreshKey, setRefreshKey] = useState(0);
+    const { address, isConnected, connector } = useAccount();
+    const { connectors, connect, error: connectError, isPending } = useConnect();
+    const { disconnect } = useDisconnect();
+    const { switchChain, chains } = useSwitchChain();
+    const chainId = useChainId();
+    const { data: balance, isLoading: balanceLoading } = useBalance({
+        address,
+    });
 
-    // Cleanup on unmount
+    const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+
     useEffect(() => {
-        return () => {
-            if (statusIntervalRef.current) {
-                clearInterval(statusIntervalRef.current);
-            }
+        if (isConnected && address && connector) {
+            setWalletInfo({
+                address,
+                connector: connector.name,
+                chainId,
+                isConnected,
+            });
+        } else {
+            setWalletInfo(null);
+        }
+    }, [isConnected, address, connector, chainId]);
 
-            if (connectionRef.current) {
-                connectionRef.current.disconnect();
-            }
+    const refreshWallets = () => {
+        setRefreshKey((prev) => prev + 1);
+    };
+
+    const formatAddress = (addr: string) => {
+        return `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+    };
+
+    const formatBalance = (bal: { formatted: string; symbol: string } | undefined) => {
+        if (!bal) return '0';
+
+        const value = Number(bal.formatted);
+
+        if (value === 0) return '0';
+
+        if (value < 0.0001) return '< 0.0001';
+
+        return value.toFixed(4);
+    };
+
+    const getChainName = (id: number) => {
+        const chain = chains.find((c) => c.id === id);
+
+        return chain?.name || `Chain ${id}`;
+    };
+
+    const getChainColor = (id: number) => {
+        const colors: Record<number, string> = {
+            [mainnet.id]: 'bg-blue-500',
+            [sepolia.id]: 'bg-purple-500',
+            [arbitrum.id]: 'bg-blue-600',
+            [base.id]: 'bg-indigo-500',
+            [optimism.id]: 'bg-red-500',
+            [polygon.id]: 'bg-purple-600',
         };
-    }, []);
 
-    // Monitor connection status
-    const startStatusMonitoring = () => {
-        if (statusIntervalRef.current) {
-            clearInterval(statusIntervalRef.current);
-        }
-
-        statusIntervalRef.current = setInterval(() => {
-            if (connectionRef.current) {
-                const status = connectionRef.current.getConnectionStatus();
-
-                setConnectionStatus(status);
-
-                // Update connection quality based on status
-                if (status === 'webrtc-connected') {
-                    setConnectionQuality('excellent');
-                    setIsConnecting(false);
-                } else if (status === 'mqtt-only') {
-                    setConnectionQuality('good');
-                    // Keep connecting state if we're still trying to establish WebRTC
-                } else {
-                    setConnectionQuality('poor');
-                    setIsConnecting(false);
-                }
-            }
-        }, 1000);
-    };
-
-    const stopStatusMonitoring = () => {
-        if (statusIntervalRef.current) {
-            clearInterval(statusIntervalRef.current);
-            statusIntervalRef.current = null;
-        }
-    };
-
-    // Add debug logging
-    const addDebugMessage = (message: string) => {
-        if (debugMode) {
-            const timestamp = new Date().toLocaleTimeString();
-
-            setMessages((prev) => [...prev, `[${timestamp}] DEBUG: ${message}`]);
-        }
-    };
-
-    // Peer A: Initialize session
-    const initSession = async () => {
-        setIsConnecting(true);
-        try {
-            const connection = new OpenLVConnection();
-            connectionRef.current = connection;
-
-            const { openLVUrl } = await connection.initSession();
-            setOpenLVUrl(openLVUrl);
-
-            // Add message handler
-            connection.onMessage((message) => {
-                const timestamp = new Date().toLocaleTimeString();
-                setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
-            });
-
-            // Start monitoring connection status
-            startStatusMonitoring();
-
-            // Add a status message
-            setMessages((prev) => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] Session initialized, waiting for peer to connect...`,
-            ]);
-
-            addDebugMessage('Session initialized successfully');
-        } catch (error) {
-            console.error('Failed to initialize session:', error);
-            setMessages((prev) => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] Error: Failed to initialize session`,
-            ]);
-            setIsConnecting(false);
-        }
-    };
-
-    // Peer B: Connect to session
-    const connectToSession = async () => {
-        if (!connectedAsUrl.trim()) return;
-
-        setIsConnecting(true);
-        try {
-            const connection = new OpenLVConnection();
-            connectionRef.current = connection;
-
-            await connection.connectToSession({
-                openLVUrl: connectedAsUrl.trim(),
-                onMessage: (message) => {
-                    const timestamp = new Date().toLocaleTimeString();
-                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
-                },
-            });
-
-            // Start monitoring connection status
-            startStatusMonitoring();
-
-            const browserInfo = navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other';
-            setMessages((prev) => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] Connecting to session on ${browserInfo}, establishing WebRTC connection...`,
-            ]);
-
-            addDebugMessage(`Connecting from ${browserInfo} browser`);
-        } catch (error) {
-            console.error('Failed to connect to session:', error);
-            setMessages((prev) => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] Error: Failed to connect to session`,
-            ]);
-            setIsConnecting(false);
-        }
-    };
-
-    // Send message
-    const sendMessage = () => {
-        if (!inputMessage.trim() || !connectionRef.current) return;
-
-        const timestamp = new Date().toLocaleTimeString();
-        const currentStatus = connectionRef.current.getConnectionStatus();
-        const transport = currentStatus === 'webrtc-connected' ? 'WebRTC' : 'MQTT';
-
-        connectionRef.current.sendMessage(inputMessage.trim());
-        setMessages((prev) => [
-            ...prev,
-            `[${timestamp}] Sent via ${transport}: ${inputMessage.trim()}`,
-        ]);
-        setInputMessage('');
-    };
-
-    // Send test message to verify connection
-    const sendTestMessage = () => {
-        if (!connectionRef.current) return;
-
-        const testMessage = `Test message from ${connectionStatus === 'webrtc-connected' ? 'WebRTC' : 'MQTT'} - ${new Date().toISOString()}`;
-
-        connectionRef.current.sendMessage(testMessage);
-
-        const timestamp = new Date().toLocaleTimeString();
-        const transport =
-            connectionRef.current.getConnectionStatus() === 'webrtc-connected' ? 'WebRTC' : 'MQTT';
-
-        setMessages((prev) => [
-            ...prev,
-            `[${timestamp}] Test sent via ${transport}: ${testMessage}`,
-        ]);
-    };
-
-    // Force WebRTC retry
-    const forceRetryWebRTC = async () => {
-        if (!connectionRef.current) return;
-
-        addDebugMessage('Forcing WebRTC retry...');
-        // Disconnect and reconnect to force retry
-        connectionRef.current.disconnect();
-
-        setTimeout(async () => {
-            try {
-                if (connectedAsUrl) {
-                    await connectToSession();
-                } else {
-                    await initSession();
-                }
-            } catch (error) {
-                console.error('Retry failed:', error);
-                setMessages((prev) => [
-                    ...prev,
-                    `[${new Date().toLocaleTimeString()}] Retry failed: ${error.message}`,
-                ]);
-            }
-        }, 1000);
-    };
-
-    // Disconnect
-    const disconnect = () => {
-        stopStatusMonitoring();
-
-        if (connectionRef.current) {
-            connectionRef.current.disconnect();
-            connectionRef.current = null;
-        }
-
-        setConnectionStatus('disconnected');
-        setConnectionQuality('excellent');
-        setIsConnecting(false);
-        setOpenLVUrl('');
-        setConnectedAsUrl('');
-        setMessages([]);
-    };
-
-    const getStatusColor = () => {
-        switch (connectionStatus) {
-            case 'webrtc-connected':
-                return 'text-green-600';
-            case 'mqtt-only':
-                return 'text-yellow-600';
-            default:
-                return 'text-red-600';
-        }
-    };
-
-    const getStatusText = () => {
-        if (isConnecting && connectionStatus === 'mqtt-only') {
-            return 'Establishing WebRTC...';
-        }
-
-        switch (connectionStatus) {
-            case 'webrtc-connected':
-                return 'WebRTC Connected';
-            case 'mqtt-only':
-                return 'MQTT Only';
-            default:
-                return 'Disconnected';
-        }
-    };
-
-    const getQualityColor = () => {
-        switch (connectionQuality) {
-            case 'excellent':
-                return 'bg-green-500';
-            case 'good':
-                return 'bg-yellow-500';
-            case 'poor':
-                return 'bg-red-500';
-        }
-    };
-
-    const getQualityText = () => {
-        switch (connectionQuality) {
-            case 'excellent':
-                return 'Direct P2P (WebRTC)';
-            case 'good':
-                return 'Relay (MQTT)';
-            case 'poor':
-                return 'Poor Connection';
-        }
+        return colors[id] || 'bg-gray-500';
     };
 
     return (
-        <div className="min-h-screen bg-gray-100 p-4">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold">OpenLV Demo</h1>
-                    <button
-                        onClick={() => setDebugMode(!debugMode)}
-                        className={`px-3 py-1 rounded text-sm ${
-                            debugMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-                        }`}
-                    >
-                        Debug Mode
-                    </button>
-                </div>
-
-                {/* Connection Status */}
-                <div className="bg-white rounded-lg p-4 mb-6 shadow">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg font-semibold">Status:</span>
-                        <div className="flex items-center gap-2">
-                            {isConnecting && (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
-                            )}
-                            <span className={`text-lg font-semibold ${getStatusColor()}`}>
-                                {getStatusText()}
-                            </span>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 p-4">
+            <div className="max-w-6xl mx-auto">
+                {/* Header */}
+                <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                    <div className="flex items-center justify-between mb-4">
+                        <div>
+                            <h1 className="text-4xl font-bold text-slate-800 mb-2">
+                                🚀 Wallet Sandbox
+                            </h1>
+                            <p className="text-slate-600">
+                                Beautiful wagmi-powered wallet connection demo
+                            </p>
                         </div>
-                    </div>
-
-                    {connectionStatus !== 'disconnected' && (
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Connection Quality:</span>
-                            <div className="flex items-center gap-2">
-                                <div className={`w-3 h-3 rounded-full ${getQualityColor()}`}></div>
-                                <span className="text-sm font-medium">{getQualityText()}</span>
-                            </div>
-                        </div>
-                    )}
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-6">
-                    {/* Peer A - Session Initiator */}
-                    <div className="bg-white rounded-lg p-6 shadow">
-                        <h2 className="text-xl font-semibold mb-4">Peer A - Create Session</h2>
-
                         <button
-                            onClick={initSession}
-                            disabled={connectionStatus !== 'disconnected'}
-                            className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-4 hover:bg-blue-600 disabled:bg-gray-400"
+                            onClick={refreshWallets}
+                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
                         >
-                            Initialize Session
+                            <svg
+                                className="w-4 h-4"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                                />
+                            </svg>
+                            Refresh
                         </button>
-
-                        {openLVUrl && (
-                            <div className="space-y-4">
-                                <div className="bg-gray-50 p-3 rounded">
-                                    <label className="block text-sm font-medium mb-2">
-                                        Connection URL:
-                                    </label>
-                                    <div className="text-xs break-all bg-white p-2 rounded border">
-                                        {openLVUrl}
-                                    </div>
-                                </div>
-
-                                <div className="flex justify-center bg-white p-4 rounded border">
-                                    <QRCodeSVG value={openLVUrl} size={200} />
-                                </div>
-
-                                <div className="text-xs text-center text-gray-600">
-                                    Share this QR code or URL with Peer B
-                                </div>
-
-                                {debugMode && (
-                                    <div className="bg-yellow-50 p-2 rounded text-xs">
-                                        <strong>Debug:</strong> Open browser console to see detailed
-                                        WebRTC logs
-                                    </div>
-                                )}
-                            </div>
-                        )}
                     </div>
 
-                    {/* Peer B - Session Joiner */}
-                    <div className="bg-white rounded-lg p-6 shadow">
-                        <h2 className="text-xl font-semibold mb-4">Peer B - Join Session</h2>
-
-                        <div className="space-y-4">
-                            <div>
-                                <label className="block text-sm font-medium mb-2">
-                                    Paste Connection URL:
-                                </label>
-                                <input
-                                    type="text"
-                                    value={connectedAsUrl}
-                                    onChange={(e) => setConnectedAsUrl(e.target.value)}
-                                    placeholder="openlv://..."
-                                    className="w-full p-2 border rounded"
-                                    disabled={connectionStatus !== 'disconnected'}
-                                />
-                            </div>
-
-                            <button
-                                onClick={connectToSession}
-                                disabled={
-                                    !connectedAsUrl.trim() || connectionStatus !== 'disconnected'
-                                }
-                                className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 disabled:bg-gray-400"
-                            >
-                                Connect to Session
-                            </button>
-
-                            <div className="text-xs text-gray-600">
-                                After connecting, WebRTC negotiation will begin automatically
-                            </div>
-                        </div>
+                    {/* Connection Status */}
+                    <div className="flex items-center gap-3">
+                        <div
+                            className={`w-3 h-3 rounded-full ${
+                                isConnected ? 'bg-green-500' : 'bg-red-500'
+                            }`}
+                        ></div>
+                        <span className="text-sm font-medium text-slate-600">
+                            {isConnected ? 'Connected' : 'Disconnected'}
+                        </span>
+                        {isConnected && (
+                            <span className="text-xs bg-slate-100 px-2 py-1 rounded">
+                                {connector?.name}
+                            </span>
+                        )}
                     </div>
                 </div>
 
-                {/* Messaging Interface */}
-                {connectionStatus !== 'disconnected' && (
-                    <div className="bg-white rounded-lg p-6 shadow mt-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold">Messages</h2>
-                            <div className="flex gap-2">
-                                {connectionStatus === 'mqtt-only' && (
-                                    <button
-                                        onClick={forceRetryWebRTC}
-                                        className="bg-orange-500 text-white py-1 px-3 rounded text-sm hover:bg-orange-600"
-                                    >
-                                        Retry WebRTC
-                                    </button>
-                                )}
-                                <button
-                                    onClick={sendTestMessage}
-                                    className="bg-blue-500 text-white py-1 px-3 rounded text-sm hover:bg-blue-600"
-                                >
-                                    Send Test
-                                </button>
-                                <button
-                                    onClick={disconnect}
-                                    className="bg-red-500 text-white py-1 px-3 rounded text-sm hover:bg-red-600"
-                                >
-                                    Disconnect
-                                </button>
-                            </div>
-                        </div>
-
-                        {/* Message Display */}
-                        <div className="bg-gray-50 p-4 rounded mb-4 h-48 overflow-y-auto">
-                            {messages.length === 0 ? (
-                                <p className="text-gray-500 text-center">No messages yet...</p>
-                            ) : (
-                                messages.map((message, index) => (
-                                    <div key={index} className="mb-2 text-sm">
-                                        <span
-                                            className={`font-mono ${
-                                                message.includes('DEBUG:') ? 'text-blue-600' : ''
-                                            }`}
-                                        >
-                                            {message}
-                                        </span>
-                                    </div>
-                                ))
-                            )}
-                        </div>
-
-                        {/* Message Input */}
-                        <div className="flex gap-2">
-                            <input
-                                type="text"
-                                value={inputMessage}
-                                onChange={(e) => setInputMessage(e.target.value)}
-                                onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
-                                placeholder="Type a message..."
-                                className="flex-1 p-2 border rounded"
-                            />
-                            <button
-                                onClick={sendMessage}
-                                disabled={!inputMessage.trim()}
-                                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-gray-400"
+                <div className="grid lg:grid-cols-2 gap-8">
+                    {/* Available Wallets */}
+                    <div className="bg-white rounded-2xl shadow-xl p-6">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <svg
+                                className="w-6 h-6 text-blue-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
                             >
-                                Send
-                            </button>
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                                />
+                            </svg>
+                            Available Wallets ({connectors.length})
+                        </h2>
+
+                        <div className="space-y-3">
+                            {connectors.map((conn) => (
+                                <div
+                                    key={`${conn.id}-${refreshKey}`}
+                                    className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200"
+                                >
+                                    <div className="flex items-center gap-3">
+                                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
+                                            {conn.name.charAt(0)}
+                                        </div>
+                                        <div>
+                                            <h3 className="font-semibold text-slate-800">
+                                                {conn.name}
+                                            </h3>
+                                            <p className="text-xs text-slate-500">
+                                                {conn.type} • {conn.id}
+                                            </p>
+                                        </div>
+                                    </div>
+                                    <button
+                                        onClick={() => connect({ connector: conn })}
+                                        disabled={isPending || isConnected}
+                                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+                                    >
+                                        {isPending ? 'Connecting...' : 'Connect'}
+                                    </button>
+                                </div>
+                            ))}
                         </div>
 
-                        <div className="mt-2 text-xs text-gray-600">
-                            Messages are sent via{' '}
-                            {connectionStatus === 'webrtc-connected'
-                                ? 'WebRTC (direct P2P)'
-                                : 'MQTT (relay)'}
+                        {connectError && (
+                            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
+                                <p className="text-red-700 text-sm">
+                                    <span className="font-medium">Connection Error:</span>{' '}
+                                    {connectError.message}
+                                </p>
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Wallet Information */}
+                    <div className="bg-white rounded-2xl shadow-xl p-6">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <svg
+                                className="w-6 h-6 text-green-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+                                />
+                            </svg>
+                            Wallet Information
+                        </h2>
+
+                        {walletInfo ? (
+                            <div className="space-y-6">
+                                {/* Address */}
+                                <div className="p-4 bg-slate-50 rounded-xl">
+                                    <label className="text-sm font-medium text-slate-600 block mb-2">
+                                        Address
+                                    </label>
+                                    <div className="flex items-center justify-between">
+                                        <code className="text-sm font-mono text-slate-800">
+                                            {formatAddress(walletInfo.address)}
+                                        </code>
+                                        <button
+                                            onClick={() =>
+                                                navigator.clipboard.writeText(walletInfo.address)
+                                            }
+                                            className="text-blue-500 hover:text-blue-700 text-sm"
+                                        >
+                                            Copy
+                                        </button>
+                                    </div>
+                                </div>
+
+                                {/* Balance */}
+                                <div className="p-4 bg-slate-50 rounded-xl">
+                                    <label className="text-sm font-medium text-slate-600 block mb-2">
+                                        Balance
+                                    </label>
+                                    <div className="text-2xl font-bold text-slate-800">
+                                        {balanceLoading ? (
+                                            <div className="animate-pulse bg-slate-200 h-8 w-32 rounded"></div>
+                                        ) : (
+                                            `${formatBalance(balance)} ${balance?.symbol || 'ETH'}`
+                                        )}
+                                    </div>
+                                </div>
+
+                                {/* Current Chain */}
+                                <div className="p-4 bg-slate-50 rounded-xl">
+                                    <label className="text-sm font-medium text-slate-600 block mb-2">
+                                        Current Chain
+                                    </label>
+                                    <div className="flex items-center gap-2">
+                                        <div
+                                            className={`w-3 h-3 rounded-full ${getChainColor(
+                                                chainId
+                                            )}`}
+                                        ></div>
+                                        <span className="font-semibold text-slate-800">
+                                            {getChainName(chainId)}
+                                        </span>
+                                        <span className="text-xs text-slate-500">#{chainId}</span>
+                                    </div>
+                                </div>
+
+                                {/* Disconnect Button */}
+                                <button
+                                    onClick={() => disconnect()}
+                                    className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition-colors duration-200 font-medium"
+                                >
+                                    Disconnect Wallet
+                                </button>
+                            </div>
+                        ) : (
+                            <div className="text-center py-12">
+                                <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                                    <svg
+                                        className="w-8 h-8 text-slate-400"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            strokeWidth={2}
+                                            d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                                        />
+                                    </svg>
+                                </div>
+                                <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                                    No Wallet Connected
+                                </h3>
+                                <p className="text-slate-600">
+                                    Connect a wallet to see your account information
+                                </p>
+                            </div>
+                        )}
+                    </div>
+                </div>
+
+                {/* Available Chains */}
+                {isConnected && (
+                    <div className="bg-white rounded-2xl shadow-xl p-6 mt-8">
+                        <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                            <svg
+                                className="w-6 h-6 text-purple-500"
+                                fill="none"
+                                stroke="currentColor"
+                                viewBox="0 0 24 24"
+                            >
+                                <path
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                    strokeWidth={2}
+                                    d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"
+                                />
+                            </svg>
+                            Available Chains ({chains.length})
+                        </h2>
+
+                        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {chains.map((chain) => (
+                                <div
+                                    key={chain.id}
+                                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                                        chain.id === chainId
+                                            ? 'border-blue-500 bg-blue-50'
+                                            : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                                    }`}
+                                >
+                                    <div className="flex items-center justify-between mb-3">
+                                        <div className="flex items-center gap-2">
+                                            <div
+                                                className={`w-3 h-3 rounded-full ${getChainColor(
+                                                    chain.id
+                                                )}`}
+                                            ></div>
+                                            <h3 className="font-semibold text-slate-800">
+                                                {chain.name}
+                                            </h3>
+                                        </div>
+                                        {chain.id === chainId && (
+                                            <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
+                                                Current
+                                            </span>
+                                        )}
+                                    </div>
+                                    <p className="text-xs text-slate-500 mb-3">
+                                        Chain ID: {chain.id} • {chain.nativeCurrency.symbol}
+                                    </p>
+                                    {chain.id !== chainId && (
+                                        <button
+                                            onClick={() => switchChain({ chainId: chain.id })}
+                                            className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+                                        >
+                                            Switch to {chain.name}
+                                        </button>
+                                    )}
+                                </div>
+                            ))}
                         </div>
-
-                        {connectionStatus === 'mqtt-only' && (
-                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
-                                ⚠️ WebRTC connection in progress. 
-                                {navigator.userAgent.includes('Firefox') 
-                                    ? ' Firefox requires TURN servers for some network configurations. This may take longer than Chrome.'
-                                    : ' Check browser console for details.'
-                                }
-                                {' '}If stuck, try the &quot;Retry WebRTC&quot; button.
-                            </div>
-                        )}
-
-                        {debugMode && connectionStatus === 'mqtt-only' && (
-                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-600">
-                                🔧 Debug: Using {navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other'} browser. 
-                                WebRTC is attempting to connect through STUN/TURN servers. 
-                                Check console for ICE candidate details.
-                            </div>
-                        )}
                     </div>
                 )}
+
+                {/* Footer */}
+                <div className="text-center mt-8 text-slate-500">
+                    <p className="text-sm">
+                        Built with ❤️ using{' '}
+                        <span className="font-semibold text-blue-500">wagmi</span>,{' '}
+                        <span className="font-semibold text-blue-500">viem</span>, and{' '}
+                        <span className="font-semibold text-blue-500">React</span>
+                    </p>
+                </div>
             </div>
         </div>
     );

@@ -2,11 +2,14 @@ import mqtt from 'mqtt';
 
 export type SessionConfig = {
     mqttUrl?: string;
+    protocol?: 'mqtt' | 'waku' | 'nostr';
 };
 
 export type ConnectionPayload = {
     sessionId: string;
     sharedKey: string;
+    server?: string;
+    protocol?: 'mqtt' | 'waku' | 'nostr';
 };
 
 export type MessageHandler = (message: string) => void;
@@ -22,21 +25,48 @@ export const contentTopic = ({ sessionId }: { sessionId: string }) =>
     `/openlv/session/${sessionId}`;
 
 // include 'wss://test.mosquitto.org:8081/mqtt' later
-// openlv://{sessionId}?sharedKey={sharedKey}
-// openlv://abcdefg?sharedKey=1234567890
+// Enhanced URL format: openlv://{sessionId}?k={sharedKey}&s={server}&p={protocol}
+// Example: openlv://abcdefg?k=1234567890&s=wss%3A//test.mosquitto.org%3A8081/mqtt&p=mqtt
 export const decodeConnectionURL = (url: string): ConnectionPayload => {
-    // openlv://abcdefg?sharedKey=1234567890
-    // regex to get sessionId and sharedKey
-    const [, sessionId, sharedKey] = url.match(/openlv:\/\/([^?]+)\?sharedKey=([^&]+)/) ?? [];
+    try {
+        const urlObj = new URL(url);
+        const sessionId = urlObj.hostname || urlObj.pathname.replace('/', '');
+        const sharedKey = urlObj.searchParams.get('k') || '';
+        const server = urlObj.searchParams.get('s') || undefined;
+        const protocol = (urlObj.searchParams.get('p') as 'mqtt' | 'waku' | 'nostr') || 'mqtt';
 
-    return {
-        sessionId,
-        sharedKey,
-    };
+        return {
+            sessionId,
+            sharedKey,
+            server: server ? decodeURIComponent(server) : undefined,
+            protocol,
+        };
+    } catch {
+        // Fallback to legacy regex parsing (supports both old and new formats)
+        const legacyMatch = url.match(/openlv:\/\/([^?]+)\?(?:sharedKey|k)=([^&]+)/) ?? [];
+        const [, sessionId, sharedKey] = legacyMatch;
+
+        return {
+            sessionId,
+            sharedKey,
+        };
+    }
 };
 
 export const encodeConnectionURL = (payload: ConnectionPayload) => {
-    return `openlv://${payload.sessionId}?sharedKey=${payload.sharedKey}`;
+    const params = new URLSearchParams();
+
+    params.set('k', payload.sharedKey);
+
+    if (payload.server) {
+        params.set('s', payload.server);
+    }
+
+    if (payload.protocol && payload.protocol !== 'mqtt') {
+        params.set('p', payload.protocol);
+    }
+
+    return `openlv://${payload.sessionId}?${params.toString()}`;
 };
 
 export class OpenLVConnection {

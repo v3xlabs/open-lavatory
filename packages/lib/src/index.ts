@@ -117,7 +117,7 @@ export class OpenLVConnection {
                 }
             }
         } catch (error) {
-            console.log('Could not fetch Cloudflare TURN credentials:', error.message);
+            console.log('Could not fetch Cloudflare TURN credentials:', error);
         }
 
         return null;

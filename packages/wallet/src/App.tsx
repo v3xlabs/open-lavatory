@@ -14,7 +14,12 @@ const App: Component = () => {
         {show() ? 'Hide modal' : 'Connect Wallet'}
       </button>
       <Show when={show()}>
-        <QRScanner />
+       <div class={styles.camera}>
+         <button class={styles.close} onclick={() => setShow(s => !s)}>Close</button>
+          <div class={styles.container}>
+            <QRScanner />
+          </div>
+       </div>
       </Show>
     </main>
   );

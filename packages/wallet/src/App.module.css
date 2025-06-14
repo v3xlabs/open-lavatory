@@ -1,18 +1,19 @@
 .connect {
-  border-radius: 10px;
+  border-radius: 16px;
   background-color: blue;
   color: white;
   font-weight: bold;
   font-family: sans-serif;
-  padding: 1rem;
+  padding: 1.5rem 2rem;
   border-style: none;
   cursor: pointer;
   font-size: 40px;
   transition: 250ms;
+  box-shadow: rgba(0, 0, 0, 0.1) 0px 54px 55px, rgba(0, 0, 0, 0.05) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
 }
 
 .connect:hover {
-  transform: scale(1.2);
+  transform: scale(1.125);
 }
 
 .main {
@@ -21,4 +22,31 @@
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+.camera {
+  position: absolute;
+  top: calc(50% - 250px);
+  left: calc(50% - 250px);
+}
+
+.close {
+  position: absolute;
+  right: 10px;
+  top: 10px;
+  z-index: 1;
+  background-color: red;
+  color: white;
+  border-style: none;
+  padding: 12px;
+  border-radius: 16px;
+  cursor: pointer;
+}
+
+.container {
+  position: relative;
+  background-color: antiquewhite;
+
+  border-radius: 16px;
+    box-shadow: rgba(0, 0, 0, 0.1) 0px 54px 55px, rgba(0, 0, 0, 0.05) 0px -12px 30px, rgba(0, 0, 0, 0.12) 0px 4px 6px, rgba(0, 0, 0, 0.17) 0px 12px 13px, rgba(0, 0, 0, 0.09) 0px -3px 5px;
 }

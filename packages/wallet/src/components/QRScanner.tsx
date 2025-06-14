@@ -1,6 +1,7 @@
 import { onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
 import { tryConnect } from '../utils/tryConnect'
+import styles from './QRScanner.module.css'
 
 export const QRScanner = () => {
   let videoEl: HTMLVideoElement | undefined = undefined
@@ -35,7 +36,7 @@ export const QRScanner = () => {
       autoplay
       muted
       playsinline
-      style="border: 2px solid black;"
+      class={styles.video}
     />
   )
 }

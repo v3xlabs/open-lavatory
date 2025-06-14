@@ -1,11 +1,11 @@
 import { createEffect, createSignal, onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
 import styles from './QRScanner.module.css'
-import { JsonRpcRequest, OpenLVConnection } from 'lib'
+import { MessageHandler, OpenLVConnection } from 'lib'
 
 export const QRScanner = (
   { onMessage, onConnect }: {
-    onMessage: (message: JsonRpcRequest) => void
+    onMessage: MessageHandler
     onConnect: () => void
   },
 ) => {

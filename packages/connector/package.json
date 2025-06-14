@@ -8,7 +8,8 @@
     "build": "tsc"
   },
   "dependencies": {
-    "lib": "workspace:*"
+    "lib": "workspace:*",
+    "viem": "^2.31.2"
   },
   "devDependencies": {
     "@wagmi/core": "^2.17.3"

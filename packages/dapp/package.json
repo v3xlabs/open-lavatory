@@ -26,6 +26,7 @@
     "@vitejs/plugin-react": "^4.5.2",
     "@wagmi/connectors": "^5.8.5",
     "autoprefixer": "^10.4.21",
+    "connector": "workspace:^",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.6",

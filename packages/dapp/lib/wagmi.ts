@@ -1,4 +1,5 @@
 import { injected, metaMask, walletConnect } from '@wagmi/connectors';
+import { openLvConnector } from 'connector';
 import { createConfig, http } from 'wagmi';
 import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
 
@@ -10,6 +11,7 @@ export const config = createConfig({
         walletConnect({
             projectId: 'demo-project-id', // Replace with actual project ID
         }),
+        openLvConnector(),
     ],
     multiInjectedProviderDiscovery: true,
     transports: {

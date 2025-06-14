@@ -15,7 +15,7 @@ export type ConnectionPayload = {
 export type MessageHandler = (message: string) => void;
 
 export type WebRTCMessage = {
-    type: 'pubkey' | 'hello' | 'webrtc-offer' | 'webrtc-answer' | 'ice-candidate' | 'data';
+    type: 'pubkey' | 'ping' | 'hello' | 'webrtc-offer' | 'webrtc-answer' | 'ice-candidate' | 'data';
     payload: any;
     sessionId: string;
     timestamp: number;
@@ -333,6 +333,7 @@ export class OpenLVConnection {
         const hashBuffer = await crypto.subtle.digest('SHA-256', exportedKey);
         const hashArray = new Uint8Array(hashBuffer);
         const shortHash = hashArray.slice(0, 8); // First 8 bytes
+
         return btoa(String.fromCharCode.apply(null, Array.from(shortHash)));
     }
 
@@ -357,7 +358,10 @@ export class OpenLVConnection {
         return sharedSecret;
     }
 
-    private async encryptMessage(message: WebRTCMessage, recipientPublicKey: CryptoKey): Promise<string> {
+    private async encryptMessage(
+        message: WebRTCMessage,
+        recipientPublicKey: CryptoKey
+    ): Promise<string> {
         if (!this.privateKey) {
             throw new Error('Private key not available');
         }
@@ -367,17 +371,16 @@ export class OpenLVConnection {
         const data = encoder.encode(JSON.stringify(message));
         const iv = crypto.getRandomValues(new Uint8Array(12));
 
-        const encrypted = await crypto.subtle.encrypt(
-            { name: 'AES-GCM', iv },
-            sharedKey,
-            data
-        );
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sharedKey, data);
 
         // Get ephemeral public key for ECIES
         const ephemeralPublicKey = await this.exportPublicKey(this.publicKey!);
-        
+
         // Combine ephemeral public key, IV and encrypted data
-        const combined = new Uint8Array(ephemeralPublicKey.byteLength + iv.length + encrypted.byteLength);
+        const combined = new Uint8Array(
+            ephemeralPublicKey.byteLength + iv.length + encrypted.byteLength
+        );
+
         combined.set(new Uint8Array(ephemeralPublicKey));
         combined.set(iv, ephemeralPublicKey.byteLength);
         combined.set(new Uint8Array(encrypted), ephemeralPublicKey.byteLength + iv.length);
@@ -406,7 +409,7 @@ export class OpenLVConnection {
 
             // Import ephemeral public key
             const senderPublicKey = await this.importPublicKey(ephemeralPublicKey.buffer);
-            
+
             // Derive shared key
             const sharedKey = await this.deriveSharedKey(this.privateKey, senderPublicKey);
 
@@ -418,6 +421,7 @@ export class OpenLVConnection {
 
             const decoder = new TextDecoder();
             const messageStr = decoder.decode(decrypted);
+
             return JSON.parse(messageStr);
         } catch (error) {
             console.error('Failed to decrypt message:', error);
@@ -432,9 +436,9 @@ export class OpenLVConnection {
             await this.waitForMQTTConnection();
 
             const topic = contentTopic({ sessionId: this.sessionId });
-            
+
             let payloadToSend: string;
-            
+
             if (recipientPublicKey) {
                 // Encrypt the message for the recipient
                 payloadToSend = await this.encryptMessage(message, recipientPublicKey);
@@ -460,7 +464,7 @@ export class OpenLVConnection {
     private async handleMQTTMessage(messageStr: string) {
         try {
             let message: WebRTCMessage;
-            
+
             // Try to parse as JSON first (unencrypted public key advertisement)
             try {
                 message = JSON.parse(messageStr);
@@ -469,44 +473,98 @@ export class OpenLVConnection {
                 message = await this.decryptMessage(messageStr);
             }
 
-            console.log('Processing MQTT message:', message.type);
+            console.log('Processing MQTT message:', message.type, 'isInitiator:', this.isInitiator);
+
+            // Ignore messages from ourselves
+            if (
+                message.sessionId === this.sessionId &&
+                message.type === 'pubkey' &&
+                this.isInitiator
+            ) {
+                console.log('Ignoring own pubkey message');
+
+                return;
+            }
+
+            // If we're the initiator and this is any message from someone else, re-publish our pubkey
+            // This ensures new subscribers get our public key
+            if (
+                this.isInitiator &&
+                message.sessionId === this.sessionId &&
+                message.type !== 'pubkey'
+            ) {
+                console.log('Detected peer activity, re-publishing pubkey...');
+                await this.publishPublicKey();
+            }
 
             switch (message.type) {
+                case 'ping':
+                    if (this.isInitiator) {
+                        console.log('Received ping from wallet, re-publishing pubkey...');
+                        await this.publishPublicKey();
+                    }
+
+                    break;
+
                 case 'pubkey':
                     if (!this.isInitiator) {
-                        console.log('Received public key from dApp');
+                        console.log('Received public key from dApp, verifying...');
                         const publicKeyData = new Uint8Array(
                             atob(message.payload.publicKey)
                                 .split('')
                                 .map((char) => char.charCodeAt(0))
                         );
+
                         this.peerPublicKey = await this.importPublicKey(publicKeyData.buffer);
-                        
+
                         // Verify the public key hash
                         const computedHash = await this.computePublicKeyHash(this.peerPublicKey);
+
+                        console.log(
+                            'Expected hash:',
+                            this.pubkeyHash,
+                            'Computed hash:',
+                            computedHash
+                        );
+
                         if (computedHash !== this.pubkeyHash) {
-                            console.error('Public key hash mismatch');
+                            console.error(
+                                'Public key hash mismatch! Expected:',
+                                this.pubkeyHash,
+                                'Got:',
+                                computedHash
+                            );
+
                             return;
                         }
-                        
+
+                        console.log('Public key verified, sending hello message...');
                         // Send hello message encrypted with dApp's public key
                         await this.sendHelloMessage();
+                    } else {
+                        console.log('Ignoring pubkey message (we are the initiator)');
                     }
+
                     break;
 
                 case 'hello':
                     if (this.isInitiator) {
-                        console.log('Received hello from wallet');
+                        console.log('Received hello from wallet, extracting public key...');
                         const publicKeyData = new Uint8Array(
                             atob(message.payload.publicKey)
                                 .split('')
                                 .map((char) => char.charCodeAt(0))
                         );
+
                         this.peerPublicKey = await this.importPublicKey(publicKeyData.buffer);
-                        
+                        console.log('Wallet public key imported, starting WebRTC...');
+
                         // Start WebRTC connection
                         await this.createWebRTCOffer();
+                    } else {
+                        console.log('Ignoring hello message (we are not the initiator)');
                     }
+
                     break;
 
                 case 'webrtc-offer':
@@ -514,6 +572,7 @@ export class OpenLVConnection {
                         console.log('Received WebRTC offer');
                         await this.handleWebRTCOffer(message.payload);
                     }
+
                     break;
 
                 case 'webrtc-answer':
@@ -521,6 +580,7 @@ export class OpenLVConnection {
                         console.log('Received WebRTC answer');
                         await this.handleWebRTCAnswer(message.payload);
                     }
+
                     break;
 
                 case 'ice-candidate':
@@ -537,24 +597,51 @@ export class OpenLVConnection {
         }
     }
 
-    private async sendHelloMessage() {
-        if (!this.publicKey || !this.peerPublicKey) return;
-        
+    private async publishPublicKey() {
+        if (!this.publicKey || !this.sessionId) return;
+
         const exportedKey = await this.exportPublicKey(this.publicKey);
-        const publicKeyBase64 = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey))));
-        
+        const publicKeyBase64 = btoa(
+            String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey)))
+        );
+
         await this.sendMQTTMessage({
-            type: 'hello',
+            type: 'pubkey',
             payload: {
                 publicKey: publicKeyBase64,
-                walletInfo: {
-                    name: 'Open Lavatory Wallet',
-                    version: '1.0.0',
-                }
+                dAppInfo: {
+                    name: 'Open Lavatory dApp',
+                    url: typeof window !== 'undefined' ? window.location?.origin : 'unknown',
+                },
             },
-            sessionId: this.sessionId!,
+            sessionId: this.sessionId,
             timestamp: Date.now(),
-        }, this.peerPublicKey);
+        });
+    }
+
+    private async sendHelloMessage() {
+        if (!this.publicKey || !this.peerPublicKey) return;
+
+        const exportedKey = await this.exportPublicKey(this.publicKey);
+        const publicKeyBase64 = btoa(
+            String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey)))
+        );
+
+        await this.sendMQTTMessage(
+            {
+                type: 'hello',
+                payload: {
+                    publicKey: publicKeyBase64,
+                    walletInfo: {
+                        name: 'Open Lavatory Wallet',
+                        version: '1.0.0',
+                    },
+                },
+                sessionId: this.sessionId!,
+                timestamp: Date.now(),
+            },
+            this.peerPublicKey
+        );
     }
 
     private async createWebRTCOffer() {
@@ -563,15 +650,19 @@ export class OpenLVConnection {
         try {
             console.log('Creating WebRTC offer...');
             const offer = await this.peerConnection.createOffer();
+
             await this.peerConnection.setLocalDescription(offer);
 
             console.log('Sending WebRTC offer');
-            await this.sendMQTTMessage({
-                type: 'webrtc-offer',
-                payload: offer,
-                sessionId: this.sessionId!,
-                timestamp: Date.now(),
-            }, this.peerPublicKey);
+            await this.sendMQTTMessage(
+                {
+                    type: 'webrtc-offer',
+                    payload: offer,
+                    sessionId: this.sessionId!,
+                    timestamp: Date.now(),
+                },
+                this.peerPublicKey
+            );
 
             this.setConnectionTimeout();
         } catch (error) {
@@ -593,15 +684,19 @@ export class OpenLVConnection {
             this.pendingICECandidates = [];
 
             const answer = await this.peerConnection.createAnswer();
+
             await this.peerConnection.setLocalDescription(answer);
 
             console.log('Sending WebRTC answer');
-            await this.sendMQTTMessage({
-                type: 'webrtc-answer',
-                payload: answer,
-                sessionId: this.sessionId!,
-                timestamp: Date.now(),
-            }, this.peerPublicKey);
+            await this.sendMQTTMessage(
+                {
+                    type: 'webrtc-answer',
+                    payload: answer,
+                    sessionId: this.sessionId!,
+                    timestamp: Date.now(),
+                },
+                this.peerPublicKey
+            );
 
             this.setConnectionTimeout();
         } catch (error) {
@@ -692,16 +787,34 @@ export class OpenLVConnection {
         return crypto.randomUUID();
     }
 
+    // Debug helper to test URL generation
+    async _testURLGeneration() {
+        const sessionId = this._generateSessionId();
+        const keyPair = await this.generateKeyPair();
+        const pubkeyHash = await this.computePublicKeyHash(keyPair.publicKey);
+
+        const url = encodeConnectionURL({
+            sessionId,
+            pubkeyHash,
+        });
+
+        console.log('Generated URL:', url);
+        console.log('Decoded:', decodeConnectionURL(url));
+
+        return url;
+    }
+
     // Peer A: Initialize session and generate openLVUrl
     async initSession(): Promise<{ openLVUrl: string }> {
         this.isInitiator = true;
         this.sessionId = this._generateSessionId();
-        
+
         // Generate ECDH keypair
         const keyPair = await this.generateKeyPair();
+
         this.privateKey = keyPair.privateKey;
         this.publicKey = keyPair.publicKey;
-        
+
         // Compute public key hash
         this.pubkeyHash = await this.computePublicKeyHash(this.publicKey);
 
@@ -714,12 +827,14 @@ export class OpenLVConnection {
                 console.error('Error subscribing to topic:', error);
             } else {
                 console.log('Successfully subscribed to topic:', topic);
-                
+
                 // Publish public key after subscription
                 setTimeout(async () => {
                     const exportedKey = await this.exportPublicKey(this.publicKey!);
-                    const publicKeyBase64 = btoa(String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey))));
-                    
+                    const publicKeyBase64 = btoa(
+                        String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey)))
+                    );
+
                     await this.sendMQTTMessage({
                         type: 'pubkey',
                         payload: {
@@ -727,7 +842,7 @@ export class OpenLVConnection {
                             dAppInfo: {
                                 name: 'Open Lavatory dApp',
                                 url: window.location?.origin || 'unknown',
-                            }
+                            },
                         },
                         sessionId: this.sessionId!,
                         timestamp: Date.now(),
@@ -759,6 +874,7 @@ export class OpenLVConnection {
 
         // Generate ECDH keypair
         const keyPair = await this.generateKeyPair();
+
         this.privateKey = keyPair.privateKey;
         this.publicKey = keyPair.publicKey;
 
@@ -775,6 +891,17 @@ export class OpenLVConnection {
                 console.error('Error subscribing to topic:', error);
             } else {
                 console.log('Successfully subscribed to topic:', topic);
+
+                // Send a ping to request the dApp's public key
+                setTimeout(() => {
+                    console.log('Sending ping to request pubkey...');
+                    this.sendMQTTMessage({
+                        type: 'ping',
+                        payload: 'request-pubkey',
+                        sessionId: this.sessionId!,
+                        timestamp: Date.now(),
+                    });
+                }, 1000);
             }
         });
 
@@ -792,12 +919,15 @@ export class OpenLVConnection {
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
             this.dataChannel.send(message);
         } else if (this.sessionId && this.peerPublicKey) {
-            this.sendMQTTMessage({
-                type: 'data',
-                payload: message,
-                sessionId: this.sessionId,
-                timestamp: Date.now(),
-            }, this.peerPublicKey);
+            this.sendMQTTMessage(
+                {
+                    type: 'data',
+                    payload: message,
+                    sessionId: this.sessionId,
+                    timestamp: Date.now(),
+                },
+                this.peerPublicKey
+            );
         } else {
             console.error('No connection available to send message');
         }

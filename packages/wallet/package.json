@@ -16,10 +16,12 @@
     "vite-plugin-solid": "^2.11.6"
   },
   "dependencies": {
+    "@wagmi/core": "^2.17.3",
     "@waku/sdk": "^0.0.31",
     "lib": "workspace:*",
     "protobufjs": "^7.5.3",
     "qr-scanner": "^1.4.2",
-    "solid-js": "^1.9.5"
+    "solid-js": "^1.9.5",
+    "viem": "^2.31.2"
   }
 }

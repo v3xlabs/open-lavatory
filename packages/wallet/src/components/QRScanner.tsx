@@ -1,6 +1,5 @@
 import { onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
-import { tryConnect } from '../utils/tryConnect'
 import styles from './QRScanner.module.css'
 
 export const QRScanner = () => {
@@ -9,7 +8,7 @@ export const QRScanner = () => {
 
   onMount(() => {
     scanner = new QrScanner(videoEl!, ({data}: {data: string}) => {
-      
+
     }, {
       highlightScanRegion: true,
       highlightCodeOutline: true,

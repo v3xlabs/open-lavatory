@@ -23,6 +23,7 @@ const App: Component = () => {
           <button class={styles.close} onclick={() => setShow((s) => !s)}>
             Close
           </button>
+         <span class={styles.info}>Show the QR code pls</span>
           <div class={styles.container}>
             <QRScanner />
           </div>

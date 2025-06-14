@@ -25,8 +25,16 @@ export type ConnectionState =
     | 'disconnected'
     | 'mqtt-connecting'
     | 'mqtt-connected'
-    | 'webrtc-connecting'
+    | 'pairing'
+    | 'key-exchange'
+    | 'webrtc-negotiating'
     | 'webrtc-connected';
+
+export type ConnectionPhase = {
+    state: ConnectionState;
+    description: string;
+    timestamp: number;
+};
 
 export const contentTopic = ({ sessionId }: { sessionId: string }) =>
     `/openlv/session/${sessionId}`;
@@ -86,6 +94,7 @@ export class OpenLVConnection {
     private peerConnection?: RTCPeerConnection;
     private dataChannel?: RTCDataChannel;
     private messageHandlers: MessageHandler[] = [];
+    private phaseHandlers: ((phase: ConnectionPhase) => void)[] = [];
     private isInitiator = false;
     private connectionState: ConnectionState = 'disconnected';
     private messageHandlerSetup = false;
@@ -107,33 +116,46 @@ export class OpenLVConnection {
     private setupMQTTHandlers() {
         this.client.on('connect', () => {
             console.log('Connected to MQTT broker');
-            this.updateConnectionState('mqtt-connected');
+            this.updateConnectionState('mqtt-connected', 'Connected to signaling server');
         });
 
         this.client.on('error', (error) => {
             console.error('MQTT connection error:', error);
+
             if (this.connectionState === 'webrtc-connected') {
                 // Don't change state if WebRTC is working
                 return;
             }
-            this.updateConnectionState('disconnected');
+
+            this.updateConnectionState('disconnected', 'Connection failed');
         });
 
         this.client.on('disconnect', () => {
             console.log('Disconnected from MQTT broker');
+
             if (this.connectionState === 'webrtc-connected') {
                 // Don't change state if WebRTC is working
                 return;
             }
-            this.updateConnectionState('disconnected');
+
+            this.updateConnectionState('disconnected', 'Disconnected from signaling server');
         });
     }
 
-    private updateConnectionState(newState: ConnectionState) {
+    private updateConnectionState(newState: ConnectionState, description: string) {
         const oldState = this.connectionState;
         this.connectionState = newState;
 
-        console.log(`Connection state: ${oldState} → ${newState}`);
+        console.log(`Connection state: ${oldState} → ${newState} (${description})`);
+
+        const phase: ConnectionPhase = {
+            state: newState,
+            description,
+            timestamp: Date.now(),
+        };
+
+        // Notify phase handlers
+        this.phaseHandlers.forEach((handler) => handler(phase));
 
         // Handle state transitions
         if (newState === 'webrtc-connected' && oldState !== 'webrtc-connected') {
@@ -261,12 +283,12 @@ export class OpenLVConnection {
             console.log('WebRTC connection state:', this.peerConnection?.connectionState);
 
             if (this.peerConnection?.connectionState === 'connected') {
-                this.updateConnectionState('webrtc-connected');
+                this.updateConnectionState('webrtc-connected', 'Direct P2P connection established');
             } else if (this.peerConnection?.connectionState === 'failed') {
                 console.warn('WebRTC connection failed, attempting retry...');
                 this.retryWebRTCConnection();
             } else if (this.peerConnection?.connectionState === 'connecting') {
-                this.updateConnectionState('webrtc-connecting');
+                this.updateConnectionState('webrtc-negotiating', 'Establishing P2P connection...');
             }
         };
 
@@ -325,7 +347,7 @@ export class OpenLVConnection {
     private setupDataChannelHandlers(dataChannel: RTCDataChannel) {
         dataChannel.onopen = () => {
             console.log('WebRTC data channel opened');
-            this.updateConnectionState('webrtc-connected');
+            this.updateConnectionState('webrtc-connected', 'P2P data channel ready');
         };
 
         dataChannel.onmessage = (event) => {
@@ -339,7 +361,7 @@ export class OpenLVConnection {
 
         dataChannel.onclose = () => {
             console.log('WebRTC data channel closed');
-            this.updateConnectionState('mqtt-connected');
+            this.updateConnectionState('mqtt-connected', 'P2P connection lost, using relay');
         };
     }
 
@@ -347,6 +369,7 @@ export class OpenLVConnection {
         return new Promise((resolve, reject) => {
             if (this.client.connected) {
                 resolve();
+
                 return;
             }
 
@@ -558,20 +581,25 @@ export class OpenLVConnection {
 
             if (isOwnPubkeyMessage) {
                 console.log('Ignoring own pubkey message');
+
                 return;
             }
 
             switch (message.type) {
                 case 'ping':
-                    if (this.isInitiator && !this.hasPublishedKey) {
-                        console.log('Received ping from wallet, publishing pubkey...');
+                    if (this.isInitiator) {
+                        console.log('Received ping from wallet, responding with pubkey...');
+                        this.updateConnectionState('pairing', 'Wallet detected, sharing public key');
                         await this.publishPublicKey();
                     }
+
                     break;
 
                 case 'pubkey':
                     if (!this.isInitiator) {
                         console.log('Received public key from dApp, verifying...');
+                        this.updateConnectionState('key-exchange', 'Verifying dApp public key');
+                        
                         const publicKeyData = new Uint8Array(
                             atob(message.payload.publicKey)
                                 .split('')
@@ -595,6 +623,7 @@ export class OpenLVConnection {
                                 'Got:',
                                 computedHash
                             );
+
                             return;
                         }
 
@@ -602,15 +631,19 @@ export class OpenLVConnection {
                         this.peerPublicKey = await this.importPublicKey(publicKeyData.buffer);
 
                         // Send hello message encrypted with dApp's public key
+                        this.updateConnectionState('key-exchange', 'Sending encrypted hello message');
                         await this.sendHelloMessage();
                     } else {
                         console.log('Ignoring pubkey message (we are the initiator)');
                     }
+
                     break;
 
                 case 'hello':
                     if (this.isInitiator) {
                         console.log('Received hello from wallet, extracting public key...');
+                        this.updateConnectionState('key-exchange', 'Received wallet hello, starting WebRTC');
+                        
                         const publicKeyData = new Uint8Array(
                             atob(message.payload.publicKey)
                                 .split('')
@@ -621,24 +654,30 @@ export class OpenLVConnection {
                         console.log('Wallet public key imported, starting WebRTC...');
 
                         // Start WebRTC connection
+                        this.updateConnectionState('webrtc-negotiating', 'Creating WebRTC offer');
                         await this.createWebRTCOffer();
                     } else {
                         console.log('Ignoring hello message (we are not the initiator)');
                     }
+
                     break;
 
                 case 'webrtc-offer':
                     if (!this.isInitiator) {
                         console.log('Received WebRTC offer');
+                        this.updateConnectionState('webrtc-negotiating', 'Processing WebRTC offer');
                         await this.handleWebRTCOffer(message.payload);
                     }
+
                     break;
 
                 case 'webrtc-answer':
                     if (this.isInitiator) {
                         console.log('Received WebRTC answer');
+                        this.updateConnectionState('webrtc-negotiating', 'Processing WebRTC answer');
                         await this.handleWebRTCAnswer(message.payload);
                     }
+
                     break;
 
                 case 'ice-candidate':
@@ -656,7 +695,7 @@ export class OpenLVConnection {
     }
 
     private async publishPublicKey() {
-        if (!this.publicKey || !this.sessionId || this.hasPublishedKey) return;
+        if (!this.publicKey || !this.sessionId) return;
 
         const exportedKey = await this.exportPublicKey(this.publicKey);
         const publicKeyBase64 = btoa(
@@ -801,7 +840,8 @@ export class OpenLVConnection {
     private retryWebRTCConnection() {
         if (this.webrtcRetryCount >= this.maxWebrtcRetries) {
             console.error('Max WebRTC retry attempts reached, falling back to MQTT');
-            this.updateConnectionState('mqtt-connected');
+            this.updateConnectionState('mqtt-connected', 'WebRTC failed, using relay fallback');
+
             return;
         }
 
@@ -830,6 +870,7 @@ export class OpenLVConnection {
             clearTimeout(this.webrtcRetryInterval);
             this.webrtcRetryInterval = undefined;
         }
+
         this.webrtcRetryCount = 0;
     }
 
@@ -883,6 +924,7 @@ export class OpenLVConnection {
 
         // Generate ECDH keypair
         const keyPair = await this.generateKeyPair();
+
         this.privateKey = keyPair.privateKey;
         this.publicKey = keyPair.publicKey;
 
@@ -893,7 +935,7 @@ export class OpenLVConnection {
 
         console.log('Initializing session with topic:', topic);
 
-        this.updateConnectionState('mqtt-connecting');
+        this.updateConnectionState('mqtt-connecting', 'Connecting to signaling server');
 
         this.client.subscribe(topic, (error) => {
             if (error) {
@@ -903,6 +945,7 @@ export class OpenLVConnection {
 
                 // Publish public key after subscription
                 setTimeout(async () => {
+                    this.updateConnectionState('pairing', 'Waiting for wallet to connect');
                     await this.publishPublicKey();
                 }, 1000);
             }
@@ -931,6 +974,7 @@ export class OpenLVConnection {
 
         // Generate ECDH keypair
         const keyPair = await this.generateKeyPair();
+
         this.privateKey = keyPair.privateKey;
         this.publicKey = keyPair.publicKey;
 
@@ -942,7 +986,7 @@ export class OpenLVConnection {
 
         const topic = contentTopic({ sessionId });
 
-        this.updateConnectionState('mqtt-connecting');
+        this.updateConnectionState('mqtt-connecting', 'Connecting to signaling server');
 
         this.client.subscribe(topic, (error) => {
             if (error) {
@@ -953,6 +997,7 @@ export class OpenLVConnection {
                 // Send a ping to request the dApp's public key
                 setTimeout(() => {
                     console.log('Sending ping to request pubkey...');
+                    this.updateConnectionState('pairing', 'Requesting dApp public key');
                     this.sendMQTTMessage({
                         type: 'ping',
                         payload: 'request-pubkey',
@@ -970,6 +1015,11 @@ export class OpenLVConnection {
     // Add message handler for peer-to-peer communication
     onMessage(handler: MessageHandler) {
         this.messageHandlers.push(handler);
+    }
+
+    // Add phase handler for connection state updates
+    onPhaseChange(handler: (phase: ConnectionPhase) => void) {
+        this.phaseHandlers.push(handler);
     }
 
     // Send message via WebRTC data channel (preferred) or MQTT fallback
@@ -998,11 +1048,18 @@ export class OpenLVConnection {
                 return 'webrtc-connected';
             case 'mqtt-connected':
             case 'mqtt-connecting':
-            case 'webrtc-connecting':
+            case 'pairing':
+            case 'key-exchange':
+            case 'webrtc-negotiating':
                 return 'mqtt-only';
             default:
                 return 'disconnected';
         }
+    }
+
+    // Get detailed connection state
+    getConnectionState(): ConnectionState {
+        return this.connectionState;
     }
 
     // Cleanup
@@ -1022,7 +1079,7 @@ export class OpenLVConnection {
         }
 
         // Reset state
-        this.updateConnectionState('disconnected');
+        this.updateConnectionState('disconnected', 'Connection closed');
         this.messageHandlerSetup = false;
         this.webrtcRetryCount = 0;
         this.pendingICECandidates = [];

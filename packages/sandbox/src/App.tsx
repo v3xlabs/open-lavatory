@@ -1,4 +1,5 @@
 import { OpenLVConnection } from 'lib';
+import type { ConnectionPhase } from 'lib';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -15,7 +16,7 @@ const App = () => {
     const [connectionStatus, setConnectionStatus] = useState<
         'disconnected' | 'mqtt-only' | 'webrtc-connected'
     >('disconnected');
-    const [connectionDetails, setConnectionDetails] = useState<string>('');
+    const [connectionPhase, setConnectionPhase] = useState<ConnectionPhase | null>(null);
     const [messages, setMessages] = useState<string[]>([]);
     const [inputMessage, setInputMessage] = useState<string>('');
     const [connectedAsUrl, setConnectedAsUrl] = useState<string>('');
@@ -55,15 +56,14 @@ const App = () => {
                 if (status === 'webrtc-connected') {
                     setConnectionQuality('excellent');
                     setIsConnecting(false);
-                    setConnectionDetails('Direct P2P connection established via WebRTC');
                 } else if (status === 'mqtt-only') {
                     setConnectionQuality('good');
-                    setConnectionDetails('Connected via MQTT relay, establishing WebRTC...');
-                    // Keep connecting state if we're still trying to establish WebRTC
+                    // Keep connecting state based on phase
+                    const currentState = connectionRef.current.getConnectionState();
+                    setIsConnecting(['pairing', 'key-exchange', 'webrtc-negotiating'].includes(currentState));
                 } else {
                     setConnectionQuality('poor');
                     setIsConnecting(false);
-                    setConnectionDetails('No connection');
                 }
             }
         }, 1000);
@@ -80,8 +80,89 @@ const App = () => {
     const addDebugMessage = (message: string) => {
         if (debugMode) {
             const timestamp = new Date().toLocaleTimeString();
-
             setMessages((prev) => [...prev, `[${timestamp}] DEBUG: ${message}`]);
+        }
+    };
+
+    const getPhaseIcon = (state: string) => {
+        switch (state) {
+            case 'mqtt-connecting':
+                return '🔗';
+            case 'mqtt-connected':
+                return '📡';
+            case 'pairing':
+                return '🤝';
+            case 'key-exchange':
+                return '🔐';
+            case 'webrtc-negotiating':
+                return '⚡';
+            case 'webrtc-connected':
+                return '✅';
+            default:
+                return '❌';
+        }
+    };
+
+    const getStatusText = () => {
+        if (connectionPhase) {
+            return `${getPhaseIcon(connectionPhase.state)} ${connectionPhase.description}`;
+        }
+
+        switch (connectionStatus) {
+            case 'webrtc-connected':
+                return '✅ WebRTC Connected (P2P)';
+            case 'mqtt-only':
+                return '📡 MQTT Connected (Relay)';
+            default:
+                return '❌ Disconnected';
+        }
+    };
+
+    const getStatusColor = () => {
+        if (connectionPhase) {
+            switch (connectionPhase.state) {
+                case 'webrtc-connected':
+                    return 'text-green-600';
+                case 'pairing':
+                case 'key-exchange':
+                case 'webrtc-negotiating':
+                    return 'text-blue-600';
+                case 'mqtt-connected':
+                    return 'text-yellow-600';
+                default:
+                    return 'text-red-600';
+            }
+        }
+
+        switch (connectionStatus) {
+            case 'webrtc-connected':
+                return 'text-green-600';
+            case 'mqtt-only':
+                return 'text-yellow-600';
+            default:
+                return 'text-red-600';
+        }
+    };
+
+    const getQualityColor = () => {
+        switch (connectionQuality) {
+            case 'excellent':
+                return 'bg-green-500';
+            case 'good':
+                return 'bg-yellow-500';
+            case 'poor':
+                return 'bg-red-500';
+        }
+    };
+
+    const getQualityText = () => {
+        switch (connectionQuality) {
+            case 'excellent':
+                return 'Direct P2P (WebRTC)';
+            case 'good':
+                return 'Relay (MQTT)';
+            case 'poor':
+                return 'Poor Connection';
         }
     };
 
@@ -91,6 +172,16 @@ const App = () => {
         try {
             const connection = new OpenLVConnection();
             connectionRef.current = connection;
+
+            // Add phase change handler
+            connection.onPhaseChange((phase) => {
+                setConnectionPhase(phase);
+                const timestamp = new Date().toLocaleTimeString();
+                setMessages((prev) => [
+                    ...prev,
+                    `[${timestamp}] ${getPhaseIcon(phase.state)} ${phase.description}`,
+                ]);
+            });
 
             const { openLVUrl } = await connection.initSession();
             setOpenLVUrl(openLVUrl);
@@ -103,12 +194,6 @@ const App = () => {
 
             // Start monitoring connection status
             startStatusMonitoring();
-
-            // Add a status message
-            setMessages((prev) => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] Session initialized, waiting for peer to connect...`,
-            ]);
 
             addDebugMessage('Session initialized successfully');
         } catch (error) {
@@ -130,6 +215,16 @@ const App = () => {
             const connection = new OpenLVConnection();
             connectionRef.current = connection;
 
+            // Add phase change handler
+            connection.onPhaseChange((phase) => {
+                setConnectionPhase(phase);
+                const timestamp = new Date().toLocaleTimeString();
+                setMessages((prev) => [
+                    ...prev,
+                    `[${timestamp}] ${getPhaseIcon(phase.state)} ${phase.description}`,
+                ]);
+            });
+
             await connection.connectToSession({
                 openLVUrl: connectedAsUrl.trim(),
                 onMessage: (message) => {
@@ -142,11 +237,6 @@ const App = () => {
             startStatusMonitoring();
 
             const browserInfo = navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other';
-            setMessages((prev) => [
-                ...prev,
-                `[${new Date().toLocaleTimeString()}] Connecting to session on ${browserInfo}, establishing WebRTC connection...`,
-            ]);
-
             addDebugMessage(`Connecting from ${browserInfo} browser`);
         } catch (error) {
             console.error('Failed to connect to session:', error);
@@ -227,59 +317,12 @@ const App = () => {
         }
 
         setConnectionStatus('disconnected');
+        setConnectionPhase(null);
         setConnectionQuality('excellent');
         setIsConnecting(false);
         setOpenLVUrl('');
         setConnectedAsUrl('');
         setMessages([]);
-    };
-
-    const getStatusColor = () => {
-        switch (connectionStatus) {
-            case 'webrtc-connected':
-                return 'text-green-600';
-            case 'mqtt-only':
-                return 'text-yellow-600';
-            default:
-                return 'text-red-600';
-        }
-    };
-
-    const getStatusText = () => {
-        if (isConnecting && connectionStatus === 'mqtt-only') {
-            return 'Establishing P2P Connection...';
-        }
-
-        switch (connectionStatus) {
-            case 'webrtc-connected':
-                return 'WebRTC Connected (P2P)';
-            case 'mqtt-only':
-                return 'MQTT Connected (Relay)';
-            default:
-                return 'Disconnected';
-        }
-    };
-
-    const getQualityColor = () => {
-        switch (connectionQuality) {
-            case 'excellent':
-                return 'bg-green-500';
-            case 'good':
-                return 'bg-yellow-500';
-            case 'poor':
-                return 'bg-red-500';
-        }
-    };
-
-    const getQualityText = () => {
-        switch (connectionQuality) {
-            case 'excellent':
-                return 'Direct P2P (WebRTC)';
-            case 'good':
-                return 'Relay (MQTT)';
-            case 'poor':
-                return 'Poor Connection';
-        }
     };
 
     return (
@@ -305,7 +348,7 @@ const App = () => {
                             {isConnecting && (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                             )}
-                            <span className={`text-lg font-semibold ${getStatusColor()}`}>
+                            <span className={`text-sm font-semibold ${getStatusColor()}`}>
                                 {getStatusText()}
                             </span>
                         </div>
@@ -320,10 +363,13 @@ const App = () => {
                                     <span className="text-sm font-medium">{getQualityText()}</span>
                                 </div>
                             </div>
-                            
-                            {connectionDetails && (
+
+                            {connectionPhase && (
                                 <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
-                                    {connectionDetails}
+                                    <div className="flex items-center justify-between">
+                                        <span>Phase: {connectionPhase.state}</span>
+                                        <span>{new Date(connectionPhase.timestamp).toLocaleTimeString()}</span>
+                                    </div>
                                 </div>
                             )}
                         </>
@@ -402,7 +448,7 @@ const App = () => {
                             </button>
 
                             <div className="text-xs text-gray-600">
-                                After connecting, WebRTC negotiation will begin automatically
+                                After connecting, the pairing process will begin automatically
                             </div>
                         </div>
                     </div>
@@ -414,7 +460,7 @@ const App = () => {
                         <div className="flex items-center justify-between mb-4">
                             <h2 className="text-xl font-semibold">Messages</h2>
                             <div className="flex gap-2">
-                                {connectionStatus === 'mqtt-only' && (
+                                {connectionStatus === 'mqtt-only' && !isConnecting && (
                                     <button
                                         onClick={forceRetryWebRTC}
                                         className="bg-orange-500 text-white py-1 px-3 rounded text-sm hover:bg-orange-600"
@@ -446,7 +492,9 @@ const App = () => {
                                     <div key={index} className="mb-2 text-sm">
                                         <span
                                             className={`font-mono ${
-                                                message.includes('DEBUG:') ? 'text-blue-600' : ''
+                                                message.includes('DEBUG:') ? 'text-blue-600' : 
+                                                message.includes('🤝') || message.includes('🔐') || message.includes('⚡') ? 'text-purple-600 font-semibold' :
+                                                message.includes('✅') ? 'text-green-600 font-semibold' : ''
                                             }`}
                                         >
                                             {message}
@@ -482,21 +530,26 @@ const App = () => {
                                 : 'MQTT (relay)'}
                         </div>
 
-                        {connectionStatus === 'mqtt-only' && (
-                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
-                                ⚡ WebRTC connection in progress...
+                        {connectionPhase && connectionPhase.state === 'webrtc-connected' && (
+                            <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-800">
+                                ✅ Direct P2P connection established! MQTT connection has been closed to save resources.
+                                Messages are now sent directly between peers via WebRTC DataChannel.
+                            </div>
+                        )}
+
+                        {connectionPhase && ['pairing', 'key-exchange', 'webrtc-negotiating'].includes(connectionPhase.state) && (
+                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-800">
+                                🔄 Connection in progress: {connectionPhase.description}
                                 {navigator.userAgent.includes('Firefox') 
                                     ? ' Firefox may take longer due to TURN server requirements.'
                                     : ' This usually completes within 5-10 seconds.'
                                 }
-                                {' '}Once established, MQTT will be disconnected to save resources.
                             </div>
                         )}
 
-                        {connectionStatus === 'webrtc-connected' && (
-                            <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-800">
-                                ✅ Direct P2P connection established! MQTT connection has been closed to save resources.
-                                Messages are now sent directly between peers via WebRTC DataChannel.
+                        {debugMode && connectionPhase && (
+                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-600">
+                                🔧 Debug: Current state = {connectionPhase.state}, Browser = {navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other'}
                             </div>
                         )}
                     </div>

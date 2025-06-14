@@ -1,5 +1,5 @@
-import { OpenLVConnection } from 'lib';
 import type { ConnectionPhase } from 'lib';
+import { OpenLVConnection } from 'lib';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState } from 'react';
 
@@ -50,6 +50,7 @@ const App = () => {
         statusIntervalRef.current = setInterval(() => {
             if (connectionRef.current) {
                 const status = connectionRef.current.getConnectionStatus();
+
                 setConnectionStatus(status);
 
                 // Update connection quality based on status
@@ -60,7 +61,10 @@ const App = () => {
                     setConnectionQuality('good');
                     // Keep connecting state based on phase
                     const currentState = connectionRef.current.getConnectionState();
-                    setIsConnecting(['pairing', 'key-exchange', 'webrtc-negotiating'].includes(currentState));
+
+                    setIsConnecting(
+                        ['pairing', 'key-exchange', 'webrtc-negotiating'].includes(currentState)
+                    );
                 } else {
                     setConnectionQuality('poor');
                     setIsConnecting(false);
@@ -80,6 +84,7 @@ const App = () => {
     const addDebugMessage = (message: string) => {
         if (debugMode) {
             const timestamp = new Date().toLocaleTimeString();
+
             setMessages((prev) => [...prev, `[${timestamp}] DEBUG: ${message}`]);
         }
     };
@@ -169,14 +174,17 @@ const App = () => {
     // Peer A: Initialize session
     const initSession = async () => {
         setIsConnecting(true);
+
         try {
             const connection = new OpenLVConnection();
+
             connectionRef.current = connection;
 
             // Add phase change handler
             connection.onPhaseChange((phase) => {
                 setConnectionPhase(phase);
                 const timestamp = new Date().toLocaleTimeString();
+
                 setMessages((prev) => [
                     ...prev,
                     `[${timestamp}] ${getPhaseIcon(phase.state)} ${phase.description}`,
@@ -184,11 +192,13 @@ const App = () => {
             });
 
             const { openLVUrl } = await connection.initSession();
+
             setOpenLVUrl(openLVUrl);
 
             // Add message handler
             connection.onMessage((message) => {
                 const timestamp = new Date().toLocaleTimeString();
+
                 setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
             });
 
@@ -211,32 +221,40 @@ const App = () => {
         if (!connectedAsUrl.trim()) return;
 
         setIsConnecting(true);
+
         try {
             const connection = new OpenLVConnection();
+
             connectionRef.current = connection;
 
             // Add phase change handler
             connection.onPhaseChange((phase) => {
                 setConnectionPhase(phase);
                 const timestamp = new Date().toLocaleTimeString();
+
                 setMessages((prev) => [
                     ...prev,
                     `[${timestamp}] ${getPhaseIcon(phase.state)} ${phase.description}`,
                 ]);
             });
 
-            await connection.connectToSession({
-                openLVUrl: connectedAsUrl.trim(),
-                onMessage: (message) => {
-                    const timestamp = new Date().toLocaleTimeString();
-                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
-                },
+            // Add message handler
+            connection.onMessage((message) => {
+                const timestamp = new Date().toLocaleTimeString();
+
+                setMessages((prev) => [...prev, `[${timestamp}] Received: ${message}`]);
             });
+
+            // Connect to session with just the URL
+            await connection.connectToSession(connectedAsUrl.trim());
 
             // Start monitoring connection status
             startStatusMonitoring();
 
-            const browserInfo = navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other';
+            const browserInfo = navigator.userAgent.includes('Firefox')
+                ? 'Firefox'
+                : 'Chrome/Other';
+
             addDebugMessage(`Connecting from ${browserInfo} browser`);
         } catch (error) {
             console.error('Failed to connect to session:', error);
@@ -359,7 +377,9 @@ const App = () => {
                             <div className="flex items-center justify-between mb-2">
                                 <span className="text-sm text-gray-600">Connection Quality:</span>
                                 <div className="flex items-center gap-2">
-                                    <div className={`w-3 h-3 rounded-full ${getQualityColor()}`}></div>
+                                    <div
+                                        className={`w-3 h-3 rounded-full ${getQualityColor()}`}
+                                    ></div>
                                     <span className="text-sm font-medium">{getQualityText()}</span>
                                 </div>
                             </div>
@@ -368,7 +388,11 @@ const App = () => {
                                 <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
                                     <div className="flex items-center justify-between">
                                         <span>Phase: {connectionPhase.state}</span>
-                                        <span>{new Date(connectionPhase.timestamp).toLocaleTimeString()}</span>
+                                        <span>
+                                            {new Date(
+                                                connectionPhase.timestamp
+                                            ).toLocaleTimeString()}
+                                        </span>
                                     </div>
                                 </div>
                             )}
@@ -492,9 +516,15 @@ const App = () => {
                                     <div key={index} className="mb-2 text-sm">
                                         <span
                                             className={`font-mono ${
-                                                message.includes('DEBUG:') ? 'text-blue-600' : 
-                                                message.includes('🤝') || message.includes('🔐') || message.includes('⚡') ? 'text-purple-600 font-semibold' :
-                                                message.includes('✅') ? 'text-green-600 font-semibold' : ''
+                                                message.includes('DEBUG:')
+                                                    ? 'text-blue-600'
+                                                    : message.includes('🤝') ||
+                                                        message.includes('🔐') ||
+                                                        message.includes('⚡')
+                                                      ? 'text-purple-600 font-semibold'
+                                                      : message.includes('✅')
+                                                        ? 'text-green-600 font-semibold'
+                                                        : ''
                                             }`}
                                         >
                                             {message}
@@ -532,24 +562,30 @@ const App = () => {
 
                         {connectionPhase && connectionPhase.state === 'webrtc-connected' && (
                             <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-800">
-                                ✅ Direct P2P connection established! MQTT connection has been closed to save resources.
-                                Messages are now sent directly between peers via WebRTC DataChannel.
+                                ✅ Direct P2P connection established! MQTT connection has been
+                                closed to save resources. Messages are now sent directly between
+                                peers via WebRTC DataChannel.
                             </div>
                         )}
 
-                        {connectionPhase && ['pairing', 'key-exchange', 'webrtc-negotiating'].includes(connectionPhase.state) && (
-                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-800">
-                                🔄 Connection in progress: {connectionPhase.description}
-                                {navigator.userAgent.includes('Firefox') 
-                                    ? ' Firefox may take longer due to TURN server requirements.'
-                                    : ' This usually completes within 5-10 seconds.'
-                                }
-                            </div>
-                        )}
+                        {connectionPhase &&
+                            ['pairing', 'key-exchange', 'webrtc-negotiating'].includes(
+                                connectionPhase.state
+                            ) && (
+                                <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-800">
+                                    🔄 Connection in progress: {connectionPhase.description}
+                                    {navigator.userAgent.includes('Firefox')
+                                        ? ' Firefox may take longer due to TURN server requirements.'
+                                        : ' This usually completes within 5-10 seconds.'}
+                                </div>
+                            )}
 
                         {debugMode && connectionPhase && (
                             <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-600">
-                                🔧 Debug: Current state = {connectionPhase.state}, Browser = {navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other'}
+                                🔧 Debug: Current state = {connectionPhase.state}, Browser ={' '}
+                                {navigator.userAgent.includes('Firefox')
+                                    ? 'Firefox'
+                                    : 'Chrome/Other'}
                             </div>
                         )}
                     </div>

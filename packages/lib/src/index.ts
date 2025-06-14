@@ -9,25 +9,25 @@
 export { OpenLVConnection } from './connection.js';
 
 // URL utilities
-export { encodeConnectionURL, decodeConnectionURL } from './connection.js';
+export { decodeConnectionURL, encodeConnectionURL } from './connection.js';
 
 // Types
 export type {
-    ConnectionState,
-    ConnectionPhase,
-    SessionConfig,
+    ConnectionEvents,
     ConnectionPayload,
-    JsonRpcRequest,
-    JsonRpcResponse,
-    JsonRpcError,
+    ConnectionPhase,
+    ConnectionState,
+    DAppInfo,
+    ErrorHandler,
     EthereumMethod,
     EthereumRequest,
-    WalletInfo,
-    DAppInfo,
+    JsonRpcError,
+    JsonRpcRequest,
+    JsonRpcResponse,
     MessageHandler,
     PhaseHandler,
-    ErrorHandler,
-    ConnectionEvents,
+    SessionConfig,
+    WalletInfo,
 } from './types.js';
 
 // Utilities (for advanced usage)

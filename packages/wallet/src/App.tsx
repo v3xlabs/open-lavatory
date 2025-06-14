@@ -18,6 +18,8 @@ const App: Component = () => {
   >()
   const [response, setResponse] = createSignal<any[]>()
 
+  const [isAuthorized, setIsAuthorized] = createSignal(false)
+
   const balance = useWalletBalance(config, ANVIL_ACCOUNT_0)
 
   return (
@@ -60,7 +62,8 @@ const App: Component = () => {
                   const client = config.getClient()
 
                   if (payload.method.startsWith('eth_')) {
-                    const { method, params } = payload as EIP1193Parameters<
+                    if (isAuthorized()) {
+                      const { method, params } = payload as EIP1193Parameters<
                       EIP1474Methods
                     >
                     switch (method) {
@@ -76,6 +79,9 @@ const App: Component = () => {
                         })
                       case 'eth_blockNumber':
                         return getBlockNumber(client)
+                    }
+                    } else {
+                      return []
                     }
                   }
                 }}

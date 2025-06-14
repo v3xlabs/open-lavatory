@@ -222,13 +222,12 @@ const App = () => {
                         `[${timestamp}] ✅ Sending eth_accounts response: ${testAccounts[0]}...`,
                     ]);
 
-                    // Send accounts as a separate JSON-RPC message (not a direct return)
+                    // Send proper JSON-RPC response to the original request
                     setTimeout(() => {
                         if (connectionRef.current) {
                             connectionRef.current.sendMessage({
                                 jsonrpc: '2.0',
-                                id: Date.now(),
-                                method: 'eth_accounts',
+                                id: request.id, // Use the original request ID
                                 result: testAccounts,
                             });
                         }
@@ -319,13 +318,12 @@ const App = () => {
                         `[${timestamp}] ✅ Sending eth_accounts response: ${testAccounts[0]}...`,
                     ]);
 
-                    // Send accounts as a separate JSON-RPC message (not a direct return)
+                    // Send proper JSON-RPC response to the original request
                     setTimeout(() => {
                         if (connectionRef.current) {
                             connectionRef.current.sendMessage({
                                 jsonrpc: '2.0',
-                                id: Date.now(),
-                                method: 'eth_accounts',
+                                id: request.id, // Use the original request ID
                                 result: testAccounts,
                             });
                         }

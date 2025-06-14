@@ -138,11 +138,11 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                     const handleMessage = (message: any) => {
                         console.log('OpenLV: Received message:', message);
                         
-                        // Handle account response - check for both proper JSON-RPC response and malformed message
+                        // Handle account response - look for proper JSON-RPC response with account data
                         const isAccountMessage = (
-                            (message.method === 'eth_accounts' && message.result?.length > 0) || // Malformed: has both method and result
-                            (message.method === 'eth_accounts' && Array.isArray(message.params) && message.params.length > 0) || // Request with params
-                            (!message.method && message.result && Array.isArray(message.result) && message.result.length > 0) // Proper response
+                            (!message.method && message.result && Array.isArray(message.result) && message.result.length > 0) || // Proper JSON-RPC response
+                            (message.method === 'eth_accounts' && message.result?.length > 0) || // Legacy malformed format (for backward compatibility)
+                            (message.method === 'eth_accounts' && Array.isArray(message.params) && message.params.length > 0) // Request with params
                         );
 
                         if (isAccountMessage) {

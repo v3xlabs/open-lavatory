@@ -35,6 +35,7 @@
     "eslint-plugin-unicorn": "^58.0.0",
     "eslint-plugin-unused-imports": "^4.1.4",
     "globals": "^16.0.0",
+    "lib": "workspace:^",
     "postcss": "^8.5.1",
     "postcss-nested": "^7.0.2",
     "prettier": "^3.5.3",

@@ -80,9 +80,15 @@ export async function subscribeToMessages(
 }
 
 export const pairExchange = async (node: LightNode) => {
+  console.log('starting node');
+
   await node.start()
 
+  console.log('started node. waiting for peers');
+
   await node.waitForPeers([Protocols.LightPush, Protocols.Filter])
+
+  console.log('peers', node.peerId);
 
   return node
 }

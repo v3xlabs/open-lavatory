@@ -1,6 +1,7 @@
 {
   "name": "lib",
   "exports": "./dist/index.js",
+  "type": "module",
   "packageManager": "pnpm@10.10.0",
   "dependencies": {
     "@waku/sdk": "^0.0.31"

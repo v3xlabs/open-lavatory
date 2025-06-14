@@ -1,12 +1,14 @@
-import { createDecoder, createEncoder, createLightNode, Protocols } from '@waku/sdk';
+import { createWakuNode, pairExchange, sendMessage, subscribeToMessages } from 'lib';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 
-let connection;
+// let connection;
 // Choose a content topic
+// const contentTopic = '/light-guide/1/message/proto';
+// const encoder = createEncoder({ contentTopic, ephemeral: true });
+// const decoder = createDecoder(contentTopic);
+
 const contentTopic = '/light-guide/1/message/proto';
-const encoder = createEncoder({ contentTopic, ephemeral: true });
-const decoder = createDecoder(contentTopic);
 
 const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: string) => void }) => {
     // console.log('init conn');
@@ -50,30 +52,30 @@ const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: stri
     // await pc.setLocalDescription(offer);
     // console.log('local desc', pc.localDescription);
     // setOfferJson(JSON.stringify(pc.localDescription));
-    // Create and start a Light Node
-    const node = await createLightNode({ defaultBootstrap: true });
 
-    await node.start();
+    console.log('init conn');
 
-    console.log('started');
+    const node = await createWakuNode();
 
-    // Wait for a successful peer connection
-    await node.waitForPeers([Protocols.LightPush, Protocols.Filter]);
+    console.log('node', node);
 
-    console.log('peers', node.peerId);
+    const node2 = await pairExchange(node);
 
-    //
-    const { unsubscribe } = await node.filter.subscribe([decoder], (message) => {
-        console.log('message', message);
+    console.log('node2', node2);
+
+    await subscribeToMessages({
+        node,
+        contentTopic,
+        cb: (message) => {
+            console.log('message', message);
+        },
     });
 
     console.log('subbed');
 
-    await node.lightPush.send(encoder, {
-        payload: new Uint8Array([1, 2, 3]),
-    });
+    await new Promise((resolve) => setTimeout(resolve, 100));
 
-    console.log('pushed');
+    await sendMessage({ node, contentTopic, message: 'hello' });
 };
 
 export const App = () => {

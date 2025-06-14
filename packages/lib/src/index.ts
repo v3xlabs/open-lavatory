@@ -11,7 +11,7 @@ export type ConnectionPayload = {
     sharedKey: string;
 };
 
-export type MessageHandler = (message: string) => void;
+export type MessageHandler = (message: EIP1474Method) => void;
 
 export type WebRTCMessage = {
     type: 'hello' | 'webrtc-offer' | 'webrtc-answer' | 'ice-candidate' | 'data';
@@ -608,7 +608,7 @@ export class OpenLVConnection {
     }
 
     // Peer B: Connect to session using openLVUrl
-    async connectToSession(config: { openLVUrl: string; onMessage?: (message: string) => void }) {
+    async connectToSession(config: { openLVUrl: string; onMessage?: (message: EIP1474Method) => void }) {
         this.isInitiator = false;
         const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
 

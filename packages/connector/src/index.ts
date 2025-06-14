@@ -297,8 +297,8 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
             config.emitter.emit('change', { chainId: newChainId });
         },
 
-        async onConnect(connectInfo: ProviderConnectInfo) {
-            const chainId = Number(connectInfo.chainId);
+        async onConnect(connectInfo?: ProviderConnectInfo) {
+            const chainId = connectInfo?.chainId ? Number(connectInfo.chainId) : currentChainId;
             currentChainId = chainId;
             const currentAccounts = await this.getAccounts();
             config.emitter.emit('connect', { accounts: currentAccounts, chainId });

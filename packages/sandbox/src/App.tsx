@@ -201,16 +201,51 @@ const App = () => {
                     const textMessage = request.params?.[0] || 'Empty message';
 
                     setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
+
+                    // Return a simple acknowledgment for text messages
+                    return { status: 'received' };
+                } else if (request.method === 'eth_requestAccounts') {
+                    // Handle wallet account request
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] 🔐 Received wallet request: ${request.method}`,
+                    ]);
+
+                    // Test wallet addresses
+                    const testAccounts = [
+                        '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b1',
+                        '0x8ba1f109551bD432803012645Hac136c22C177ec',
+                    ];
+
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] ✅ Sending eth_accounts response: ${testAccounts[0]}...`,
+                    ]);
+
+                    // Send accounts as a separate JSON-RPC message (not a direct return)
+                    setTimeout(() => {
+                        if (connectionRef.current) {
+                            connectionRef.current.sendMessage({
+                                jsonrpc: '2.0',
+                                id: Date.now(),
+                                method: 'eth_accounts',
+                                result: testAccounts,
+                            });
+                        }
+                    }, 100); // Small delay to ensure proper message ordering
+
+                    // Return acknowledgment for the original request
+                    return { status: 'processing' };
                 } else {
                     // Handle other JSON-RPC methods
                     setMessages((prev) => [
                         ...prev,
                         `[${timestamp}] Received JSON-RPC: ${request.method}`,
                     ]);
-                }
 
-                // Return a simple acknowledgment for JSON-RPC
-                return { status: 'received' };
+                    // Return a simple acknowledgment for other methods
+                    return { status: 'received' };
+                }
             });
 
             const { openLVUrl } = await connection.initSession();
@@ -263,16 +298,51 @@ const App = () => {
                     const textMessage = request.params?.[0] || 'Empty message';
 
                     setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
+
+                    // Return a simple acknowledgment for text messages
+                    return { status: 'received' };
+                } else if (request.method === 'eth_requestAccounts') {
+                    // Handle wallet account request
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] 🔐 Received wallet request: ${request.method}`,
+                    ]);
+
+                    // Test wallet addresses
+                    const testAccounts = [
+                        '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b1',
+                        '0x8ba1f109551bD432803012645Hac136c22C177ec',
+                    ];
+
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] ✅ Sending eth_accounts response: ${testAccounts[0]}...`,
+                    ]);
+
+                    // Send accounts as a separate JSON-RPC message (not a direct return)
+                    setTimeout(() => {
+                        if (connectionRef.current) {
+                            connectionRef.current.sendMessage({
+                                jsonrpc: '2.0',
+                                id: Date.now(),
+                                method: 'eth_accounts',
+                                result: testAccounts,
+                            });
+                        }
+                    }, 100); // Small delay to ensure proper message ordering
+
+                    // Return acknowledgment for the original request
+                    return { status: 'processing' };
                 } else {
                     // Handle other JSON-RPC methods
                     setMessages((prev) => [
                         ...prev,
                         `[${timestamp}] Received JSON-RPC: ${request.method}`,
                     ]);
-                }
 
-                // Return a simple acknowledgment for JSON-RPC
-                return { status: 'received' };
+                    // Return a simple acknowledgment for other methods
+                    return { status: 'received' };
+                }
             });
 
             // Connect to session with just the URL
@@ -349,7 +419,7 @@ const App = () => {
                 console.error('Retry failed:', error);
                 setMessages((prev) => [
                     ...prev,
-                    `[${new Date().toLocaleTimeString()}] Retry failed: ${error.message}`,
+                    `[${new Date().toLocaleTimeString()}] Retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
                 ]);
             }
         }, 1000);
@@ -380,9 +450,8 @@ const App = () => {
                     <h1 className="text-3xl font-bold">OpenLV Demo</h1>
                     <button
                         onClick={() => setDebugMode(!debugMode)}
-                        className={`px-3 py-1 rounded text-sm ${
-                            debugMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-                        }`}
+                        className={`px-3 py-1 rounded text-sm ${debugMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                            }`}
                     >
                         Debug Mode
                     </button>
@@ -545,17 +614,16 @@ const App = () => {
                                 messages.map((message, index) => (
                                     <div key={index} className="mb-2 text-sm">
                                         <span
-                                            className={`font-mono ${
-                                                message.includes('DEBUG:')
+                                            className={`font-mono ${message.includes('DEBUG:')
                                                     ? 'text-blue-600'
                                                     : message.includes('🤝') ||
                                                         message.includes('🔐') ||
                                                         message.includes('⚡')
-                                                      ? 'text-purple-600 font-semibold'
-                                                      : message.includes('✅')
-                                                        ? 'text-green-600 font-semibold'
-                                                        : ''
-                                            }`}
+                                                        ? 'text-purple-600 font-semibold'
+                                                        : message.includes('✅')
+                                                            ? 'text-green-600 font-semibold'
+                                                            : ''
+                                                }`}
                                         >
                                             {message}
                                         </span>

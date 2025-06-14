@@ -9,10 +9,7 @@ import {
 
 export const createWakuNode = () =>
   createLightNode({
-    defaultBootstrap: false,
-    bootstrapPeers: [
-      '/dns4/node-01.do-ams3.waku.sandbox.status.im/tcp/8000/wss',
-    ],
+    defaultBootstrap: true
   })
 
 export async function sendMessage(
@@ -86,7 +83,7 @@ export const pairExchange = async (node: LightNode) => {
 
   console.log('started node. waiting for peers');
 
-  await node.waitForPeers([Protocols.LightPush, Protocols.Filter])
+  await node.waitForPeers()
 
   console.log('peers', node.peerId);
 

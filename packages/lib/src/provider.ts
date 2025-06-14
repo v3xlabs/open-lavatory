@@ -3,9 +3,6 @@ import type { EIP1193Parameters, EIP1474Methods } from 'viem';
 
 import { OpenLVConnection } from './index.js';
 
-type HasMethod<T> = T extends { Method: infer M } ? M : never;
-export type EIP1474Method = HasMethod<EIP1474Methods[keyof EIP1474Methods]>;
-
 export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
     #conn: OpenLVConnection | undefined;
     constructor() {

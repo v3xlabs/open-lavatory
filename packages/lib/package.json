@@ -1,6 +1,16 @@
 {
   "name": "lib",
-  "exports": "./dist/index.js",
+  "exports": {
+    ".":{
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+
+    },
+    "./provider":{
+      "default": "./dist/provider.js",
+      "types": "./dist/provider.d.ts"
+    }
+  },
   "type": "module",
   "types": "./dist/index.d.ts",
   "packageManager": "pnpm@10.10.0",

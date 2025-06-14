@@ -31,49 +31,49 @@ export const encodeConnectionURL = (payload: ConnectionPayload) => {
 };
 
 export class OpenLVConnection {
-  client: mqtt.MqttClient;
+    client: mqtt.MqttClient;
 
-  constructor(config?: SessionConfig) {
-    this.client = mqtt.connect(config?.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt');
-  }
-
-  _generateSessionId(): string {
-    return crypto.randomUUID();
-  }
-
-  _generateSharedKey(): string {
-    return crypto.randomUUID();
-  }
-
-  initSession(): { openLVUrl: string } {
-    const sessionId = this._generateSessionId();
-    const sharedKey = this._generateSharedKey();
-    const topic = contentTopic({ sessionId });
-
-    this.client.subscribe(topic);
-
-    const openLVUrl = encodeConnectionURL({
-        sessionId,
-        sharedKey,
-    });
-
-    return {
-      openLVUrl
+    constructor(config?: SessionConfig) {
+        this.client = mqtt.connect(config?.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt');
     }
-  }
 
-  connectToSession(config: {openLVUrl: string, onMessage: (message: string) => void}) {
-    const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
-    const topic = contentTopic({ sessionId });
+    _generateSessionId(): string {
+        return crypto.randomUUID();
+    }
 
-    this.client.subscribe(topic);
-    this.client.on('message', (topic, message) => {
-      if (topic === topic) {
-        console.log('Received message on topic', topic, message.toString());
-        config.onMessage(message.toString());
-      }
-    });
-  }
+    _generateSharedKey(): string {
+        return crypto.randomUUID();
+    }
+
+    initSession(): { openLVUrl: string } {
+        const sessionId = this._generateSessionId();
+        const sharedKey = this._generateSharedKey();
+        const topic = contentTopic({ sessionId });
+
+        this.client.subscribe(topic);
+
+        const openLVUrl = encodeConnectionURL({
+            sessionId,
+            sharedKey,
+        });
+
+        return {
+            openLVUrl,
+        };
+    }
+
+    connectToSession(config: { openLVUrl: string; onMessage: (message: string) => void }) {
+        const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
+        const topic = contentTopic({ sessionId });
+
+        this.client.subscribe(topic);
+        this.client.on('message', (topic, message) => {
+            if (topic === topic) {
+                console.log('Received message on topic', topic, message.toString());
+                config.onMessage(message.toString());
+            }
+        });
+    }
 }
 
 export const startConnection = (config: SessionConfig) => {

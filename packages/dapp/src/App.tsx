@@ -73,6 +73,14 @@ const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: stri
 
     console.log('subbed');
 
+    console.log(node.libp2p.peerId);
+
+    setInterval(async () => {
+        const x = await node.getConnectedPeers();
+
+        console.log('peeeeeers', x);
+    }, 1000);
+
     await new Promise((resolve) => setTimeout(resolve, 100));
 
     await sendMessage({ node, contentTopic, message: 'hello' });

@@ -1,6 +1,7 @@
 import { onCleanup, onMount } from 'solid-js'
 import QrScanner from 'qr-scanner'
 import styles from './QRScanner.module.css'
+import { OpenLVConnection } from 'lib'
 
 export const QRScanner = () => {
   let videoEl: HTMLVideoElement | undefined = undefined
@@ -8,7 +9,14 @@ export const QRScanner = () => {
 
   onMount(() => {
     scanner = new QrScanner(videoEl!, ({data}: {data: string}) => {
+        const conn = new OpenLVConnection()
 
+        conn.connectToSession({
+          openLVUrl: data,
+          onMessage: (message) => {
+            console.log('Received message', message)
+          },
+        })
     }, {
       highlightScanRegion: true,
       highlightCodeOutline: true,

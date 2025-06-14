@@ -7,9 +7,9 @@ export class OpenLVProvider extends EventEmitter<'display_uri'> {
     constructor() {
         super();
     }
-    init() {
+    async init() {
        this.#conn = new OpenLVConnection()
-       const { openLVUrl } = this.#conn.initSession()
+       const { openLVUrl } = await this.#conn.initSession()
 
        this.emit('display_uri', openLVUrl)
     }

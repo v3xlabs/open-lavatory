@@ -3,7 +3,6 @@ import { OpenLVProvider } from './provider.js'
 
 export const openLvConnector = createConnector((config) => ({
     connect: async (parameters) => {
-
         return { accounts:[], chainId:1 }
     },
     disconnect: async () => { 
@@ -17,8 +16,13 @@ export const openLvConnector = createConnector((config) => ({
     getChainId: async () => {
         return 1;
     },
+    async setup() {
+        const provider =await  this.getProvider({})
+        await provider.init()
+    },
     getProvider: async (parameters) => {
         const provider = new OpenLVProvider()
+
         
         return provider
     },

@@ -184,4 +184,85 @@ export class EncryptionUtils {
 
         return await this.importPublicKey(keyData.buffer);
     }
+
+    /**
+     * Derive symmetric key from shared secret (for initial handshake)
+     */
+    static async deriveSymmetricKey(sharedSecret: string): Promise<CryptoKey> {
+        const encoder = new TextEncoder();
+        const keyMaterial = await crypto.subtle.importKey(
+            'raw',
+            encoder.encode(sharedSecret),
+            'PBKDF2',
+            false,
+            ['deriveKey']
+        );
+
+        return await crypto.subtle.deriveKey(
+            {
+                name: 'PBKDF2',
+                salt: encoder.encode('openlv-salt'), // Fixed salt for deterministic key
+                iterations: 100000,
+                hash: 'SHA-256',
+            },
+            keyMaterial,
+            {
+                name: 'AES-GCM',
+                length: 256,
+            },
+            false,
+            ['encrypt', 'decrypt']
+        );
+    }
+
+    /**
+     * Encrypt message using symmetric key (for initial handshake)
+     */
+    static async encryptSymmetric(message: any, sharedKey: CryptoKey): Promise<string> {
+        const encoder = new TextEncoder();
+        const data = encoder.encode(JSON.stringify(message));
+        const iv = crypto.getRandomValues(new Uint8Array(12));
+
+        const encrypted = await crypto.subtle.encrypt({ name: 'AES-GCM', iv }, sharedKey, data);
+
+        // Combine IV and encrypted data
+        const combined = new Uint8Array(iv.length + encrypted.byteLength);
+        combined.set(iv);
+        combined.set(new Uint8Array(encrypted), iv.length);
+
+        // Return as base64
+        return btoa(String.fromCharCode.apply(null, Array.from(combined)));
+    }
+
+    /**
+     * Decrypt message using symmetric key (for initial handshake)
+     */
+    static async decryptSymmetric(encryptedMessage: string, sharedKey: CryptoKey): Promise<any> {
+        try {
+            // Decode from base64
+            const combined = new Uint8Array(
+                atob(encryptedMessage)
+                    .split('')
+                    .map((char) => char.charCodeAt(0))
+            );
+
+            // Extract IV and encrypted data
+            const iv = combined.slice(0, 12); // 12 bytes
+            const encrypted = combined.slice(12);
+
+            const decrypted = await crypto.subtle.decrypt(
+                { name: 'AES-GCM', iv },
+                sharedKey,
+                encrypted
+            );
+
+            const decoder = new TextDecoder();
+            const messageStr = decoder.decode(decrypted);
+
+            return JSON.parse(messageStr);
+        } catch (error) {
+            console.error('Failed to decrypt symmetric message:', error);
+            throw new Error('Symmetric message decryption failed');
+        }
+    }
 }

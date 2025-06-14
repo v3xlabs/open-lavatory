@@ -17,6 +17,7 @@ export const encodeConnectionURL = (payload: ConnectionPayload) => {
     const params = new URLSearchParams();
 
     params.set('h', payload.pubkeyHash);
+    params.set('k', payload.sharedKey);
 
     if (payload.server) {
         params.set('s', payload.server);
@@ -47,6 +48,7 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
         const urlObj = new URL(url);
         const sessionId = urlObj.hostname || urlObj.pathname.replace('/', '');
         const pubkeyHash = urlObj.searchParams.get('h') || '';
+        const sharedKey = urlObj.searchParams.get('k') || '';
         const server = urlObj.searchParams.get('s') || undefined;
         const protocol = (urlObj.searchParams.get('p') as 'mqtt' | 'waku' | 'nostr') || 'mqtt';
 
@@ -58,9 +60,14 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
             throw new Error('Public key hash (h parameter) is required in URL');
         }
 
+        if (!sharedKey) {
+            throw new Error('Shared key (k parameter) is required in URL');
+        }
+
         return {
             sessionId,
             pubkeyHash,
+            sharedKey,
             server: server ? decodeURIComponent(server) : undefined,
             protocol,
         };
@@ -83,7 +90,8 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
 
             return {
                 sessionId,
-                pubkeyHash: keyOrHash,
+                pubkeyHash: keyOrHash, // Assume it's pubkeyHash for legacy
+                sharedKey: keyOrHash, // Use same value for both in legacy mode
             };
         } catch {
             const errorMessage = error instanceof Error ? error.message : 'Unknown error';
@@ -96,6 +104,8 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
 export class OpenLVConnection {
     private sessionId?: string;
     private pubkeyHash?: string;
+    private sharedKey?: string;
+    private symmetricKey?: CryptoKey; // Derived from sharedKey for handshake encryption
     private privateKey?: CryptoKey;
     private publicKey?: CryptoKey;
     private peerPublicKey?: CryptoKey;
@@ -118,9 +128,13 @@ export class OpenLVConnection {
     // Connection state flags
     private hasSharedPublicKey = false;
     private peerRequested = false;
+    
+    // Peer identification
+    private peerId: string;
 
     constructor(config?: SessionConfig) {
         this.signaling = new MQTTSignaling(config);
+        this.peerId = crypto.randomUUID(); // Unique identifier for this peer
     }
 
     private updateConnectionState(newState: ConnectionState, description: string) {
@@ -163,11 +177,8 @@ export class OpenLVConnection {
             console.log(`Processing: ${message.type} (initiator: ${this.isInitiator})`);
 
             // Ignore our own messages
-            if (
-                message.sessionId === this.sessionId &&
-                message.type === 'pubkey' &&
-                this.isInitiator
-            ) {
+            if (message.senderId === this.peerId) {
+                console.log(`Ignoring own message: ${message.type}`);
                 return;
             }
 
@@ -297,6 +308,7 @@ export class OpenLVConnection {
             payload: encryptedAnswer,
             sessionId: this.sessionId!,
             timestamp: Date.now(),
+            senderId: this.peerId,
         });
     }
 
@@ -392,6 +404,7 @@ export class OpenLVConnection {
             },
             sessionId: this.sessionId,
             timestamp: Date.now(),
+            senderId: this.peerId,
         });
 
         this.hasSharedPublicKey = true;
@@ -424,6 +437,7 @@ export class OpenLVConnection {
             payload: encryptedHello,
             sessionId: this.sessionId!,
             timestamp: Date.now(),
+            senderId: this.peerId,
         });
     }
 
@@ -477,6 +491,7 @@ export class OpenLVConnection {
                     payload: encryptedCandidate,
                     sessionId: this.sessionId!,
                     timestamp: Date.now(),
+                    senderId: this.peerId,
                 });
             }
         };
@@ -562,6 +577,7 @@ export class OpenLVConnection {
             payload: encryptedOffer,
             sessionId: this.sessionId!,
             timestamp: Date.now(),
+            senderId: this.peerId,
         });
 
         this.setConnectionTimeout();
@@ -622,6 +638,10 @@ export class OpenLVConnection {
         this.publicKey = keyPair.publicKey;
         this.pubkeyHash = await EncryptionUtils.computePublicKeyHash(this.publicKey);
 
+        // Generate shared key for symmetric encryption during handshake
+        this.sharedKey = crypto.randomUUID(); // Random shared key
+        this.symmetricKey = await EncryptionUtils.deriveSymmetricKey(this.sharedKey);
+
         this.updateConnectionState('mqtt-connecting', 'Connecting to signaling server');
 
         // Setup signaling
@@ -638,6 +658,7 @@ export class OpenLVConnection {
         const openLVUrl = encodeConnectionURL({
             sessionId: this.sessionId,
             pubkeyHash: this.pubkeyHash,
+            sharedKey: this.sharedKey,
         });
 
         return { openLVUrl };
@@ -645,10 +666,14 @@ export class OpenLVConnection {
 
     async connectToSession(openLVUrl: string): Promise<void> {
         this.isInitiator = false;
-        const { sessionId, pubkeyHash } = decodeConnectionURL(openLVUrl);
+        const { sessionId, pubkeyHash, sharedKey } = decodeConnectionURL(openLVUrl);
 
         this.sessionId = sessionId;
         this.pubkeyHash = pubkeyHash;
+        this.sharedKey = sharedKey;
+
+        // Derive symmetric key for handshake encryption
+        this.symmetricKey = await EncryptionUtils.deriveSymmetricKey(this.sharedKey);
 
         // Generate keypair
         const keyPair = await EncryptionUtils.generateKeyPair();
@@ -675,6 +700,7 @@ export class OpenLVConnection {
             payload: 'request-pubkey',
             sessionId: this.sessionId,
             timestamp: Date.now(),
+            senderId: this.peerId,
         });
     }
 
@@ -710,6 +736,7 @@ export class OpenLVConnection {
                 payload: encryptedMessage,
                 sessionId: this.sessionId!,
                 timestamp: Date.now(),
+                senderId: this.peerId,
             });
         } else {
             throw new Error('No connection available to send message');

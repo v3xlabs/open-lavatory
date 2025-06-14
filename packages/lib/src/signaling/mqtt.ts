@@ -5,6 +5,7 @@ export type SignalingMessage = {
     payload: any;
     sessionId: string;
     timestamp: number;
+    senderId: string;
 };
 
 export type SignalingConfig = {

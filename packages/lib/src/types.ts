@@ -26,7 +26,8 @@ export type SessionConfig = {
 
 export type ConnectionPayload = {
     sessionId: string;
-    pubkeyHash: string;
+    pubkeyHash: string; // Hash of PeerA's public key for verification
+    sharedKey: string; // Shared key for symmetric encryption during handshake
     server?: string;
     protocol?: 'mqtt' | 'waku' | 'nostr';
 };

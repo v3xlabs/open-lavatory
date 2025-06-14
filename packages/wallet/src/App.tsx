@@ -6,7 +6,7 @@ import { config } from '../lib/wagmi'
 import { useWalletBalance } from '../lib/useBalance'
 import { BlockTag, EIP1193Parameters, EIP1474Methods, formatEther, numberToHex } from 'viem'
 import { ANVIL_ACCOUNT_0 } from '../lib/const'
-import { getBalance, getBlockNumber } from 'viem/actions'
+import { getBalance, getBlockNumber, signMessage } from 'viem/actions'
 import { Portal } from 'solid-js/web'
 import { RequestModal } from './components/RequestModal'
 
@@ -64,7 +64,7 @@ const App: Component = () => {
 
                   console.log('Payload: ', payload)
 
-                  if (payload.method.startsWith('eth_')) {
+                  if (payload.method.startsWith('eth_') || payload.method.startsWith('personal_')) {
                     if (isAuthorized()) {
                       const { method, params } = payload as EIP1193Parameters<
                         EIP1474Methods
@@ -82,6 +82,11 @@ const App: Component = () => {
                           }))
                         case 'eth_blockNumber':
                           return numberToHex(await getBlockNumber(client))
+                        case 'personal_sign':
+                          return await signMessage(client, {
+                            message: params[0],
+                            account: params[1]
+                          })
                       }
                     } else {
                       return []

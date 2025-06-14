@@ -8,7 +8,9 @@ export const QRScanner = () => {
   let scanner: QrScanner
 
   onMount(() => {
-    scanner = new QrScanner(videoEl!, tryConnect, {
+    scanner = new QrScanner(videoEl!, ({data}: {data: string}) => {
+      
+    }, {
       highlightScanRegion: true,
       highlightCodeOutline: true,
       maxScansPerSecond: 1,

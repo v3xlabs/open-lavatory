@@ -7,6 +7,7 @@
   "dependencies": {
     "@wagmi/core": "^2.17.3",
     "@waku/sdk": "^0.0.31",
+    "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "mqtt": "^5.13.1",
     "viem": "^2.31.2",

@@ -2,6 +2,7 @@ import { createConnector } from 'wagmi'
 
 export const openLvConnector = createConnector((config) => ({
     connect: async (parameters) => {
+        
         return { accounts:[], chainId:1 }
     },
     disconnect: async () => { 

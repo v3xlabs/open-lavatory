@@ -11,6 +11,7 @@ export const config = createConfig({
             projectId: 'demo-project-id', // Replace with actual project ID
         }),
     ],
+    multiInjectedProviderDiscovery: true,
     transports: {
         [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/demo'),
         [sepolia.id]: http('https://ethereum-sepolia-rpc.publicnode.com'),

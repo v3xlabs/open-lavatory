@@ -1,14 +1,16 @@
 import type { Component } from 'solid-js'
-import { createSignal, onMount, Show } from 'solid-js'
+import { createSignal, Show } from 'solid-js'
 import styles from './App.module.css'
 import { QRScanner } from './components/QRScanner'
 import { config } from '../lib/wagmi'
 import { useWalletBalance } from '../lib/useBalance'
-import { formatEther } from 'viem'
+import { BlockTag, EIP1193Parameters, EIP1474Methods, formatEther } from 'viem'
 import { ANVIL_ACCOUNT_0 } from '../lib/const'
+import { getBalance, getBlockNumber } from 'viem/actions'
 
 const App: Component = () => {
   const [show, setShow] = createSignal(false)
+  const [isConnected, setIsConnected] = createSignal(false)
 
   const balance = useWalletBalance(config, ANVIL_ACCOUNT_0)
 
@@ -19,6 +21,7 @@ const App: Component = () => {
         <h2>Balance: {formatEther(balance())} ETH</h2>
         <h2>Address: {ANVIL_ACCOUNT_0}</h2>
         <h2>Network: {config.getClient().chain.name}</h2>
+        <h2>Connected: {isConnected() ? 'Yes' : 'No'}</h2>
       </div>
       {!show() && (
         <button
@@ -35,7 +38,36 @@ const App: Component = () => {
           </button>
           <span class={styles.info}>Show the QR code pls</span>
           <div class={styles.container}>
-            <QRScanner />
+            <QRScanner
+              onConnect={() => {
+                setShow(false)
+                setIsConnected(true)
+              }}
+              onMessage={(message) => {
+                const payload = JSON.parse(message)
+                const client = config.getClient()
+
+                if (payload.method.startsWith('eth_')) {
+                  const { method, params } = payload as EIP1193Parameters<
+                    EIP1474Methods
+                  >
+                  switch (method) {
+                    case 'eth_requestAccounts':
+                    case 'eth_accounts':
+                      return [ANVIL_ACCOUNT_0]
+                    case 'eth_chainId':
+                      return client.chain.id
+                    case 'eth_getBalance':
+                      return getBalance(client, {
+                        address: params[0],
+                        blockTag: params[1] as BlockTag,
+                      })
+                    case 'eth_blockNumber':
+                      return getBlockNumber(client)
+                  }
+                }
+              }}
+            />
           </div>
         </div>
       </Show>

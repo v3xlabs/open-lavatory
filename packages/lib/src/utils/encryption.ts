@@ -227,6 +227,7 @@ export class EncryptionUtils {
 
         // Combine IV and encrypted data
         const combined = new Uint8Array(iv.length + encrypted.byteLength);
+
         combined.set(iv);
         combined.set(new Uint8Array(encrypted), iv.length);
 

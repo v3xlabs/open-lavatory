@@ -179,6 +179,7 @@ export class OpenLVConnection {
             // Ignore our own messages
             if (message.senderId === this.peerId) {
                 console.log(`Ignoring own message: ${message.type}`);
+
                 return;
             }
 

@@ -7,10 +7,16 @@ import { useWalletBalance } from '../lib/useBalance'
 import { BlockTag, EIP1193Parameters, EIP1474Methods, formatEther } from 'viem'
 import { ANVIL_ACCOUNT_0 } from '../lib/const'
 import { getBalance, getBlockNumber } from 'viem/actions'
+import { Portal } from 'solid-js/web'
+import { RequestModal } from './components/RequestModal'
 
 const App: Component = () => {
   const [show, setShow] = createSignal(false)
   const [isConnected, setIsConnected] = createSignal(false)
+  const [payload, setPayload] = createSignal<
+    EIP1193Parameters<EIP1474Methods>
+  >()
+  const [response, setResponse] = createSignal<any[]>()
 
   const balance = useWalletBalance(config, ANVIL_ACCOUNT_0)
 
@@ -31,46 +37,53 @@ const App: Component = () => {
           Connect to dApp
         </button>
       )}
-      <Show when={show()}>
-        <div class={styles.camera}>
-          <button class={styles.close} onclick={() => setShow((s) => !s)}>
-            Close
-          </button>
-          <span class={styles.info}>Show the QR code pls</span>
-          <div class={styles.container}>
-            <QRScanner
-              onConnect={() => {
-                setShow(false)
-                setIsConnected(true)
-              }}
-              onMessage={(message) => {
-                const payload = JSON.parse(message)
-                const client = config.getClient()
+      <RequestModal
+        payload={{ method: 'eth_requestAccounts' }}
+        setResponse={setResponse}
+      />
+      {/* {payload() && <RequestModal payload={payload()!} setResponse={setResponse} />} */}
+      <Portal>
+        <Show when={show()}>
+          <div class={styles.camera}>
+            <button class={styles.close} onclick={() => setShow((s) => !s)}>
+              Close
+            </button>
+            <span class={styles.info}>Show the QR code pls</span>
+            <div class={styles.container}>
+              <QRScanner
+                onConnect={() => {
+                  setShow(false)
+                  setIsConnected(true)
+                }}
+                onMessage={(message) => {
+                  const payload = JSON.parse(message)
+                  const client = config.getClient()
 
-                if (payload.method.startsWith('eth_')) {
-                  const { method, params } = payload as EIP1193Parameters<
-                    EIP1474Methods
-                  >
-                  switch (method) {
-                    case 'eth_requestAccounts':
-                    case 'eth_accounts':
-                      return [ANVIL_ACCOUNT_0]
-                    case 'eth_chainId':
-                      return client.chain.id
-                    case 'eth_getBalance':
-                      return getBalance(client, {
-                        address: params[0],
-                        blockTag: params[1] as BlockTag,
-                      })
-                    case 'eth_blockNumber':
-                      return getBlockNumber(client)
+                  if (payload.method.startsWith('eth_')) {
+                    const { method, params } = payload as EIP1193Parameters<
+                      EIP1474Methods
+                    >
+                    switch (method) {
+                      case 'eth_requestAccounts':
+                      case 'eth_accounts':
+                        setPayload(payload)
+                      case 'eth_chainId':
+                        return client.chain.id
+                      case 'eth_getBalance':
+                        return getBalance(client, {
+                          address: params[0],
+                          blockTag: params[1] as BlockTag,
+                        })
+                      case 'eth_blockNumber':
+                        return getBlockNumber(client)
+                    }
                   }
-                }
-              }}
-            />
+                }}
+              />
+            </div>
           </div>
-        </div>
-      </Show>
+        </Show>
+      </Portal>
     </main>
   )
 }

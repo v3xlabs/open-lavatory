@@ -15,6 +15,7 @@ const App = () => {
     const [connectionStatus, setConnectionStatus] = useState<
         'disconnected' | 'mqtt-only' | 'webrtc-connected'
     >('disconnected');
+    const [connectionDetails, setConnectionDetails] = useState<string>('');
     const [messages, setMessages] = useState<string[]>([]);
     const [inputMessage, setInputMessage] = useState<string>('');
     const [connectedAsUrl, setConnectedAsUrl] = useState<string>('');
@@ -48,19 +49,21 @@ const App = () => {
         statusIntervalRef.current = setInterval(() => {
             if (connectionRef.current) {
                 const status = connectionRef.current.getConnectionStatus();
-
                 setConnectionStatus(status);
 
                 // Update connection quality based on status
                 if (status === 'webrtc-connected') {
                     setConnectionQuality('excellent');
                     setIsConnecting(false);
+                    setConnectionDetails('Direct P2P connection established via WebRTC');
                 } else if (status === 'mqtt-only') {
                     setConnectionQuality('good');
+                    setConnectionDetails('Connected via MQTT relay, establishing WebRTC...');
                     // Keep connecting state if we're still trying to establish WebRTC
                 } else {
                     setConnectionQuality('poor');
                     setIsConnecting(false);
+                    setConnectionDetails('No connection');
                 }
             }
         }, 1000);
@@ -244,14 +247,14 @@ const App = () => {
 
     const getStatusText = () => {
         if (isConnecting && connectionStatus === 'mqtt-only') {
-            return 'Establishing WebRTC...';
+            return 'Establishing P2P Connection...';
         }
 
         switch (connectionStatus) {
             case 'webrtc-connected':
-                return 'WebRTC Connected';
+                return 'WebRTC Connected (P2P)';
             case 'mqtt-only':
-                return 'MQTT Only';
+                return 'MQTT Connected (Relay)';
             default:
                 return 'Disconnected';
         }
@@ -309,13 +312,21 @@ const App = () => {
                     </div>
 
                     {connectionStatus !== 'disconnected' && (
-                        <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-600">Connection Quality:</span>
-                            <div className="flex items-center gap-2">
-                                <div className={`w-3 h-3 rounded-full ${getQualityColor()}`}></div>
-                                <span className="text-sm font-medium">{getQualityText()}</span>
+                        <>
+                            <div className="flex items-center justify-between mb-2">
+                                <span className="text-sm text-gray-600">Connection Quality:</span>
+                                <div className="flex items-center gap-2">
+                                    <div className={`w-3 h-3 rounded-full ${getQualityColor()}`}></div>
+                                    <span className="text-sm font-medium">{getQualityText()}</span>
+                                </div>
                             </div>
-                        </div>
+                            
+                            {connectionDetails && (
+                                <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                                    {connectionDetails}
+                                </div>
+                            )}
+                        </>
                     )}
                 </div>
 
@@ -473,20 +484,19 @@ const App = () => {
 
                         {connectionStatus === 'mqtt-only' && (
                             <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-800">
-                                ⚠️ WebRTC connection in progress. 
+                                ⚡ WebRTC connection in progress...
                                 {navigator.userAgent.includes('Firefox') 
-                                    ? ' Firefox requires TURN servers for some network configurations. This may take longer than Chrome.'
-                                    : ' Check browser console for details.'
+                                    ? ' Firefox may take longer due to TURN server requirements.'
+                                    : ' This usually completes within 5-10 seconds.'
                                 }
-                                {' '}If stuck, try the &quot;Retry WebRTC&quot; button.
+                                {' '}Once established, MQTT will be disconnected to save resources.
                             </div>
                         )}
 
-                        {debugMode && connectionStatus === 'mqtt-only' && (
-                            <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-600">
-                                🔧 Debug: Using {navigator.userAgent.includes('Firefox') ? 'Firefox' : 'Chrome/Other'} browser. 
-                                WebRTC is attempting to connect through STUN/TURN servers. 
-                                Check console for ICE candidate details.
+                        {connectionStatus === 'webrtc-connected' && (
+                            <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-800">
+                                ✅ Direct P2P connection established! MQTT connection has been closed to save resources.
+                                Messages are now sent directly between peers via WebRTC DataChannel.
                             </div>
                         )}
                     </div>

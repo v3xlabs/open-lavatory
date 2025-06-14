@@ -21,6 +21,13 @@ export type WebRTCMessage = {
     timestamp: number;
 };
 
+export type ConnectionState =
+    | 'disconnected'
+    | 'mqtt-connecting'
+    | 'mqtt-connected'
+    | 'webrtc-connecting'
+    | 'webrtc-connected';
+
 export const contentTopic = ({ sessionId }: { sessionId: string }) =>
     `/openlv/session/${sessionId}`;
 
@@ -80,34 +87,94 @@ export class OpenLVConnection {
     private dataChannel?: RTCDataChannel;
     private messageHandlers: MessageHandler[] = [];
     private isInitiator = false;
-    private isConnected = false;
+    private connectionState: ConnectionState = 'disconnected';
     private messageHandlerSetup = false;
     private pendingICECandidates: RTCIceCandidateInit[] = [];
     private webrtcRetryCount = 0;
-    private maxWebrtcRetries = 5;
+    private maxWebrtcRetries = 3;
     private webrtcRetryInterval?: NodeJS.Timeout;
     private connectionTimeout?: NodeJS.Timeout;
+    private mqttReconnectTimeout?: NodeJS.Timeout;
+    private hasPublishedKey = false;
+    private mqttUrl: string;
 
     constructor(config?: SessionConfig) {
-        this.client = mqtt.connect(config?.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt');
+        this.mqttUrl = config?.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt';
+        this.client = mqtt.connect(this.mqttUrl);
         this.setupMQTTHandlers();
     }
 
     private setupMQTTHandlers() {
         this.client.on('connect', () => {
             console.log('Connected to MQTT broker');
-            this.isConnected = true;
+            this.updateConnectionState('mqtt-connected');
         });
 
         this.client.on('error', (error) => {
             console.error('MQTT connection error:', error);
-            this.isConnected = false;
+            if (this.connectionState === 'webrtc-connected') {
+                // Don't change state if WebRTC is working
+                return;
+            }
+            this.updateConnectionState('disconnected');
         });
 
         this.client.on('disconnect', () => {
             console.log('Disconnected from MQTT broker');
-            this.isConnected = false;
+            if (this.connectionState === 'webrtc-connected') {
+                // Don't change state if WebRTC is working
+                return;
+            }
+            this.updateConnectionState('disconnected');
         });
+    }
+
+    private updateConnectionState(newState: ConnectionState) {
+        const oldState = this.connectionState;
+        this.connectionState = newState;
+
+        console.log(`Connection state: ${oldState} → ${newState}`);
+
+        // Handle state transitions
+        if (newState === 'webrtc-connected' && oldState !== 'webrtc-connected') {
+            this.onWebRTCConnected();
+        } else if (oldState === 'webrtc-connected' && newState !== 'webrtc-connected') {
+            this.onWebRTCDisconnected();
+        }
+    }
+
+    private onWebRTCConnected() {
+        console.log('WebRTC connected - closing MQTT connection to save resources');
+        this.clearTimeouts();
+        this.closeMQTTConnection();
+    }
+
+    private onWebRTCDisconnected() {
+        console.log('WebRTC disconnected - reopening MQTT connection for fallback');
+        this.openMQTTConnection();
+    }
+
+    private closeMQTTConnection() {
+        if (this.client.connected) {
+            this.client.end(true); // Force close
+        }
+    }
+
+    private openMQTTConnection() {
+        if (!this.client.connected && this.sessionId) {
+            console.log('Reopening MQTT connection...');
+            this.client = mqtt.connect(this.mqttUrl);
+            this.setupMQTTHandlers();
+
+            // Re-subscribe to topic when reconnected
+            this.client.on('connect', () => {
+                if (this.sessionId) {
+                    const topic = contentTopic({ sessionId: this.sessionId });
+                    this.client.subscribe(topic);
+                    this.setupMessageHandler();
+                }
+            });
+        }
     }
 
     private setupMessageHandler() {
@@ -194,11 +261,12 @@ export class OpenLVConnection {
             console.log('WebRTC connection state:', this.peerConnection?.connectionState);
 
             if (this.peerConnection?.connectionState === 'connected') {
-                this.clearWebRTCRetry();
-                this.clearConnectionTimeout();
+                this.updateConnectionState('webrtc-connected');
             } else if (this.peerConnection?.connectionState === 'failed') {
                 console.warn('WebRTC connection failed, attempting retry...');
                 this.retryWebRTCConnection();
+            } else if (this.peerConnection?.connectionState === 'connecting') {
+                this.updateConnectionState('webrtc-connecting');
             }
         };
 
@@ -257,8 +325,7 @@ export class OpenLVConnection {
     private setupDataChannelHandlers(dataChannel: RTCDataChannel) {
         dataChannel.onopen = () => {
             console.log('WebRTC data channel opened');
-            this.clearWebRTCRetry();
-            this.clearConnectionTimeout();
+            this.updateConnectionState('webrtc-connected');
         };
 
         dataChannel.onmessage = (event) => {
@@ -272,14 +339,14 @@ export class OpenLVConnection {
 
         dataChannel.onclose = () => {
             console.log('WebRTC data channel closed');
+            this.updateConnectionState('mqtt-connected');
         };
     }
 
     private waitForMQTTConnection(): Promise<void> {
         return new Promise((resolve, reject) => {
-            if (this.isConnected) {
+            if (this.client.connected) {
                 resolve();
-
                 return;
             }
 
@@ -288,7 +355,7 @@ export class OpenLVConnection {
             }, 10000);
 
             const checkConnection = () => {
-                if (this.isConnected) {
+                if (this.client.connected) {
                     clearTimeout(timeout);
                     resolve();
                 } else {
@@ -341,6 +408,7 @@ export class OpenLVConnection {
         const hashBuffer = await crypto.subtle.digest('SHA-256', publicKeyData);
         const hashArray = new Uint8Array(hashBuffer);
         const shortHash = hashArray.slice(0, 8); // First 8 bytes
+
         return btoa(String.fromCharCode.apply(null, Array.from(shortHash)));
     }
 
@@ -437,7 +505,7 @@ export class OpenLVConnection {
     }
 
     private async sendMQTTMessage(message: WebRTCMessage, recipientPublicKey?: CryptoKey) {
-        if (!this.sessionId) return;
+        if (!this.sessionId || !this.client.connected) return;
 
         try {
             await this.waitForMQTTConnection();
@@ -483,34 +551,22 @@ export class OpenLVConnection {
             console.log('Processing MQTT message:', message.type, 'isInitiator:', this.isInitiator);
 
             // Ignore messages from ourselves
-            if (
+            const isOwnPubkeyMessage =
                 message.sessionId === this.sessionId &&
                 message.type === 'pubkey' &&
-                this.isInitiator
-            ) {
+                this.isInitiator;
+
+            if (isOwnPubkeyMessage) {
                 console.log('Ignoring own pubkey message');
-
                 return;
-            }
-
-            // If we're the initiator and this is any message from someone else, re-publish our pubkey
-            // This ensures new subscribers get our public key
-            if (
-                this.isInitiator &&
-                message.sessionId === this.sessionId &&
-                message.type !== 'pubkey'
-            ) {
-                console.log('Detected peer activity, re-publishing pubkey...');
-                await this.publishPublicKey();
             }
 
             switch (message.type) {
                 case 'ping':
-                    if (this.isInitiator) {
-                        console.log('Received ping from wallet, re-publishing pubkey...');
+                    if (this.isInitiator && !this.hasPublishedKey) {
+                        console.log('Received ping from wallet, publishing pubkey...');
                         await this.publishPublicKey();
                     }
-
                     break;
 
                 case 'pubkey':
@@ -539,18 +595,17 @@ export class OpenLVConnection {
                                 'Got:',
                                 computedHash
                             );
-
                             return;
                         }
 
                         console.log('Public key verified, importing and sending hello message...');
                         this.peerPublicKey = await this.importPublicKey(publicKeyData.buffer);
+
                         // Send hello message encrypted with dApp's public key
                         await this.sendHelloMessage();
                     } else {
                         console.log('Ignoring pubkey message (we are the initiator)');
                     }
-
                     break;
 
                 case 'hello':
@@ -570,7 +625,6 @@ export class OpenLVConnection {
                     } else {
                         console.log('Ignoring hello message (we are not the initiator)');
                     }
-
                     break;
 
                 case 'webrtc-offer':
@@ -578,7 +632,6 @@ export class OpenLVConnection {
                         console.log('Received WebRTC offer');
                         await this.handleWebRTCOffer(message.payload);
                     }
-
                     break;
 
                 case 'webrtc-answer':
@@ -586,7 +639,6 @@ export class OpenLVConnection {
                         console.log('Received WebRTC answer');
                         await this.handleWebRTCAnswer(message.payload);
                     }
-
                     break;
 
                 case 'ice-candidate':
@@ -604,7 +656,7 @@ export class OpenLVConnection {
     }
 
     private async publishPublicKey() {
-        if (!this.publicKey || !this.sessionId) return;
+        if (!this.publicKey || !this.sessionId || this.hasPublishedKey) return;
 
         const exportedKey = await this.exportPublicKey(this.publicKey);
         const publicKeyBase64 = btoa(
@@ -623,6 +675,8 @@ export class OpenLVConnection {
             sessionId: this.sessionId,
             timestamp: Date.now(),
         });
+
+        this.hasPublishedKey = true;
     }
 
     private async sendHelloMessage() {
@@ -746,8 +800,8 @@ export class OpenLVConnection {
 
     private retryWebRTCConnection() {
         if (this.webrtcRetryCount >= this.maxWebrtcRetries) {
-            console.error('Max WebRTC retry attempts reached');
-
+            console.error('Max WebRTC retry attempts reached, falling back to MQTT');
+            this.updateConnectionState('mqtt-connected');
             return;
         }
 
@@ -765,13 +819,32 @@ export class OpenLVConnection {
         }, 2000 * this.webrtcRetryCount); // Exponential backoff
     }
 
+    private clearTimeouts() {
+        this.clearWebRTCRetry();
+        this.clearConnectionTimeout();
+        this.clearMQTTReconnectTimeout();
+    }
+
     private clearWebRTCRetry() {
         if (this.webrtcRetryInterval) {
             clearTimeout(this.webrtcRetryInterval);
             this.webrtcRetryInterval = undefined;
         }
-
         this.webrtcRetryCount = 0;
+    }
+
+    private clearConnectionTimeout() {
+        if (this.connectionTimeout) {
+            clearTimeout(this.connectionTimeout);
+            this.connectionTimeout = undefined;
+        }
+    }
+
+    private clearMQTTReconnectTimeout() {
+        if (this.mqttReconnectTimeout) {
+            clearTimeout(this.mqttReconnectTimeout);
+            this.mqttReconnectTimeout = undefined;
+        }
     }
 
     private setConnectionTimeout() {
@@ -780,13 +853,6 @@ export class OpenLVConnection {
             console.warn('WebRTC connection timeout, retrying...');
             this.retryWebRTCConnection();
         }, 15000); // 15 second timeout
-    }
-
-    private clearConnectionTimeout() {
-        if (this.connectionTimeout) {
-            clearTimeout(this.connectionTimeout);
-            this.connectionTimeout = undefined;
-        }
     }
 
     _generateSessionId(): string {
@@ -817,7 +883,6 @@ export class OpenLVConnection {
 
         // Generate ECDH keypair
         const keyPair = await this.generateKeyPair();
-
         this.privateKey = keyPair.privateKey;
         this.publicKey = keyPair.publicKey;
 
@@ -828,6 +893,8 @@ export class OpenLVConnection {
 
         console.log('Initializing session with topic:', topic);
 
+        this.updateConnectionState('mqtt-connecting');
+
         this.client.subscribe(topic, (error) => {
             if (error) {
                 console.error('Error subscribing to topic:', error);
@@ -836,23 +903,7 @@ export class OpenLVConnection {
 
                 // Publish public key after subscription
                 setTimeout(async () => {
-                    const exportedKey = await this.exportPublicKey(this.publicKey!);
-                    const publicKeyBase64 = btoa(
-                        String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey)))
-                    );
-
-                    await this.sendMQTTMessage({
-                        type: 'pubkey',
-                        payload: {
-                            publicKey: publicKeyBase64,
-                            dAppInfo: {
-                                name: 'Open Lavatory dApp',
-                                url: window.location?.origin || 'unknown',
-                            },
-                        },
-                        sessionId: this.sessionId!,
-                        timestamp: Date.now(),
-                    });
+                    await this.publishPublicKey();
                 }, 1000);
             }
         });
@@ -880,7 +931,6 @@ export class OpenLVConnection {
 
         // Generate ECDH keypair
         const keyPair = await this.generateKeyPair();
-
         this.privateKey = keyPair.privateKey;
         this.publicKey = keyPair.publicKey;
 
@@ -891,6 +941,8 @@ export class OpenLVConnection {
         }
 
         const topic = contentTopic({ sessionId });
+
+        this.updateConnectionState('mqtt-connecting');
 
         this.client.subscribe(topic, (error) => {
             if (error) {
@@ -924,7 +976,7 @@ export class OpenLVConnection {
     sendMessage(message: string) {
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
             this.dataChannel.send(message);
-        } else if (this.sessionId && this.peerPublicKey) {
+        } else if (this.sessionId && this.peerPublicKey && this.client.connected) {
             this.sendMQTTMessage(
                 {
                     type: 'data',
@@ -941,19 +993,21 @@ export class OpenLVConnection {
 
     // Get connection status
     getConnectionStatus(): 'disconnected' | 'mqtt-only' | 'webrtc-connected' {
-        if (this.dataChannel && this.dataChannel.readyState === 'open') {
-            return 'webrtc-connected';
-        } else if (this.client.connected) {
-            return 'mqtt-only';
-        } else {
-            return 'disconnected';
+        switch (this.connectionState) {
+            case 'webrtc-connected':
+                return 'webrtc-connected';
+            case 'mqtt-connected':
+            case 'mqtt-connecting':
+            case 'webrtc-connecting':
+                return 'mqtt-only';
+            default:
+                return 'disconnected';
         }
     }
 
     // Cleanup
     disconnect() {
-        this.clearWebRTCRetry();
-        this.clearConnectionTimeout();
+        this.clearTimeouts();
 
         if (this.dataChannel) {
             this.dataChannel.close();
@@ -968,9 +1022,11 @@ export class OpenLVConnection {
         }
 
         // Reset state
+        this.updateConnectionState('disconnected');
         this.messageHandlerSetup = false;
         this.webrtcRetryCount = 0;
         this.pendingICECandidates = [];
+        this.hasPublishedKey = false;
     }
 }
 

@@ -30,6 +30,52 @@ export const encodeConnectionURL = (payload: ConnectionPayload) => {
     return `openlv://${payload.sessionId}?sharedKey=${payload.sharedKey}`;
 };
 
+export class OpenLVConnection {
+  client: mqtt.MqttClient;
+
+  constructor(config?: SessionConfig) {
+    this.client = mqtt.connect(config?.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt');
+  }
+
+  _generateSessionId(): string {
+    return crypto.randomUUID();
+  }
+
+  _generateSharedKey(): string {
+    return crypto.randomUUID();
+  }
+
+  initSession(): { openLVUrl: string } {
+    const sessionId = this._generateSessionId();
+    const sharedKey = this._generateSharedKey();
+    const topic = contentTopic({ sessionId });
+
+    this.client.subscribe(topic);
+
+    const openLVUrl = encodeConnectionURL({
+        sessionId,
+        sharedKey,
+    });
+
+    return {
+      openLVUrl
+    }
+  }
+
+  connectToSession(config: {openLVUrl: string, onMessage: (message: string) => void}) {
+    const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
+    const topic = contentTopic({ sessionId });
+
+    this.client.subscribe(topic);
+    this.client.on('message', (topic, message) => {
+      if (topic === topic) {
+        console.log('Received message on topic', topic, message.toString());
+        config.onMessage(message.toString());
+      }
+    });
+  }
+}
+
 export const startConnection = (config: SessionConfig) => {
     const client = mqtt.connect(config.mqttUrl ?? 'wss://test.mosquitto.org:8081/mqtt');
 
@@ -58,27 +104,4 @@ export const startConnection = (config: SessionConfig) => {
             });
         },
     };
-};
-
-export const startSession = async (connection: SessionConfig) => {
-    // TODO: generate sessionId
-    const sessionId = 'abcdefg';
-    const topic = contentTopic({ sessionId });
-
-    const client = startConnection(connection);
-
-    console.log('client', client);
-
-    client.subscribe(topic);
-
-    const payload = encodeConnectionURL({
-        sessionId: 'abcdefg',
-        sharedKey: '1234567890',
-    });
-
-    console.log('payload', payload);
-
-    setInterval(() => {
-        client.publish(topic, 'hello ' + Math.round(Math.random() * 1000));
-    }, 3000);
 };

@@ -1,4 +1,4 @@
-import { contentTopic, encodeConnectionURL, startConnection } from 'lib';
+import { OpenLVConnection } from 'lib';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
 
@@ -11,6 +11,10 @@ import { useState } from 'react';
 // const contentTopic = '/light-guide/1/message/proto'
 
 const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: string) => void }) => {
+    const connection = new OpenLVConnection();
+    const { openLVUrl } = connection.initSession();
+
+    setOfferJson(openLVUrl);
 
     // const pc = new RTCPeerConnection({
     //     iceServers: [

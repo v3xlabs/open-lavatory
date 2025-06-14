@@ -1,7 +1,9 @@
 import { EventEmitter } from 'eventemitter3';
 
+import { OpenLVConnection } from './index.js';
+
 export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
-    #conn: OpenLVConnection | undefined
+    #conn: OpenLVConnection | undefined;
     constructor() {
         super();
     }
@@ -15,11 +17,11 @@ export class OpenLVProvider extends EventEmitter<'display_uri' | 'message'> {
         this.#conn?.connectToSession({
             openLVUrl: uri,
             onMessage: (message) => {
-                this.emit('message', message)
+                this.emit('message', message);
             },
-        })
+        });
     }
     disconnect() {
-        this.#conn?.disconnect()
+        this.#conn?.disconnect();
     }
 }

@@ -1,3 +1,4 @@
+import { contentTopic, encodeConnectionURL } from 'lib';
 import mqtt from 'mqtt';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';
@@ -9,21 +10,22 @@ import { useState } from 'react';
 // const decoder = createDecoder(contentTopic);
 
 // const contentTopic = '/light-guide/1/message/proto'
-const contentTopic = '/my/topic/goes/here';
 
 const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: string) => void }) => {
+    const topic = contentTopic('abcdefg');
+
     console.log('init conn');
 
     const client = mqtt.connect('wss://test.mosquitto.org:8081/mqtt');
 
     console.log('client', client);
 
-    client.subscribe(contentTopic, (err, granted) => {
+    client.subscribe(topic, (err, granted) => {
         if (err) {
             console.error('Error subscribing to topic', err);
         }
 
-        console.log('Subscribed to topic', contentTopic, granted);
+        console.log('Subscribed to topic', topic, granted);
     });
 
     client.on('message', (topic, message) => {
@@ -34,17 +36,21 @@ const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: stri
         console.log('Connected to MQTT broker');
     });
 
+    const payload = encodeConnectionURL({
+        sessionId: 'abcdefg',
+        sharedKey: '1234567890',
+    });
+
+    console.log('payload', payload);
+
+    setOfferJson(payload);
+
     setInterval(() => {
-        client.publish(
-            contentTopic,
-            'hello ' + Math.round(Math.random() * 1000),
-            { qos: 1 },
-            (err) => {
-                if (err) {
-                    console.error('Error publishing message', err);
-                }
+        client.publish(topic, 'hello ' + Math.round(Math.random() * 1000), { qos: 1 }, (err) => {
+            if (err) {
+                console.error('Error publishing message', err);
             }
-        );
+        });
     }, 3000);
 
     // const pc = new RTCPeerConnection({

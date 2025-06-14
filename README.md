@@ -68,7 +68,7 @@ In a similar manner, the `h` parameter specifies a hash of the public key, which
 - ⚠️ **Firefox**: Requires TURN servers (potential centralization point)
 - ❓ **Safari**: Limited testing
 
-### 🔒 Security Features
+### Security Features
 
 - **🛡️ End-to-End Encryption**: ECDH P-256 + AES-256-GCM
 - **🚫 No Central Authority**: Direct peer-to-peer communication

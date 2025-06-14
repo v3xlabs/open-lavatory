@@ -559,7 +559,7 @@ export class OpenLVConnection {
                     // This is a response - just log it, don't process further
                     const response = message as JsonRpcResponse;
 
-                    console.log('Received P2P JSON-RPC response for ID:', response.id);
+                    console.log('Received P2P JSON-RPC response for ID:', response.id, response);
                     // Responses are typically handled by the original sender, not processed here
                 }
             } catch (error) {

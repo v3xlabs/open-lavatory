@@ -44,6 +44,8 @@ export class OpenLVProvider extends EventEmitter<
         // Set up message handler for incoming JSON-RPC messages
         this.#conn.onMessage(async (request: JsonRpcRequest) => {
             console.log('Provider: Received message:', request);
+            
+            // Always emit the message for the connector to handle
             this.emit('message', request);
 
             // Handle responses to our requests
@@ -56,11 +58,10 @@ export class OpenLVProvider extends EventEmitter<
                     const newAccounts = response.result;
                     console.log('Provider: Found accounts in response:', newAccounts);
 
-                    if (JSON.stringify(newAccounts) !== JSON.stringify(this.#accounts)) {
-                        this.#accounts = newAccounts;
-                        console.log('Provider: Emitting accountsChanged:', newAccounts);
-                        this.emit('accountsChanged', newAccounts);
-                    }
+                    // Always update accounts and emit event when we receive account data
+                    this.#accounts = newAccounts;
+                    console.log('Provider: Emitting accountsChanged:', newAccounts);
+                    this.emit('accountsChanged', newAccounts);
                 }
 
                 return response;

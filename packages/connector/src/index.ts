@@ -164,6 +164,8 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                                 accountsArray = message.params;
                             }
 
+                            console.log('OpenLV: Extracted accounts array:', accountsArray);
+
                             // Validate that these look like Ethereum addresses
                             if (accountsArray.length > 0 && accountsArray.every(addr => 
                                 typeof addr === 'string' && addr.startsWith('0x') && addr.length === 42
@@ -176,6 +178,7 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                                 isConnected = true;
 
                                 console.log('OpenLV: Connection successful, accounts:', newAccounts);
+                                console.log('OpenLV: Updated global accounts variable:', accounts);
                                 closeOpenLVModal();
 
                                 // Emit connect event to Wagmi
@@ -187,6 +190,7 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                                 // Also trigger accountsChanged to ensure UI updates
                                 setTimeout(() => {
                                     if (accountsChanged) {
+                                        console.log('OpenLV: Triggering accountsChanged with:', accountsArray);
                                         accountsChanged(accountsArray);
                                     }
                                 }, 100);
@@ -196,6 +200,17 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
                                     chainId: targetChainId!,
                                 });
                                 return;
+                            } else {
+                                console.log('OpenLV: Account validation failed:', {
+                                    length: accountsArray.length,
+                                    accounts: accountsArray,
+                                    validation: accountsArray.map(addr => ({
+                                        addr,
+                                        isString: typeof addr === 'string',
+                                        startsWithOx: typeof addr === 'string' && addr.startsWith('0x'),
+                                        correctLength: typeof addr === 'string' && addr.length === 42
+                                    }))
+                                });
                             }
                         }
 
@@ -237,6 +252,11 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
 
                     provider.on('message', handleMessage);
                     provider.on('connect', handleConnect);
+                    
+                    // Add debug listener to see all messages
+                    provider.on('message', (msg) => {
+                        console.log('OpenLV: Provider emitted message event:', msg);
+                    });
 
                     // If already connected, trigger the connect handler
                     if (provider.connected) {

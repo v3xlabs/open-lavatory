@@ -39,10 +39,10 @@ const App: Component = () => {
           Connect to dApp
         </button>
       )}
-      <RequestModal
+      {/* <RequestModal
         payload={{ method: 'eth_requestAccounts' }}
         setResponse={setResponse}
-      />
+      /> */}
       {/* {payload() && <RequestModal payload={payload()!} setResponse={setResponse} />} */}
       <Portal>
         <Show when={show()}>
@@ -60,6 +60,8 @@ const App: Component = () => {
                 onMessage={(message) => {
                   const payload = JSON.parse(message)
                   const client = config.getClient()
+
+                  console.log('Payload: ',payload)
 
                   if (payload.method.startsWith('eth_')) {
                     if (isAuthorized()) {
@@ -83,6 +85,8 @@ const App: Component = () => {
                     } else {
                       return []
                     }
+                  } else if (payload.method.startsWith('lv_')) {
+                     
                   }
                 }}
               />

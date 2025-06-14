@@ -221,10 +221,13 @@ export class OpenLVConnection {
         console.log('Received public key from dApp, verifying...');
         this.updateConnectionState('key-exchange', 'Verifying dApp public key');
 
-        const publicKeyData = await EncryptionUtils.publicKeyFromBase64(message.payload.publicKey);
-        const computedHash = await EncryptionUtils.computePublicKeyHashFromRaw(
-            new Uint8Array(await EncryptionUtils.exportPublicKey(publicKeyData))
+        // First, compute hash from the raw base64 data to verify it matches
+        const publicKeyRaw = new Uint8Array(
+            atob(message.payload.publicKey)
+                .split('')
+                .map((char) => char.charCodeAt(0))
         );
+        const computedHash = await EncryptionUtils.computePublicKeyHashFromRaw(publicKeyRaw);
 
         if (computedHash !== this.pubkeyHash) {
             throw new Error(
@@ -232,7 +235,11 @@ export class OpenLVConnection {
             );
         }
 
+        // Now import the key for use
+        const publicKeyData = await EncryptionUtils.publicKeyFromBase64(message.payload.publicKey);
+
         this.peerPublicKey = publicKeyData;
+
         this.updateConnectionState('key-exchange', 'Sending encrypted hello message');
         await this.sendHello();
     }

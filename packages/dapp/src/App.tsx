@@ -11,34 +11,6 @@ import { useState } from 'react';
 // const contentTopic = '/light-guide/1/message/proto'
 
 const initConnection = async ({ setOfferJson }: { setOfferJson: (offerJson: string) => void }) => {
-    const sessionId = 'abcdefg';
-
-    const topic = contentTopic({ sessionId });
-
-    console.log('init conn');
-
-    const client = startConnection();
-
-    console.log('client', client);
-
-    client.subscribe(topic, (err) => {
-        if (err) {
-            console.error('Error subscribing to topic', err);
-        }
-    });
-
-    const payload = encodeConnectionURL({
-        sessionId: 'abcdefg',
-        sharedKey: '1234567890',
-    });
-
-    console.log('payload', payload);
-
-    setOfferJson(payload);
-
-    setInterval(() => {
-        client.publish(topic, 'hello ' + Math.round(Math.random() * 1000));
-    }, 3000);
 
     // const pc = new RTCPeerConnection({
     //     iceServers: [

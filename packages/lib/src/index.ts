@@ -1,7 +1,5 @@
 import mqtt from 'mqtt';
 
-import { EIP1474Method } from './provider.js';
-
 export type SessionConfig = {
     mqttUrl?: string;
 };
@@ -11,7 +9,7 @@ export type ConnectionPayload = {
     sharedKey: string;
 };
 
-export type MessageHandler = (message: EIP1474Method) => void;
+export type MessageHandler = (message: string) => void;
 
 export type WebRTCMessage = {
     type: 'hello' | 'webrtc-offer' | 'webrtc-answer' | 'ice-candidate' | 'data';
@@ -608,10 +606,7 @@ export class OpenLVConnection {
     }
 
     // Peer B: Connect to session using openLVUrl
-    async connectToSession(config: {
-        openLVUrl: string;
-        onMessage?: (message: EIP1474Method) => void;
-    }) {
+    async connectToSession(config: { openLVUrl: string; onMessage?: (message: string) => void }) {
         this.isInitiator = false;
         const { sessionId, sharedKey } = decodeConnectionURL(config.openLVUrl);
 
@@ -657,7 +652,7 @@ export class OpenLVConnection {
     }
 
     // Send message via WebRTC data channel (preferred) or MQTT fallback
-    sendMessage(message: EIP1474Method) {
+    sendMessage(message: string) {
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
             // Send via WebRTC data channel
             this.dataChannel.send(message);

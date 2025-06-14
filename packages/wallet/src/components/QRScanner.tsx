@@ -19,7 +19,7 @@ export const QRScanner = () => {
         console.log('Scanner started')
         console.log('Video stream:', videoEl!.srcObject)
       })
-      .catch(err => {
+      .catch((err) => {
         console.error('Failed to start scanner:', err)
       })
   })

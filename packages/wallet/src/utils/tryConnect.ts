@@ -1,22 +1,21 @@
-import { contentTopic, decodeConnectionURL, startConnection } from "lib"
+import {
+  contentTopic,
+  decodeConnectionURL,
+  OpenLVConnection,
+  startConnection,
+} from 'lib'
 
-export const tryConnect = async (result: {data: string}) => {
-    try {
-        const {sessionId, sharedKey } = decodeConnectionURL(result.data)
-       
-        const topic = contentTopic({sessionId})
+export const tryConnect = async (result: { data: string }) => {
+  try {
+    const conn = new OpenLVConnection()
 
-
-        const client = startConnection()
-
-        client.subscribe(topic, (err, granted) => {
-            if (err) {
-                console.error('Error subscribing to topic', err);
-            }
-
-            console.log('Subscribed to topic', topic, granted);
-        });
-    } catch (error) {
-        throw new Error(`Failed to pair with host: ${error}`, {cause: error})
-    }
+    conn.connectToSession({
+      openLVUrl: result.data,
+      onMessage: (message) => {
+        console.log('Received message', message)
+      },
+    })
+  } catch (error) {
+    throw new Error(`Failed to pair with host: ${error}`, { cause: error })
+  }
 }

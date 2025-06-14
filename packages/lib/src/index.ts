@@ -1,5 +1,7 @@
 import mqtt from 'mqtt';
 
+import { EIP1474Method } from './provider.js';
+
 export type SessionConfig = {
     mqttUrl?: string;
 };
@@ -306,6 +308,7 @@ export class OpenLVConnection {
 
         // Combine IV and encrypted data
         const combined = new Uint8Array(iv.length + encrypted.byteLength);
+
         combined.set(iv);
         combined.set(new Uint8Array(encrypted), iv.length);
 
@@ -651,7 +654,7 @@ export class OpenLVConnection {
     }
 
     // Send message via WebRTC data channel (preferred) or MQTT fallback
-    sendMessage(message: string) {
+    sendMessage(message: EIP1474Method) {
         if (this.dataChannel && this.dataChannel.readyState === 'open') {
             // Send via WebRTC data channel
             this.dataChannel.send(message);

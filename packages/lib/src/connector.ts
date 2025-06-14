@@ -2,7 +2,7 @@ import { createConnector } from 'wagmi';
 
 import { OpenLVProvider } from './provider.js';
 
-export const openLvConnector = createConnector((config) => ({
+export const openLvConnector = createConnector(() => ({
     connect: async (parameters) => {
         return { accounts: [], chainId: 1 };
     },

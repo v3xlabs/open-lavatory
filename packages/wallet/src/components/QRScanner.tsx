@@ -16,12 +16,14 @@ export const QRScanner = () => {
       const conn = new OpenLVConnection()
       const client = config.getClient()
 
+      scanner.stop()
+
       conn.connectToSession({
         openLVUrl: data,
         onMessage: (message) => {
           const payload = JSON.parse(message)
 
-          if (payload.params.startsWith('eth_')) {
+          if (payload.method.startsWith('eth_')) {
             const { method, params } = payload as EIP1193Parameters<EIP1474Methods>
             switch (method) {
               case 'eth_requestAccounts':
@@ -37,6 +39,7 @@ export const QRScanner = () => {
           }
         },
       })
+
     }, {
       highlightScanRegion: true,
       highlightCodeOutline: true,

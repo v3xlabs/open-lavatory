@@ -128,7 +128,7 @@ export class OpenLVConnection {
     // Connection state flags
     private hasSharedPublicKey = false;
     private peerRequested = false;
-    
+
     // Peer identification
     private peerId: string;
 
@@ -518,35 +518,48 @@ export class OpenLVConnection {
 
         this.dataChannel.onmessage = async (event) => {
             try {
-                const request: JsonRpcRequest = JSON.parse(event.data);
+                const message: JsonRpcRequest | JsonRpcResponse = JSON.parse(event.data);
 
-                console.log('Received P2P JSON-RPC request:', request.method);
+                // Check if this is a request (has method) or response (has result/error)
+                if ('method' in message) {
+                    // This is a request
+                    const request = message as JsonRpcRequest;
 
-                // Handle the request
-                for (const handler of this.messageHandlers) {
-                    try {
-                        const result = await handler(request);
+                    console.log('Received P2P JSON-RPC request:', request.method);
 
-                        const response: JsonRpcResponse = {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            result,
-                        };
+                    // Handle the request - only send one response, not multiple
+                    if (this.messageHandlers.length > 0) {
+                        try {
+                            // Use the first handler (there should typically be only one)
+                            const result = await this.messageHandlers[0](request);
 
-                        this.dataChannel!.send(JSON.stringify(response));
-                    } catch (error) {
-                        const errorResponse: JsonRpcResponse = {
-                            jsonrpc: '2.0',
-                            id: request.id,
-                            error: {
-                                code: -32603,
-                                message: 'Internal error',
-                                data: error instanceof Error ? error.message : String(error),
-                            },
-                        };
+                            const response: JsonRpcResponse = {
+                                jsonrpc: '2.0',
+                                id: request.id,
+                                result,
+                            };
 
-                        this.dataChannel!.send(JSON.stringify(errorResponse));
+                            this.dataChannel!.send(JSON.stringify(response));
+                        } catch (error) {
+                            const errorResponse: JsonRpcResponse = {
+                                jsonrpc: '2.0',
+                                id: request.id,
+                                error: {
+                                    code: -32603,
+                                    message: 'Internal error',
+                                    data: error instanceof Error ? error.message : String(error),
+                                },
+                            };
+
+                            this.dataChannel!.send(JSON.stringify(errorResponse));
+                        }
                     }
+                } else {
+                    // This is a response - just log it, don't process further
+                    const response = message as JsonRpcResponse;
+
+                    console.log('Received P2P JSON-RPC response for ID:', response.id);
+                    // Responses are typically handled by the original sender, not processed here
                 }
             } catch (error) {
                 console.error('Error handling P2P message:', error);

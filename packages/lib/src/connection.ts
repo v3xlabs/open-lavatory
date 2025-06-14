@@ -30,6 +30,19 @@ export const encodeConnectionURL = (payload: ConnectionPayload) => {
 };
 
 export const decodeConnectionURL = (url: string): ConnectionPayload => {
+    // Type check and validation
+    if (typeof url !== 'string') {
+        throw new Error(`Invalid URL type: expected string, got ${typeof url}`);
+    }
+
+    if (!url || url.trim() === '') {
+        throw new Error('URL cannot be empty');
+    }
+
+    if (!url.startsWith('openlv://')) {
+        throw new Error(`Invalid URL format: must start with 'openlv://', got: ${url}`);
+    }
+
     try {
         const urlObj = new URL(url);
         const sessionId = urlObj.hostname || urlObj.pathname.replace('/', '');
@@ -37,21 +50,46 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
         const server = urlObj.searchParams.get('s') || undefined;
         const protocol = (urlObj.searchParams.get('p') as 'mqtt' | 'waku' | 'nostr') || 'mqtt';
 
+        if (!sessionId) {
+            throw new Error('Session ID is required in URL');
+        }
+
+        if (!pubkeyHash) {
+            throw new Error('Public key hash (h parameter) is required in URL');
+        }
+
         return {
             sessionId,
             pubkeyHash,
             server: server ? decodeURIComponent(server) : undefined,
             protocol,
         };
-    } catch {
-        // Fallback to legacy regex parsing
-        const legacyMatch = url.match(/openlv:\/\/([^?]+)\?(?:sharedKey|k|h)=([^&]+)/) ?? [];
-        const [, sessionId, keyOrHash] = legacyMatch;
+    } catch (error) {
+        // If it's already our custom error, re-throw it
+        if (error instanceof Error && error.message.includes('required')) {
+            throw error;
+        }
 
-        return {
-            sessionId,
-            pubkeyHash: keyOrHash,
-        };
+        // Fallback to legacy regex parsing
+        try {
+            const legacyMatch = url.match(/openlv:\/\/([^?]+)\?(?:sharedKey|k|h)=([^&]+)/) ?? [];
+            const [, sessionId, keyOrHash] = legacyMatch;
+
+            if (!sessionId || !keyOrHash) {
+                throw new Error(
+                    `Invalid URL format: could not parse session ID or key from ${url}`
+                );
+            }
+
+            return {
+                sessionId,
+                pubkeyHash: keyOrHash,
+            };
+        } catch {
+            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+
+            throw new Error(`Failed to parse URL: ${url}. Original error: ${errorMessage}`);
+        }
     }
 };
 

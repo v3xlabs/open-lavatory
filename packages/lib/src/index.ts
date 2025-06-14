@@ -9,28 +9,28 @@
 export { OpenLVConnection } from './connection.js';
 
 // URL utilities
-export { decodeConnectionURL, encodeConnectionURL } from './connection.js';
+export { encodeConnectionURL, decodeConnectionURL } from './connection.js';
 
 // Types
 export type {
-    ConnectionEvents,
-    ConnectionPayload,
-    ConnectionPhase,
     ConnectionState,
-    DAppInfo,
-    ErrorHandler,
-    EthereumMethod,
-    EthereumRequest,
-    JsonRpcError,
+    ConnectionPhase,
+    SessionConfig,
+    ConnectionPayload,
     JsonRpcRequest,
     JsonRpcResponse,
+    JsonRpcError,
+    EthereumMethod,
+    EthereumRequest,
+    WalletInfo,
+    DAppInfo,
     MessageHandler,
     PhaseHandler,
-    SessionConfig,
-    WalletInfo,
-} from './types';
+    ErrorHandler,
+    ConnectionEvents,
+} from './types.js';
 
 // Utilities (for advanced usage)
-export type { SignalingConfig, SignalingMessage } from './signaling/mqtt';
-export { MQTTSignaling } from './signaling/mqtt';
-export { EncryptionUtils } from './utils/encryption';
+export type { SignalingConfig, SignalingMessage } from './signaling/mqtt.js';
+export { MQTTSignaling } from './signaling/mqtt.js';
+export { EncryptionUtils } from './utils/encryption.js';

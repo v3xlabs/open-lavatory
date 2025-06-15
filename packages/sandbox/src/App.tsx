@@ -1,15 +1,103 @@
 import type { ConnectionPhase } from 'lib';
 import { OpenLVConnection } from 'lib';
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useCallback } from 'react';
 
-// let connection;
-// Choose a content topic
-// const contentTopic = '/light-guide/1/message/proto';
-// const encoder = createEncoder({ contentTopic, ephemeral: true });
-// const decoder = createDecoder(contentTopic);
+// Wallet interface
+interface WalletAccount {
+    address: string;
+    privateKey: string;
+    publicKey: string;
+}
 
-// const contentTopic = '/light-guide/1/message/proto'
+// Simple Ethereum address derivation (simplified - in production use ethers.js or web3.js)
+const generateEthereumAccount = async (): Promise<WalletAccount> => {
+    // Generate a cryptographically secure private key
+    const privateKeyArray = new Uint8Array(32);
+    crypto.getRandomValues(privateKeyArray);
+
+    // Convert to hex string
+    const privateKey =
+        '0x' +
+        Array.from(privateKeyArray)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+
+    // For demo purposes, create a mock address derived from private key
+    // In production, you'd use proper keccak256 hashing and secp256k1 public key derivation
+    const hashArray = await crypto.subtle.digest('SHA-256', privateKeyArray);
+    const hashBytes = new Uint8Array(hashArray);
+    const address =
+        '0x' +
+        Array.from(hashBytes.slice(-20))
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+
+    // Mock public key for completeness
+    const publicKey =
+        '0x04' +
+        Array.from(hashBytes.slice(0, 32))
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+
+    return { address, privateKey, publicKey };
+};
+
+// Wallet storage hook (in-memory for Claude.ai, adaptable to localStorage)
+const useWalletStorage = () => {
+    const [accounts, setAccounts] = useState<WalletAccount[]>([]);
+    const [isInitialized, setIsInitialized] = useState(false);
+
+    // Initialize wallet (create first account if none exist)
+    const initializeWallet = useCallback(async () => {
+        if (isInitialized) return accounts;
+
+        // In a real implementation with localStorage:
+        // const stored = localStorage.getItem('wallet_accounts');
+        // if (stored) {
+        //     const parsedAccounts = JSON.parse(stored);
+        //     setAccounts(parsedAccounts);
+        //     setIsInitialized(true);
+        //     return parsedAccounts;
+        // }
+
+        // Generate first account
+        const firstAccount = await generateEthereumAccount();
+        const newAccounts = [firstAccount];
+        setAccounts(newAccounts);
+        setIsInitialized(true);
+
+        // In a real implementation:
+        // localStorage.setItem('wallet_accounts', JSON.stringify(newAccounts));
+
+        return newAccounts;
+    }, [accounts, isInitialized]);
+
+    // Add new account
+    const addAccount = useCallback(async () => {
+        const newAccount = await generateEthereumAccount();
+        const updatedAccounts = [...accounts, newAccount];
+        setAccounts(updatedAccounts);
+
+        // In a real implementation:
+        // localStorage.setItem('wallet_accounts', JSON.stringify(updatedAccounts));
+
+        return newAccount;
+    }, [accounts]);
+
+    // Get addresses only (for eth_requestAccounts response)
+    const getAddresses = useCallback(() => {
+        return accounts.map((account) => account.address);
+    }, [accounts]);
+
+    return {
+        accounts,
+        initializeWallet,
+        addAccount,
+        getAddresses,
+        isInitialized,
+    };
+};
 
 const App = () => {
     const [openLVUrl, setOpenLVUrl] = useState<string>('');
@@ -27,6 +115,15 @@ const App = () => {
     const [debugMode, setDebugMode] = useState(false);
     const connectionRef = useRef<OpenLVConnection | null>(null);
     const statusIntervalRef = useRef<NodeJS.Timeout | null>(null);
+
+    // Initialize wallet storage
+    const { accounts, initializeWallet, addAccount, getAddresses, isInitialized } =
+        useWalletStorage();
+
+    // Initialize wallet on component mount
+    useEffect(() => {
+        initializeWallet();
+    }, [initializeWallet]);
 
     // Cleanup on unmount
     useEffect(() => {
@@ -171,8 +268,74 @@ const App = () => {
         }
     };
 
+    // Unified message handler to avoid duplication
+    const createMessageHandler = () => {
+        return (request: any) => {
+            const timestamp = new Date().toLocaleTimeString();
+
+            // Handle different JSON-RPC methods
+            if (request.method === 'lv_rawText') {
+                // Extract the text message from params
+                const textMessage = request.params?.[0] || 'Empty message';
+
+                setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
+
+                // Return a simple acknowledgment for text messages
+                return { status: 'received' };
+            } else if (request.method === 'eth_requestAccounts') {
+                // Handle wallet account request with real addresses
+                setMessages((prev) => [
+                    ...prev,
+                    `[${timestamp}] 🔐 Received wallet request: ${request.method}`,
+                ]);
+
+                const walletAddresses = getAddresses();
+
+                if (walletAddresses.length === 0) {
+                    setMessages((prev) => [
+                        ...prev,
+                        `[${timestamp}] ❌ No wallet accounts available`,
+                    ]);
+                    return { status: 'error', error: 'No accounts available' };
+                }
+
+                setMessages((prev) => [
+                    ...prev,
+                    `[${timestamp}] ✅ Sending eth_accounts response: ${walletAddresses[0].substring(0, 10)}...`,
+                ]);
+
+                // Send proper JSON-RPC response to the original request
+                setTimeout(() => {
+                    if (connectionRef.current) {
+                        connectionRef.current.sendMessage({
+                            jsonrpc: '2.0',
+                            id: request.id, // Use the original request ID
+                            result: walletAddresses,
+                        });
+                    }
+                }, 100); // Small delay to ensure proper message ordering
+
+                // Return acknowledgment for the original request
+                return { status: 'processing' };
+            } else {
+                // Handle other JSON-RPC methods
+                setMessages((prev) => [
+                    ...prev,
+                    `[${timestamp}] Received JSON-RPC: ${request.method}`,
+                ]);
+
+                // Return a simple acknowledgment for other methods
+                return { status: 'received' };
+            }
+        };
+    };
+
     // Peer A: Initialize session
     const initSession = async () => {
+        if (!isInitialized) {
+            await initializeWallet();
+        }
+
         setIsConnecting(true);
 
         try {
@@ -191,62 +354,8 @@ const App = () => {
                 ]);
             });
 
-            // Add message handler
-            connection.onMessage((request) => {
-                const timestamp = new Date().toLocaleTimeString();
-
-                // Handle different JSON-RPC methods
-                if (request.method === 'lv_rawText') {
-                    // Extract the text message from params
-                    const textMessage = request.params?.[0] || 'Empty message';
-
-                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
-
-                    // Return a simple acknowledgment for text messages
-                    return { status: 'received' };
-                } else if (request.method === 'eth_requestAccounts') {
-                    // Handle wallet account request
-                    setMessages((prev) => [
-                        ...prev,
-                        `[${timestamp}] 🔐 Received wallet request: ${request.method}`,
-                    ]);
-
-                    // Test wallet addresses
-                    // ToDo - change second address later, it's not correct 0x EVM wallet
-                    const testAccounts = [
-                        '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b1',
-                        '0x8ba1f109551bD432803012645Hac136c22C177ec',
-                    ];
-
-                    setMessages((prev) => [
-                        ...prev,
-                        `[${timestamp}] ✅ Sending eth_accounts response: ${testAccounts[0]}...`,
-                    ]);
-
-                    // Send proper JSON-RPC response to the original request
-                    setTimeout(() => {
-                        if (connectionRef.current) {
-                            connectionRef.current.sendMessage({
-                                jsonrpc: '2.0',
-                                id: request.id, // Use the original request ID
-                                result: testAccounts,
-                            });
-                        }
-                    }, 100); // Small delay to ensure proper message ordering
-
-                    // Return acknowledgment for the original request
-                    return { status: 'processing' };
-                } else {
-                    // Handle other JSON-RPC methods
-                    setMessages((prev) => [
-                        ...prev,
-                        `[${timestamp}] Received JSON-RPC: ${request.method}`,
-                    ]);
-
-                    // Return a simple acknowledgment for other methods
-                    return { status: 'received' };
-                }
-            });
+            // Add unified message handler
+            connection.onMessage(createMessageHandler());
 
             const { openLVUrl } = await connection.initSession();
 
@@ -255,7 +364,7 @@ const App = () => {
             // Start monitoring connection status
             startStatusMonitoring();
 
-            addDebugMessage('Session initialized successfully');
+            addDebugMessage(`Session initialized with ${accounts.length} wallet accounts`);
         } catch (error) {
             console.error('Failed to initialize session:', error);
             setMessages((prev) => [
@@ -270,6 +379,10 @@ const App = () => {
     const connectToSession = async () => {
         if (!connectedAsUrl.trim()) return;
 
+        if (!isInitialized) {
+            await initializeWallet();
+        }
+
         setIsConnecting(true);
 
         try {
@@ -288,61 +401,8 @@ const App = () => {
                 ]);
             });
 
-            // Add message handler
-            connection.onMessage((request) => {
-                const timestamp = new Date().toLocaleTimeString();
-
-                // Handle different JSON-RPC methods
-                if (request.method === 'lv_rawText') {
-                    // Extract the text message from params
-                    const textMessage = request.params?.[0] || 'Empty message';
-
-                    setMessages((prev) => [...prev, `[${timestamp}] Received: ${textMessage}`]);
-
-                    // Return a simple acknowledgment for text messages
-                    return { status: 'received' };
-                } else if (request.method === 'eth_requestAccounts') {
-                    // Handle wallet account request
-                    setMessages((prev) => [
-                        ...prev,
-                        `[${timestamp}] 🔐 Received wallet request: ${request.method}`,
-                    ]);
-
-                    // Test wallet addresses
-                    const testAccounts = [
-                        '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b1',
-                        '0x8ba1f109551bD432803012645Hac136c22C177ec',
-                    ];
-
-                    setMessages((prev) => [
-                        ...prev,
-                        `[${timestamp}] ✅ Sending eth_accounts response: ${testAccounts[0]}...`,
-                    ]);
-
-                    // Send proper JSON-RPC response to the original request
-                    setTimeout(() => {
-                        if (connectionRef.current) {
-                            connectionRef.current.sendMessage({
-                                jsonrpc: '2.0',
-                                id: request.id, // Use the original request ID
-                                result: testAccounts,
-                            });
-                        }
-                    }, 100); // Small delay to ensure proper message ordering
-
-                    // Return acknowledgment for the original request
-                    return { status: 'processing' };
-                } else {
-                    // Handle other JSON-RPC methods
-                    setMessages((prev) => [
-                        ...prev,
-                        `[${timestamp}] Received JSON-RPC: ${request.method}`,
-                    ]);
-
-                    // Return a simple acknowledgment for other methods
-                    return { status: 'received' };
-                }
-            });
+            // Add unified message handler
+            connection.onMessage(createMessageHandler());
 
             // Connect to session with just the URL
             await connection.connectToSession(connectedAsUrl.trim());
@@ -354,7 +414,9 @@ const App = () => {
                 ? 'Firefox'
                 : 'Chrome/Other';
 
-            addDebugMessage(`Connecting from ${browserInfo} browser`);
+            addDebugMessage(
+                `Connecting from ${browserInfo} browser with ${accounts.length} wallet accounts`
+            );
         } catch (error) {
             console.error('Failed to connect to session:', error);
             setMessages((prev) => [
@@ -424,6 +486,16 @@ const App = () => {
         }, 1000);
     };
 
+    // Add new wallet account
+    const handleAddAccount = async () => {
+        const newAccount = await addAccount();
+        const timestamp = new Date().toLocaleTimeString();
+        setMessages((prev) => [
+            ...prev,
+            `[${timestamp}] 💼 New account created: ${newAccount.address.substring(0, 10)}...`,
+        ]);
+    };
+
     // Disconnect
     const disconnect = () => {
         stopStatusMonitoring();
@@ -446,7 +518,7 @@ const App = () => {
         <div className="min-h-screen bg-gray-100 p-4">
             <div className="max-w-4xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold">OpenLV Demo</h1>
+                    <h1 className="text-3xl font-bold">OpenLV Wallet Demo</h1>
                     <button
                         onClick={() => setDebugMode(!debugMode)}
                         className={`px-3 py-1 rounded text-sm ${
@@ -457,10 +529,51 @@ const App = () => {
                     </button>
                 </div>
 
+                {/* Wallet Status */}
+                <div className="bg-white rounded-lg p-4 mb-6 shadow">
+                    <div className="flex items-center justify-between mb-2">
+                        <span className="text-lg font-semibold">Wallet Status:</span>
+                        <div className="flex items-center gap-2">
+                            <span className="text-sm font-medium">
+                                {accounts.length} account{accounts.length !== 1 ? 's' : ''}
+                            </span>
+                            <button
+                                onClick={handleAddAccount}
+                                className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                            >
+                                + Add Account
+                            </button>
+                        </div>
+                    </div>
+
+                    {accounts.length > 0 && (
+                        <div className="text-sm space-y-1">
+                            {accounts.map((account, index) => (
+                                <div key={index} className="bg-gray-50 p-2 rounded">
+                                    <div className="font-mono text-xs">
+                                        <span className="text-gray-600">Account {index + 1}:</span>{' '}
+                                        {account.address}
+                                    </div>
+                                    {debugMode && (
+                                        <div className="font-mono text-xs text-gray-500 mt-1">
+                                            Private Key: {account.privateKey.substring(0, 20)}...
+                                        </div>
+                                    )}
+                                </div>
+                            ))}
+                        </div>
+                    )}
+
+                    <div className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded">
+                        ⚠️ Note: In this demo, keys are stored in memory only. In production, use
+                        secure storage with proper encryption.
+                    </div>
+                </div>
+
                 {/* Connection Status */}
                 <div className="bg-white rounded-lg p-4 mb-6 shadow">
                     <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg font-semibold">Status:</span>
+                        <span className="text-lg font-semibold">Connection Status:</span>
                         <div className="flex items-center gap-2">
                             {isConnecting && (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
@@ -623,7 +736,9 @@ const App = () => {
                                                       ? 'text-purple-600 font-semibold'
                                                       : message.includes('✅')
                                                         ? 'text-green-600 font-semibold'
-                                                        : ''
+                                                        : message.includes('💼')
+                                                          ? 'text-orange-600 font-semibold'
+                                                          : ''
                                             }`}
                                         >
                                             {message}
@@ -685,6 +800,7 @@ const App = () => {
                                 {navigator.userAgent.includes('Firefox')
                                     ? 'Firefox'
                                     : 'Chrome/Other'}
+                                , Wallet accounts = {accounts.length}
                             </div>
                         )}
                     </div>

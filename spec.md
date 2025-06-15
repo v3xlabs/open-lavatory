@@ -66,35 +66,37 @@ Open Lavatory establishes connections through a three-phase process:
 ```mermaid
 sequenceDiagram
     participant D as dApp
-    participant Q as QR Code
     participant W as Wallet
     participant S as Signaling Server<br/>(MQTT/Waku/Nostr)
     participant P as WebRTC P2P
 
-    Note over D, P: Phase 1: Discovery
-    D->>D: Generate session + ECDH keypair
-    D->>Q: Display openlv:// URL with session ID
+    Note over D, P: Phase 1: Discovery & Session Setup
+    D->>D: Generate session ID + ECDH keypair<br/>+ shared secret (k parameter)
+    D->>W: Share openlv:// URL<br/>(QR code / copy-paste)
     D->>S: Subscribe to session topic
     
-    Note over D, P: Phase 2: Pairing
-    W->>Q: Scan QR code
-    W->>W: Parse URL, generate keypair
+    Note over D, P: Phase 2: Homo-to-Asymmetric Handshake (Signaling)
+    W->>W: Parse URL, extract shared secret<br/>Generate ECDH keypair
     W->>S: Connect to session topic
-    W->>S: Send encrypted hello (wallet info)
-    S->>D: Relay hello message
-    D->>W: Send encrypted response (dApp info)
+    W->>S: Send hello encrypted with shared key<br/>(wallet info + public key)
+    S->>D: Relay encrypted hello
+    D->>S: Send response encrypted with wallet's pubkey<br/>(dApp info + public key)
+    S->>W: Relay encrypted response
     
-    Note over D, P: Phase 3: WebRTC Connection
-    D->>S: Send encrypted WebRTC offer
-    S->>W: Relay offer
-    W->>S: Send encrypted WebRTC answer
-    S->>D: Relay answer
-    D->>P: Establish direct P2P connection
-    W->>P: Complete P2P handshake
+    Note over D, P: Phase 3: WebRTC Negotiation (E2EE via signaling)
+    D->>S: Send WebRTC offer<br/>encrypted with wallet's pubkey
+    S->>W: Relay encrypted offer
+    W->>S: Send WebRTC answer<br/>encrypted with dApp's pubkey
+    S->>D: Relay encrypted answer
+    D->>S: Exchange ICE candidates<br/>encrypted with wallet's pubkey
+    W->>S: Exchange ICE candidates<br/>encrypted with dApp's pubkey
     
-    Note over D, P: Direct Communication
+    Note over D, P: Phase 4: Direct P2P Communication (E2EE)
+    D->>P: Establish WebRTC connection
+    W->>P: Complete WebRTC handshake
+    Note over S: Signaling connection closed
     D->>P: JSON-RPC requests (eth_*)
-    P->>W: Direct encrypted communication
+    P->>W: Direct DTLS-encrypted communication
     W->>P: JSON-RPC responses
     P->>D: Signed transactions, account data
 ```

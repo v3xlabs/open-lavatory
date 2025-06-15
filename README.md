@@ -75,11 +75,17 @@ In a similar manner, the `h` parameter specifies a hash of the public key, which
 - **🔄 Fallback Mechanism**: MQTT reopens on WebRTC failure
 - **✅ Key Verification**: SHA-256 public key hashing
 
+## 🖼️ Screenshots
+
+
 ## 🛠️ Getting Started
 
 There are several ways to run this project
 
 ### Option 1: Sandbox + Sandbox
+
+![Sandbox + Sandbox](/packages/dapp/public/ss_01.png)
+![Sandbox + Sandbox + Element Inspect](/packages/dapp/public/ss_02.png)
 
 To test out the openlv transport layer, you can run the sandbox and the wallet in two separate tabs. The sandbox includes debug logs, extra features and fully fledged UI.
 
@@ -90,6 +96,8 @@ pnpm sandbox
 And then open [localhost:5173](http://localhost:5173) in two of your browser tabs.
 
 ### Option 2: dApp + Sandbox
+
+![dApp + Sandbox](/packages/dapp/public/ss_03.png)
 
 To test out the wagmi connector and explore the active connection you can initiate a session from the dApp sandbox.
 

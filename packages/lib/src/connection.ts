@@ -372,6 +372,12 @@ export class OpenLVConnection {
 
         console.log('Received JSON-RPC request:', request.method);
 
+        if (!request.method) {
+            console.warn('Received unknown payload', request);
+
+            return;
+        }
+
         // Notify message handlers
         for (const handler of this.messageHandlers) {
             try {

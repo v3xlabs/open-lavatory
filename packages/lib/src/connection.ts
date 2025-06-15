@@ -372,7 +372,7 @@ export class OpenLVConnection {
 
         console.log('Received JSON-RPC request:', request.method);
 
-        if (!request.method) {
+        if (!request.method && !('result' in request)) {
             console.warn('Received unknown payload', request);
 
             return;

@@ -27,7 +27,7 @@ export const QRScanner = (
         <Dialog.Overlay className={styles.overlay} />
         <Dialog.Content className={styles.content}>
           <Dialog.Title className={styles.title}>
-            Show the QR code to the camera
+            Show the QR code
           </Dialog.Title>
           <Scanner
             sound={false}

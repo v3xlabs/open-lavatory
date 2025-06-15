@@ -75,9 +75,6 @@ In a similar manner, the `h` parameter specifies a hash of the public key, which
 - **🔄 Fallback Mechanism**: MQTT reopens on WebRTC failure
 - **✅ Key Verification**: SHA-256 public key hashing
 
-## 🖼️ Screenshots
-
-
 ## 🛠️ Getting Started
 
 There are several ways to run this project

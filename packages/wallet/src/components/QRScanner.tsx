@@ -29,15 +29,14 @@ export const QRScanner = (
           <Dialog.Title className={styles.title}>
             Show the QR code
           </Dialog.Title>
-          <Scanner
+          {result ? <div>Establishing connection</div> : <Scanner
             sound={false}
             onScan={(result) => {
               if (result[0].format === 'qr_code') {
                 setResult(result[0].rawValue)
-                setOpen(false)
               }
             }}
-          />
+          />}
           <form
             onSubmit={(e) => {
               e.preventDefault()
@@ -45,14 +44,13 @@ export const QRScanner = (
               const uri = new FormData(e.currentTarget).get('uri') as string
 
               setResult(uri)
-              setOpen(false)
             }}
           >
-            <input
+            {!result && <input
               name='uri'
               className={styles.input}
               placeholder='openlv://<uuid>'
-            />
+            />}
           </form>
         </Dialog.Content>
       </Dialog.Portal>

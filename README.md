@@ -127,6 +127,7 @@ Built with ❤️ during a 48-hour hackathon. Contributions welcome!
 ## 👥 Attribution
 
 **Builders**: [@talentlessguy](https://github.com/talentlessguy) & [@lucemans](https://github.com/lucemans) & [@nevvdev](https://github.com/nevvdev)
+
 **Event**: [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin
 
 ---

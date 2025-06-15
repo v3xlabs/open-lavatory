@@ -56,12 +56,27 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
             throw new Error('Session ID is required in URL');
         }
 
+        // Validate session ID format (16 characters, URL-safe alphabet)
+        if (!/^[A-Za-z0-9_-]{16}$/.test(sessionId)) {
+            throw new Error('Invalid session ID format: must be 16 URL-safe characters');
+        }
+
         if (!pubkeyHash) {
             throw new Error('Public key hash (h parameter) is required in URL');
         }
 
+        // Validate public key hash format (16 hex characters)
+        if (!/^[0-9a-f]{16}$/.test(pubkeyHash)) {
+            throw new Error('Invalid public key hash format: must be 16 hex characters');
+        }
+
         if (!sharedKey) {
             throw new Error('Shared key (k parameter) is required in URL');
+        }
+
+        // Validate shared key format (64 hex characters)
+        if (!/^[0-9a-f]{64}$/.test(sharedKey)) {
+            throw new Error('Invalid shared key format: must be 64 hex characters');
         }
 
         return {
@@ -134,7 +149,7 @@ export class OpenLVConnection {
 
     constructor(config?: SessionConfig) {
         this.signaling = new MQTTSignaling(config);
-        this.peerId = crypto.randomUUID(); // Unique identifier for this peer
+        this.peerId = EncryptionUtils.generateSessionId(); // Unique identifier for this peer
     }
 
     private updateConnectionState(newState: ConnectionState, description: string) {
@@ -652,7 +667,7 @@ export class OpenLVConnection {
 
     async initSession(): Promise<{ openLVUrl: string }> {
         this.isInitiator = true;
-        this.sessionId = crypto.randomUUID();
+        this.sessionId = EncryptionUtils.generateSessionId();
 
         // Generate keypair
         const keyPair = await EncryptionUtils.generateKeyPair();
@@ -662,7 +677,7 @@ export class OpenLVConnection {
         this.pubkeyHash = await EncryptionUtils.computePublicKeyHash(this.publicKey);
 
         // Generate shared key for symmetric encryption during handshake
-        this.sharedKey = crypto.randomUUID(); // Random shared key
+        this.sharedKey = EncryptionUtils.generateSharedKey(); // Random shared key as hex
         this.symmetricKey = await EncryptionUtils.deriveSymmetricKey(this.sharedKey);
 
         this.updateConnectionState('mqtt-connecting', 'Connecting to signaling server');

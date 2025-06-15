@@ -5,6 +5,71 @@
 
 export class EncryptionUtils {
     /**
+     * URL-safe alphabet for session ID generation
+     */
+    private static readonly URL_SAFE_ALPHABET =
+        'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_';
+
+    /**
+     * Generate a cryptographically secure URL-safe random string
+     */
+    static generateUrlSafeRandomString(length: number): string {
+        const array = new Uint8Array(length);
+
+        crypto.getRandomValues(array);
+
+        return Array.from(array)
+            .map((byte) => this.URL_SAFE_ALPHABET[byte % this.URL_SAFE_ALPHABET.length])
+            .join('');
+    }
+
+    /**
+     * Generate a 16-character URL-safe session ID
+     */
+    static generateSessionId(): string {
+        return this.generateUrlSafeRandomString(16);
+    }
+
+    /**
+     * Generate a 32-byte random shared key and return as hex
+     */
+    static generateSharedKey(): string {
+        const array = new Uint8Array(32);
+
+        crypto.getRandomValues(array);
+
+        return Array.from(array)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+
+    /**
+     * Convert hex string to Uint8Array
+     */
+    static hexToBytes(hex: string): Uint8Array {
+        if (hex.length % 2 !== 0) {
+            throw new Error('Hex string must have even length');
+        }
+
+        const array = new Uint8Array(hex.length / 2);
+
+        for (let i = 0; i < hex.length; i += 2) {
+            array[i / 2] = parseInt(hex.substr(i, 2), 16);
+        }
+
+        return array;
+    }
+
+    /**
+     * Convert Uint8Array to hex string
+     */
+    static bytesToHex(bytes: Uint8Array): string {
+        return Array.from(bytes)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
+    }
+
+    /**
      * Generate an ECDH keypair using P-256 curve
      */
     static async generateKeyPair(): Promise<{ privateKey: CryptoKey; publicKey: CryptoKey }> {
@@ -42,7 +107,7 @@ export class EncryptionUtils {
     }
 
     /**
-     * Compute SHA-256 hash of public key and return first 8 bytes as base64
+     * Compute SHA-256 hash of public key and return first 8 bytes as hex
      */
     static async computePublicKeyHash(publicKey: CryptoKey): Promise<string> {
         const exportedKey = await this.exportPublicKey(publicKey);
@@ -50,7 +115,9 @@ export class EncryptionUtils {
         const hashArray = new Uint8Array(hashBuffer);
         const shortHash = hashArray.slice(0, 8); // First 8 bytes
 
-        return btoa(String.fromCharCode.apply(null, Array.from(shortHash)));
+        return Array.from(shortHash)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
     }
 
     /**
@@ -61,7 +128,9 @@ export class EncryptionUtils {
         const hashArray = new Uint8Array(hashBuffer);
         const shortHash = hashArray.slice(0, 8); // First 8 bytes
 
-        return btoa(String.fromCharCode.apply(null, Array.from(shortHash)));
+        return Array.from(shortHash)
+            .map((b) => b.toString(16).padStart(2, '0'))
+            .join('');
     }
 
     /**
@@ -186,17 +255,19 @@ export class EncryptionUtils {
     }
 
     /**
-     * Derive symmetric key from shared secret (for initial handshake)
+     * Derive symmetric key from hex-encoded shared secret (for initial handshake)
      */
-    static async deriveSymmetricKey(sharedSecret: string): Promise<CryptoKey> {
-        const encoder = new TextEncoder();
+    static async deriveSymmetricKey(sharedSecretHex: string): Promise<CryptoKey> {
+        const sharedSecretBytes = this.hexToBytes(sharedSecretHex);
         const keyMaterial = await crypto.subtle.importKey(
             'raw',
-            encoder.encode(sharedSecret),
+            sharedSecretBytes,
             'PBKDF2',
             false,
             ['deriveKey']
         );
+
+        const encoder = new TextEncoder();
 
         return await crypto.subtle.deriveKey(
             {

@@ -1,77 +1,20 @@
-import { createEffect, createSignal, onCleanup, onMount } from 'solid-js'
-import QrScanner from 'qr-scanner'
+import { Scanner } from '@yudiel/react-qr-scanner'
+import { Dialog } from 'radix-ui'
 import styles from './QRScanner.module.css'
-import { MessageHandler, OpenLVConnection } from 'lib'
 
-export const QRScanner = (
-  { onMessage, onConnect }: {
-    onMessage: MessageHandler
-    onConnect: () => void
-  },
-) => {
-  let videoEl: HTMLVideoElement | undefined = undefined
-  let scanner: QrScanner
-
-  const [url, setUrl] = createSignal('')
-  let conn: OpenLVConnection
-
-  onMount(() => {
-    scanner = new QrScanner(
-      videoEl!,
-      ({ data }: { data: string }) => {
-        scanner.stop()
-        setUrl(data) // defer connection until url is updated
-      },
-      {
-        highlightScanRegion: true,
-        highlightCodeOutline: true,
-        maxScansPerSecond: 1,
-      },
-    )
-
-    scanner
-      .start()
-      .then(() => {
-        console.log('Scanner started')
-        console.log('Video stream:', videoEl!.srcObject)
-      })
-      .catch((err) => {
-        console.error('Failed to start scanner:', err)
-      })
-  })
-
-  // Connect when URL is set
-  createEffect(() => {
-    const currentUrl = url()
-    if (!currentUrl) return
-
-    conn = new OpenLVConnection()
-    onConnect()
-    conn.connectToSession(currentUrl)
-    conn.onMessage(onMessage)
-  })
-
-  onCleanup(() => {
-    scanner?.stop()
-    scanner?.destroy()
-  })
-
+export const QRScanner = () => {
   return (
-    <>
-      <input
-        onchange={(e) => {
-          setUrl(e.target.value)
-        }}
-      />
-      <video
-        ref={videoEl!}
-        width={500}
-        height={500}
-        autoplay
-        muted
-        playsinline
-        class={styles.video}
-      />
-    </>
+    <Dialog.Root>
+      <Dialog.Trigger asChild>
+        <button className={styles.cta}>Open Camera</button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className={styles.overlay} />
+        <Dialog.Content className={styles.content}>
+          <Dialog.Title className={styles.title}>Edit profile</Dialog.Title>
+          <Scanner onScan={(result) => console.log(result)} />
+        </Dialog.Content>
+      </Dialog.Portal>
+    </Dialog.Root>
   )
 }

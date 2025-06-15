@@ -1,27 +1,35 @@
 {
   "name": "wallet",
+  "private": true,
   "version": "0.0.0",
-  "description": "",
   "type": "module",
   "scripts": {
-    "start": "vite",
     "dev": "vite",
-    "build": "vite build",
-    "serve": "vite preview"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "typescript": "^5.7.2",
-    "vite": "^6.0.0",
-    "vite-plugin-solid": "^2.11.6"
+    "build": "tsc -b && vite build",
+    "lint": "eslint .",
+    "preview": "vite preview"
   },
   "dependencies": {
+    "@radix-ui/react-icons": "^1.3.2",
     "@wagmi/core": "^2.17.3",
-    "@waku/sdk": "^0.0.31",
-    "lib": "workspace:*",
-    "protobufjs": "^7.5.3",
-    "qr-scanner": "^1.4.2",
-    "solid-js": "^1.9.5",
-    "viem": "^2.31.2"
+    "@yudiel/react-qr-scanner": "^2.3.1",
+    "radix-ui": "^1.4.2",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0",
+    "viem": "^2.31.2",
+    "wagmi": "^2.15.6"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.25.0",
+    "@types/react": "^19.1.2",
+    "@types/react-dom": "^19.1.2",
+    "@vitejs/plugin-react": "^4.4.1",
+    "eslint": "^9.25.0",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "globals": "^16.0.0",
+    "typescript": "~5.8.3",
+    "typescript-eslint": "^8.30.1",
+    "vite": "^6.3.5"
   }
 }

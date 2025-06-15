@@ -48,7 +48,7 @@ This repository includes the following packages:
 
 You can find the entire specification in [spec.md](./spec.md).
 
-## 📝 The Open Lavatory Protocol
+### 📝 The Open Lavatory Protocol
 
 In short detail, the protocol works as follows:
 
@@ -59,7 +59,7 @@ In short detail, the protocol works as follows:
 5. **🌐 WebRTC**: Asymmetric encryption negotiates direct P2P connection
 6. **💬 Communication**: Encrypted JSON-RPC over local-preferred WebRTC
 
-## ⚠️ Known Limitations
+### ⚠️ Known Limitations
 
 As always there is room for improvement;
 
@@ -67,18 +67,18 @@ The current specification implements a full homo-to-asymmetric encryption scheme
 
 In a similar manner, the `h` parameter specifies a hash of the public key, which allows for double verification when initiating a handshake during the signaling phase. This too could use improvements.
 
-### Browser support
-
-- ✅ **Chromium-based browsers**: Full support with & w/out TURN servers
-- ⚠️ **Firefox**: Requires TURN servers (potential centralization point)
-- ❓ **Safari**: Limited testing
-
-### Security Features
+### 🔐 Security Features
 
 - **🛡️ End-to-End Encryption**: ECDH P-256 + AES-256-GCM
 - **🚫 No Central Authority**: Direct peer-to-peer communication
 - **🔄 Fallback Mechanism**: MQTT reopens on WebRTC failure
 - **✅ Key Verification**: SHA-256 public key hashing
+
+### 🌐 Browser support
+
+- ✅ **Chromium-based browsers**: Full support with & w/out TURN servers
+- ⚠️ **Firefox**: Requires TURN servers (potential centralization point)
+- ❓ **Safari**: Limited testing
 
 ## 🛠️ Getting Started
 

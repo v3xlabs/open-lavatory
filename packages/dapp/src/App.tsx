@@ -96,7 +96,7 @@ const App = () => {
                                 Beautiful wagmi-powered wallet connection demo
                             </p>
                         </div>
-                    <button
+                        <button
                             onClick={refreshWallets}
                             className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
                         >
@@ -114,10 +114,10 @@ const App = () => {
                                 />
                             </svg>
                             Refresh
-                    </button>
-                </div>
+                        </button>
+                    </div>
 
-                {/* Connection Status */}
+                    {/* Connection Status */}
                     <div className="flex items-center gap-3">
                         <div
                             className={`w-3 h-3 rounded-full ${
@@ -183,7 +183,7 @@ const App = () => {
                                     </button>
                                 </div>
                             ))}
-                                </div>
+                        </div>
 
                         {connectError && (
                             <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
@@ -220,19 +220,19 @@ const App = () => {
                                 <div className="p-4 bg-slate-50 rounded-xl">
                                     <label className="text-sm font-medium text-slate-600 block mb-2">
                                         Address
-                                </label>
+                                    </label>
                                     <div className="flex items-center justify-between">
                                         <code className="text-sm font-mono text-slate-800">
                                             {formatAddress(walletInfo.address)}
                                         </code>
-                            <button
+                                        <button
                                             onClick={() =>
                                                 navigator.clipboard.writeText(walletInfo.address)
-                                }
+                                            }
                                             className="text-blue-500 hover:text-blue-700 text-sm"
-                            >
+                                        >
                                             Copy
-                            </button>
+                                        </button>
                                     </div>
                                 </div>
 
@@ -247,8 +247,8 @@ const App = () => {
                                         ) : (
                                             `${formatBalance(balance)} ${balance?.symbol || 'ETH'}`
                                         )}
-                            </div>
-                        </div>
+                                    </div>
+                                </div>
 
                                 {/* Current Chain */}
                                 <div className="p-4 bg-slate-50 rounded-xl">
@@ -265,8 +265,8 @@ const App = () => {
                                             {getChainName(chainId)}
                                         </span>
                                         <span className="text-xs text-slate-500">#{chainId}</span>
-                    </div>
-                </div>
+                                    </div>
+                                </div>
 
                                 {/* Disconnect Button */}
                                 <button
@@ -301,8 +301,8 @@ const App = () => {
                                 </p>
                             </div>
                         )}
-                            </div>
-                        </div>
+                    </div>
+                </div>
 
                 {/* Available Chains */}
                 {isConnected && (
@@ -348,21 +348,21 @@ const App = () => {
                                         {chain.id === chainId && (
                                             <span className="text-xs bg-blue-500 text-white px-2 py-1 rounded">
                                                 Current
-                                        </span>
+                                            </span>
                                         )}
                                     </div>
                                     <p className="text-xs text-slate-500 mb-3">
                                         Chain ID: {chain.id} • {chain.nativeCurrency.symbol}
                                     </p>
                                     {chain.id !== chainId && (
-                            <button
+                                        <button
                                             onClick={() => switchChain({ chainId: chain.id })}
                                             className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
-                            >
+                                        >
                                             Switch to {chain.name}
-                            </button>
+                                        </button>
                                     )}
-                        </div>
+                                </div>
                             ))}
                         </div>
                     </div>

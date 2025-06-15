@@ -2,24 +2,25 @@ import { injected, metaMask, walletConnect } from '@wagmi/connectors';
 import { openLvConnector } from 'connector';
 import { createConfig } from 'wagmi';
 import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
+import { createConnector, http } from 'wagmi';
 
 export const config = createConfig({
     chains: [mainnet, sepolia, arbitrum, base, optimism, polygon],
     connectors: [
         injected(),
         metaMask(),
-        walletConnect({
-            projectId: 'demo-project-id', // Replace with actual project ID
-        }),
+        // walletConnect({
+        //     projectId: 'demo-project-id', // Replace with actual project ID
+        // }),
         openLvConnector(),
     ],
     multiInjectedProviderDiscovery: true,
-    // transports: {
-    //     [mainnet.id]: http('https://eth-mainnet.g.alchemy.com/v2/demo'),
-    //     [sepolia.id]: http('https://ethereum-sepolia-rpc.publicnode.com'),
-    //     [arbitrum.id]: http('https://arb-mainnet.g.alchemy.com/v2/demo'),
-    //     [base.id]: http('https://base-mainnet.g.alchemy.com/v2/demo'),
-    //     [optimism.id]: http('https://opt-mainnet.g.alchemy.com/v2/demo'),
-    //     [polygon.id]: http('https://polygon-rpc.com'),
-    // },
+    transports: {
+        [mainnet.id]: http(),
+        [sepolia.id]: http(),
+        [arbitrum.id]: http(),
+        [base.id]: http(),
+        [optimism.id]: http(),
+        [polygon.id]: http(),
+    },
 });

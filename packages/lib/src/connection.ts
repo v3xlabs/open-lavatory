@@ -383,6 +383,11 @@ export class OpenLVConnection {
             try {
                 const result = await handler(request);
 
+                if (!result) {
+                    console.log('Skipping response');
+                    continue;
+                }
+
                 // Send response back
                 const response: JsonRpcResponse = {
                     jsonrpc: '2.0',

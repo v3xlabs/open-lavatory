@@ -3,7 +3,10 @@ import { QRScanner } from './components/QRScanner'
 function App() {
   return (
     <>
-      <QRScanner />
+     <div>
+      <span>"Mobile" Wallet</span>
+       <QRScanner onScanned={(result) => console.log(result)} />
+     </div>
     </>
   )
 }

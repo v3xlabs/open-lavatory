@@ -38,6 +38,22 @@ export const QRScanner = (
               }
             }}
           />
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+
+              const uri = new FormData(e.currentTarget).get('uri') as string
+
+              setResult(uri)
+              setOpen(false)
+            }}
+          >
+            <input
+              name='uri'
+              className={styles.input}
+              placeholder='openlv://<uuid>'
+            />
+          </form>
         </Dialog.Content>
       </Dialog.Portal>
     </Dialog.Root>

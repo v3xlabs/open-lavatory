@@ -2,41 +2,28 @@ import { Scanner } from '@yudiel/react-qr-scanner'
 import { Dialog } from 'radix-ui'
 import styles from './QRScanner.module.css'
 import { EnterFullScreenIcon } from '@radix-ui/react-icons'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { LoadingSVG } from './LoadingSVG'
 
-export const QRScanner = (
-  { onScanned }: { onScanned: (result: string) => void },
-) => {
-  const [result, setResult] = useState<string | null>(null)
-  const [open, setOpen] = useState(false)
+const SessionDialog = ({setOpen}: {setOpen: (open: boolean) => void}) => {
 
-  useEffect(() => {
-    if (result) {
-      onScanned(result)
-    }
-  }, [result, onScanned])
+  const [result, setResult] = useState<string | null>(null)
+
+  const [isConnecting, setIsConnecting] = useState(false)
 
   return (
-    <Dialog.Root open={open} onOpenChange={setOpen}>
-      <Dialog.Trigger asChild>
-        <button className={styles.cta}>
-          <EnterFullScreenIcon />
-        </button>
-      </Dialog.Trigger>
-      <Dialog.Portal>
-        <Dialog.Overlay className={styles.overlay} />
-        <Dialog.Content className={styles.content}>
+      <Dialog.Content className={styles.content}>
           <Dialog.Title className={styles.title}>
-            {result ? 'Establishing session' : 'Show the QR code'}
+            {isConnecting ? 'Establishing session' : 'Show the QR code'}
           </Dialog.Title>
-          {result ? <div className={styles.loader}>
+          {isConnecting ? <div className={styles.loader}>
             <LoadingSVG height={36} width={36} />
           </div> : <Scanner
             sound={false}
             onScan={(result) => {
               if (result[0].format === 'qr_code') {
                 setResult(result[0].rawValue)
+                setIsConnecting(true)
               }
             }}
           />}
@@ -47,15 +34,32 @@ export const QRScanner = (
               const uri = new FormData(e.currentTarget).get('uri') as string
 
               setResult(uri)
+              setIsConnecting(true)
             }}
           >
-            {!result && <input
+            {!isConnecting && <input
               name='uri'
               className={styles.input}
               placeholder='openlv://<uuid>'
             />}
           </form>
         </Dialog.Content>
+  )
+}
+
+export const QRScanner = () => {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Dialog.Root open={open} onOpenChange={setOpen}>
+      <Dialog.Trigger asChild>
+        <button className={styles.cta}>
+          <EnterFullScreenIcon />
+        </button>
+      </Dialog.Trigger>
+      <Dialog.Portal>
+        <Dialog.Overlay className={styles.overlay} />
+      <SessionDialog setOpen={setOpen} />
       </Dialog.Portal>
     </Dialog.Root>
   )

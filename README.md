@@ -48,6 +48,8 @@ This repository includes the following packages:
 
 You can find the entire specification in [spec.md](./spec.md).
 
+## 📝 The Open Lavatory Protocol
+
 In short detail, the protocol works as follows:
 
 1. **🔑 Key Generation**: Peer A (dApp) chooses a protocol, server, and generates a keypair

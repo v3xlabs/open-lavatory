@@ -5,6 +5,19 @@
 Open Lavatory is a secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
 It serves as a drop-in replacement for WalletConnect, addressing the centralization issues introduced in WalletConnect v2 while maintaining compatibility with existing wallet standards such as [EIP-6963](https://eips.ethereum.org/EIPS/eip-6963) & [EIP-1193](https://eips.ethereum.org/EIPS/eip-1193).
 
+## Motivation
+
+[EIP-1328](https://eips.ethereum.org/EIPS/eip-1328) introduced the original wallet connection url specification. The goal simple; connect dApp & wallet via a relay server, or so called `bridge`.
+This allowed for dApps to specify their own relay server, or allow users to specify their own via UI (although rarely implemented).
+
+With the rollout of WalletConnect v2 (and thereby hostile deprecation of v1), the ability to specify a relay was removed, the v1 specifications (other then the EIP) erased, and the v2 spec no longer mentions such `bridge` parameter. Even through a rebrand, WCv2, now `@reown/appkit`, still mandates a central hardcoded relay server.
+
+It has become clear that in the current Ethereum ecosystem, `@reown/appkit` has an undefeated monopoly.
+Most dApps come pre-packaged with wagmi (and thereby `@reown/appkit`) and due to slight (mis-)use of javascript side-effects instantly loads its metrics, components, and other dependencies **on page load**.
+
+The need for secure, private, local-first dApp-wallet connectivity is imminent.
+This is where Open Lavatory comes in.
+
 ## 1. Introduction
 
 ### 1.1 Background

@@ -33,13 +33,13 @@ Open Lavatory Protocol eliminates centralized relay servers by enabling direct p
 
 This repository includes the following packages:
 
-| Package | Description |
-|---------|-------------|
-| 🔧 [lib](./packages/lib) | Core implementation of the OpenLV transport layer |
-| 🔌 [connector](./packages/connector) | Wagmi connector for dApp integration |
-| 🧪 [sandbox](./packages/sandbox) | Interactive testing environment with debug features |
-| 👛 [wallet](./packages/wallet) | Sample wallet implementation for testing |
-| 🌐 [dapp](./packages/dapp) | Wagmi-based dApp sandbox for end-to-end testing |
+| Package                              | Description                                         |
+| ------------------------------------ | --------------------------------------------------- |
+| 🔧 [lib](./packages/lib)             | Core implementation of the OpenLV transport layer   |
+| 🔌 [connector](./packages/connector) | Wagmi connector for dApp integration                |
+| 🧪 [sandbox](./packages/sandbox)     | Interactive testing environment with debug features |
+| 👛 [wallet](./packages/wallet)       | Sample wallet implementation for testing            |
+| 🌐 [dapp](./packages/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
 
 ## 📋 Specification
 
@@ -53,7 +53,7 @@ You can find the entire specification in [spec.md](./spec.md).
 In short detail, the protocol works as follows:
 
 1. **🔑 Key Generation**: Peer A (dApp) chooses a protocol, server, and generates a keypair
-2. **📱 URL Sharing**: Connection details shared via QR code or copy/paste  
+2. **📱 URL Sharing**: Connection details shared via QR code or copy/paste
 3. **🤝 Signaling**: Both peers connect to chosen signaling server (MQTT/Waku/Nostr)
 4. **🔐 Handshake**: Hybrid encryption scheme securely exchanges keys
 5. **🌐 WebRTC**: Asymmetric encryption negotiates direct P2P connection
@@ -100,6 +100,7 @@ And then open [localhost:5173](http://localhost:5173) in two of your browser tab
 ### Option 2: dApp + Sandbox
 
 ![dApp + Sandbox](/packages/dapp/public/ss_03.png)
+![dApp + Sandbox](/packages/dapp/public/ss_wallet_1.png)
 
 To test out the wagmi connector and explore the active connection you can initiate a session from the dApp sandbox.
 

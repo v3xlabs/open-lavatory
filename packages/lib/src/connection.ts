@@ -394,6 +394,11 @@ export class OpenLVConnection {
                     continue;
                 }
 
+                if ('result' in request) {
+                    console.log('stopping echo');
+                    continue;
+                }
+
                 // Send response back
                 const response: JsonRpcResponse = {
                     jsonrpc: '2.0',

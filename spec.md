@@ -32,21 +32,29 @@ openlv://<session-id>?h=<pubkey-hash>&k=<shared-key>&s=<pairing-server>&p=<proto
 
 | Parameter | Required | Description | Format |
 |-----------|----------|-------------|---------|
-| `session-id` | Yes | Unique session identifier | UUID v4 |
-| `h` | Yes | Hash of dApp's public key for verification | First 8 bytes of SHA-256 hash, base64-encoded |
-| `k` | Yes | Shared secret for homomorphic encryption during handshake | 32 bytes, base64-encoded |
+| `session-id` | Yes | Unique session identifier | 16-character URL-safe random string (A-Z, a-z, 0-9, -, _) |
+| `h` | Yes | Hash of dApp's public key for verification | First 8 bytes of SHA-256 hash, hex-encoded (16 characters) |
+| `k` | Yes | Shared secret for homomorphic encryption during handshake | 32 bytes, hex-encoded (64 characters) |
 | `s` | No | Pairing server URL | URL-encoded string |
 | `p` | No | Pairing server protocol | `mqtt`, `waku`, `nostr` |
 
-### 2.3 Examples
+### 2.3 Session ID Generation
+
+Session IDs are generated using a cryptographically secure random number generator from the URL-safe alphabet:
+- **Alphabet**: `ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_`
+- **Length**: 16 characters
+- **Entropy**: ~95.4 bits (64^16 possible combinations)
+- **Collision Probability**: Negligible for practical purposes
+
+### 2.4 Examples
 
 ```
-openlv://550e8400-e29b-41d4-a716-446655440000?h=YWJjZGVmZ2g&k=dGVzdGtleWZvcmVuY3J5cHRpb25wdXJwb3NlcwAA&s=wss%3A//test.mosquitto.org%3A8081/mqtt&p=mqtt
+openlv://k7n8m9x2w5q1p3r6?h=a1b2c3d4e5f60708&k=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&s=wss%3A//test.mosquitto.org%3A8081/mqtt&p=mqtt
 
-openlv://550e8400-e29b-41d4-a716-446655440000?h=YWJjZGVmZ2g&k=dGVzdGtleWZvcmVuY3J5cHRpb25wdXJwb3NlcwAA
+openlv://j9x7z4m2n8q5w3e1?h=f1e2d3c4b5a69708&k=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210
 ```
 
-### 2.4 Default Values
+### 2.5 Default Values
 
 - `server`: `wss://test.mosquitto.org:8081/mqtt` (fallback MQTT broker)
 - `protocol`: `mqtt`
@@ -130,7 +138,7 @@ The `k` parameter provides a shared secret for initial handshake encryption:
 The public key hash included in the URL is computed as:
 - **Hash Algorithm**: SHA-256
 - **Truncation**: First 8 bytes of the hash
-- **Encoding**: Base64
+- **Encoding**: Hexadecimal (lowercase)
 
 ### 4.4 Message Encryption
 
@@ -191,7 +199,7 @@ Sent by dApp to publish its public key:
       "icon": "data:image/svg+xml;base64,..."
     }
   },
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "sessionId": "k7n8m9x2w5q1p3r6",
   "timestamp": 1640995200
 }
 ```
@@ -211,7 +219,7 @@ Sent by wallet to initiate connection (encrypted with shared key from URL):
       "icon": "data:image/svg+xml;base64,..."
     }
   },
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "sessionId": "k7n8m9x2w5q1p3r6",
   "timestamp": 1640995200
 }
 ```
@@ -227,7 +235,7 @@ Standard WebRTC SDP exchange (encrypted with recipient's public key):
     "type": "offer",
     "sdp": "v=0\r\no=- 123456 123456 IN IP4 0.0.0.0\r\n..."
   },
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "sessionId": "k7n8m9x2w5q1p3r6",
   "timestamp": 1640995200
 }
 ```
@@ -244,7 +252,7 @@ WebRTC ICE candidate exchange (encrypted with recipient's public key):
     "sdpMid": "0",
     "sdpMLineIndex": 0
   },
-  "sessionId": "550e8400-e29b-41d4-a716-446655440000",
+  "sessionId": "k7n8m9x2w5q1p3r6",
   "timestamp": 1640995200
 }
 ```

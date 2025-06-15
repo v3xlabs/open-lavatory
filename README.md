@@ -41,7 +41,7 @@ This repository includes the following packages:
 ## 📋 Specification
 
 > [!IMPORTANT]  
-> This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#-known-limitations) section for more details.
+> This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#%EF%B8%8F-known-limitations) section for more details.
 
 You can find the entire specification in [spec.md](./spec.md).
 

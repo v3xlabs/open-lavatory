@@ -8,9 +8,8 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 
-
-    color: #213547;
-    background-color: #ffffff;
+  color: #213547;
+  background-color: #ffffff;
 }
 
 a {
@@ -19,7 +18,7 @@ a {
   text-decoration: inherit;
 }
 a:hover {
- color: #747bff;
+  color: #747bff;
 }
 
 body {
@@ -28,7 +27,7 @@ body {
   place-items: center;
   flex-direction: column;
   min-width: 320px;
-  min-height: 100vh;
+  height: 100vh;
 }
 
 h1 {
@@ -45,7 +44,7 @@ button {
   font-family: inherit;
   cursor: pointer;
   transition: border-color 0.25s;
-color: white;
+  color: white;
   background-color: black;
 }
 button:hover {

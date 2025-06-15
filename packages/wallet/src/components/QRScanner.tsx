@@ -4,20 +4,24 @@ import styles from './QRScanner.module.css'
 import { EnterFullScreenIcon } from '@radix-ui/react-icons'
 import { useEffect, useState } from 'react'
 
-export const QRScanner = ({ onScanned }: { onScanned: (result: string) => void }) => {
+export const QRScanner = (
+  { onScanned }: { onScanned: (result: string) => void },
+) => {
   const [result, setResult] = useState<string | null>(null)
-  	const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false)
 
-    useEffect(() => {
-        if (result) {
-            onScanned(result)
-        }
-    }, [result, onScanned])
+  useEffect(() => {
+    if (result) {
+      onScanned(result)
+    }
+  }, [result, onScanned])
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
       <Dialog.Trigger asChild>
-        <button className={styles.cta}><EnterFullScreenIcon /></button>
+        <button className={styles.cta}>
+          <EnterFullScreenIcon />
+        </button>
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />

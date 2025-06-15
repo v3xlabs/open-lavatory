@@ -1,0 +1,16 @@
+.balance {
+    font-size: 48px;
+    font-family: monospace;
+    text-align: center;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+}
+
+.container {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+   justify-content: center;
+}

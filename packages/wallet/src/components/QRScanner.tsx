@@ -3,6 +3,7 @@ import { Dialog } from 'radix-ui'
 import styles from './QRScanner.module.css'
 import { EnterFullScreenIcon } from '@radix-ui/react-icons'
 import { useEffect, useState } from 'react'
+import { LoadingSVG } from './LoadingSVG'
 
 export const QRScanner = (
   { onScanned }: { onScanned: (result: string) => void },
@@ -27,9 +28,11 @@ export const QRScanner = (
         <Dialog.Overlay className={styles.overlay} />
         <Dialog.Content className={styles.content}>
           <Dialog.Title className={styles.title}>
-            Show the QR code
+            {result ? 'Establishing session' : 'Show the QR code'}
           </Dialog.Title>
-          {result ? <div>Establishing connection</div> : <Scanner
+          {result ? <div className={styles.loader}>
+            <LoadingSVG height={36} width={36} />
+          </div> : <Scanner
             sound={false}
             onScan={(result) => {
               if (result[0].format === 'qr_code') {

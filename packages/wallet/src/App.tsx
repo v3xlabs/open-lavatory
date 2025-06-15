@@ -68,8 +68,6 @@ const App: Component = () => {
                 onMessage={async (payload) => {
                   const client = config.getClient()
 
-                  console.log('Payload: ', payload)
-
                   if (
                     payload.method.startsWith('eth_') ||
                     payload.method.startsWith('personal_')

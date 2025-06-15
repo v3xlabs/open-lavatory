@@ -1,5 +1,8 @@
 <div align="center">
-  <img src="./packages/dapp/public/openlavatory.png" alt="Open Lavatory Protocol" width="150" height="150">
+  <picture width="150" height="150">
+    <source srcset="./packages/dapp/public/openlavatory_dark.png" media="(prefers-color-scheme: dark)">
+    <img src="./packages/dapp/public/openlavatory.png" alt="Open Lavatory Protocol" width="150" height="150">
+  </picture>
   <br />
   <h1>Open-Lavatory</h1>
   <p><strong>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</strong></p>

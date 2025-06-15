@@ -370,7 +370,13 @@ export class OpenLVConnection {
         // Handle JSON-RPC request
         const request: JsonRpcRequest = decryptedData;
 
-        console.log('Received JSON-RPC request:', request.method);
+        if (request.method) {
+            console.log('Received JSON-RPC request:', request.method);
+        }
+
+        if ('result' in request) {
+            console.log('Received JSON-RPC response:', request.result);
+        }
 
         if (!request.method && !('result' in request)) {
             console.warn('Received unknown payload', request);

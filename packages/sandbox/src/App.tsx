@@ -321,7 +321,7 @@ const App = () => {
                 // Handle other JSON-RPC methods
                 setMessages((prev) => [
                     ...prev,
-                    `[${timestamp}] Received JSON-RPC: ${request.method}`,
+                    `[${timestamp}] Received JSON-RPC: ${JSON.stringify(request)}`,
                 ]);
 
                 // Return a simple acknowledgment for other methods

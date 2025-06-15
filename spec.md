@@ -20,9 +20,40 @@ Open Lavatory aims to address these issues using public signaling & existing p2p
 - **Compatibility**: Drop-in replacement for existing wallet infrastructure via multi-injected provider discovery
 - **Flexibility**: Support for multiple pairing server protocols (MQTT, Waku, Nostr, etc.)
 
-## 2. Protocol Architecture
+## 2. URL Format Specification
 
-### 2.1 Overview
+### 2.1 Standard Format
+
+```
+openlv://<session-id>?h=<pubkey-hash>&k=<shared-key>&s=<pairing-server>&p=<protocol-type>
+```
+
+### 2.2 Parameters
+
+| Parameter | Required | Description | Format |
+|-----------|----------|-------------|---------|
+| `session-id` | Yes | Unique session identifier | UUID v4 |
+| `h` | Yes | Hash of dApp's public key for verification | First 8 bytes of SHA-256 hash, base64-encoded |
+| `k` | Yes | Shared secret for homomorphic encryption during handshake | 32 bytes, base64-encoded |
+| `s` | No | Pairing server URL | URL-encoded string |
+| `p` | No | Pairing server protocol | `mqtt`, `waku`, `nostr` |
+
+### 2.3 Examples
+
+```
+openlv://550e8400-e29b-41d4-a716-446655440000?h=YWJjZGVmZ2g&k=dGVzdGtleWZvcmVuY3J5cHRpb25wdXJwb3NlcwAA&s=wss%3A//test.mosquitto.org%3A8081/mqtt&p=mqtt
+
+openlv://550e8400-e29b-41d4-a716-446655440000?h=YWJjZGVmZ2g&k=dGVzdGtleWZvcmVuY3J5cHRpb25wdXJwb3NlcwAA
+```
+
+### 2.4 Default Values
+
+- `server`: `wss://test.mosquitto.org:8081/mqtt` (fallback MQTT broker)
+- `protocol`: `mqtt`
+
+## 3. Protocol Architecture
+
+### 3.1 Overview
 
 Open Lavatory establishes connections through a three-phase process:
 
@@ -30,107 +61,50 @@ Open Lavatory establishes connections through a three-phase process:
 2. **Pairing Phase**: Wallet connects via public pairing server with encrypted communication
 3. **Direct Connection Phase**: Peers establish WebRTC connection for ongoing communication
 
-### 2.2 Connection Flow Diagram
-
-The following diagram illustrates the complete connection establishment process:
+### 3.2 Connection Flow Diagram
 
 ```mermaid
 sequenceDiagram
-    participant dApp as dApp<br/>(Peer A)
-    participant QR as QR Code<br/>Display  
-    participant Wallet as Mobile Wallet<br/>(Peer B)
-    participant MQTT as Pairing Server<br/>(MQTT/Waku/Nostr)
-    participant WebRTC as WebRTC<br/>P2P Connection
+    participant D as dApp
+    participant Q as QR Code
+    participant W as Wallet
+    participant S as Signaling Server<br/>(MQTT/Waku/Nostr)
+    participant P as WebRTC P2P
 
-    Note over dApp, WebRTC: Phase 1: Discovery & Session Initialization
-    dApp->>dApp: Generate sessionId & ECDH keypair<br/>via crypto.randomUUID() & P-256
-    dApp->>dApp: Compute pubkey hash<br/>SHA-256 first 8 bytes
-    dApp->>MQTT: Subscribe to topic<br/>/openlv/session/<sessionId>
-    dApp->>MQTT: Publish dApp's public key<br/>with dApp info
-    dApp->>QR: Display QR code<br/>openlv://sessionId?h=pubkey-hash
+    Note over D, P: Phase 1: Discovery
+    D->>D: Generate session + ECDH keypair
+    D->>Q: Display openlv:// URL with session ID
+    D->>S: Subscribe to session topic
     
-    Note over dApp, WebRTC: Phase 2: Pairing via Asymmetric Encryption
-    Wallet->>QR: Scan QR code
-    Wallet->>Wallet: Parse openlv:// URL<br/>Extract sessionId & pubkey hash
-    Wallet->>Wallet: Generate ECDH keypair<br/>using P-256 curve
-    Wallet->>MQTT: Subscribe to same topic<br/>/openlv/session/<sessionId>
-    MQTT->>Wallet: Relay dApp's public key
-    Wallet->>Wallet: Verify pubkey hash matches<br/>received public key
+    Note over D, P: Phase 2: Pairing
+    W->>Q: Scan QR code
+    W->>W: Parse URL, generate keypair
+    W->>S: Connect to session topic
+    W->>S: Send encrypted hello (wallet info)
+    S->>D: Relay hello message
+    D->>W: Send encrypted response (dApp info)
     
-    Wallet->>MQTT: Send encrypted "hello" message<br/>with wallet pubkey & info (encrypted with dApp's pubkey)
-    MQTT->>dApp: Relay encrypted message
-    dApp->>dApp: Decrypt message using private key<br/>Extract wallet's public key
+    Note over D, P: Phase 3: WebRTC Connection
+    D->>S: Send encrypted WebRTC offer
+    S->>W: Relay offer
+    W->>S: Send encrypted WebRTC answer
+    S->>D: Relay answer
+    D->>P: Establish direct P2P connection
+    W->>P: Complete P2P handshake
     
-    Note over dApp, WebRTC: Phase 3: WebRTC Handshake (Encrypted via MQTT)
-    dApp->>WebRTC: Initialize RTCPeerConnection<br/>with STUN/TURN servers
-    dApp->>MQTT: Send encrypted WebRTC offer<br/>SDP + ICE candidates (encrypted with wallet's pubkey)
-    MQTT->>Wallet: Relay encrypted offer
-    Wallet->>Wallet: Decrypt offer using private key<br/>& set remote description
-    Wallet->>WebRTC: Initialize RTCPeerConnection<br/>Create answer
-    Wallet->>MQTT: Send encrypted WebRTC answer<br/>SDP + ICE candidates (encrypted with dApp's pubkey)
-    MQTT->>dApp: Relay encrypted answer
-    dApp->>dApp: Decrypt answer using private key<br/>& set remote description
-    
-    Note over dApp, WebRTC: ICE Candidate Exchange (Encrypted with recipient's pubkey)
-    dApp->>MQTT: Send encrypted ICE candidates<br/>(encrypted with wallet's pubkey)
-    MQTT->>Wallet: Relay candidates
-    Wallet->>MQTT: Send encrypted ICE candidates<br/>(encrypted with dApp's pubkey)
-    MQTT->>dApp: Relay candidates
-    
-    Note over dApp, WebRTC: Phase 4: Direct P2P Communication
-    WebRTC-->>WebRTC: DTLS-encrypted DataChannel established
-    dApp->>WebRTC: Send Ethereum JSON-RPC requests<br/>eth_requestAccounts, eth_sendTransaction
-    WebRTC->>Wallet: Direct P2P communication<br/>(bypassing MQTT)
-    Wallet->>WebRTC: JSON-RPC responses<br/>account data, signed transactions
-    WebRTC->>dApp: Receive responses
-    
-    Note over dApp, WebRTC: Fallback Mechanism
-    alt WebRTC connection fails
-        dApp->>MQTT: Continue using encrypted MQTT<br/>for JSON-RPC communication
-        MQTT->>Wallet: Relay encrypted requests/responses
-    end
-    
-    Note over dApp, WebRTC: EIP-6963 Integration
-    dApp->>dApp: Expose OpenLavatoryProvider<br/>via window.ethereum events
-    dApp->>dApp: Compatible with wagmi,<br/>ethers, web3.js
+    Note over D, P: Direct Communication
+    D->>P: JSON-RPC requests (eth_*)
+    P->>W: Direct encrypted communication
+    W->>P: JSON-RPC responses
+    P->>D: Signed transactions, account data
 ```
 
-### 2.3 Components
+### 3.3 Components
 
 - **dApp (Peer A)**: Web application requesting wallet connection
 - **Wallet (Peer B)**: Mobile or desktop wallet application
 - **Pairing Server**: Public, protocol-agnostic message relay (MQTT, Waku, Nostr, etc.)
 - **Provider Interface**: EIP-6963 compatible provider for dApp integration
-
-## 3. URL Format Specification
-
-### 3.1 Standard Format
-
-```
-openlv://<session-id>?h=<pubkey-hash>&s=<pairing-server>&p=<protocol-type>
-```
-
-### 3.2 Parameters
-
-| Parameter | Required | Description | Format |
-|-----------|----------|-------------|---------|
-| `session-id` | Yes | Unique session identifier | UUID v4 |
-| `h` | Yes | Hash of dApp's public key for verification | First 8 bytes of SHA-256 hash, base64-encoded |
-| `s` | No | Pairing server URL | URL-encoded string |
-| `p` | No | Pairing server protocol | `mqtt`, `waku`, `nostr` |
-
-### 3.3 Examples
-
-```
-openlv://550e8400-e29b-41d4-a716-446655440000?h=YWJjZGVmZ2g&s=wss%3A//test.mosquitto.org%3A8081/mqtt&p=mqtt
-
-openlv://550e8400-e29b-41d4-a716-446655440000?h=YWJjZGVmZ2g
-```
-
-### 3.4 Default Values
-
-- `server`: `wss://test.mosquitto.org:8081/mqtt` (fallback MQTT broker)
-- `protocol`: `mqtt`
 
 ## 4. Cryptographic Specification
 
@@ -142,14 +116,21 @@ Each peer generates an ECDH keypair using the P-256 (secp256r1) curve:
 - **Public Key Format**: Uncompressed (65 bytes: 0x04 || x || y)
 - **Private Key**: 32 bytes
 
-### 4.2 Public Key Hash
+### 4.2 Homomorphic Encryption Handshake
+
+The `k` parameter provides a shared secret for initial handshake encryption:
+- **Key Derivation**: HKDF-SHA256 from shared secret
+- **Encryption**: AES-256-GCM with shared key
+- **Purpose**: Encrypts initial pairing messages before ECDH key exchange
+
+### 4.3 Public Key Hash
 
 The public key hash included in the URL is computed as:
 - **Hash Algorithm**: SHA-256
 - **Truncation**: First 8 bytes of the hash
 - **Encoding**: Base64
 
-### 4.3 Message Encryption
+### 4.4 Message Encryption
 
 Messages are encrypted using ECIES (Elliptic Curve Integrated Encryption Scheme):
 - **Key Exchange**: ECDH with P-256
@@ -158,7 +139,7 @@ Messages are encrypted using ECIES (Elliptic Curve Integrated Encryption Scheme)
 - **IV Size**: 96 bits (randomly generated per message)
 - **Tag Size**: 128 bits
 
-### 4.4 Message Format
+### 4.5 Message Format
 
 Encrypted messages are base64-encoded with the following structure:
 ```
@@ -215,7 +196,7 @@ Sent by dApp to publish its public key:
 
 ### 6.2 Hello Message
 
-Sent by wallet to initiate connection (encrypted with dApp's public key):
+Sent by wallet to initiate connection (encrypted with shared key from URL):
 
 ```json
 {
@@ -295,4 +276,4 @@ Default STUN/TURN servers for maximum compatibility:
 
 ### 7.2 Browser Support
 
-Chromium appears to be working however Firefox appears to have problems when not provided with a TURN server.
+Chromium-based browsers work well with STUN servers, while Firefox requires TURN servers for reliable WebRTC connections.

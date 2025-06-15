@@ -3,7 +3,6 @@ import styles from './App.module.css'
 import { WalletInfo } from './components/WalletInfo'
 
 function App() {
-
   return (
     <>
       <header className={styles.header}>

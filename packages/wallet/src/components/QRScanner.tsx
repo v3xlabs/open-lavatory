@@ -5,45 +5,76 @@ import { EnterFullScreenIcon } from '@radix-ui/react-icons'
 import { useState } from 'react'
 import { LoadingSVG } from './LoadingSVG'
 
-const SessionDialog = ({setOpen}: {setOpen: (open: boolean) => void}) => {
+type State = {
+  isConnecting: boolean
+  uri: string | null
+}
 
-  const [result, setResult] = useState<string | null>(null)
+const Title = ({ isConnecting, uri }: State) => {
+  if (!uri) return 'Show the QR code'
+  if (isConnecting && uri) return 'Establishing session'
+  if (!isConnecting && uri) return 'Invalid URI'
+  return 'Connected'
+}
+
+const Body = (
+  { isConnecting, uri, setIsConnecting, setUri }: State & {
+    setIsConnecting: (isConnecting: boolean) => void
+    setUri: (uri: string) => void
+  },
+) => {
+  if (!isConnecting && !uri) {
+    return (
+      <>
+        <form
+          onSubmit={(e) => {
+            e.preventDefault()
+
+            setUri(new FormData(e.currentTarget).get('uri') as string)
+            setIsConnecting(true)
+          }}
+        >
+          <Scanner
+            sound={false}
+            onScan={(result) => {
+              if (result[0].format === 'qr_code') {
+                setUri(result[0].rawValue)
+                setIsConnecting(true)
+              }
+            }}
+          />
+          {!isConnecting && (
+            <input
+              name='uri'
+              className={styles.input}
+              placeholder='openlv://<uuid>'
+            />
+          )}
+        </form>
+      </>
+    )
+  }
+  if (isConnecting && uri) {
+    return (
+      <div className={styles.loader}>
+        <LoadingSVG height={36} width={36} />
+      </div>
+    )
+  }
+}
+
+const SessionDialog = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
+  const [uri, setUri] = useState<string | null>(null)
 
   const [isConnecting, setIsConnecting] = useState(false)
 
   return (
-      <Dialog.Content className={styles.content}>
-          <Dialog.Title className={styles.title}>
-            {isConnecting ? 'Establishing session' : 'Show the QR code'}
-          </Dialog.Title>
-          {isConnecting ? <div className={styles.loader}>
-            <LoadingSVG height={36} width={36} />
-          </div> : <Scanner
-            sound={false}
-            onScan={(result) => {
-              if (result[0].format === 'qr_code') {
-                setResult(result[0].rawValue)
-                setIsConnecting(true)
-              }
-            }}
-          />}
-          <form
-            onSubmit={(e) => {
-              e.preventDefault()
-
-              const uri = new FormData(e.currentTarget).get('uri') as string
-
-              setResult(uri)
-              setIsConnecting(true)
-            }}
-          >
-            {!isConnecting && <input
-              name='uri'
-              className={styles.input}
-              placeholder='openlv://<uuid>'
-            />}
-          </form>
-        </Dialog.Content>
+    <Dialog.Content className={styles.content}>
+      <Dialog.Title className={styles.title}>
+        <Title {...{ uri, isConnecting }} />
+      </Dialog.Title>
+      <Body {...{ uri, isConnecting, setUri, setIsConnecting }} />
+    </Dialog.Content>
   )
 }
 
@@ -59,7 +90,7 @@ export const QRScanner = () => {
       </Dialog.Trigger>
       <Dialog.Portal>
         <Dialog.Overlay className={styles.overlay} />
-      <SessionDialog setOpen={setOpen} />
+        <SessionDialog setOpen={setOpen} />
       </Dialog.Portal>
     </Dialog.Root>
   )

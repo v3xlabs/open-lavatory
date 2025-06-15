@@ -31,8 +31,6 @@ export class OpenLVProvider extends EventEmitter<
                 this.#isConnected = true;
                 this.emit('connect');
             } else if (phase.state === 'key-exchange') {
-                // We can also send messages via encrypted MQTT once we have the peer's public key
-                // This happens before WebRTC is established
                 this.#isConnected = true;
                 this.emit('connect');
             } else if (phase.state === 'disconnected') {
@@ -42,28 +40,34 @@ export class OpenLVProvider extends EventEmitter<
         });
 
         // Set up message handler for incoming JSON-RPC messages
-        this.#conn.onMessage(async (request: JsonRpcRequest) => {
-            console.log('Provider: Received message:', request);
-            
-            // Always emit the message for the connector to handle
-            this.emit('message', request);
+        this.#conn.onMessage(async (message: JsonRpcRequest | JsonRpcResponse) => {
+            console.log('Provider: Received message:', message);
 
-            // Handle responses to our requests
-            if ('result' in request || 'error' in request) {
-                const response = request as any as JsonRpcResponse;
+            // **FIX: Always emit the message first**
+            this.emit('message', message);
+
+            // Handle responses to our requests (but don't interfere with request handlers)
+            if ('result' in message || 'error' in message) {
+                const response = message as JsonRpcResponse;
                 console.log('Provider: Processing response:', response);
 
-                // Check for account changes
+                // Check for account changes and update internal state
                 if (response.result && Array.isArray(response.result)) {
                     const newAccounts = response.result;
                     console.log('Provider: Found accounts in response:', newAccounts);
 
-                    // Always update accounts and emit event when we receive account data
+                    // Update accounts but don't emit here - let the request handler do it
+                    const oldAccounts = this.#accounts;
                     this.#accounts = newAccounts;
-                    console.log('Provider: Emitting accountsChanged:', newAccounts);
-                    this.emit('accountsChanged', newAccounts);
+
+                    // Only emit if accounts actually changed
+                    if (JSON.stringify(oldAccounts) !== JSON.stringify(newAccounts)) {
+                        console.log('Provider: Emitting accountsChanged:', newAccounts);
+                        this.emit('accountsChanged', newAccounts);
+                    }
                 }
 
+                // Return the response for request handlers
                 return response;
             }
 
@@ -87,8 +91,6 @@ export class OpenLVProvider extends EventEmitter<
                 this.#isConnected = true;
                 this.emit('connect');
             } else if (phase.state === 'key-exchange') {
-                // We can also send messages via encrypted MQTT once we have the peer's public key
-                // This happens before WebRTC is established
                 this.#isConnected = true;
                 this.emit('connect');
             } else if (phase.state === 'disconnected') {
@@ -98,12 +100,15 @@ export class OpenLVProvider extends EventEmitter<
         });
 
         // Set up message handler
-        this.#conn.onMessage(async (request: JsonRpcRequest) => {
-            this.emit('message', request);
+        this.#conn.onMessage(async (message: JsonRpcRequest | JsonRpcResponse) => {
+            console.log('Provider: Received message:', message);
+
+            // **FIX: Always emit the message first**
+            this.emit('message', message);
 
             // Handle responses to our requests
-            if ('result' in request || 'error' in request) {
-                const response = request as any as JsonRpcResponse;
+            if ('result' in message || 'error' in message) {
+                const response = message as JsonRpcResponse;
 
                 // Check for account changes
                 if (response.result && Array.isArray(response.result)) {
@@ -153,6 +158,8 @@ export class OpenLVProvider extends EventEmitter<
             params: params.params ? Array.from(params.params as any[]) : [],
         };
 
+        console.log('Provider: Sending request:', jsonRpcRequest);
+
         // Send the request
         await this.#conn.sendMessage(jsonRpcRequest);
 
@@ -163,34 +170,97 @@ export class OpenLVProvider extends EventEmitter<
                 return new Promise((resolve, reject) => {
                     const timeout = setTimeout(() => {
                         this.removeListener('message', handleResponse);
+                        console.log('Provider: Request timeout for eth_requestAccounts');
                         reject(new Error('Request timeout'));
                     }, 30000);
 
                     const handleResponse = (message: any) => {
-                        console.log('Provider: Checking response for eth_requestAccounts:', message);
-                        
+                        console.log(
+                            'Provider: Checking response for eth_requestAccounts:',
+                            message
+                        );
+                        console.log(
+                            'Provider: Request ID:',
+                            jsonRpcRequest.id,
+                            'Response ID:',
+                            message.id
+                        );
+                        console.log('Provider: Response structure:', {
+                            hasId: 'id' in message,
+                            hasResult: 'result' in message,
+                            hasError: 'error' in message,
+                            hasMethod: 'method' in message,
+                            resultType: typeof message.result,
+                            isArray: Array.isArray(message.result),
+                            resultLength: Array.isArray(message.result)
+                                ? message.result.length
+                                : 'N/A',
+                        });
+
                         // Check if this is the response to our request
                         if (message.id === jsonRpcRequest.id) {
-                            clearTimeout(timeout);
-                            this.removeListener('message', handleResponse);
-                            
+                            console.log('Provider: ID match - processing response');
+
                             if (message.error) {
+                                console.log('Provider: Error in response:', message.error);
+                                clearTimeout(timeout);
+                                this.removeListener('message', handleResponse);
                                 reject(new Error(message.error.message));
-                            } else if (message.result && Array.isArray(message.result)) {
-                                this.#accounts = message.result;
-                                console.log('Provider: Updated accounts:', this.#accounts);
-                                resolve(message.result);
+                            } else if ('result' in message && Array.isArray(message.result)) {
+                                // Validate that these are proper Ethereum addresses
+                                const accounts = message.result;
+                                const isValidAccounts =
+                                    accounts.length > 0 &&
+                                    accounts.every((addr: any) => {
+                                        if (typeof addr !== 'string') return false;
+                                        if (!addr.startsWith('0x')) return false;
+                                        if (addr.length !== 42) return false;
+                                        // Basic hex validation
+                                        return /^0x[0-9a-fA-F]{40}$/.test(addr);
+                                    });
+
+                                if (isValidAccounts) {
+                                    console.log(
+                                        'Provider: Valid account array found:',
+                                        message.result
+                                    );
+                                    clearTimeout(timeout);
+                                    this.removeListener('message', handleResponse);
+                                    this.#accounts = message.result;
+                                    console.log('Provider: Updated accounts:', this.#accounts);
+                                    resolve(message.result);
+                                } else {
+                                    console.log(
+                                        'Provider: Invalid addresses in response:',
+                                        message.result
+                                    );
+                                    console.log(
+                                        'Provider: Address validation failed - ignoring this response'
+                                    );
+                                    // Don't resolve/reject yet - wait for a valid response
+                                }
+                            } else if ('result' in message) {
+                                console.log('Provider: Non-array result found:', message.result);
+                                // Don't resolve for non-array results like {status: 'processing'}
+                                // Keep waiting for the actual account array
+                                console.log('Provider: Waiting for account array response...');
                             } else {
-                                reject(new Error('Invalid response format'));
+                                console.log('Provider: Invalid response format - missing result');
+                                console.log(
+                                    'Provider: Full message:',
+                                    JSON.stringify(message, null, 2)
+                                );
+                                // Don't reject immediately - wallet might send another response
+                                console.log('Provider: Continuing to wait for valid response...');
                             }
-                        }
-                        // Legacy support for malformed responses
-                        else if (message.method === 'eth_accounts' && message.result) {
-                            clearTimeout(timeout);
-                            this.removeListener('message', handleResponse);
-                            this.#accounts = message.result;
-                            console.log('Provider: Updated accounts (legacy):', this.#accounts);
-                            resolve(message.result);
+                        } else {
+                            console.log('Provider: Message ID mismatch - ignoring');
+                            console.log(
+                                'Provider: Expected:',
+                                jsonRpcRequest.id,
+                                'Got:',
+                                message.id
+                            );
                         }
                     };
 
@@ -252,6 +322,7 @@ export class OpenLVProvider extends EventEmitter<
                     }, 10000);
 
                     const handleResponse = (message: any) => {
+                        console.log('Provider: Default handler - checking response:', message);
                         if (message.id === jsonRpcRequest.id) {
                             clearTimeout(timeout);
                             this.removeListener('message', handleResponse);

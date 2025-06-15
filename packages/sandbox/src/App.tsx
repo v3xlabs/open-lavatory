@@ -212,6 +212,7 @@ const App = () => {
                     ]);
 
                     // Test wallet addresses
+                    // ToDo - change second address later, it's not correct 0x EVM wallet
                     const testAccounts = [
                         '0x742d35Cc6634C0532925a3b8D4C9db96C4b4d8b1',
                         '0x8ba1f109551bD432803012645Hac136c22C177ec',
@@ -448,8 +449,9 @@ const App = () => {
                     <h1 className="text-3xl font-bold">OpenLV Demo</h1>
                     <button
                         onClick={() => setDebugMode(!debugMode)}
-                        className={`px-3 py-1 rounded text-sm ${debugMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
-                            }`}
+                        className={`px-3 py-1 rounded text-sm ${
+                            debugMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
+                        }`}
                     >
                         Debug Mode
                     </button>
@@ -612,16 +614,17 @@ const App = () => {
                                 messages.map((message, index) => (
                                     <div key={index} className="mb-2 text-sm">
                                         <span
-                                            className={`font-mono ${message.includes('DEBUG:')
+                                            className={`font-mono ${
+                                                message.includes('DEBUG:')
                                                     ? 'text-blue-600'
                                                     : message.includes('🤝') ||
                                                         message.includes('🔐') ||
                                                         message.includes('⚡')
-                                                        ? 'text-purple-600 font-semibold'
-                                                        : message.includes('✅')
-                                                            ? 'text-green-600 font-semibold'
-                                                            : ''
-                                                }`}
+                                                      ? 'text-purple-600 font-semibold'
+                                                      : message.includes('✅')
+                                                        ? 'text-green-600 font-semibold'
+                                                        : ''
+                                            }`}
                                         >
                                             {message}
                                         </span>

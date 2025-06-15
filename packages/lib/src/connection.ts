@@ -561,6 +561,15 @@ export class OpenLVConnection {
 
                     console.log('Received P2P JSON-RPC response for ID:', response.id, response);
                     // Responses are typically handled by the original sender, not processed here
+                    // return response;
+
+                    if (this.messageHandlers.length > 0) {
+                        try {
+                            await this.messageHandlers[0](response as any);
+                        } catch (error) {
+                            console.error('Error handling response in message handler:', error);
+                        }
+                    }
                 }
             } catch (error) {
                 console.error('Error handling P2P message:', error);

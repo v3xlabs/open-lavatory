@@ -38,11 +38,11 @@ This repository includes the following packages:
 
 | Package                              | Description                                         |
 | ------------------------------------ | --------------------------------------------------- |
-| 🔧 [lib](./packages/lib)             | Core implementation of the OpenLV transport layer   |
+| 🔧 [transport](./packages/transport)             | Core implementation of the OpenLV transport layer   |
 | 🔌 [connector](./packages/connector) | Wagmi connector for dApp integration                |
-| 🧪 [sandbox](./packages/sandbox)     | Interactive testing environment with debug features |
-| 👛 [wallet](./packages/wallet)       | Sample wallet implementation for testing            |
-| 🌐 [dapp](./packages/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
+| 🧪 [sandbox](./examples/sandbox)     | Interactive testing environment with debug features |
+| 👛 [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
+| 🌐 [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
 
 ## 📋 Specification
 
@@ -89,8 +89,8 @@ There are several ways to run this project
 
 ### Option 1: Sandbox + Sandbox
 
-![Sandbox + Sandbox](/packages/dapp/public/ss_01.png)
-![Sandbox + Sandbox + Element Inspect](/packages/dapp/public/ss_02.png)
+![Sandbox + Sandbox](/examples/dapp/public/ss_01.png)
+![Sandbox + Sandbox + Element Inspect](/examples/dapp/public/ss_02.png)
 
 To test out the openlv transport layer, you can run the sandbox and the wallet in two separate tabs. The sandbox includes debug logs, extra features and fully fledged UI.
 
@@ -102,8 +102,8 @@ And then open [localhost:5173](http://localhost:5173) in two of your browser tab
 
 ### Option 2: dApp + Sandbox
 
-![dApp + Sandbox](/packages/dapp/public/ss_03.png)
-![dApp + Sandbox](/packages/dapp/public/ss_wallet_1.png)
+![dApp + Sandbox](/examples/dapp/public/ss_03.png)
+![dApp + Sandbox](/examples/dapp/public/ss_wallet_1.png)
 
 To test out the wagmi connector and explore the active connection you can initiate a session from the dApp sandbox.
 

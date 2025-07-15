@@ -63,7 +63,7 @@ In short detail, the protocol works as follows:
 
 As always there is room for improvement;
 
-The current specification implements a full homo-to-asymmetric encryption scheme, which could be simplified (taking signaling server race conditions into account) to be more efficient and only rely on asymmetric encryption.
+The current specification implements a full symmetric-to-asymmetric encryption scheme, which could be simplified (taking signaling server race conditions into account) to be more efficient and only rely on asymmetric encryption.
 
 In a similar manner, the `h` parameter specifies a hash of the public key, which allows for double verification when initiating a handshake during the signaling phase. This too could use improvements.
 

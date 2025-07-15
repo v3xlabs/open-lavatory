@@ -47,7 +47,7 @@ openlv://<session-id>?h=<pubkey-hash>&k=<shared-key>&s=<pairing-server>&p=<proto
 |-----------|----------|-------------|---------|
 | `session-id` | Yes | Unique session identifier | 16-character URL-safe random string (A-Z, a-z, 0-9, -, _) |
 | `h` | Yes | Hash of dApp's public key for verification | First 8 bytes of SHA-256 hash, hex-encoded (16 characters) |
-| `k` | Yes | Shared secret for homomorphic encryption during handshake | 32 bytes, hex-encoded (64 characters) |
+| `k` | Yes | Shared secret for symmetric encryption during handshake | 32 bytes, hex-encoded (64 characters) |
 | `s` | No | Pairing server URL | URL-encoded string |
 | `p` | No | Pairing server protocol | `mqtt`, `waku`, `nostr` |
 
@@ -96,7 +96,7 @@ sequenceDiagram
     D->>W: Share openlv:// URL<br/>(QR code / copy-paste)
     D->>S: Subscribe to session topic
     
-    Note over D, P: Phase 2: Homo-to-Asymmetric Handshake (Signaling)
+    Note over D, P: Phase 2: Symmetric-to-Asymmetric Handshake (Signaling)
     W->>W: Parse URL, extract shared secret<br/>Generate ECDH keypair
     W->>S: Connect to session topic
     W->>S: Send hello encrypted with shared key<br/>(wallet info + public key)
@@ -139,7 +139,7 @@ Each peer generates an ECDH keypair using the P-256 (secp256r1) curve:
 - **Public Key Format**: Uncompressed (65 bytes: 0x04 || x || y)
 - **Private Key**: 32 bytes
 
-### 4.2 Homomorphic Encryption Handshake
+### 4.2 Symmetric Encryption Handshake with pre-shared key
 
 The `k` parameter provides a shared secret for initial handshake encryption:
 - **Key Derivation**: HKDF-SHA256 from shared secret

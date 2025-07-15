@@ -1,0 +1,125 @@
+name: CI
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+# Cancel previous runs on the same PR/branch
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ------------------------------
+  # 1) Install & Build Workspace
+  # ------------------------------
+  build:
+    runs-on: ubuntu-22.04
+    outputs:
+      node-modules-cache-key: ${{ steps.cache.outputs.cache-key }}
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Cache node_modules
+        id: cache
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.pnpm-store
+            **/node_modules
+          key: ${{ runner.os }}-node-${{ hashFiles('pnpm-lock.yaml') }}
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Build core packages so test jobs can reuse dist artifacts
+      - name: Build transport & connector packages
+        run: |
+          pnpm build:lib
+          pnpm build:connector
+
+      # Store workspace as artifact so other jobs can download without rebuilding
+      - name: Upload workspace artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: openlv-workspace
+          path: |
+            .
+          retention-days: 1
+
+  # ----------------------------------
+  # 2) Sandbox E2E Tests (Playwright)
+  # ----------------------------------
+  e2e-sandbox:
+    needs: build
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Download workspace artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: openlv-workspace
+          path: .
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20.x
+          cache: 'pnpm'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Install Playwright Browsers
+        uses: microsoft/playwright-github-action@v1
+        with:
+          # Only install Chromium (faster) – adjust when Firefox/WebKit needed
+          browsers: 'chromium'
+
+      # Run only sandbox tests (tagged default directory)
+      - name: Run Sandbox E2E Tests
+        run: pnpm test --filter @openlv/tests -- --project=chromium
+
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sandbox-playwright-report
+          path: tests/playwright-report
+
+  # ----------------------------------
+  # 3) Extension Tests (placeholder)
+  # ----------------------------------
+  e2e-extension:
+    needs: build
+    if: false  # TODO: enable when extension tests exist
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Placeholder
+        run: echo "Extension tests will run here once implemented."
+
+  # ----------------------------------------------
+  # 4) Protocol Integration Tests (placeholder)
+  # ----------------------------------------------
+  e2e-protocol:
+    needs: build
+    if: false  # TODO: enable when protocol integration tests exist
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Placeholder
+        run: echo "Protocol integration tests will run here once implemented." 

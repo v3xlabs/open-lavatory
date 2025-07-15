@@ -5,7 +5,7 @@ import type { Chain } from "@wagmi/core/chains";
 import type { Address, ProviderConnectInfo } from "viem";
 import { getAddress } from "viem";
 
-import { OpenLVProvider } from "lib/provider";
+import { OpenLVProvider } from "@openlv/transport/provider";
 import { OpenLVModalElement } from "./modal-component.js";
 
 export interface OpenLVParameters {

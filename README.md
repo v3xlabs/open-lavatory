@@ -21,6 +21,9 @@
 
 ## 🌟 Overview
 
+> [!IMPORTANT]
+> You are currently viewing the **development** branch of the repository.
+
 > [!NOTE]  
 > This project was built during 48 hours at [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin.
 > It is to be treated as a proof of concept.

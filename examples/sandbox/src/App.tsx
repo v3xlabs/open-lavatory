@@ -1,5 +1,5 @@
-import type { ConnectionPhase } from 'lib';
-import { OpenLVConnection } from 'lib';
+import type { ConnectionPhase } from '@openlv/transport';
+import { OpenLVConnection } from '@openlv/transport';
 import { QRCodeSVG } from 'qrcode.react';
 import { useEffect, useRef, useState, useCallback } from 'react';
 

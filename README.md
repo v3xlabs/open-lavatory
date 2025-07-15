@@ -1,7 +1,7 @@
 <div align="center">
   <picture width="150" height="150">
-    <source srcset="./packages/dapp/public/openlavatory_dark.png" media="(prefers-color-scheme: dark)">
-    <img src="./packages/dapp/public/openlavatory.png" alt="Open Lavatory Protocol" width="150" height="150">
+    <source srcset="./examples/dapp/public/openlavatory_dark.png" media="(prefers-color-scheme: dark)">
+    <img src="./examples/dapp/public/openlavatory.png" alt="Open Lavatory Protocol" width="150" height="150">
   </picture>
   <br />
   <h1>Open-Lavatory</h1>

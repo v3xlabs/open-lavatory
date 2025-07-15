@@ -578,7 +578,7 @@ const App = () => {
                             {isConnecting && (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                             )}
-                            <span className={`text-sm font-semibold ${getStatusColor()}`}>
+                            <span className={`text-sm font-semibold ${getStatusColor()}`} data-testid="connection-status">
                                 {getStatusText()}
                             </span>
                         </div>
@@ -621,6 +621,7 @@ const App = () => {
                             onClick={initSession}
                             disabled={connectionStatus !== 'disconnected'}
                             className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-4 hover:bg-blue-600 disabled:bg-gray-400"
+                            data-testid="init-session-button"
                         >
                             Initialize Session
                         </button>
@@ -631,7 +632,7 @@ const App = () => {
                                     <label className="block text-sm font-medium mb-2">
                                         Connection URL:
                                     </label>
-                                    <div className="text-xs break-all bg-white p-2 rounded border">
+                                    <div className="text-xs break-all bg-white p-2 rounded border" data-testid="connection-url">
                                         {openLVUrl}
                                     </div>
                                 </div>
@@ -670,6 +671,7 @@ const App = () => {
                                     placeholder="openlv://..."
                                     className="w-full p-2 border rounded"
                                     disabled={connectionStatus !== 'disconnected'}
+                                    data-testid="connection-url-input"
                                 />
                             </div>
 
@@ -679,6 +681,7 @@ const App = () => {
                                     !connectedAsUrl.trim() || connectionStatus !== 'disconnected'
                                 }
                                 className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 disabled:bg-gray-400"
+                                data-testid="connect-session-button"
                             >
                                 Connect to Session
                             </button>
@@ -707,6 +710,7 @@ const App = () => {
                                 <button
                                     onClick={sendTestMessage}
                                     className="bg-blue-500 text-white py-1 px-3 rounded text-sm hover:bg-blue-600"
+                                    data-testid="send-test-button"
                                 >
                                     Send Test
                                 </button>
@@ -720,7 +724,7 @@ const App = () => {
                         </div>
 
                         {/* Message Display */}
-                        <div className="bg-gray-50 p-4 rounded mb-4 h-48 overflow-y-auto">
+                        <div className="bg-gray-50 p-4 rounded mb-4 h-48 overflow-y-auto" data-testid="message-log">
                             {messages.length === 0 ? (
                                 <p className="text-gray-500 text-center">No messages yet...</p>
                             ) : (

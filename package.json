@@ -6,8 +6,11 @@
   "scripts": {
     "sandbox": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/sandbox dev",
     "dapp": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/example-dapp dev",
+    "wallet": "pnpm --filter @openlv/example-wallet dev",
     "build:lib": "pnpm --filter @openlv/transport build",
     "build:connector": "pnpm --filter @openlv/connector build",
-    "wallet": "pnpm --filter @openlv/example-wallet dev"
+    "test": "pnpm --filter @openlv/tests test",
+    "test:ui": "pnpm --filter @openlv/tests test:ui",
+    "test:headed": "pnpm --filter @openlv/tests test:headed"
   }
 }

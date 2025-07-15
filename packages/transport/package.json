@@ -1,5 +1,23 @@
 {
   "name": "@openlv/transport",
+  "version": "0.0.1-beta.1",
+  "keywords": ["open-lavatory"],
+  "author": {
+    "name": "Open-Lavatory",
+    "url": "https://github.com/v3xlabs/open-lavatory"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/v3xlabs/open-lavatory.git",
+    "directory": "packages/transport"
+  },
+  "homepage": "https://github.com/v3xlabs/open-lavatory",
+  "bugs": {
+    "url": "https://github.com/v3xlabs/open-lavatory/issues"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "exports": {
     ".":{
       "default": "./dist/index.js",

@@ -43,7 +43,7 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('pnpm-lock.yaml') }}
 
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: pnpm install
 
       # Build core packages so test jobs can reuse dist artifacts
       - name: Build transport & connector packages

@@ -37,6 +37,7 @@ jobs:
   # ----------------------------------
   e2e-sandbox:
     runs-on: ubuntu-22.04
+    needs: build
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
@@ -119,7 +120,7 @@ jobs:
         working-directory: tests
 
       - name: Run Extension E2E Tests
-        run: pnpm test:extension:chromium --filter @openlv/tests
+        run: pnpm run --filter @openlv/tests test:extension:chromium
         continue-on-error: true  # Allow failure while extension tests are being developed
 
       - name: Upload Extension Test Report
@@ -136,6 +137,7 @@ jobs:
   e2e-protocol:
     if: false  # TODO: enable when protocol integration tests exist
     runs-on: ubuntu-22.04
+    needs: build
     steps:
       - name: Checkout source
         uses: actions/checkout@v4

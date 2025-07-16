@@ -38,8 +38,9 @@ This repository includes the following packages:
 
 | Package                              | Description                                         |
 | ------------------------------------ | --------------------------------------------------- |
-| 🔧 [transport](./packages/transport)             | Core implementation of the OpenLV transport layer   |
+| 🔧 [transport](./packages/transport) | Core implementation of the OpenLV transport layer   |
 | 🔌 [connector](./packages/connector) | Wagmi connector for dApp integration                |
+| 🌐 [extension](./packages/extension) | Browser extension for dApp integration              |
 | 🧪 [sandbox](./examples/sandbox)     | Interactive testing environment with debug features |
 | 👛 [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
 | 🌐 [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |

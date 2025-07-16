@@ -1,4 +1,4 @@
-# E2E Test Directory
+# Sandbox Test Directory
 
 ## Quick Start
 
@@ -11,19 +11,19 @@ pnpm install
 # Install Playwright browsers
 cd tests && pnpm exec playwright install
 
-# Run tests (starts sandbox automatically)
-pnpm test
+# Run sandbox tests (starts sandbox automatically)
+pnpm test:sandbox
 
 # Run tests with visual browser
-pnpm test:headed
+pnpm test:sandbox:headed
 
 # Interactive test development
-pnpm test:ui
+pnpm test:sandbox:ui
 ```
 
 ## Test Files
 
-- `sandbox-p2p.spec.ts` - Main P2P connection tests
-- `utils/test-helpers.ts` - Reusable test utilities
+- `p2p-connection.spec.ts` - Main P2P connection tests
+- `utils/helpers.ts` - Reusable test utilities
 
 See `../README.md` for detailed documentation. 

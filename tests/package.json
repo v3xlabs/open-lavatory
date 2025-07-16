@@ -2,16 +2,26 @@
   "name": "@openlv/tests",
   "private": true,
   "version": "0.0.0",
-
   "scripts": {
-    "test": "playwright test",
-    "test:ui": "playwright test --ui",
-    "test:headed": "playwright test --headed",
-    "test:debug": "playwright test --debug",
-    "test:report": "playwright show-report"
+    "test": "playwright test --config=playwright.sandbox.config.js",
+    "test:ui": "playwright test --config=playwright.sandbox.config.js --ui",
+    "test:headed": "playwright test --config=playwright.sandbox.config.js --headed",
+    "test:debug": "playwright test --config=playwright.sandbox.config.js --debug",
+    "test:report": "playwright show-report",
+    "test:sandbox": "playwright test --config=playwright.sandbox.config.js",
+    "test:sandbox:ui": "playwright test --config=playwright.sandbox.config.js --ui",
+    "test:sandbox:headed": "playwright test --config=playwright.sandbox.config.js --headed",
+    "test:sandbox:debug": "playwright test --config=playwright.sandbox.config.js --debug",
+    "test:extension": "playwright test --config=playwright.extension.config.js",
+    "test:extension:ui": "playwright test --config=playwright.extension.config.js --ui",
+    "test:extension:headed": "playwright test --config=playwright.extension.config.js --headed",
+    "test:extension:debug": "playwright test --config=playwright.extension.config.js --debug",
+    "test:extension:chromium": "playwright test --config=playwright.extension.config.js --project=chromium-extension",
+    "test:extension:firefox": "playwright test --config=playwright.extension.config.js --project=firefox-extension"
   },
   "devDependencies": {
     "@playwright/test": "1.40.1",
+    "@types/chrome": "^0.0.278",
     "@types/node": "^20.0.0",
     "typescript": "^5.8.3"
   }

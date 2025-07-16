@@ -1,0 +1,44 @@
+{
+  "name": "@openlv/extension",
+  "version": "0.0.1-beta.1",
+  "private": true,
+  "description": "Open Lavatory Browser Extension - Privacy-first wallet connection",
+  "author": {
+    "name": "Open-Lavatory",
+    "url": "https://github.com/v3xlabs/open-lavatory"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/v3xlabs/open-lavatory.git",
+    "directory": "packages/extension"
+  },
+  "homepage": "https://github.com/v3xlabs/open-lavatory",
+  "bugs": {
+    "url": "https://github.com/v3xlabs/open-lavatory/issues"
+  },
+  "type": "module",
+  "packageManager": "pnpm@10.10.0",
+  "scripts": {
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
+    "build": "wxt build",
+    "build:firefox": "wxt build -b firefox",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox",
+    "compile": "tsc --noEmit",
+    "postinstall": "wxt prepare"
+  },
+  "dependencies": {
+    "@openlv/transport": "workspace:*",
+    "eventemitter3": "^5.0.1",
+    "globals": "^16.2.0",
+    "mqtt": "^5.13.1"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.278",
+    "@types/webextension-polyfill": "^0.12.0",
+    "typescript": "^5.8.3",
+    "wxt": "^0.20.2",
+    "webextension-polyfill": "^0.12.0"
+  }
+} 

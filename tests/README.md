@@ -1,24 +1,29 @@
-# Open Lavatory Protocol - E2E Testing
+# Open Lavatory Protocol - Testing
 
-This directory contains end-to-end tests for the Open Lavatory Protocol using Playwright.
+This directory contains comprehensive tests for the Open Lavatory Protocol using Playwright.
 
 ## Overview
 
-The test suite validates the core P2P connection functionality by orchestrating two browser contexts to simulate real-world usage:
+The test suite includes:
 
-1. **Peer A** (Session Creator) - Initializes OpenLV session and generates connection URL
-2. **Peer B** (Session Joiner) - Connects to session using the URL
-3. **Connection Verification** - Tests bidirectional messaging and connection quality
+1. **Sandbox Tests** - P2P connection functionality between browser contexts
+2. **Extension Tests** - Browser extension injection and EIP-6963 provider detection
 
 ## Test Structure
 
 ```
 tests/
-├── e2e/
-│   ├── sandbox-p2p.spec.ts      # Main P2P connection tests
-│   └── utils/
-│       └── test-helpers.ts       # Reusable test utilities
-├── playwright.config.ts          # Playwright configuration
+├── sandbox/                      # P2P sandbox connection tests
+│   ├── p2p-connection.spec.ts    # Main P2P connection tests
+│   └── utils/helpers.ts          # Reusable test utilities
+├── extension/                    # Browser extension tests
+│   ├── basic.spec.ts             # Basic extension functionality  
+│   ├── eip6963.spec.ts           # EIP-6963 provider detection
+│   ├── fixtures.ts               # Extension test fixtures
+│   └── utils/helpers.ts          # Extension test utilities
+├── playwright.sandbox.config.js  # Sandbox test configuration
+├── playwright.extension.config.js # Extension test configuration
+├── extension-setup.js            # Extension build setup
 ├── package.json                  # Test dependencies
 └── README.md                     # This file
 ```
@@ -38,26 +43,55 @@ Install Playwright browsers:
 pnpm exec playwright install
 ```
 
-### Running Tests
+### Sandbox Tests (P2P Connection)
 
-**Run all tests:**
+**Run sandbox tests:**
 ```bash
-pnpm test
+pnpm test:sandbox
 ```
 
 **Run with UI (interactive mode):**
 ```bash
-pnpm test:ui
+pnpm test:sandbox:ui
 ```
 
 **Run in headed mode (see browser):**
 ```bash
-pnpm test:headed
+pnpm test:sandbox:headed
 ```
 
 **Debug specific test:**
 ```bash
-pnpm test:debug
+pnpm test:sandbox:debug
+```
+
+### Extension Tests (Browser Extension)
+
+**Run extension tests:**
+```bash
+pnpm test:extension
+```
+
+**Run with UI (interactive mode):**
+```bash
+pnpm test:extension:ui
+```
+
+**Run in headed mode (see browser):**
+```bash
+pnpm test:extension:headed
+```
+
+**Debug specific test:**
+```bash
+pnpm test:extension:debug
+```
+
+### All Tests
+
+**Default test command (sandbox):**
+```bash
+pnpm test
 ```
 
 **View test report:**

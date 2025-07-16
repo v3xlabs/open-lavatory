@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Open Lavatory Wallet</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      width: 360px;
+      height: 600px;
+      overflow: hidden;
+    }
+
+    .container {
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .header {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      padding: 20px;
+      text-align: center;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+    }
+
+    .logo {
+      width: 40px;
+      height: 40px;
+      background: #663399;
+      border-radius: 50%;
+      margin: 0 auto 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+
+    .title {
+      font-size: 18px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 5px;
+    }
+
+    .subtitle {
+      font-size: 12px;
+      color: #666;
+      opacity: 0.8;
+    }
+
+    .main-content {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+    }
+
+    .network-info {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .network-status {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 500;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+    }
+
+    .account-section {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      padding: 15px;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #333;
+    }
+
+    .account-item {
+      background: #f8f9fa;
+      border-radius: 8px;
+      padding: 12px;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .account-address {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 12px;
+      color: #666;
+    }
+
+    .account-balance {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.9);
+      border: none;
+      border-radius: 8px;
+      padding: 12px 16px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 1);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary {
+      background: #663399;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #552288;
+    }
+
+    .info-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    .info-card {
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .info-label {
+      font-size: 11px;
+      color: #666;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .info-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .status-connected {
+      color: #059669;
+    }
+
+    .status-disconnected {
+      color: #dc2626;
+    }
+
+    .loading {
+      text-align: center;
+      padding: 20px;
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    .spinner {
+      border: 2px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top: 2px solid white;
+      width: 20px;
+      height: 20px;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+
+    .hidden {
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">OL</div>
+      <div class="title">Open Lavatory</div>
+      <div class="subtitle">EIP-6963 Wallet Provider</div>
+    </div>
+
+    <div class="main-content">
+      <div id="loading" class="loading">
+        <div class="spinner"></div>
+        <div>Loading wallet...</div>
+      </div>
+
+      <div id="wallet-content" class="hidden">
+        <div class="network-info">
+          <div class="network-status">
+            <span class="status-dot"></span>
+            <span id="network-name">Ethereum Mainnet</span>
+          </div>
+        </div>
+
+        <div class="account-section">
+          <div class="section-title">Accounts</div>
+          <div id="accounts-list">
+            <!-- Accounts will be populated here -->
+          </div>
+        </div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="connect-btn">
+            <span>🔗</span>
+            Connect
+          </button>
+          <button class="btn" id="settings-btn">
+            <span>⚙️</span>
+            Settings
+          </button>
+        </div>
+
+        <div class="info-grid">
+          <div class="info-card">
+            <div class="info-label">Status</div>
+            <div class="info-value" id="connection-status">Disconnected</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Chain ID</div>
+            <div class="info-value" id="chain-id">0x1</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Connected Sites</div>
+            <div class="info-value" id="connected-sites">0</div>
+          </div>
+          <div class="info-card">
+            <div class="info-label">Provider</div>
+            <div class="info-value">EIP-6963</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html> 

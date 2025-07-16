@@ -15,4 +15,4 @@ test.describe('OpenLV Extension - EIP-6963 Provider Detection', () => {
     
     console.log('✅ "Open Lavatory" detected in wallet list on eip6963.org');
   });
-}); 
+});

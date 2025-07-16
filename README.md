@@ -41,6 +41,9 @@ This repository includes the following packages:
 | 🔧 [transport](./packages/transport) | Core implementation of the OpenLV transport layer   |
 | 🔌 [connector](./packages/connector) | Wagmi connector for dApp integration                |
 | 🌐 [extension](./packages/extension) | Browser extension for dApp integration              |
+
+| Examples                             | Description                                         |
+| ------------------------------------ | --------------------------------------------------- |
 | 🧪 [sandbox](./examples/sandbox)     | Interactive testing environment with debug features |
 | 👛 [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
 | 🌐 [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
@@ -50,7 +53,7 @@ This repository includes the following packages:
 > [!IMPORTANT]  
 > This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#%EF%B8%8F-known-limitations) section for more details.
 
-You can find the entire specification in [spec.md](./spec.md).
+You can find the entire specification in [spec.md](./docs/spec.md).
 
 ### 📝 The Open Lavatory Protocol
 

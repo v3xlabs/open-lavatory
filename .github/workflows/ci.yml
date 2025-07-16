@@ -120,8 +120,7 @@ jobs:
         working-directory: tests
 
       - name: Run Extension E2E Tests
-        run: pnpm run --filter @openlv/tests test:extension:chromium
-        continue-on-error: true  # Allow failure while extension tests are being developed
+        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" pnpm run --filter @openlv/tests test:extension:chromium
 
       - name: Upload Extension Test Report
         if: always()

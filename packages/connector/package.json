@@ -27,14 +27,14 @@
   },
   "dependencies": {
     "@openlv/transport": "workspace:*",
-    "qrcode-generator": "^1.5.0",
-    "viem": "^2.31.2"
+    "qrcode-generator": "^1.5.0"
   },
   "devDependencies": {
     "@wagmi/core": "^2.17.3",
     "typescript": "^5.8.3"
   },
   "peerDependencies": {
-    "@wagmi/core": "^2.17.3"
+    "@wagmi/core": "^2.x.x",
+    "viem": "^2.x.x"
   }
 }

@@ -39,19 +39,18 @@ Get started with Wagmi by following the [official guide](https://wagmi.sh/react/
 
 ### 2. Configure OpenLV
 
-After you have setup Wagmi, you can set up OpenLV using the `openLvConnector(){:ts}` connector.
+After you have setup Wagmi, you can set up OpenLV using the `openlv(){:ts}` connector.
 
-```ts [wagmi.ts]
+```ts [wagmi.ts] twoslash
 import { http, createConfig, createStorage } from 'wagmi'
-import { baseSepolia } from 'wagmi/chains'
-import { openLvConnector } from '@openlv/connector' // [!code ++]
+import { mainnet } from 'wagmi/chains'
+import { openlv } from '@openlv/connector' // [!code ++]
 
 export const wagmiConfig = createConfig({
-  chains: [baseSepolia],
-  connectors: [openLvConnector()], // [!code ++]
-  storage: createStorage({ storage: localStorage }),
+  chains: [mainnet],
+  connectors: [openlv()], // [!code ++]
   transports: {
-    [baseSepolia.id]: http(),
+    [mainnet.id]: http(),
   },
 })
 ```

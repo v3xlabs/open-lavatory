@@ -124,6 +124,7 @@ export class EncryptionUtils {
      * Compute SHA-256 hash of raw public key data
      */
     static async computePublicKeyHashFromRaw(publicKeyData: Uint8Array): Promise<string> {
+        // @ts-ignore
         const hashBuffer = await crypto.subtle.digest('SHA-256', publicKeyData);
         const hashArray = new Uint8Array(hashBuffer);
         const shortHash = hashArray.slice(0, 8); // First 8 bytes
@@ -259,9 +260,11 @@ export class EncryptionUtils {
      */
     static async deriveSymmetricKey(sharedSecretHex: string): Promise<CryptoKey> {
         const sharedSecretBytes = this.hexToBytes(sharedSecretHex);
+        // @ts-ignore
+        const sharedSecretBytesBufferSource: BufferSource = sharedSecretBytes;
         const keyMaterial = await crypto.subtle.importKey(
             'raw',
-            sharedSecretBytes,
+            sharedSecretBytesBufferSource,
             'PBKDF2',
             false,
             ['deriveKey']

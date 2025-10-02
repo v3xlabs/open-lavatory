@@ -4,6 +4,8 @@
   "private": true,
   "packageManager": "pnpm@10.10.0",
   "scripts": {
+    "dev:docs": "pnpm --filter docs dev",
+    "build:docs": "pnpm --filter docs build",
     "sandbox": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/sandbox dev",
     "dapp": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/example-dapp dev",
     "wallet": "pnpm --filter @openlv/example-wallet dev",
@@ -17,5 +19,10 @@
     "test": "pnpm --filter @openlv/tests test",
     "test:ui": "pnpm --filter @openlv/tests test:ui",
     "test:headed": "pnpm --filter @openlv/tests test:headed"
+  },
+  "devDependencies": {
+    "@wagmi/core": "^2.x.x",
+    "wagmi": "^2.x.x",
+    "viem": "^2.x.x"
   }
 }

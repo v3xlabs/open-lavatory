@@ -49,15 +49,18 @@ export class OpenLVProvider extends EventEmitter<
             // Handle responses to our requests (but don't interfere with request handlers)
             if ('result' in message || 'error' in message) {
                 const response = message as JsonRpcResponse;
+
                 console.log('Provider: Processing response:', response);
 
                 // Check for account changes and update internal state
                 if (response.result && Array.isArray(response.result)) {
                     const newAccounts = response.result;
+
                     console.log('Provider: Found accounts in response:', newAccounts);
 
                     // Update accounts but don't emit here - let the request handler do it
                     const oldAccounts = this.#accounts;
+
                     this.#accounts = newAccounts;
 
                     // Only emit if accounts actually changed
@@ -213,8 +216,11 @@ export class OpenLVProvider extends EventEmitter<
                                     accounts.length > 0 &&
                                     accounts.every((addr: any) => {
                                         if (typeof addr !== 'string') return false;
+
                                         if (!addr.startsWith('0x')) return false;
+
                                         if (addr.length !== 42) return false;
+
                                         // Basic hex validation
                                         return /^0x[0-9a-fA-F]{40}$/.test(addr);
                                     });
@@ -323,6 +329,7 @@ export class OpenLVProvider extends EventEmitter<
 
                     const handleResponse = (message: any) => {
                         console.log('Provider: Default handler - checking response:', message);
+
                         if (message.id === jsonRpcRequest.id) {
                             clearTimeout(timeout);
                             this.removeListener('message', handleResponse);

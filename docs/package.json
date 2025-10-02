@@ -12,12 +12,15 @@
         "@openlv/connector": "workspace:*",
         "react": "latest",
         "react-dom": "latest",
-        "viem": "^2.37.9",
-        "vocs": "latest",
-        "wagmi": "^2.15.6"
+        "vocs": "latest"
     },
     "devDependencies": {
         "@types/react": "latest",
         "typescript": "latest"
+    },
+    "peerDependencies": {
+        "@wagmi/core": "^2.17.3",
+        "wagmi": "^2.15.6",
+        "viem": "^2.31.2"
     }
 }

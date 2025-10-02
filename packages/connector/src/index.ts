@@ -21,7 +21,7 @@ if (!customElements.get("openlv-modal")) {
   customElements.define("openlv-modal", OpenLVModalElement);
 }
 
-openLvConnector.type = "openLv" as const;
+openlv.type = "openLv" as const;
 
 function validateAndCleanAccounts(accounts: string[]): Address[] {
   return accounts
@@ -73,7 +73,7 @@ function validateAndCleanAccounts(accounts: string[]): Address[] {
     });
 }
 
-export function openLvConnector(parameters: OpenLVParameters = {}) {
+export function openlv(parameters: OpenLVParameters = {}) {
   const showQrModal = parameters.showQrModal ?? true;
 
   type Provider = OpenLVProvider;
@@ -103,7 +103,7 @@ export function openLvConnector(parameters: OpenLVParameters = {}) {
   return createConnector<Provider, Properties>((config) => ({
     id: "openLv",
     name: "OpenLV Protocol",
-    type: openLvConnector.type,
+    type: openlv.type,
     icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz48L3N2Zz4=",
 
     async setup() {

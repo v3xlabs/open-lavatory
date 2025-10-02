@@ -1,0 +1,16 @@
+# Mobile Wallets
+
+:::note
+
+Due to the nature of how the openlv protocol works, a persistent connection is required for transport.
+Thus, it is required to keep the wallet open in order to interact with a dApp.
+
+:::
+
+## Future Considerations
+
+As a result of the above, the mobile wallet paired with mobile-dapp experience is not ideal.
+This is something we are working to address, however due to how phones operate would this would require services such as [APN](https://developer.apple.com/documentation/usernotifications), [FCM](https://firebase.google.com/docs/cloud-messaging/android/client).
+
+A potential approach to circumvent this is to use the signaling layer as a mailbox / push service, however this is yet to be explored.
+Your input would be greatly appreciated.

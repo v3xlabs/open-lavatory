@@ -17,12 +17,12 @@ export default defineConfig({
       link: '/getting-started',
     },
     {
-        text: 'How it works',
-        link: '/how',
+      text: 'How it works',
+      link: '/how',
     },
     {
-        text: 'FAQ',
-        link: '/faq',
+      text: 'FAQ',
+      link: '/faq',
     },
     {
       text: 'Guides',
@@ -32,17 +32,30 @@ export default defineConfig({
           link: '/guides/intro'
         },
         {
-          text: 'Roll Your Own Modal',
-          link: '/guides/modal'
+          text: 'Configuration',
+          link: '/guides/configuration'
         },
         {
           text: 'Theming',
           link: '/guides/theme'
         },
         {
-          text: 'Wallet Implementation',
-          link: '/guides/wallet'
+          text: 'Mobile Wallets',
+          link: '/guides/mobile-wallets'
         },
+      ]
+    },
+    {
+      text: 'Wallets',
+      items: [
+        {
+          text: 'Introduction',
+          link: '/wallets'
+        },
+        {
+          text: 'Migrating from WalletConnect',
+          link: '/wallets/migrate'
+        }
       ]
     },
     {
@@ -54,11 +67,23 @@ export default defineConfig({
         },
         {
           text: 'Signaling',
-          link: '/api/signaling'
+          link: '/api/signaling',
+          items: [
+            {
+              text: 'MQTT',
+              link: '/api/signaling/mqtt'
+            }
+          ]
         },
         {
           text: 'Transport',
-          link: '/api/transport'
+          link: '/api/transport',
+          items: [
+            {
+              text: 'WebRTC',
+              link: '/api/transport/webrtc'
+            }
+          ]
         },
         {
           text: 'Connector',
@@ -66,6 +91,7 @@ export default defineConfig({
         },
       ]
     },
+
   ],
   topNav: [
     {

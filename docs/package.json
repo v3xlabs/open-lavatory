@@ -22,8 +22,8 @@
         "typescript": "latest"
     },
     "peerDependencies": {
-        "@wagmi/core": "^2.17.3",
-        "viem": "^2.31.2",
-        "wagmi": "^2.15.6"
+        "@wagmi/core": "2",
+        "viem": "2",
+        "wagmi": "2"
     }
 }

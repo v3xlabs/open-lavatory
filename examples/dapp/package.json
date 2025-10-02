@@ -51,8 +51,8 @@
     "vite-tsconfig-paths": "^5.1.4"
   },
   "peerDependencies": {
-    "@wagmi/core": "^2.x.x",
-    "wagmi": "^2.x.x",
-    "viem": "^2.x.x"
+    "@wagmi/core": "2",
+    "wagmi": "2",
+    "viem": "2"
   }
 }

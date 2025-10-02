@@ -38,10 +38,9 @@
     "mqtt": "^5.13.1"
   },
   "peerDependencies": {
-    "@wagmi/core": "^2.x.x",
-    "@waku/sdk": "^0.0.31",
-    "wagmi": "^2.x.x",
-    "viem": "^2.x.x"
+    "@wagmi/core": "2",
+    "wagmi": "2",
+    "viem": "2"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

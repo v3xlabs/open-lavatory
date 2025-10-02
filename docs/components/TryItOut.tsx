@@ -54,7 +54,7 @@ const Connectors = () => {
                             onClick={() => {
                                 connect({ connector: connector })
                             }}
-                            className="border border-[var(--vocs-color_codeInlineBorder)] !bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-1"
+                            className="border border-[var(--vocs-color_codeInlineBorder)] !bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 text-sm"
                         >
                             Connect
                         </button>

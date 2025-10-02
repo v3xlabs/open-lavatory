@@ -66,6 +66,10 @@ export default defineConfig({
           link: '/api/intro'
         },
         {
+          text: 'Establishing a link',
+          link: '/api/uri'
+        },
+        {
           text: 'Signaling',
           link: '/api/signaling',
           items: [

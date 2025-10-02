@@ -267,7 +267,7 @@ export class OpenLVModalElement extends HTMLElement {
     }
 
     private generateQRCode(text: string): string {
-        const qr = QRCode.default(0, 'M');
+        const qr = QRCode(0, 'M');
         qr.addData(text);
         qr.make();
         return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });

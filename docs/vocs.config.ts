@@ -1,3 +1,4 @@
+import tailwindcss from '@tailwindcss/vite'
 import { defineConfig } from 'vocs'
 
 // eslint-disable-next-line import/no-default-export
@@ -31,12 +32,16 @@ export default defineConfig({
           link: '/guides/intro'
         },
         {
-          text: 'Pairing',
-          link: '/guides/accounts'
+          text: 'Roll Your Own Modal',
+          link: '/guides/modal'
         },
         {
-          text: 'Other',
-          link: '/guides/other'
+          text: 'Theming',
+          link: '/guides/theme'
+        },
+        {
+          text: 'Wallet Implementation',
+          link: '/guides/wallet'
         },
       ]
     },
@@ -52,8 +57,12 @@ export default defineConfig({
           link: '/api/signaling'
         },
         {
-          text: 'Connectivity',
-          link: '/api/connectivity'
+          text: 'Transport',
+          link: '/api/transport'
+        },
+        {
+          text: 'Connector',
+          link: '/api/connector'
         },
       ]
     },
@@ -71,7 +80,10 @@ export default defineConfig({
     }
   ],
   theme: {
-    accentColor: '#D01C15',
+    accentColor: {
+      light: '#fe7d37',
+      dark: '#fe7d37',
+    },
   },
   banner: {
     content: 'OpenLV is still under active development.',

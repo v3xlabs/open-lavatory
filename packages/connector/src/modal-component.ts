@@ -238,7 +238,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
 export class OpenLVModalElement extends HTMLElement {
     public shadowRoot: ShadowRoot;
     private uri: string = '';
-    private onClose: () => void = () => {};
+    private onClose: () => void = () => { };
     private keydownHandler?: (e: KeyboardEvent) => void;
 
     constructor() {
@@ -270,7 +270,7 @@ export class OpenLVModalElement extends HTMLElement {
         const qr = QRCode.default(0, 'M');
         qr.addData(text);
         qr.make();
-        return qr.createSvgTag({cellSize: 5, margin: 0, scalable: true});
+        return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
     }
 
     private render() {
@@ -292,14 +292,14 @@ export class OpenLVModalElement extends HTMLElement {
             document.body.appendChild(textArea);
             textArea.focus();
             textArea.select();
-            
+
             try {
                 document.execCommand('copy');
                 this.showCopyFeedback();
             } catch (err) {
                 console.error('Failed to copy to clipboard:', err);
             }
-            
+
             document.body.removeChild(textArea);
         }
     }
@@ -357,4 +357,14 @@ export class OpenLVModalElement extends HTMLElement {
 // Register the custom element
 if (!customElements.get('openlv-modal')) {
     customElements.define('openlv-modal', OpenLVModalElement);
-} 
+}
+
+if (customElements) {
+
+    // Register the custom element
+    if (!customElements.get("openlv-modal")) {
+        customElements.define("openlv-modal", OpenLVModalElement);
+    }
+} else {
+    console.warn("OpenLV: Custom elements are not supported in this environment");
+}

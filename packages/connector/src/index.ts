@@ -4,9 +4,23 @@ import { mainnet } from "@wagmi/core/chains";
 import type { Chain } from "@wagmi/core/chains";
 import type { Address, ProviderConnectInfo } from "viem";
 import { getAddress } from "viem";
+import type { OpenLVModalElement as OpenLVModalElementType } from "./modal-component.js";
 
 import { OpenLVProvider } from "@openlv/transport/provider";
-import { OpenLVModalElement } from "./modal-component.js";
+
+// import { OpenLVModalElement } from "./modal-component.js";
+
+const OpenLVModalElement = await (async (): Promise<typeof OpenLVModalElementType> => {
+  if (typeof window !== "undefined") {
+    const { OpenLVModalElement } = await import("./modal-component.js");
+    return OpenLVModalElement;
+  } else {
+    // @ts-ignore
+    // const { OpenLVModalElement } = await import("./modal-component.js");
+    // return OpenLVModalElement;
+    return null;
+  }
+})();
 
 export interface OpenLVParameters {
   showQrModal?: boolean;
@@ -15,11 +29,6 @@ export interface OpenLVParameters {
 type OpenLVConnector = Connector & {
   onDisplayUri(uri: string): void;
 };
-
-// Register the custom element
-if (!customElements.get("openlv-modal")) {
-  customElements.define("openlv-modal", OpenLVModalElement);
-}
 
 openlv.type = "openLv" as const;
 
@@ -98,7 +107,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
   let chainChanged: OpenLVConnector["onChainChanged"] | undefined;
 
   // Modal state
-  let modalElement: OpenLVModalElement | null = null;
+  let modalElement: OpenLVModalElementType | null = null;
 
   return createConnector<Provider, Properties>((config) => ({
     id: "openLv",

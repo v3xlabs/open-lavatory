@@ -32,6 +32,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile=false
       - name: Build Docs
+        run: pnpm build:all
+      - name: Build Docs
         run: pnpm --filter docs build
       - name: Setup Pages
         uses: actions/configure-pages@v5

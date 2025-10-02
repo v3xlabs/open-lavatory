@@ -1,4 +1,4 @@
-import * as QRCode from 'qrcode-generator';
+import { default as QRCode } from 'qrcode-generator';
 
 export const getModalTemplate = (qrSvg: string, uri: string): string => `
     <style>

@@ -16,7 +16,9 @@ let OpenLVModalElement: typeof OpenLVModalElementType | undefined;
 
     OpenLVModalElement = OpenLVModalElement_;
   }
-})();
+})().then(() => {
+  console.log("OpenLV: Modal element imported");
+});
 
 export interface OpenLVParameters {
   showQrModal?: boolean;

@@ -23,7 +23,8 @@
   "types": "./dist/index.d.ts",
   "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "dev": "tsc --watch"
   },
   "dependencies": {
     "@openlv/transport": "workspace:*",

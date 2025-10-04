@@ -8,7 +8,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.8);
+            background: rgba(0, 0, 0, 0.7);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -19,7 +19,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
         .modal-content {
             background: white;
             border-radius: 16px;
-            padding: 32px;
+            padding: 16px;
             max-width: 400px;
             width: 90%;
             text-align: center;
@@ -42,7 +42,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
         .qr-container {
             margin: 24px 0;
             padding: 16px;
-            background: #f9fafb;
+            background: #F4F5F6;
             border-radius: 12px;
         }
 
@@ -204,7 +204,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
     </style>
     
     <div class="modal-content">
-        <h2 class="modal-title">Connect OpenLV Wallet</h2>
+        <h2 class="modal-title">Connect Wallet</h2>
         <p class="modal-subtitle">Scan QR code or copy URL to connect</p>
         
         <div class="qr-container">
@@ -225,9 +225,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
         </div>
         
         <button class="cancel-button" id="cancel-btn">Cancel</button>
-        
-        <p class="protocol-badge">🔐 OpenLV Protocol</p>
-        
+
         <div class="copy-feedback" id="copy-feedback">
             📋 Connection URL copied to clipboard!
         </div>

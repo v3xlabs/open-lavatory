@@ -1,7 +1,6 @@
 import { createConnector } from "@wagmi/core";
 import type { Connector } from "@wagmi/core";
 import { mainnet } from "@wagmi/core/chains";
-import type { Chain } from "@wagmi/core/chains";
 import type { Address, ProviderConnectInfo } from "viem";
 import { getAddress } from "viem";
 import type { OpenLVModalElement as OpenLVModalElementType } from "./modal-component.js";
@@ -10,6 +9,7 @@ import { OpenLVProvider } from "@openlv/transport/provider";
 
 let OpenLVModalElement: typeof OpenLVModalElementType | undefined;
 
+// Import fix to workaround SSR environments
 (async () => {
   if (typeof window !== "undefined") {
     const { OpenLVModalElement: OpenLVModalElement_ } = await import("./modal-component.js");
@@ -17,7 +17,7 @@ let OpenLVModalElement: typeof OpenLVModalElementType | undefined;
     OpenLVModalElement = OpenLVModalElement_;
   }
 })().then(() => {
-  console.log("OpenLV: Modal element imported");
+  // console.log("OpenLV: Modal element imported");
 });
 
 export interface OpenLVParameters {

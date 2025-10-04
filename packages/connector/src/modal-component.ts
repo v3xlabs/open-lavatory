@@ -16,6 +16,12 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
 
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .modal-content {
             background: white;
             border-radius: 16px;
@@ -152,8 +158,6 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
         }
 
         .cancel-button {
-            background: #ef4444;
-            color: white;
             border: none;
             border-radius: 8px;
             padding: 12px 24px;
@@ -201,10 +205,39 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             transform: translateX(0);
             opacity: 1;
         }
+        .footer {
+            display: flex;
+            justify-content: flex-start;
+            align-items: center;
+        }
+        .openlv-logo {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            color: inherit;
+        }
+        .openlv-logo img {
+            width: 20px;
+            height: 20px;
+        }
+        .openlv-logo span {
+            font-size: 12px;
+            font-weight: 600;
+            opacity: 0.5;
+        }
+        .openlv-logo:hover {
+            text-decoration: underline;
+        }
     </style>
     
     <div class="modal-content">
-        <h2 class="modal-title">Connect Wallet</h2>
+        <div class="modal-header">
+            <button class="cancel-button" id="cancel-btn">Cancel</button>
+            <h2 class="modal-title">Connect Wallet</h2>
+            <button class="settings-button">Settings</button>
+        </div>
         <p class="modal-subtitle">Scan QR code or copy URL to connect</p>
         
         <div class="qr-container">
@@ -218,16 +251,14 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             </div>
             <p class="interaction-hint">QR code is blurred for privacy protection • Click to copy URL</p>
         </div>
-        
-        <div class="url-container" id="url-container" title="Click to copy connection URL">
-            <p class="url-label">Connection URL:</p>
-            <p class="url-text">${uri}</p>
-        </div>
-        
-        <button class="cancel-button" id="cancel-btn">Cancel</button>
-
         <div class="copy-feedback" id="copy-feedback">
             📋 Connection URL copied to clipboard!
+        </div>
+        <div class="footer">
+            <a href="https://github.com/v3xlabs/open-lavatory" target="_blank" class="openlv-logo">
+                <img src="/openlavatory.png" alt="Open Lavatory Logo" />
+                <span>openlv</span>
+            </a>
         </div>
     </div>
 `;

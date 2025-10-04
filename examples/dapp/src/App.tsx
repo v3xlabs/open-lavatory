@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import {
+    Connector,
     useAccount,
     useBalance,
     useChainId,
@@ -8,6 +9,7 @@ import {
     useSwitchChain,
 } from 'wagmi';
 import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
+import { ConnectorCard } from './components/ConnectorCard';
 
 interface WalletInfo {
     address: string;
@@ -82,23 +84,24 @@ const App = () => {
         return colors[id] || 'bg-gray-500';
     };
 
+
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-200 p-4">
+        <div className="min-h-screen bg-gray-50 p-6">
             <div className="max-w-6xl mx-auto">
                 {/* Header */}
-                <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+                <div className="bg-white border border-gray-200 rounded-lg p-8 mb-8">
                     <div className="flex items-center justify-between mb-4">
                         <div>
-                            <h1 className="text-4xl font-bold text-slate-800 mb-2">
+                            <h1 className="text-2xl font-bold text-gray-800 mb-2">
                                 🚀 Wallet Sandbox
                             </h1>
-                            <p className="text-slate-600">
+                            <p className="text-sm text-gray-600">
                                 Beautiful wagmi-powered wallet connection demo
                             </p>
                         </div>
                         <button
                             onClick={refreshWallets}
-                            className="bg-slate-100 hover:bg-slate-200 text-slate-700 px-4 py-2 rounded-lg transition-colors duration-200 flex items-center gap-2"
+                            className="bg-gray-100 hover:bg-gray-200 text-gray-700 px-4 py-2 rounded-md transition-colors duration-200 flex items-center gap-2"
                         >
                             <svg
                                 className="w-4 h-4"
@@ -124,82 +127,59 @@ const App = () => {
                                 isConnected ? 'bg-green-500' : 'bg-red-500'
                             }`}
                         ></div>
-                        <span className="text-sm font-medium text-slate-600">
+                        <span className="text-sm font-medium text-gray-600">
                             {isConnected ? 'Connected' : 'Disconnected'}
                         </span>
                         {isConnected && (
-                            <span className="text-xs bg-slate-100 px-2 py-1 rounded">
+                            <span className="text-xs bg-gray-100 px-2 py-1 rounded">
                                 {connector?.name}
                             </span>
                         )}
                     </div>
                 </div>
 
-                <div className="grid lg:grid-cols-2 gap-8">
-                    {/* Available Wallets */}
-                    <div className="bg-white rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
-                            <svg
-                                className="w-6 h-6 text-blue-500"
-                                fill="none"
-                                stroke="currentColor"
-                                viewBox="0 0 24 24"
-                            >
-                                <path
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    strokeWidth={2}
-                                    d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
-                                />
-                            </svg>
-                            Available Wallets ({connectors.length})
-                        </h2>
+                {/* Available Connectors */}
+                <div className="bg-white border border-gray-200 rounded-lg p-6 mb-8">
+                    <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+                        <svg
+                            className="w-5 h-5 text-blue-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"
+                            />
+                        </svg>
+                        Available Connectors ({connectors.length})
+                    </h2>
 
-                        <div className="space-y-3">
-                            {connectors.map((conn) => (
-                                <div
-                                    key={`${conn.id}-${refreshKey}`}
-                                    className="flex items-center justify-between p-4 bg-slate-50 rounded-xl hover:bg-slate-100 transition-colors duration-200"
-                                >
-                                    <div className="flex items-center gap-3">
-                                        <div className="w-10 h-10 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center text-white font-bold text-sm">
-                                            {conn.name.charAt(0)}
-                                        </div>
-                                        <div>
-                                            <h3 className="font-semibold text-slate-800">
-                                                {conn.name}
-                                            </h3>
-                                            <p className="text-xs text-slate-500">
-                                                {conn.type} • {conn.id}
-                                            </p>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => connect({ connector: conn })}
-                                        disabled={isPending || isConnected}
-                                        className="bg-blue-500 hover:bg-blue-600 disabled:bg-slate-300 text-white px-4 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
-                                    >
-                                        {isPending ? 'Connecting...' : 'Connect'}
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-
-                        {connectError && (
-                            <div className="mt-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-                                <p className="text-red-700 text-sm">
-                                    <span className="font-medium">Connection Error:</span>{' '}
-                                    {connectError.message}
-                                </p>
-                            </div>
-                        )}
+                    <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {connectors.map((conn) => (
+                            <ConnectorCard key={conn.id} connector={conn} refreshKey={refreshKey} />
+                        ))}
                     </div>
 
+                    {connectError && (
+                        <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+                            <p className="text-red-700 text-sm">
+                                <span className="font-medium">Connection Error:</span>{' '}
+                                {connectError.message}
+                            </p>
+                        </div>
+                    )}
+                </div>
+
+                <div className="grid lg:grid-cols-2 gap-8">
+
                     {/* Wallet Information */}
-                    <div className="bg-white rounded-2xl shadow-xl p-6">
-                        <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <div className="bg-white border border-gray-200 rounded-lg p-6">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                             <svg
-                                className="w-6 h-6 text-green-500"
+                                className="w-5 h-5 text-green-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -217,12 +197,12 @@ const App = () => {
                         {walletInfo ? (
                             <div className="space-y-6">
                                 {/* Address */}
-                                <div className="p-4 bg-slate-50 rounded-xl">
-                                    <label className="text-sm font-medium text-slate-600 block mb-2">
+                                <div className="p-4 bg-gray-50 rounded-lg">
+                                    <label className="text-sm font-medium text-gray-600 block mb-2">
                                         Address
                                     </label>
                                     <div className="flex items-center justify-between">
-                                        <code className="text-sm font-mono text-slate-800">
+                                        <code className="text-sm font-mono text-gray-800">
                                             {formatAddress(walletInfo.address)}
                                         </code>
                                         <button
@@ -237,13 +217,13 @@ const App = () => {
                                 </div>
 
                                 {/* Balance */}
-                                <div className="p-4 bg-slate-50 rounded-xl">
-                                    <label className="text-sm font-medium text-slate-600 block mb-2">
+                                <div className="p-4 bg-gray-50 rounded-lg">
+                                    <label className="text-sm font-medium text-gray-600 block mb-2">
                                         Balance
                                     </label>
-                                    <div className="text-2xl font-bold text-slate-800">
+                                    <div className="text-lg font-semibold text-gray-800">
                                         {balanceLoading ? (
-                                            <div className="animate-pulse bg-slate-200 h-8 w-32 rounded"></div>
+                                            <div className="animate-pulse bg-gray-200 h-8 w-32 rounded"></div>
                                         ) : (
                                             `${formatBalance(balance)} ${balance?.symbol || 'ETH'}`
                                         )}
@@ -251,8 +231,8 @@ const App = () => {
                                 </div>
 
                                 {/* Current Chain */}
-                                <div className="p-4 bg-slate-50 rounded-xl">
-                                    <label className="text-sm font-medium text-slate-600 block mb-2">
+                                <div className="p-4 bg-gray-50 rounded-lg">
+                                    <label className="text-sm font-medium text-gray-600 block mb-2">
                                         Current Chain
                                     </label>
                                     <div className="flex items-center gap-2">
@@ -261,26 +241,26 @@ const App = () => {
                                                 chainId
                                             )}`}
                                         ></div>
-                                        <span className="font-semibold text-slate-800">
+                                        <span className="font-semibold text-gray-800">
                                             {getChainName(chainId)}
                                         </span>
-                                        <span className="text-xs text-slate-500">#{chainId}</span>
+                                        <span className="text-xs text-gray-500">#{chainId}</span>
                                     </div>
                                 </div>
 
                                 {/* Disconnect Button */}
                                 <button
                                     onClick={() => disconnect()}
-                                    className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-xl transition-colors duration-200 font-medium"
+                                    className="w-full bg-red-500 hover:bg-red-600 text-white py-3 rounded-lg transition-colors duration-200 font-medium"
                                 >
                                     Disconnect Wallet
                                 </button>
                             </div>
                         ) : (
                             <div className="text-center py-12">
-                                <div className="w-20 h-20 mx-auto mb-4 bg-slate-100 rounded-full flex items-center justify-center">
+                                <div className="w-20 h-20 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
                                     <svg
-                                        className="w-8 h-8 text-slate-400"
+                                        className="w-8 h-8 text-gray-400"
                                         fill="none"
                                         stroke="currentColor"
                                         viewBox="0 0 24 24"
@@ -293,10 +273,10 @@ const App = () => {
                                         />
                                     </svg>
                                 </div>
-                                <h3 className="text-lg font-semibold text-slate-800 mb-2">
+                                <h3 className="text-base font-medium text-gray-800 mb-2">
                                     No Wallet Connected
                                 </h3>
-                                <p className="text-slate-600">
+                                <p className="text-gray-600">
                                     Connect a wallet to see your account information
                                 </p>
                             </div>
@@ -306,10 +286,10 @@ const App = () => {
 
                 {/* Available Chains */}
                 {isConnected && (
-                    <div className="bg-white rounded-2xl shadow-xl p-6 mt-8">
-                        <h2 className="text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2">
+                    <div className="bg-white rounded-lg border border-gray-200 p-6 mt-8">
+                        <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
                             <svg
-                                className="w-6 h-6 text-purple-500"
+                                className="w-5 h-5 text-purple-500"
                                 fill="none"
                                 stroke="currentColor"
                                 viewBox="0 0 24 24"
@@ -328,10 +308,10 @@ const App = () => {
                             {chains.map((chain) => (
                                 <div
                                     key={chain.id}
-                                    className={`p-4 rounded-xl border-2 transition-all duration-200 ${
+                                    className={`p-4 rounded-lg border-2 transition-all duration-200 ${
                                         chain.id === chainId
                                             ? 'border-blue-500 bg-blue-50'
-                                            : 'border-slate-200 bg-slate-50 hover:border-slate-300'
+                                            : 'border-slate-200 bg-gray-50 hover:border-slate-300'
                                     }`}
                                 >
                                     <div className="flex items-center justify-between mb-3">
@@ -341,7 +321,7 @@ const App = () => {
                                                     chain.id
                                                 )}`}
                                             ></div>
-                                            <h3 className="font-semibold text-slate-800">
+                                            <h3 className="font-medium text-gray-800">
                                                 {chain.name}
                                             </h3>
                                         </div>
@@ -351,13 +331,13 @@ const App = () => {
                                             </span>
                                         )}
                                     </div>
-                                    <p className="text-xs text-slate-500 mb-3">
+                                    <p className="text-xs text-gray-500 mb-3">
                                         Chain ID: {chain.id} • {chain.nativeCurrency.symbol}
                                     </p>
                                     {chain.id !== chainId && (
                                         <button
                                             onClick={() => switchChain({ chainId: chain.id })}
-                                            className="w-full bg-slate-200 hover:bg-slate-300 text-slate-700 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
+                                            className="w-full bg-gray-200 hover:bg-slate-300 text-gray-700 py-2 rounded-lg transition-colors duration-200 text-sm font-medium"
                                         >
                                             Switch to {chain.name}
                                         </button>
@@ -369,7 +349,7 @@ const App = () => {
                 )}
 
                 {/* Footer */}
-                <div className="text-center mt-8 text-slate-500">
+                <div className="text-center mt-8 text-gray-500">
                     <p className="text-sm">
                         Built with ❤️ using{' '}
                         <span className="font-semibold text-blue-500">wagmi</span>,{' '}

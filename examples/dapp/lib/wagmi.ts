@@ -8,11 +8,11 @@ export const config = createConfig({
     chains: [mainnet, sepolia, arbitrum, base, optimism, polygon],
     connectors: [
         injected(),
-        metaMask(),
-        // walletConnect({
-        //     projectId: 'demo-project-id', // Replace with actual project ID
-        // }),
+        walletConnect({
+            projectId: 'demo-project-id', // Replace with actual project ID
+        }),
         openlv(),
+        metaMask(),
     ],
     multiInjectedProviderDiscovery: true,
     transports: {

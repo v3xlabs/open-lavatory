@@ -20,7 +20,7 @@
     "test:extension:firefox": "playwright test --config=playwright.extension.config.js --project=firefox-extension"
   },
   "devDependencies": {
-    "@playwright/test": "1.40.1",
+    "@playwright/test": "1.55.1",
     "@types/chrome": "^0.0.278",
     "@types/node": "^20.0.0",
     "typescript": "^5.8.3"

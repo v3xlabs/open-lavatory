@@ -1,5 +1,5 @@
 /* eslint-disable sonarjs/cognitive-complexity */
-/* eslint-disable @typescript-eslint/no-unused-vars */
+
 import { OpenLVProvider } from "@openlv/transport/provider";
 import type { Connector } from "@wagmi/core";
 import { createConnector } from "@wagmi/core";
@@ -99,10 +99,17 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
   type Provider = OpenLVProvider;
   type Properties = {
-    connect(parameters?: {
+    connect<withCapabilities extends boolean = false>(parameters?: {
       chainId?: number | undefined;
+      instantOnboarding?: boolean | undefined;
       isReconnecting?: boolean | undefined;
-    }): Promise<{ accounts: readonly Address[]; chainId: number }>;
+      withCapabilities?: withCapabilities | boolean | undefined;
+    }): Promise<{
+      accounts: withCapabilities extends true
+        ? readonly { address: Address }[]
+        : readonly Address[];
+      chainId: number;
+    }>;
     onConnect(connectInfo: ProviderConnectInfo): void;
     onDisplayUri(uri: string): void;
   };
@@ -126,25 +133,37 @@ export function openlv(parameters: OpenLVParameters = {}) {
     name: "Open Lavatory",
     type: openlv.type,
     icon: OPENLV_ICON_128,
+    rdns: "company.v3x.openlv",
 
     async setup() {
-      const provider = await this.getProvider().catch(() => null);
+      provider_ = (await this.getProvider().catch(() => undefined)) as
+        | Provider
+        | undefined;
 
-      if (!provider) return;
+      if (!provider_) return;
 
       if (!connect) {
         connect = this.onConnect.bind(this);
-        provider.on("connect", connect);
+        provider_.on("connect", connect);
       }
     },
+    async connect<withCapabilities extends boolean = false>(parameters?: {
+      chainId?: number;
+      isReconnecting?: boolean;
+      withCapabilities?: withCapabilities | boolean;
+    }): Promise<{
+      accounts: withCapabilities extends true
+        ? readonly { address: Address; capabilities: Record<string, unknown> }[]
+        : readonly Address[];
+      chainId: number;
+    }> {
+      const chainId = parameters?.chainId ?? config.chains[0]?.id;
+      const isReconnecting = parameters?.isReconnecting ?? false;
 
-    async connect({ chainId, isReconnecting } = {}) {
       try {
-        const provider = await this.getProvider();
-
         if (!displayUri) {
           displayUri = this.onDisplayUri.bind(this);
-          provider.on("display_uri", displayUri);
+          provider_?.on("display_uri", displayUri);
         }
 
         // Determine target chain
@@ -156,15 +175,15 @@ export function openlv(parameters: OpenLVParameters = {}) {
             (x) => x.id === state.chainId,
           );
 
-          if (isChainSupported) targetChainId = state.chainId;
+          if (isChainSupported) targetChainId = state.chainId!;
           else targetChainId = config.chains[0]?.id;
         }
 
         if (!targetChainId) throw new Error("No chains found on connector.");
 
         // Initialize OpenLV connection if not reconnecting or not connected
-        if (!isReconnecting || !provider.connected) {
-          await provider.init();
+        if (!isReconnecting || !provider_?.connected) {
+          await provider_?.init();
         }
 
         // Wait for wallet connection and proper connection state
@@ -179,11 +198,11 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
           const cleanup = () => {
             clearTimeout(timeout);
-            provider.removeListener("message", handleMessage);
-            provider.removeListener("connect", handleConnect);
+            provider_?.removeListener("message", handleMessage);
+            provider_?.removeListener("connect", handleConnect);
 
             if (displayUri) {
-              provider.removeListener("display_uri", displayUri);
+              provider_?.removeListener("display_uri", displayUri);
               displayUri = undefined;
             }
           };
@@ -195,6 +214,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
             connectionEstablished = true;
             console.log(
               "OpenLV: Connection established, requesting accounts...",
+              connectionEstablished,
             );
 
             // Only request accounts once we have a proper connection
@@ -202,7 +222,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
               accountsRequested = true;
               setTimeout(async () => {
                 try {
-                  await provider.request({
+                  await provider_?.request({
                     method: "eth_requestAccounts",
                     params: undefined,
                   });
@@ -377,16 +397,16 @@ export function openlv(parameters: OpenLVParameters = {}) {
             }
           };
 
-          provider.on("message", handleMessage);
-          provider.on("connect", handleConnect);
+          provider_?.on("message", handleMessage);
+          provider_?.on("connect", handleConnect);
 
           // Add debug listener to see all messages
-          provider.on("message", (msg) => {
+          provider_?.on("message", (msg) => {
             console.log("OpenLV: Provider emitted message event:", msg);
           });
 
           // If already connected, trigger the connect handler
-          if (provider.connected) {
+          if (provider_?.connected) {
             handleConnect();
           }
         });
@@ -394,7 +414,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
         // Set up event listeners for ongoing communication
         if (!accountsChanged) {
           accountsChanged = this.onAccountsChanged.bind(this);
-          provider.on("accountsChanged", accountsChanged);
+          provider_?.on("accountsChanged", accountsChanged);
           console.log("OpenLV: Set up accountsChanged listener");
         }
 
@@ -417,21 +437,29 @@ export function openlv(parameters: OpenLVParameters = {}) {
           }
         };
 
-        provider.on("accountsChanged", directAccountHandler);
+        provider_?.on("accountsChanged", directAccountHandler);
 
         if (!chainChanged) {
           chainChanged = this.onChainChanged.bind(this);
-          provider.on("chainChanged", chainChanged);
+          provider_?.on("chainChanged", chainChanged);
           console.log("OpenLV: Set up chainChanged listener");
         }
 
         if (!disconnect) {
           disconnect = this.onDisconnect.bind(this);
-          provider.on("disconnect", disconnect);
+          provider_?.on("disconnect", disconnect);
           console.log("OpenLV: Set up disconnect listener");
         }
 
-        return result;
+        return result as {
+          accounts: withCapabilities extends true
+            ? readonly {
+                address: Address;
+                capabilities: Record<string, unknown>;
+              }[]
+            : readonly Address[];
+          chainId: number;
+        };
       } catch (error) {
         console.error("OpenLV connection failed:", error);
         closeOpenLVModal();
@@ -440,26 +468,24 @@ export function openlv(parameters: OpenLVParameters = {}) {
     },
 
     async disconnect() {
-      const provider = await this.getProvider();
-
       try {
-        provider?.disconnect();
+        provider_?.disconnect();
       } catch (error) {
         console.error("Disconnect error:", error);
       } finally {
         // Clean up event listeners
         if (accountsChanged) {
-          provider?.removeListener("accountsChanged", accountsChanged);
+          provider_?.removeListener("accountsChanged", accountsChanged);
           accountsChanged = undefined;
         }
 
         if (chainChanged) {
-          provider?.removeListener("chainChanged", chainChanged);
+          provider_?.removeListener("chainChanged", chainChanged);
           chainChanged = undefined;
         }
 
         if (disconnect) {
-          provider?.removeListener("disconnect", disconnect);
+          provider_?.removeListener("disconnect", disconnect);
           disconnect = undefined;
         }
 
@@ -510,12 +536,10 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
       if (!chain) throw new Error(`Chain ${newChainId} not configured`);
 
-      const provider = await this.getProvider();
-
-      if (!provider) throw new Error("Provider not connected");
+      if (!provider_) throw new Error("Provider not connected");
 
       try {
-        await provider.request({
+        await provider_.request({
           method: "wallet_switchEthereumChain",
           params: [{ chainId: `0x${newChainId.toString(16)}` }],
         });

@@ -7,6 +7,7 @@
 
 // Main connection class
 export { OpenLVConnection } from './connection.js';
+export { OpenLVProvider } from './provider.js';
 
 // URL utilities
 export { decodeConnectionURL, encodeConnectionURL } from './connection.js';

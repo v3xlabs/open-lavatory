@@ -6,7 +6,7 @@ import { ChevronLeft } from "./icons/chevron";
 import { Cog } from "./icons/cog";
 import { OPENLV_ICON_128 } from "./icons/logo";
 
-export const getModalTemplate = (qrSvg: string, uri: string): string => `
+export const getModalTemplate = (qrSvg: string, _uri: string): string => `
     <style>
         :host {
             position: fixed;

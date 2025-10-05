@@ -122,7 +122,6 @@ export class OpenLVConnection {
     private sessionId?: string;
     private pubkeyHash?: string;
     private sharedKey?: string;
-    private symmetricKey?: CryptoKey; // Derived from sharedKey for handshake encryption
     private privateKey?: CryptoKey;
     private publicKey?: CryptoKey;
     private peerPublicKey?: CryptoKey;
@@ -144,7 +143,6 @@ export class OpenLVConnection {
 
     // Connection state flags
     private hasSharedPublicKey = false;
-    private peerRequested = false;
 
     // Peer identification
     private peerId: string;
@@ -238,7 +236,6 @@ export class OpenLVConnection {
     private async handlePing() {
         if (this.isInitiator && !this.hasSharedPublicKey) {
             console.log('Received ping from wallet - peer is requesting public key');
-            this.peerRequested = true;
             this.updateConnectionState('pairing', 'Wallet detected, sharing public key');
             await this.sharePublicKey();
         }
@@ -702,7 +699,6 @@ export class OpenLVConnection {
 
         // Generate shared key for symmetric encryption during handshake
         this.sharedKey = EncryptionUtils.generateSharedKey(); // Random shared key as hex
-        this.symmetricKey = await EncryptionUtils.deriveSymmetricKey(this.sharedKey);
 
         this.updateConnectionState('mqtt-connecting', 'Connecting to signaling server');
 
@@ -733,9 +729,6 @@ export class OpenLVConnection {
         this.sessionId = sessionId;
         this.pubkeyHash = pubkeyHash;
         this.sharedKey = sharedKey;
-
-        // Derive symmetric key for handshake encryption
-        this.symmetricKey = await EncryptionUtils.deriveSymmetricKey(this.sharedKey);
 
         // Generate keypair
         const keyPair = await EncryptionUtils.generateKeyPair();
@@ -855,7 +848,6 @@ export class OpenLVConnection {
 
         // Reset state
         this.hasSharedPublicKey = false;
-        this.peerRequested = false;
         this.pendingICECandidates = [];
     }
 }

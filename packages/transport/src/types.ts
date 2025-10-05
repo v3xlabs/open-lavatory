@@ -74,7 +74,7 @@ export interface EthereumRequest extends JsonRpcRequest {
     method: EthereumMethod;
 }
 
-export interface EthereumResponse extends JsonRpcResponse {}
+export type EthereumResponse = JsonRpcResponse;
 
 // Wallet info for connection handshake
 export interface WalletInfo {

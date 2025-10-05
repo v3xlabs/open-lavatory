@@ -1,7 +1,10 @@
-import { default as QRCode } from 'qrcode-generator';
-import { OPENLV_ICON_128 } from './icons/logo';
-import { ChevronLeft } from './icons/chevron';
-import { Cog } from './icons/cog';
+/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { default as QRCode } from "qrcode-generator";
+
+import { ChevronLeft } from "./icons/chevron";
+import { Cog } from "./icons/cog";
+import { OPENLV_ICON_128 } from "./icons/logo";
 
 export const getModalTemplate = (qrSvg: string, uri: string): string => `
     <style>
@@ -290,135 +293,146 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
 
 // Lightweight QR Modal Web Component
 export class OpenLVModalElement extends HTMLElement {
-    public shadowRoot: ShadowRoot;
-    private uri: string = '';
-    private onClose: () => void = () => { };
-    private keydownHandler?: (e: KeyboardEvent) => void;
+  public shadowRoot: ShadowRoot;
+  private uri: string = "";
+  private onClose: () => void = () => {};
+  private keydownHandler?: (e: KeyboardEvent) => void;
 
-    constructor() {
-        super();
-        this.shadowRoot = this.attachShadow({ mode: 'closed' });
+  constructor() {
+    super();
+    this.shadowRoot = this.attachShadow({ mode: "closed" });
+  }
+
+  connectedCallback() {
+    this.render();
+    this.setupEventListeners();
+  }
+
+  disconnectedCallback() {
+    // Clean up event listeners when element is removed
+    if (this.keydownHandler) {
+      document.removeEventListener("keydown", this.keydownHandler);
     }
+  }
 
-    connectedCallback() {
-        this.render();
-        this.setupEventListeners();
+  setProps(uri: string, onClose: () => void) {
+    this.uri = uri;
+    this.onClose = onClose;
+
+    if (this.isConnected) {
+      this.render();
     }
+  }
 
-    disconnectedCallback() {
-        // Clean up event listeners when element is removed
-        if (this.keydownHandler) {
-            document.removeEventListener('keydown', this.keydownHandler);
-        }
+  private generateQRCode(text: string): string {
+    const qr = QRCode(0, "M");
+
+    qr.addData(text);
+    qr.make();
+
+    return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
+  }
+
+  private render() {
+    const qrSvg = this.generateQRCode(this.uri);
+
+    this.shadowRoot.innerHTML = getModalTemplate(qrSvg, this.uri);
+  }
+
+  private async copyToClipboard(text: string): Promise<void> {
+    try {
+      await navigator.clipboard.writeText(text);
+      this.showCopyFeedback();
+    } catch (err) {
+      console.error("Failed to copy to clipboard:", err);
+      // Fallback for older browsers
+      const textArea = document.createElement("textarea");
+
+      textArea.value = text;
+      textArea.style.position = "fixed";
+      textArea.style.left = "-999999px";
+      textArea.style.top = "-999999px";
+      document.body.appendChild(textArea);
+      textArea.focus();
+      textArea.select();
+
+      try {
+        document.execCommand("copy");
+        this.showCopyFeedback();
+      } catch (err) {
+        console.error("Failed to copy to clipboard:", err);
+      }
+
+      document.body.removeChild(textArea);
     }
+  }
 
-    setProps(uri: string, onClose: () => void) {
-        this.uri = uri;
-        this.onClose = onClose;
-        if (this.isConnected) {
-            this.render();
-        }
-    }
+  private showCopyFeedback(): void {
+    const feedback = this.shadowRoot.querySelector(
+      "#copy-feedback",
+    ) as HTMLElement;
 
-    private generateQRCode(text: string): string {
-        const qr = QRCode(0, 'M');
-        qr.addData(text);
-        qr.make();
-        return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
-    }
-
-    private render() {
-        const qrSvg = this.generateQRCode(this.uri);
-        this.shadowRoot.innerHTML = getModalTemplate(qrSvg, this.uri);
-    }
-
-    private async copyToClipboard(text: string): Promise<void> {
-        try {
-            await navigator.clipboard.writeText(text);
-            this.showCopyFeedback();
-        } catch (err) {
-            // Fallback for older browsers
-            const textArea = document.createElement('textarea');
-            textArea.value = text;
-            textArea.style.position = 'fixed';
-            textArea.style.left = '-999999px';
-            textArea.style.top = '-999999px';
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
-            try {
-                document.execCommand('copy');
-                this.showCopyFeedback();
-            } catch (err) {
-                console.error('Failed to copy to clipboard:', err);
-            }
-
-            document.body.removeChild(textArea);
-        }
-    }
-
-    private showCopyFeedback(): void {
-        const feedback = this.shadowRoot.querySelector('#copy-feedback') as HTMLElement;
+    if (feedback) {
+      feedback.classList.add("show");
+      setTimeout(() => {
         if (feedback) {
-            feedback.classList.add('show');
-            setTimeout(() => {
-                if (feedback) {
-                    feedback.classList.remove('show');
-                }
-            }, 2000);
+          feedback.classList.remove("show");
         }
+      }, 2000);
     }
+  }
 
-    private setupEventListeners() {
-        // Close on backdrop click (but not on modal content)
-        this.addEventListener('click', (e) => {
-            if (e.target === this) {
-                this.onClose();
-            }
-        });
+  private setupEventListeners() {
+    // Close on backdrop click (but not on modal content)
+    this.addEventListener("click", (e) => {
+      if (e.target === this) {
+        this.onClose();
+      }
+    });
 
-        // Copy URL when clicking QR code
-        const qrWrapper = this.shadowRoot.querySelector('#qr-wrapper');
-        qrWrapper?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.copyToClipboard(this.uri);
-        });
+    // Copy URL when clicking QR code
+    const qrWrapper = this.shadowRoot.querySelector("#qr-wrapper");
 
-        // Copy URL when clicking URL container
-        const urlContainer = this.shadowRoot.querySelector('#url-container');
-        urlContainer?.addEventListener('click', (e) => {
-            e.stopPropagation();
-            this.copyToClipboard(this.uri);
-        });
+    qrWrapper?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.copyToClipboard(this.uri);
+    });
 
-        // Close on cancel button
-        const cancelBtn = this.shadowRoot.querySelector('#cancel-btn');
-        cancelBtn?.addEventListener('click', () => {
-            this.onClose();
-        });
+    // Copy URL when clicking URL container
+    const urlContainer = this.shadowRoot.querySelector("#url-container");
 
-        // Close on Escape key
-        this.keydownHandler = (e: KeyboardEvent) => {
-            if (e.key === 'Escape') {
-                this.onClose();
-            }
-        };
-        document.addEventListener('keydown', this.keydownHandler);
-    }
+    urlContainer?.addEventListener("click", (e) => {
+      e.stopPropagation();
+      this.copyToClipboard(this.uri);
+    });
+
+    // Close on cancel button
+    const cancelBtn = this.shadowRoot.querySelector("#cancel-btn");
+
+    cancelBtn?.addEventListener("click", () => {
+      this.onClose();
+    });
+
+    // Close on Escape key
+    this.keydownHandler = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        this.onClose();
+      }
+    };
+    document.addEventListener("keydown", this.keydownHandler);
+  }
 }
 
 // Register the custom element
-if (!customElements.get('openlv-modal')) {
-    customElements.define('openlv-modal', OpenLVModalElement);
+if (!customElements.get("openlv-modal")) {
+  customElements.define("openlv-modal", OpenLVModalElement);
 }
 
 if (customElements) {
-
-    // Register the custom element
-    if (!customElements.get("openlv-modal")) {
-        customElements.define("openlv-modal", OpenLVModalElement);
-    }
+  // Register the custom element
+  if (!customElements.get("openlv-modal")) {
+    customElements.define("openlv-modal", OpenLVModalElement);
+  }
 } else {
-    console.warn("OpenLV: Custom elements are not supported in this environment");
+  console.warn("OpenLV: Custom elements are not supported in this environment");
 }

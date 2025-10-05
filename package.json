@@ -2,6 +2,7 @@
   "name": "open-lavatory",
   "version": "1.0.0",
   "private": true,
+  "type": "module",
   "packageManager": "pnpm@10.10.0",
   "scripts": {
     "dev:docs": "pnpm --filter docs dev",
@@ -18,11 +19,28 @@
     "build:all": "pnpm build:lib && pnpm build:connector && pnpm build:extension",
     "test": "pnpm --filter @openlv/tests test",
     "test:ui": "pnpm --filter @openlv/tests test:ui",
-    "test:headed": "pnpm --filter @openlv/tests test:headed"
+    "test:headed": "pnpm --filter @openlv/tests test:headed",
+    "lint": "pnpm --filter \"@openlv/*\" --filter \"!@openlv/tests\" --filter \"!docs\" --filter \"!@openlv/extension\" lint",
+    "lint:fix": "pnpm --filter \"@openlv/*\" --filter \"!@openlv/tests\" --filter \"!docs\" --filter \"!@openlv/extension\" lint:fix"
   },
   "devDependencies": {
+    "@eslint/js": "^9.23.0",
     "@wagmi/core": "2",
-    "wagmi": "2",
-    "viem": "2"
+    "eslint": "^9.25.0",
+    "eslint-config-prettier": "^10.1.2",
+    "eslint-plugin-import": "^2.31.0",
+    "eslint-plugin-prettier": "^5.2.6",
+    "eslint-plugin-react": "^7.37.4",
+    "eslint-plugin-react-hooks": "^5.2.0",
+    "eslint-plugin-react-refresh": "^0.4.19",
+    "eslint-plugin-simple-import-sort": "^12.1.1",
+    "eslint-plugin-sonarjs": "^3.0.2",
+    "eslint-plugin-unicorn": "^58.0.0",
+    "eslint-plugin-unused-imports": "^4.1.4",
+    "globals": "^16.2.0",
+    "prettier": "^3.5.3",
+    "typescript-eslint": "^8.28.0",
+    "viem": "2",
+    "wagmi": "2"
   }
 }

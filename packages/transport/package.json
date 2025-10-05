@@ -58,7 +58,7 @@
   },
   "scripts": {
     "build": "tsc",
-    "lint": "pnpm eslint -c eslint.config.js .",
-    "lint:fix": "pnpm eslint -c eslint.config.js . --fix"
+    "lint": "pnpx eslint .",
+    "lint:fix": "pnpx eslint . --fix"
   }
 }

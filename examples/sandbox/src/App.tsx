@@ -1,7 +1,8 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import type { ConnectionPhase } from '@openlv/transport';
 import { OpenLVConnection } from '@openlv/transport';
 import { QRCodeSVG } from 'qrcode.react';
-import { useEffect, useRef, useState, useCallback } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 
 // Wallet interface
 interface WalletAccount {
@@ -14,6 +15,7 @@ interface WalletAccount {
 const generateEthereumAccount = async (): Promise<WalletAccount> => {
     // Generate a cryptographically secure private key
     const privateKeyArray = new Uint8Array(32);
+
     crypto.getRandomValues(privateKeyArray);
 
     // Convert to hex string
@@ -64,6 +66,7 @@ const useWalletStorage = () => {
         // Generate first account
         const firstAccount = await generateEthereumAccount();
         const newAccounts = [firstAccount];
+
         setAccounts(newAccounts);
         setIsInitialized(true);
 
@@ -77,6 +80,7 @@ const useWalletStorage = () => {
     const addAccount = useCallback(async () => {
         const newAccount = await generateEthereumAccount();
         const updatedAccounts = [...accounts, newAccount];
+
         setAccounts(updatedAccounts);
 
         // In a real implementation:
@@ -296,6 +300,7 @@ const App = () => {
                         ...prev,
                         `[${timestamp}] ❌ No wallet accounts available`,
                     ]);
+
                     return { status: 'error', error: 'No accounts available' };
                 }
 
@@ -490,6 +495,7 @@ const App = () => {
     const handleAddAccount = async () => {
         const newAccount = await addAccount();
         const timestamp = new Date().toLocaleTimeString();
+
         setMessages((prev) => [
             ...prev,
             `[${timestamp}] 💼 New account created: ${newAccount.address.substring(0, 10)}...`,
@@ -578,7 +584,10 @@ const App = () => {
                             {isConnecting && (
                                 <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
                             )}
-                            <span className={`text-sm font-semibold ${getStatusColor()}`} data-testid="connection-status">
+                            <span
+                                className={`text-sm font-semibold ${getStatusColor()}`}
+                                data-testid="connection-status"
+                            >
                                 {getStatusText()}
                             </span>
                         </div>
@@ -632,7 +641,10 @@ const App = () => {
                                     <label className="block text-sm font-medium mb-2">
                                         Connection URL:
                                     </label>
-                                    <div className="text-xs break-all bg-white p-2 rounded border" data-testid="connection-url">
+                                    <div
+                                        className="text-xs break-all bg-white p-2 rounded border"
+                                        data-testid="connection-url"
+                                    >
                                         {openLVUrl}
                                     </div>
                                 </div>
@@ -724,7 +736,10 @@ const App = () => {
                         </div>
 
                         {/* Message Display */}
-                        <div className="bg-gray-50 p-4 rounded mb-4 h-48 overflow-y-auto" data-testid="message-log">
+                        <div
+                            className="bg-gray-50 p-4 rounded mb-4 h-48 overflow-y-auto"
+                            data-testid="message-log"
+                        >
                             {messages.length === 0 ? (
                                 <p className="text-gray-500 text-center">No messages yet...</p>
                             ) : (

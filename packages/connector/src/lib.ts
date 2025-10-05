@@ -1,19 +1,23 @@
-import { createConnector } from "@wagmi/core";
+/* eslint-disable sonarjs/cognitive-complexity */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { OpenLVProvider } from "@openlv/transport/provider";
 import type { Connector } from "@wagmi/core";
+import { createConnector } from "@wagmi/core";
 import { mainnet } from "@wagmi/core/chains";
 import type { Address, ProviderConnectInfo } from "viem";
 import { getAddress } from "viem";
-import type { OpenLVModalElement as OpenLVModalElementType } from "./modal-component.js";
-import { OPENLV_ICON_128 } from "./icons/logo.js";
 
-import { OpenLVProvider } from "@openlv/transport/provider";
+import { OPENLV_ICON_128 } from "./icons/logo.js";
+import type { OpenLVModalElement as OpenLVModalElementType } from "./modal-component.js";
 
 let OpenLVModalElement: typeof OpenLVModalElementType | undefined;
 
 // Import fix to workaround SSR environments
 (async () => {
   if (typeof window !== "undefined") {
-    const { OpenLVModalElement: OpenLVModalElement_ } = await import("./modal-component.js");
+    const { OpenLVModalElement: OpenLVModalElement_ } = await import(
+      "./modal-component.js"
+    );
 
     OpenLVModalElement = OpenLVModalElement_;
   }
@@ -36,29 +40,37 @@ function validateAndCleanAccounts(accounts: string[]): Address[] {
     .filter((addr: string) => {
       if (typeof addr !== "string") {
         console.warn("OpenLV: Skipping non-string address:", addr);
+
         return false;
       }
+
       if (!addr.startsWith("0x")) {
         console.warn("OpenLV: Skipping address without 0x prefix:", addr);
+
         return false;
       }
+
       if (addr.length !== 42) {
         console.warn(
           "OpenLV: Skipping address with wrong length:",
           addr,
           "Length:",
-          addr.length
+          addr.length,
         );
+
         return false;
       }
+
       // Basic hex validation
       if (!/^0x[0-9a-fA-F]{40}$/.test(addr)) {
         console.warn(
           "OpenLV: Skipping address with invalid hex characters:",
-          addr
+          addr,
         );
+
         return false;
       }
+
       return true;
     })
     .map((addr: string) => {
@@ -68,8 +80,9 @@ function validateAndCleanAccounts(accounts: string[]): Address[] {
         console.warn(
           "OpenLV: Failed to validate address checksum:",
           addr,
-          error
+          error,
         );
+
         // Try to fix common checksum issues by converting to lowercase and then proper checksum
         try {
           return getAddress(addr.toLowerCase());
@@ -116,6 +129,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
     async setup() {
       const provider = await this.getProvider().catch(() => null);
+
       if (!provider) return;
 
       if (!connect) {
@@ -135,11 +149,13 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
         // Determine target chain
         let targetChainId = chainId;
+
         if (!targetChainId) {
           const state = (await config.storage?.getItem("state")) ?? {};
           const isChainSupported = config.chains.some(
-            (x) => x.id === state.chainId
+            (x) => x.id === state.chainId,
           );
+
           if (isChainSupported) targetChainId = state.chainId;
           else targetChainId = config.chains[0]?.id;
         }
@@ -165,6 +181,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
             clearTimeout(timeout);
             provider.removeListener("message", handleMessage);
             provider.removeListener("connect", handleConnect);
+
             if (displayUri) {
               provider.removeListener("display_uri", displayUri);
               displayUri = undefined;
@@ -177,7 +194,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
           const handleConnect = () => {
             connectionEstablished = true;
             console.log(
-              "OpenLV: Connection established, requesting accounts..."
+              "OpenLV: Connection established, requesting accounts...",
             );
 
             // Only request accounts once we have a proper connection
@@ -251,11 +268,11 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
                   console.log(
                     "OpenLV: Connection successful, accounts:",
-                    validAccounts
+                    validAccounts,
                   );
                   console.log(
                     "OpenLV: Updated global accounts variable:",
-                    accounts
+                    accounts,
                   );
                   closeOpenLVModal();
 
@@ -270,7 +287,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
                     if (accountsChanged) {
                       console.log(
                         "OpenLV: Triggering accountsChanged with:",
-                        accountsArray
+                        accountsArray,
                       );
                       accountsChanged(accountsArray);
                     }
@@ -280,19 +297,20 @@ export function openlv(parameters: OpenLVParameters = {}) {
                     accounts: validAccounts,
                     chainId: targetChainId!,
                   });
+
                   return;
                 } else {
                   console.log(
-                    "OpenLV: No valid addresses found after validation"
+                    "OpenLV: No valid addresses found after validation",
                   );
                   console.log(
-                    "OpenLV: Continuing to wait for valid addresses..."
+                    "OpenLV: Continuing to wait for valid addresses...",
                   );
                 }
               } catch (error) {
                 console.error("OpenLV: Address validation failed:", error);
                 console.log(
-                  "OpenLV: Continuing to wait for valid addresses..."
+                  "OpenLV: Continuing to wait for valid addresses...",
                 );
                 // Continue waiting for valid addresses
               }
@@ -306,6 +324,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
             ) {
               // Check if this looks like an account array
               const firstItem = message.result[0];
+
               if (
                 typeof firstItem === "string" &&
                 firstItem.startsWith("0x") &&
@@ -313,7 +332,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
               ) {
                 try {
                   const validAccounts = validateAndCleanAccounts(
-                    message.result
+                    message.result,
                   );
 
                   if (validAccounts.length > 0) {
@@ -325,7 +344,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
                     console.log(
                       "OpenLV: Connection successful (fallback), accounts:",
-                      validAccounts
+                      validAccounts,
                     );
                     closeOpenLVModal();
 
@@ -350,7 +369,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
                 } catch (error) {
                   console.error(
                     "OpenLV: Fallback address validation failed:",
-                    error
+                    error,
                   );
                   // Continue waiting
                 }
@@ -382,8 +401,10 @@ export function openlv(parameters: OpenLVParameters = {}) {
         // Also set up a direct listener for immediate account updates
         const directAccountHandler = (newAccounts: string[]) => {
           console.log("OpenLV: Direct account update received:", newAccounts);
+
           if (newAccounts.length > 0) {
             const addresses = newAccounts.map((addr) => getAddress(addr));
+
             accounts = addresses;
             isConnected = true;
 
@@ -391,10 +412,11 @@ export function openlv(parameters: OpenLVParameters = {}) {
             config.emitter.emit("change", { accounts: addresses });
             console.log(
               "OpenLV: Emitted change event with accounts:",
-              addresses
+              addresses,
             );
           }
         };
+
         provider.on("accountsChanged", directAccountHandler);
 
         if (!chainChanged) {
@@ -430,10 +452,12 @@ export function openlv(parameters: OpenLVParameters = {}) {
           provider?.removeListener("accountsChanged", accountsChanged);
           accountsChanged = undefined;
         }
+
         if (chainChanged) {
           provider?.removeListener("chainChanged", chainChanged);
           chainChanged = undefined;
         }
+
         if (disconnect) {
           provider?.removeListener("disconnect", disconnect);
           disconnect = undefined;
@@ -449,6 +473,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
     async getAccounts() {
       console.log("OpenLV: getAccounts called, returning:", accounts);
+
       return accounts;
     },
 
@@ -456,6 +481,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
       if (!provider_) {
         provider_ = new OpenLVProvider();
       }
+
       return provider_;
     },
 
@@ -466,11 +492,13 @@ export function openlv(parameters: OpenLVParameters = {}) {
     async isAuthorized() {
       try {
         const authorized = isConnected && accounts.length > 0;
+
         console.log("OpenLV: isAuthorized check:", {
           isConnected,
           accountsLength: accounts.length,
           authorized,
         });
+
         return authorized;
       } catch {
         return false;
@@ -479,9 +507,11 @@ export function openlv(parameters: OpenLVParameters = {}) {
 
     async switchChain({ chainId: newChainId }: { chainId: number }) {
       const chain = config.chains.find((x) => x.id === newChainId);
+
       if (!chain) throw new Error(`Chain ${newChainId} not configured`);
 
       const provider = await this.getProvider();
+
       if (!provider) throw new Error("Provider not connected");
 
       try {
@@ -506,6 +536,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
         this.onDisconnect();
       } else {
         const addresses = newAccounts.map((addr) => getAddress(addr));
+
         // Update internal state
         accounts = addresses;
         isConnected = true;
@@ -517,6 +548,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
     onChainChanged(chainId: string | number) {
       const newChainId =
         typeof chainId === "string" ? parseInt(chainId, 16) : Number(chainId);
+
       currentChainId = newChainId;
       config.emitter.emit("change", { chainId: newChainId });
     },
@@ -525,8 +557,10 @@ export function openlv(parameters: OpenLVParameters = {}) {
       const chainId = connectInfo?.chainId
         ? Number(connectInfo.chainId)
         : currentChainId;
+
       currentChainId = chainId;
       const currentAccounts = await this.getAccounts();
+
       config.emitter.emit("connect", { accounts: currentAccounts, chainId });
     },
 
@@ -541,6 +575,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
       if (showQrModal) {
         showOpenLVModal(uri);
       }
+
       config.emitter.emit("message", { type: "display_uri", data: uri });
     },
   }));

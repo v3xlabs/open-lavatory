@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import {
-    Connector,
     useAccount,
     useBalance,
     useChainId,
@@ -9,6 +8,7 @@ import {
     useSwitchChain,
 } from 'wagmi';
 import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
+
 import { ConnectorCard } from './components/ConnectorCard';
 
 interface WalletInfo {
@@ -22,7 +22,7 @@ interface WalletInfo {
 const App = () => {
     const [refreshKey, setRefreshKey] = useState(0);
     const { address, isConnected, connector } = useAccount();
-    const { connectors, connect, error: connectError, isPending } = useConnect();
+    const { connectors, error: connectError } = useConnect();
     const { disconnect } = useDisconnect();
     const { switchChain, chains } = useSwitchChain();
     const chainId = useChainId();
@@ -83,7 +83,6 @@ const App = () => {
 
         return colors[id] || 'bg-gray-500';
     };
-
 
     return (
         <div className="min-h-screen bg-gray-50 p-6">
@@ -174,7 +173,6 @@ const App = () => {
                 </div>
 
                 <div className="grid lg:grid-cols-2 gap-8">
-
                     {/* Wallet Information */}
                     <div className="bg-white border border-gray-200 rounded-lg p-6">
                         <h2 className="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">

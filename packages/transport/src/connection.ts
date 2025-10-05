@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/cognitive-complexity */
+/* eslint-disable sonarjs/no-duplicate-string */
 import { MQTTSignaling, type SignalingMessage } from './signaling/mqtt.js';
 import type {
     ConnectionPayload,

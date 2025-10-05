@@ -12,4 +12,4 @@
     "types": ["node", "@playwright/test", "chrome"]
   },
   "include": ["**/*.ts"]
-} 
+}

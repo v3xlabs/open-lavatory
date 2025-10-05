@@ -1,8 +1,7 @@
-import { injected, metaMask, walletConnect } from '@wagmi/connectors';
 import { openlv } from '@openlv/connector';
-import { createConfig } from 'wagmi';
+import { injected, metaMask, walletConnect } from '@wagmi/connectors';
+import { createConfig, http } from 'wagmi';
 import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
-import { createConnector, http } from 'wagmi';
 
 export const config = createConfig({
     chains: [mainnet, sepolia, arbitrum, base, optimism, polygon],

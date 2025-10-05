@@ -1,72 +1,81 @@
-import { Scanner } from '@yudiel/react-qr-scanner'
-import { Dialog } from 'radix-ui'
-import styles from './QRScanner.module.css'
-import { EnterFullScreenIcon } from '@radix-ui/react-icons'
-import { useState } from 'react'
-import { LoadingSVG } from './LoadingSVG'
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { EnterFullScreenIcon } from "@radix-ui/react-icons";
+import { Scanner } from "@yudiel/react-qr-scanner";
+import { Dialog } from "radix-ui";
+import { useState } from "react";
+
+import { LoadingSVG } from "./LoadingSVG";
+import styles from "./QRScanner.module.css";
 
 type State = {
-  isConnecting: boolean
-  uri: string | null
-}
+  isConnecting: boolean;
+  uri: string | null;
+};
 
 const Title = ({ isConnecting, uri }: State) => {
-  if (!uri) return 'Show the QR code'
-  if (isConnecting && uri) return 'Establishing session'
-  if (!isConnecting && uri) return 'Invalid URI'
-  return 'Connected'
-}
+  if (!uri) return "Show the QR code";
 
-const Body = (
-  { isConnecting, uri, setIsConnecting, setUri }: State & {
-    setIsConnecting: (isConnecting: boolean) => void
-    setUri: (uri: string) => void
-  },
-) => {
+  if (isConnecting && uri) return "Establishing session";
+
+  if (!isConnecting && uri) return "Invalid URI";
+
+  return "Connected";
+};
+
+const Body = ({
+  isConnecting,
+  uri,
+  setIsConnecting,
+  setUri,
+}: State & {
+  setIsConnecting: (isConnecting: boolean) => void;
+  setUri: (uri: string) => void;
+}) => {
   if (!isConnecting && !uri) {
     return (
       <>
         <form
           onSubmit={(e) => {
-            e.preventDefault()
+            e.preventDefault();
 
-            setUri(new FormData(e.currentTarget).get('uri') as string)
-            setIsConnecting(true)
+            setUri(new FormData(e.currentTarget).get("uri") as string);
+            setIsConnecting(true);
           }}
         >
           <Scanner
             sound={false}
             onScan={(result) => {
-              if (result[0].format === 'qr_code') {
-                setUri(result[0].rawValue)
-                setIsConnecting(true)
+              if (result[0].format === "qr_code") {
+                setUri(result[0].rawValue);
+                setIsConnecting(true);
               }
             }}
           />
           {!isConnecting && (
             <input
-              name='uri'
+              name="uri"
               className={styles.input}
-              placeholder='openlv://<uuid>'
+              placeholder="openlv://<uuid>"
             />
           )}
         </form>
       </>
-    )
+    );
   }
+
   if (isConnecting && uri) {
     return (
       <div className={styles.loader}>
         <LoadingSVG height={36} width={36} />
       </div>
-    )
+    );
   }
-}
+};
 
 const SessionDialog = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
-  const [uri, setUri] = useState<string | null>(null)
+  const [uri, setUri] = useState<string | null>(null);
 
-  const [isConnecting, setIsConnecting] = useState(false)
+  const [isConnecting, setIsConnecting] = useState(false);
 
   return (
     <Dialog.Content className={styles.content}>
@@ -75,11 +84,11 @@ const SessionDialog = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
       </Dialog.Title>
       <Body {...{ uri, isConnecting, setUri, setIsConnecting }} />
     </Dialog.Content>
-  )
-}
+  );
+};
 
 export const QRScanner = () => {
-  const [open, setOpen] = useState(false)
+  const [open, setOpen] = useState(false);
 
   return (
     <Dialog.Root open={open} onOpenChange={setOpen}>
@@ -93,5 +102,5 @@ export const QRScanner = () => {
         <SessionDialog setOpen={setOpen} />
       </Dialog.Portal>
     </Dialog.Root>
-  )
-}
+  );
+};

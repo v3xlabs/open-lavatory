@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { EventEmitter } from 'eventemitter3';
 import type { EIP1193Parameters, EIP1474Methods } from 'viem';
 

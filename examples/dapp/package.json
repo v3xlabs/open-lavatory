@@ -9,8 +9,8 @@
     "dev": "vite",
     "build": "vite build",
     "serve": "vite preview",
-    "lint": "pnpm eslint -c eslint.config.js .",
-    "lint:fix": "pnpm eslint -c eslint.config.js . --fix"
+    "lint": "pnpx eslint .",
+    "lint:fix": "pnpx eslint . --fix"
   },
   "license": "MIT",
   "devDependencies": {

@@ -1,5 +1,7 @@
 import { default as QRCode } from 'qrcode-generator';
-import { OPENLV_ICON_128 } from './icon';
+import { OPENLV_ICON_128 } from './icons/logo';
+import { ChevronLeft } from './icons/chevron';
+import { Cog } from './icons/cog';
 
 export const getModalTemplate = (qrSvg: string, uri: string): string => `
     <style>
@@ -10,6 +12,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             width: 100%;
             height: 100%;
             background: rgba(0, 0, 0, 0.7);
+            color: #1f2937;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -26,7 +29,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
         .modal-content {
             background: white;
             border-radius: 16px;
-            padding: 16px;
+            padding: 14px 16px;
             max-width: 400px;
             width: 90%;
             text-align: center;
@@ -41,6 +44,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             justify-content: center;
             align-items: center;
             gap: 8px;
+            margin: 0;
         }
 
         .modal-subtitle {
@@ -166,28 +170,45 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             border-radius: 8px;
             padding: 12px 24px;
             font-size: 14px;
+            color: inherit;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 0.2s ease;
+        }
+        .button-square {
+            border: none;
+            border-radius: 8px;
+            padding: 4px 4px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            aspect-ratio: 1/1;
+            font-size: 14px;
+            color: inherit;
             cursor: pointer;
             font-weight: 500;
             transition: background-color 0.2s ease;
         }
 
+        .cancel-button {
+            background: transparent;
+        }
+        .settings-button {
+            background: transparent;
+        }
         .cancel-button:hover {
             background: #dc2626;
+            color: white;
         }
-
-        .protocol-badge {
-            margin: 16px 0 0 0;
-            font-size: 12px;
-            color: #9ca3af;
+        .settings-button:hover {
+            background: #e5e7eb;
         }
-
         .interaction-hint {
             margin: 8px 0 0 0;
             font-size: 11px;
             color: #9ca3af;
             font-style: italic;
         }
-
         .copy-feedback {
             position: absolute;
             top: 20px;
@@ -218,7 +239,7 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
             display: flex;
             justify-content: center;
             align-items: center;
-            gap: 8px;
+            gap: 4px;
             text-decoration: none;
             color: inherit;
         }
@@ -228,8 +249,9 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
         }
         .openlv-logo span {
             font-size: 12px;
+            line-height: 10px;
             font-weight: 600;
-            opacity: 0.5;
+            color: #6b7280;
         }
         .openlv-logo:hover {
             text-decoration: underline;
@@ -238,9 +260,9 @@ export const getModalTemplate = (qrSvg: string, uri: string): string => `
     
     <div class="modal-content">
         <div class="modal-header">
-            <button class="cancel-button button" id="cancel-btn">Cancel</button>
+            <button class="cancel-button button-square" id="cancel-btn">${ChevronLeft}</button>
             <h2 class="modal-title">Connect Wallet</h2>
-            <button class="settings-button button">Settings</button>
+            <button class="settings-button button-square">${Cog}</button>
         </div>
         <div class="qr-container">
             <div class="qr-wrapper" id="qr-wrapper" title="Click to copy connection URL">

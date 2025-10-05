@@ -49,7 +49,12 @@ const Connectors = () => {
             <ul>
                 {connectors.map((connector) => (
                     <li key={connector.id} className="mb-2 flex items-center justify-between border pr-2 pl-4 py-2 rounded-md border-[var(--vocs-color_codeInlineBorder)]">
+                        <div className="flex items-center gap-2">
+                            {connector.icon && (
+                                <img src={connector.icon} alt={`${connector.name} icon`} className="w-4 h-4" />
+                            )}
                         <div className="text-sm">{connector.name}</div>
+                        </div>
                         <button
                             onClick={() => {
                                 connect({ connector: connector })

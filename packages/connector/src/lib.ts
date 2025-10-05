@@ -4,7 +4,7 @@ import { mainnet } from "@wagmi/core/chains";
 import type { Address, ProviderConnectInfo } from "viem";
 import { getAddress } from "viem";
 import type { OpenLVModalElement as OpenLVModalElementType } from "./modal-component.js";
-import { OPENLV_ICON_128 } from "./icon";
+import { OPENLV_ICON_128 } from "./icons/logo.js";
 
 import { OpenLVProvider } from "@openlv/transport/provider";
 

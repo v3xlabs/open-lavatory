@@ -4,6 +4,7 @@ import { mainnet } from "@wagmi/core/chains";
 import type { Address, ProviderConnectInfo } from "viem";
 import { getAddress } from "viem";
 import type { OpenLVModalElement as OpenLVModalElementType } from "./modal-component.js";
+import { OPENLV_ICON_128 } from "./icon";
 
 import { OpenLVProvider } from "@openlv/transport/provider";
 
@@ -111,7 +112,7 @@ export function openlv(parameters: OpenLVParameters = {}) {
     id: "openLv",
     name: "Open Lavatory",
     type: openlv.type,
-    icon: "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMTYiIGN5PSIxNiIgcj0iMTYiIGZpbGw9IiM2MzY2RjEiLz48L3N2Zz4=",
+    icon: OPENLV_ICON_128,
 
     async setup() {
       const provider = await this.getProvider().catch(() => null);

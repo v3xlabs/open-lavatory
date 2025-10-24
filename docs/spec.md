@@ -62,9 +62,9 @@ Session IDs are generated using a cryptographically secure random number generat
 ### 2.4 Examples
 
 ```
-openlv://k7n8m9x2w5q1p3r6?h=a1b2c3d4e5f60708&k=0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef&s=wss%3A//test.mosquitto.org%3A8081/mqtt&p=mqtt
+openlv://k7n8m9x2w5q1p3r6?h=a1b2c3d4e5f60708&k=0123456789abcdef0123456789abcdef&p=mqtt&s=wss%3A//test.mosquitto.org%3A8081/mqtt
 
-openlv://j9x7z4m2n8q5w3e1?h=f1e2d3c4b5a69708&k=fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210
+openlv://j9x7z4m2n8q5w3e1?h=f1e2d3c4b5a69708&k=fedcba9876543210fedcba9876543210f
 ```
 
 ### 2.5 Default Values

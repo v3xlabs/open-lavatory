@@ -24,14 +24,6 @@ export type SessionConfig = {
     protocol?: 'mqtt' | 'waku' | 'nostr';
 };
 
-export type ConnectionPayload = {
-    sessionId: string; // 16-character URL-safe random string
-    pubkeyHash: string; // Hash of PeerA's public key for verification (16 hex chars)
-    sharedKey: string; // Shared key for symmetric encryption during handshake (64 hex chars)
-    server?: string;
-    protocol?: 'mqtt' | 'waku' | 'nostr';
-};
-
 // JSON-RPC 2.0 types for Ethereum wallet connectivity
 export interface JsonRpcRequest {
     jsonrpc: '2.0';

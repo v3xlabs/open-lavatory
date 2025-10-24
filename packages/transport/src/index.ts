@@ -15,7 +15,6 @@ export { decodeConnectionURL, encodeConnectionURL } from './utils/url.js';
 // Types
 export type {
     ConnectionEvents,
-    ConnectionPayload,
     ConnectionPhase,
     ConnectionState,
     DAppInfo,

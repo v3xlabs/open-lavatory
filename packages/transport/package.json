@@ -1,7 +1,9 @@
 {
   "name": "@openlv/transport",
   "version": "0.0.1-beta.1",
-  "keywords": ["open-lavatory"],
+  "keywords": [
+    "open-lavatory"
+  ],
   "author": {
     "name": "Open-Lavatory",
     "url": "https://github.com/v3xlabs/open-lavatory"
@@ -19,14 +21,11 @@
     "access": "public"
   },
   "exports": {
-    ".":{
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
-
+    ".": {
+      "default": "./dist/index.js"
     },
-    "./provider":{
-      "default": "./dist/provider.js",
-      "types": "./dist/provider.d.ts"
+    "./provider": {
+      "default": "./dist/provider.js"
     }
   },
   "type": "module",
@@ -35,12 +34,13 @@
   "dependencies": {
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
-    "mqtt": "^5.13.1"
+    "mqtt": "^5.13.1",
+    "vitest": "^4.0.3"
   },
   "peerDependencies": {
     "@wagmi/core": "2",
-    "wagmi": "2",
-    "viem": "2"
+    "viem": "2",
+    "wagmi": "2"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",
@@ -59,6 +59,7 @@
   "scripts": {
     "build": "tsc",
     "lint": "pnpx eslint .",
-    "lint:fix": "pnpx eslint . --fix"
+    "lint:fix": "pnpx eslint . --fix",
+    "test": "vitest"
   }
 }

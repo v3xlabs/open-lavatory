@@ -1,23 +1,23 @@
-import { ConnectionPayload } from '../types.js';
+import { SessionHandshakeParameters } from '../session/index.js';
 
-export const encodeConnectionURL = (payload: ConnectionPayload) => {
+export const encodeConnectionURL = (payload: SessionHandshakeParameters) => {
     const params = new URLSearchParams();
 
-    params.set('h', payload.pubkeyHash);
-    params.set('k', payload.sharedKey);
+    params.set('h', payload.h);
+    params.set('k', payload.k);
 
-    if (payload.server) {
-        params.set('s', payload.server);
+    if (payload.p) {
+        params.set('p', payload.p);
     }
 
-    if (payload.protocol && payload.protocol !== 'mqtt') {
-        params.set('p', payload.protocol);
+    if (payload.s) {
+        params.set('s', payload.s);
     }
 
     return `openlv://${payload.sessionId}?${params.toString()}`;
 };
 
-export const decodeConnectionURL = (url: string): ConnectionPayload => {
+export const decodeConnectionURL = (url: string): SessionHandshakeParameters => {
     // Type check and validation
     if (typeof url !== 'string') {
         throw new Error(`Invalid URL type: expected string, got ${typeof url}`);
@@ -34,10 +34,10 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
     try {
         const urlObj = new URL(url);
         const sessionId = urlObj.hostname || urlObj.pathname.replace('/', '');
-        const pubkeyHash = urlObj.searchParams.get('h') || '';
-        const sharedKey = urlObj.searchParams.get('k') || '';
-        const server = urlObj.searchParams.get('s') || undefined;
-        const protocol = (urlObj.searchParams.get('p') as 'mqtt' | 'waku' | 'nostr') || 'mqtt';
+        const h = urlObj.searchParams.get('h') || '';
+        const k = urlObj.searchParams.get('k') || '';
+        const s = urlObj.searchParams.get('s') || undefined;
+        const p = (urlObj.searchParams.get('p') as 'mqtt' | 'waku' | 'nostr') || 'mqtt';
 
         if (!sessionId) {
             throw new Error('Session ID is required in URL');
@@ -48,57 +48,35 @@ export const decodeConnectionURL = (url: string): ConnectionPayload => {
             throw new Error('Invalid session ID format: must be 16 URL-safe characters');
         }
 
-        if (!pubkeyHash) {
+        if (!h) {
             throw new Error('Public key hash (h parameter) is required in URL');
         }
 
         // Validate public key hash format (16 hex characters)
-        if (!/^[0-9a-f]{16}$/.test(pubkeyHash)) {
+        if (!/^[0-9a-f]{16}$/.test(h)) {
             throw new Error('Invalid public key hash format: must be 16 hex characters');
         }
 
-        if (!sharedKey) {
+        if (!k) {
             throw new Error('Shared key (k parameter) is required in URL');
         }
 
-        // Validate shared key format (64 hex characters)
-        if (!/^[0-9a-f]{64}$/.test(sharedKey)) {
-            throw new Error('Invalid shared key format: must be 64 hex characters');
+        // Validate shared key format (32 hex characters)
+        if (!/^[0-9a-f]{32}$/.test(k)) {
+            throw new Error('Invalid shared key format: must be 32 hex characters, received: ' + k);
         }
 
         return {
             sessionId,
-            pubkeyHash,
-            sharedKey,
-            server: server ? decodeURIComponent(server) : undefined,
-            protocol,
+            h,
+            k,
+            // TODO: figure out why '' empty string and not undefined
+            s: s ? decodeURIComponent(s) : '',
+            p,
         };
     } catch (error) {
-        // If it's already our custom error, re-throw it
-        if (error instanceof Error && error.message.includes('required')) {
-            throw error;
-        }
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error';
 
-        // Fallback to legacy regex parsing
-        try {
-            const legacyMatch = url.match(/openlv:\/\/([^?]+)\?(?:sharedKey|k|h)=([^&]+)/) ?? [];
-            const [, sessionId, keyOrHash] = legacyMatch;
-
-            if (!sessionId || !keyOrHash) {
-                throw new Error(
-                    `Invalid URL format: could not parse session ID or key from ${url}`
-                );
-            }
-
-            return {
-                sessionId,
-                pubkeyHash: keyOrHash, // Assume it's pubkeyHash for legacy
-                sharedKey: keyOrHash, // Use same value for both in legacy mode
-            };
-        } catch {
-            const errorMessage = error instanceof Error ? error.message : 'Unknown error';
-
-            throw new Error(`Failed to parse URL: ${url}. Original error: ${errorMessage}`);
-        }
+        throw new Error(`Failed to parse URL: ${url}. Original error: ${errorMessage}`);
     }
 };

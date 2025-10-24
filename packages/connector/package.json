@@ -29,8 +29,8 @@
     "lint:fix": "pnpx eslint . --fix"
   },
   "dependencies": {
-    "@openlv/transport": "workspace:*",
-    "qrcode-generator": "^1.5.0"
+    "@openlv/modal": "workspace:*",
+    "@openlv/transport": "workspace:*"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

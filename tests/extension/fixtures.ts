@@ -33,7 +33,7 @@ export const test = base.extend<{
     await use(context);
     await context.close();
   },
-  
+
   // Provide extension ID to tests
   extensionId: async ({ context }, use) => {
     // Wait for the service worker (Manifest V3)
@@ -45,9 +45,9 @@ export const test = base.extend<{
     const url = serviceWorker.url();
     const extensionId = url.split('/')[2];
     console.log(`Extension ID: ${extensionId}`);
-    
+
     await use(extensionId);
   },
 });
 
-export const expect = test.expect; 
+export const expect = test.expect;

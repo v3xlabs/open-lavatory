@@ -21,7 +21,7 @@ pnpm dev                # Chromium-based browsers
 pnpm dev:firefox        # Firefox
 
 # Build for production
-pnpm build              # Chromium-based browsers  
+pnpm build              # Chromium-based browsers
 pnpm build:firefox      # Firefox
 
 # Create distributable zip files

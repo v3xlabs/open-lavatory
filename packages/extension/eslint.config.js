@@ -17,7 +17,7 @@ export default [
       '*.js', // Ignore built JS files in root
     ],
   },
-  
+
   // Include the shared configuration
   ...config,
 ];

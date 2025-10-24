@@ -18,7 +18,7 @@ const config = [
   // Ignore patterns
   {
     ignores: [
-      "dist/**",
+      "**/dist/**",
       "node_modules/**",
       "**/*.gen.ts",
       ".wxt/**",
@@ -104,6 +104,7 @@ const config = [
       "no-multiple-empty-lines": ["warn", { max: 2 }],
       "prefer-destructuring": "warn",
       "prefer-arrow-callback": "warn",
+      "max-lines": ["error", 200],
 
       // Import rules
       "import/no-duplicates": "error",

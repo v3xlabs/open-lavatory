@@ -39,9 +39,9 @@ export async function getOpenLVMethods(page: Page): Promise<string[]> {
   return await page.evaluate(() => {
     const openlv = (window as any).openlv;
     if (!openlv) return [];
-    
+
     const methods: string[] = [];
-    
+
     // Get methods from the object and its prototype chain
     let obj = openlv;
     while (obj && obj !== Object.prototype) {
@@ -55,7 +55,7 @@ export async function getOpenLVMethods(page: Page): Promise<string[]> {
       }
       obj = Object.getPrototypeOf(obj);
     }
-    
+
     return methods.sort();
   });
 }
@@ -74,8 +74,8 @@ export async function testEIP6963Discovery(page: Page): Promise<EIP6963Discovery
       window.addEventListener('eip6963:announceProvider', (event: any) => {
         const detail = event.detail;
         providers.push(detail);
-        
-        if (detail.info.name?.toLowerCase().includes('openlv') || 
+
+        if (detail.info.name?.toLowerCase().includes('openlv') ||
             detail.info.name?.toLowerCase().includes('lavatory')) {
           hasOpenLV = true;
           openLVProvider = detail;
@@ -95,4 +95,4 @@ export async function testEIP6963Discovery(page: Page): Promise<EIP6963Discovery
       }, 2000);
     });
   });
-} 
+}

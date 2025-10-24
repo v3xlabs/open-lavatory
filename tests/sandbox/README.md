@@ -26,4 +26,4 @@ pnpm test:sandbox:ui
 - `p2p-connection.spec.ts` - Main P2P connection tests
 - `utils/helpers.ts` - Reusable test utilities
 
-See `../README.md` for detailed documentation. 
+See `../README.md` for detailed documentation.

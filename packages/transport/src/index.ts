@@ -10,7 +10,7 @@ export { OpenLVConnection } from './connection.js';
 export { OpenLVProvider } from './provider.js';
 
 // URL utilities
-export { decodeConnectionURL, encodeConnectionURL } from './connection.js';
+export { decodeConnectionURL, encodeConnectionURL } from './utils/url.js';
 
 // Types
 export type {

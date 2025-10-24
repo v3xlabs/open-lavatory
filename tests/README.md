@@ -17,7 +17,7 @@ tests/
 │   ├── p2p-connection.spec.ts    # Main P2P connection tests
 │   └── utils/helpers.ts          # Reusable test utilities
 ├── extension/                    # Browser extension tests
-│   ├── basic.spec.ts             # Basic extension functionality  
+│   ├── basic.spec.ts             # Basic extension functionality
 │   ├── eip6963.spec.ts           # EIP-6963 provider detection
 │   ├── fixtures.ts               # Extension test fixtures
 │   └── utils/helpers.ts          # Extension test utilities
@@ -106,7 +106,7 @@ pnpm test:report
 **Main Test: "should establish P2P connection between two sandbox instances"**
 
 1. **Session Initialization**: Peer A creates session and generates connection URL
-2. **Connection Establishment**: Peer B uses URL to connect 
+2. **Connection Establishment**: Peer B uses URL to connect
 3. **Status Verification**: Both peers show "Connected" status
 4. **Message Exchange**: Bidirectional test message sending
 5. **Connection Quality**: Verifies WebRTC (preferred) or MQTT fallback
@@ -122,7 +122,7 @@ pnpm test:report
 **Test IDs**: Reliable element selection using `data-testid` attributes:
 - `init-session-button` - Initialize session (Peer A)
 - `connection-url` - Generated connection URL display
-- `connection-url-input` - URL input field (Peer B)  
+- `connection-url-input` - URL input field (Peer B)
 - `connect-session-button` - Connect to session (Peer B)
 - `connection-status` - Connection status indicator
 - `send-test-button` - Send test message
@@ -154,7 +154,7 @@ pnpm test:report
 ### Timeouts
 
 - **Session Init**: 10 seconds
-- **Connection Establishment**: 30 seconds  
+- **Connection Establishment**: 30 seconds
 - **Message Exchange**: 10 seconds
 - **Page Load**: Default Playwright timeouts
 
@@ -230,7 +230,7 @@ Tests are configured for CI environments:
 ### Planned Additions
 
 1. **Wallet Integration**: Test dApp ↔ Wallet connections
-2. **Extension Testing**: Browser extension injection scenarios  
+2. **Extension Testing**: Browser extension injection scenarios
 3. **Protocol Robustness**: Network interruption, reconnection logic
 4. **Performance Benchmarking**: Connection time, message throughput
 5. **Security Testing**: Connection encryption, session isolation
@@ -239,7 +239,7 @@ Tests are configured for CI environments:
 
 Eventually expand to test the full ecosystem:
 
-- **dApp Example** ↔ **Wallet Example** 
+- **dApp Example** ↔ **Wallet Example**
 - **Browser Extension** injection testing
 - **Cross-device** connections (mobile wallet simulation)
 

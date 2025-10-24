@@ -6,7 +6,7 @@
   <br />
   <h1>Open-Lavatory</h1>
   <p><strong>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</strong></p>
-  
+
   <div align="center">
     <a href="https://hackathon.web3privacy.info">
       <img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-blue?style=for-the-badge" alt="Built at W3PN Hacks 2025">
@@ -24,7 +24,7 @@
 > [!IMPORTANT]
 > You are currently viewing the **development** branch of the repository.
 
-> [!NOTE]  
+> [!NOTE]
 > This project was built during 48 hours at [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin.
 > It is to be treated as a proof of concept.
 
@@ -50,7 +50,7 @@ This repository includes the following packages:
 
 ## 📋 Specification
 
-> [!IMPORTANT]  
+> [!IMPORTANT]
 > This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#%EF%B8%8F-known-limitations) section for more details.
 
 You can find the entire specification in [spec.md](./docs/spec.md).

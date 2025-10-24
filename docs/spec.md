@@ -95,7 +95,7 @@ sequenceDiagram
     D->>D: Generate session ID + ECDH keypair<br/>+ shared secret (k parameter)
     D->>W: Share openlv:// URL<br/>(QR code / copy-paste)
     D->>S: Subscribe to session topic
-    
+
     Note over D, P: Phase 2: Symmetric-to-Asymmetric Handshake (Signaling)
     W->>W: Parse URL, extract shared secret<br/>Generate ECDH keypair
     W->>S: Connect to session topic
@@ -103,7 +103,7 @@ sequenceDiagram
     S->>D: Relay encrypted hello
     D->>S: Send response encrypted with wallet's pubkey<br/>(dApp info + public key)
     S->>W: Relay encrypted response
-    
+
     Note over D, P: Phase 3: WebRTC Negotiation (E2EE via signaling)
     D->>S: Send WebRTC offer<br/>encrypted with wallet's pubkey
     S->>W: Relay encrypted offer
@@ -111,7 +111,7 @@ sequenceDiagram
     S->>D: Relay encrypted answer
     D->>S: Exchange ICE candidates<br/>encrypted with wallet's pubkey
     W->>S: Exchange ICE candidates<br/>encrypted with dApp's pubkey
-    
+
     Note over D, P: Phase 4: Direct P2P Communication (E2EE)
     D->>P: Establish WebRTC connection
     W->>P: Complete WebRTC handshake
@@ -157,7 +157,7 @@ The public key hash included in the URL is computed as:
 
 Messages are encrypted using ECIES (Elliptic Curve Integrated Encryption Scheme):
 - **Key Exchange**: ECDH with P-256
-- **KDF**: HKDF-SHA256 
+- **KDF**: HKDF-SHA256
 - **Encryption**: AES-256-GCM
 - **IV Size**: 96 bits (randomly generated per message)
 - **Tag Size**: 128 bits
@@ -282,7 +282,7 @@ Default STUN/TURN servers for maximum compatibility:
     // STUN servers
     { urls: 'stun:stun.l.google.com:19302' },
     { urls: 'stun:stun.services.mozilla.com:3478' },
-    
+
     // TURN servers (OpenRelay)
     {
       urls: ['turn:openrelay.metered.ca:80', 'turn:openrelay.metered.ca:443'],

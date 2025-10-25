@@ -1,9 +1,7 @@
 export type SignalMessageBase<T extends string, P> = {
     type: T;
     payload: P;
-    mailboxId: string;
     timestamp: number;
-    senderId: string;
 };
 
 /**
@@ -16,11 +14,17 @@ export type SignalMessagePing = SignalMessageBase<
     }
 >;
 
+/**
+ * Flash message
+ * Sent to initiate handshake by non-host
+ */
+export type SignalMessageFlash = SignalMessageBase<'flash', object>;
+
 export type SignalMessagePubkey = SignalMessageBase<
     'pubkey',
     {
         publicKey: string;
-        dAppInfo: {
+        dAppInfo?: {
             name: string;
             url: string;
             icon: string;
@@ -74,6 +78,7 @@ export type SignalMessageData = SignalMessageBase<
 
 export type SignalMessage =
     | SignalMessagePing
+    | SignalMessageFlash
     | SignalMessagePubkey
     | SignalMessageHello
     | SignalMessageWebRTCOffer

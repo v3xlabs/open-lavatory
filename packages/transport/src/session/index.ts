@@ -2,12 +2,11 @@ import { deriveSymmetricKey, generateHandshakeKey } from '../encryption/handshak
 import { initHash } from '../encryption/hash.js';
 import {
     DecryptionKey,
-    decryptMessage,
     EncryptionKey,
-    encryptMessage,
     initEncryptionKeys,
+    parseEncryptionKey,
 } from '../encryption/index.js';
-import { generateSessionId } from '../encryption/session.js';
+import { generateSessionId } from '../encryption/random.js';
 import { SignalingLayer, SignalingMode, SignalLayerCreator } from '../signaling/index.js';
 import { mqtt } from '../signaling/mqtt/index.js';
 import { ntfy } from '../signaling/ntfy/index.js';
@@ -46,7 +45,7 @@ export type SessionConnectionParameters = SessionHandshakeParameters & {
     decryptionKey: DecryptionKey;
 };
 
-export type SessionState = 'create' | 'handshake' | 'connected';
+export type SessionState = 'create' | 'handshake' | 'signaling' | 'encrypted' | 'connected';
 
 export type Session = {
     getState(): { state: SessionState; signaling?: { state: SignalingMode } };
@@ -87,26 +86,29 @@ export const createSession = async (
         canEncrypt() {
             return relyingPublicKey !== undefined;
         },
-        encrypt(message) {
+        async encrypt(message) {
             if (!relyingPublicKey) {
                 throw new Error('Relying party public key not found');
             }
 
-            return encryptMessage(message, relyingPublicKey);
+            console.log('encrypting to ' + relyingPublicKey.toString());
+
+            return await relyingPublicKey.encrypt(message);
         },
-        decrypt(message) {
+        async decrypt(message) {
             if (!decryptionKey) {
                 throw new Error('Decryption key not found');
             }
 
-            return decryptMessage(message, decryptionKey);
+            return await decryptionKey.decrypt(message);
         },
         publicKey: encryptionKey,
         sessionId,
         k: handshakeKey,
-        rpDiscovered(rpKey) {
+        async rpDiscovered(rpKey) {
             console.log('rpKey', rpKey);
-            relyingPublicKey = rpKey;
+
+            relyingPublicKey = await parseEncryptionKey(rpKey);
         },
         isHost,
     });
@@ -115,6 +117,7 @@ export const createSession = async (
 
     return {
         connect: async () => {
+            console.log('connecting to session, isHost:', isHost);
             // TODO: implement
             console.log('connecting to session');
             await signal.setup();

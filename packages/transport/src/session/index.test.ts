@@ -18,27 +18,31 @@ describe('Session', () => {
         expect(sessionA).toBeDefined();
         console.log(sessionA.getState());
 
+        await sessionA.connect();
+
         const handshakeParametersA = sessionA.getHandshakeParameters();
-
-        console.log(handshakeParametersA);
-
         const encodedUrl = encodeConnectionURL(handshakeParametersA);
 
         console.log(encodedUrl);
 
-        await sessionA.connect();
-
         const decodedUrl = decodeConnectionURL(encodedUrl);
 
-        console.log(decodedUrl);
-
         expect(decodedUrl).toEqual(handshakeParametersA);
+
+        //
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+
+        console.log('Connecting to session B');
 
         const sessionB = await connectSession(encodedUrl);
 
         console.log(sessionB.getState());
         await sessionB.connect();
 
+        await new Promise((resolve) => setTimeout(resolve, 3000));
+
         //
+        console.log('A', sessionA.getState());
+        console.log('B', sessionB.getState());
     });
 });

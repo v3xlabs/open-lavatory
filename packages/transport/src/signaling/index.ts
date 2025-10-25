@@ -1,19 +1,21 @@
+import { EventEmitter } from 'eventemitter3';
 import { MaybePromise } from 'viem';
 
-import { decryptHandshake, SymmetricKey } from '../encryption/handshake.js';
+import { SymmetricKey } from '../encryption/handshake.js';
 import { EncryptionKey } from '../encryption/index.js';
 import { SignalBaseProperties, SignalingBaseLayer } from './base.js';
+import { SignalMessage, SignalMessageFlash, SignalMessagePubkey } from './messages/index.js';
 
 export type SignalingProperties = {
     isHost: boolean;
     sessionId: string; // might not even be needed
     h: string;
     k?: SymmetricKey;
-    rpDiscovered: (rpKey: string) => void;
+    rpDiscovered: (rpKey: string) => MaybePromise<void>;
     // Decrypt using our private key
-    decrypt: (message: string) => string;
+    decrypt: (message: string) => MaybePromise<string>;
     // Encrypt to relying party
-    encrypt: (message: string) => string;
+    encrypt: (message: string) => MaybePromise<string>;
     // our public key
     publicKey: EncryptionKey;
     canEncrypt: () => boolean;
@@ -37,8 +39,8 @@ export type SignalingLayer = (properties: SignalingProperties) => Promise<{
 
 export type SignalLayerCreator = (properties: SignalBaseProperties) => MaybePromise<SignalingLayer>;
 
-export const XR_PREFIX = 'xr:';
-export const XR_H_PREFIX = 'h:';
+export const XR_PREFIX = 'x';
+export const XR_H_PREFIX = 'h';
 
 export type SignalingMode =
     // We hold the pubKey that matches the `h`, and are awaiting a relying party
@@ -51,6 +53,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
         canEncrypt,
         encrypt,
         decrypt,
+        rpDiscovered,
         h,
         k,
         publicKey,
@@ -58,17 +61,67 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
     }: SignalingProperties) => {
         // shared signaling layer logic goes here
         const handshakeKey = k ? k : undefined;
-        const mode: SignalingMode = canEncrypt() ? 'xr-encrypted' : 'handshake-open';
+        let mode: SignalingMode = canEncrypt() ? 'xr-encrypted' : 'handshake-open';
+        const subscribeHandler = new EventEmitter<{ message: string }>();
 
         const flash = async () => {
             if (!handshakeKey) {
                 throw new Error('Handshake key not found');
             }
 
-            const payload = 'flash';
-            const message = await handshakeKey.encrypt(payload);
+            const payload: SignalMessageFlash = {
+                type: 'flash',
+                payload: {},
+                timestamp: Date.now(),
+            };
+            const message = await handshakeKey.encrypt(JSON.stringify(payload));
 
-            init.publish(XR_H_PREFIX + message);
+            init.publish(XR_H_PREFIX + 'h' + message);
+        };
+
+        const flashPub = async () => {
+            if (!handshakeKey) {
+                throw new Error('Handshake key not found');
+            }
+
+            const payload: SignalMessagePubkey = {
+                type: 'pubkey',
+                payload: {
+                    publicKey: publicKey.toString(),
+                },
+                timestamp: Date.now(),
+            };
+            const message = await handshakeKey.encrypt(JSON.stringify(payload));
+
+            await init.publish(XR_H_PREFIX + 'c' + message);
+        };
+
+        const flashPubEncrypted = async () => {
+            if (!canEncrypt()) {
+                console.error('Cannot encrypt message before keys are exchanged');
+
+                return;
+            }
+
+            const payload: SignalMessagePubkey = {
+                type: 'pubkey',
+                payload: {
+                    publicKey: publicKey.toString(),
+                },
+                timestamp: Date.now(),
+            };
+
+            console.log('final payload', payload);
+
+            const message = await encrypt(JSON.stringify(payload));
+
+            console.log('MESSAGE BEFORE ENCRYPTION', message);
+
+            await init.publish(XR_PREFIX + 'h' + message);
+        };
+
+        const flashAckEncrypted = async () => {
+            //
         };
 
         return {
@@ -76,10 +129,89 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
             async setup() {
                 await init.setup();
 
-                if (!isHost) {
+                if (!isHost && mode === 'handshake-open') {
                     console.log('I am not groot, I must flash');
                     await flash();
                 }
+
+                await init.subscribe(async (payload) => {
+                    console.log('RAW MESSAGE RECEIVED (' + isHost ? 'h' : 'c' + ')', payload);
+
+                    if (payload.startsWith(XR_H_PREFIX) && mode == 'handshake-open') {
+                        const recipient = payload[XR_H_PREFIX.length];
+                        const isRecipient = isHost ? 'h' : 'c' === recipient;
+                        let body = payload.slice(XR_H_PREFIX.length + 1);
+
+                        if (!handshakeKey) {
+                            // throw new Error('Handshake key not found');
+                            console.error(
+                                "Dropping message, couldn't decrypt as there is no handshake key present."
+                            );
+
+                            return;
+                        }
+
+                        if (!isRecipient) {
+                            return;
+                        }
+
+                        body = await handshakeKey.decrypt(body);
+                        console.log('RECEIVED HANDSHAKE MESSAGE', body, isHost);
+
+                        //
+                        const msg = JSON.parse(body) as SignalMessage;
+
+                        if (msg.type === 'flash' && isHost) {
+                            console.log('RECEIVED FLASH MESSAGE', msg);
+
+                            await flashPub();
+
+                            return;
+                        }
+
+                        if (msg.type === 'pubkey' && !isHost) {
+                            console.log('RECEIVED PUBKEY MESSAGE', msg);
+                            await rpDiscovered(msg.payload.publicKey);
+
+                            mode = 'handshake-closed';
+
+                            await flashPubEncrypted();
+
+                            return;
+                        }
+
+                        return;
+                        // handler(body);
+                    }
+
+                    if (payload.startsWith(XR_PREFIX)) {
+                        const recipient = payload[XR_PREFIX.length];
+                        const isRecipient = isHost ? 'h' : 'c' === recipient;
+                        let body = payload.slice(XR_PREFIX.length + 1);
+
+                        if (!isRecipient) {
+                            return;
+                        }
+
+                        body = await decrypt(body);
+
+                        //
+                        const msg = JSON.parse(body) as SignalMessage;
+
+                        if (msg.type === 'pubkey' && isHost) {
+                            console.log('RECEIVED PUBKEY MESSAGE', msg);
+
+                            await rpDiscovered(msg.payload.publicKey);
+                            mode = 'xr-encrypted';
+
+                            await flashAckEncrypted();
+
+                            return;
+                        }
+
+                        subscribeHandler.emit('message', body);
+                    }
+                });
             },
             async teardown() {
                 return await init.teardown();
@@ -99,33 +231,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
              * This handler is responsible for decryption of Handshake & XR Encrypted Messages
              */
             subscribe(handler) {
-                return init.subscribe(async (payload) => {
-                    if (payload.startsWith(XR_H_PREFIX)) {
-                        let body = payload.slice(XR_H_PREFIX.length);
-
-                        if (!handshakeKey) {
-                            // throw new Error('Handshake key not found');
-                            console.error(
-                                "Dropping message, couldn't decrypt as there is no handshake key present."
-                            );
-
-                            return;
-                        }
-
-                        body = await handshakeKey.decrypt(body);
-                        console.log('RECEIVED HANDSHAKE MESSAGE', body);
-
-                        return;
-                        // handler(body);
-                    }
-
-                    if (payload.startsWith(XR_PREFIX)) {
-                        let body = payload.slice(XR_PREFIX.length);
-
-                        body = decrypt(body);
-                        handler(body);
-                    }
-                });
+                subscribeHandler.on('message', handler);
             },
             getState() {
                 return { state: mode };

@@ -6,7 +6,7 @@ const URL_SAFE_ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0
 /**
  * Generate a cryptographically secure URL-safe random string
  */
-const generateUrlSafeRandomString = (length: number): string => {
+export const generateUrlSafeRandomString = (length: number): string => {
     const array = new Uint8Array(length);
 
     crypto.getRandomValues(array);

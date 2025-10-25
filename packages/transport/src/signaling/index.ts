@@ -2,7 +2,7 @@ import { MaybePromise } from 'viem';
 
 import { decryptHandshake, SymmetricKey } from '../encryption/handshake.js';
 import { EncryptionKey } from '../encryption/index.js';
-import { SignalingBaseLayer } from './base.js';
+import { SignalBaseProperties, SignalingBaseLayer } from './base.js';
 
 export type SignalingProperties = {
     isHost: boolean;
@@ -34,6 +34,8 @@ export type SignalingLayer = (properties: SignalingProperties) => Promise<{
         state: SignalingMode;
     };
 }>;
+
+export type SignalLayerCreator = (properties: SignalBaseProperties) => MaybePromise<SignalingLayer>;
 
 export const XR_PREFIX = 'xr:';
 export const XR_H_PREFIX = 'h:';

@@ -8,7 +8,8 @@ import {
     initEncryptionKeys,
 } from '../encryption/index.js';
 import { generateSessionId } from '../encryption/session.js';
-import { SignalingLayer, SignalingMode } from '../signaling/index.js';
+import { SignalingLayer, SignalingMode, SignalLayerCreator } from '../signaling/index.js';
+import { mqtt } from '../signaling/mqtt/index.js';
 import { ntfy } from '../signaling/ntfy/index.js';
 import { decodeConnectionURL } from '../utils/url.js';
 
@@ -60,7 +61,10 @@ export type SessionParameters =
     | SessionHandshakeParameters
     | SessionCreationParameters;
 
-export const createSession = async (initParameters: SessionParameters): Promise<Session> => {
+export const createSession = async (
+    initParameters: SessionParameters,
+    signalLayer: SignalLayerCreator
+): Promise<Session> => {
     const sessionId =
         'sessionId' in initParameters ? initParameters.sessionId : generateSessionId();
     const { encryptionKey, decryptionKey } = await initEncryptionKeys(initParameters);
@@ -77,7 +81,7 @@ export const createSession = async (initParameters: SessionParameters): Promise<
     const protocol = initParameters.p;
     const server = initParameters.s;
 
-    const signaling: SignalingLayer = ntfy({ topic: sessionId, url: server });
+    const signaling: SignalingLayer = await signalLayer({ topic: sessionId, url: server });
     const signal = await signaling({
         h: hash,
         canEncrypt() {
@@ -148,5 +152,14 @@ export const createSession = async (initParameters: SessionParameters): Promise<
 export const connectSession = async (connectionUrl: string): Promise<Session> => {
     const initParameters = decodeConnectionURL(connectionUrl);
 
-    return createSession(initParameters);
+    const signaling = {
+        mqtt: mqtt,
+        ntfy: ntfy,
+    }[initParameters.p];
+
+    if (!signaling) {
+        throw new Error(`Invalid signaling protocol: ${initParameters.p}`);
+    }
+
+    return createSession(initParameters, signaling);
 };

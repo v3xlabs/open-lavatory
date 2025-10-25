@@ -2,12 +2,12 @@ import type { MqttClient } from 'mqtt';
 import { connect } from 'mqtt';
 
 import { SignalBaseProperties } from '../base.js';
-import { createSignalingLayer } from '../index.js';
+import { createSignalingLayer, SignalLayerCreator } from '../index.js';
 
 /**
  * Signaling over MQTT
  */
-export const mqtt = ({
+export const mqtt: SignalLayerCreator = ({
     url = 'wss://test.mosquitto.org:8081/mqtt',
     topic,
 }: SignalBaseProperties) => {

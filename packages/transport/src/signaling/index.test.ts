@@ -31,6 +31,7 @@ describe('Signaling layers', () => {
                 encrypt: btoa,
                 decrypt: atob,
                 publicKey: '',
+                isHost: true,
             });
 
             expect(signalingLayer).toBeDefined();

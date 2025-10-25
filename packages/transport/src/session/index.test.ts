@@ -6,8 +6,9 @@ import { createSession } from './index.js';
 describe('Session', () => {
     test('Should be able to create a session', async () => {
         const sessionA = await createSession({
-            p: 'mqtt',
-            s: 'wss://test.mosquitto.org:8081/mqtt',
+            sessionId: 'mytestsession111',
+            p: 'ntfy',
+            s: 'https://ntfy.sh/',
         });
 
         expect(sessionA).toBeDefined();
@@ -21,6 +22,8 @@ describe('Session', () => {
 
         console.log(encodedUrl);
 
+        await sessionA.connect();
+
         const decodedUrl = decodeConnectionURL(encodedUrl);
 
         console.log(decodedUrl);
@@ -30,5 +33,8 @@ describe('Session', () => {
         const sessionB = await createSession(decodedUrl);
 
         console.log(sessionB.getState());
+        await sessionB.connect();
+
+        //
     });
 });

@@ -27,7 +27,6 @@ export type SignalingLayer = (properties: SignalingProperties) => Promise<{
     // Sending only works once keys are exchanged
     send: (message: string) => MaybePromise<void>;
     subscribe: (handler: (message: string) => void) => MaybePromise<void>;
-    handshake: () => MaybePromise<void>;
     setup: () => MaybePromise<void>;
     teardown: () => MaybePromise<void>;
 
@@ -59,10 +58,26 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
         const handshakeKey = k ? k : undefined;
         const mode: SignalingMode = canEncrypt() ? 'xr-encrypted' : 'handshake-open';
 
+        const flash = async () => {
+            if (!handshakeKey) {
+                throw new Error('Handshake key not found');
+            }
+
+            const payload = 'flash';
+            const message = await handshakeKey.encrypt(payload);
+
+            init.publish(XR_H_PREFIX + message);
+        };
+
         return {
             type: init.type,
             async setup() {
-                return await init.setup();
+                await init.setup();
+
+                if (!isHost) {
+                    console.log('I am not groot, I must flash');
+                    await flash();
+                }
             },
             async teardown() {
                 return await init.teardown();
@@ -83,7 +98,6 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
              */
             subscribe(handler) {
                 return init.subscribe(async (payload) => {
-                    // TODO: attempt decrypt using hKey
                     if (payload.startsWith(XR_H_PREFIX)) {
                         let body = payload.slice(XR_H_PREFIX.length);
 
@@ -96,8 +110,11 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                             return;
                         }
 
-                        body = await decryptHandshake(body, handshakeKey);
-                        handler(body);
+                        body = await handshakeKey.decrypt(body);
+                        console.log('RECEIVED HANDSHAKE MESSAGE', body);
+
+                        return;
+                        // handler(body);
                     }
 
                     if (payload.startsWith(XR_PREFIX)) {

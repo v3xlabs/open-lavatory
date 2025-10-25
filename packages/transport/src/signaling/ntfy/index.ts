@@ -1,5 +1,5 @@
 import { SignalBaseProperties } from '../base.js';
-import { createSignalingLayer } from '../index.js';
+import { createSignalingLayer, SignalLayerCreator } from '../index.js';
 import { parseNtfyUrl } from './url.js';
 
 export type NtfyMessage = {
@@ -26,7 +26,7 @@ export type NtfyMessage = {
  * https variant: ntfys://{user}:{password}@{hostname}/{topic}
  *
  */
-export const ntfy = ({ topic, url }: SignalBaseProperties) => {
+export const ntfy: SignalLayerCreator = ({ topic, url }: SignalBaseProperties) => {
     let connection: WebSocket | null = null;
     const connectionInfo = parseNtfyUrl(url);
     const wsProtocol =

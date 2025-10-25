@@ -1,4 +1,4 @@
-import { generateHandshakeKey } from '../encryption/handshake.js';
+import { deriveSymmetricKey, generateHandshakeKey } from '../encryption/handshake.js';
 import { initHash } from '../encryption/hash.js';
 import {
     DecryptionKey,
@@ -9,7 +9,7 @@ import {
 } from '../encryption/index.js';
 import { generateSessionId } from '../encryption/session.js';
 import { SignalingLayer, SignalingMode } from '../signaling/index.js';
-import { mqtt } from '../signaling/mqtt/index.js';
+import { ntfy } from '../signaling/ntfy/index.js';
 import { decodeConnectionURL } from '../utils/url.js';
 
 // typescript type for 32 character hex string
@@ -65,7 +65,10 @@ export const createSession = async (initParameters: SessionParameters): Promise<
         'sessionId' in initParameters ? initParameters.sessionId : generateSessionId();
     const { encryptionKey, decryptionKey } = await initEncryptionKeys(initParameters);
     let relyingPublicKey: EncryptionKey | undefined;
-    const handshakeKey = 'k' in initParameters ? initParameters.k : generateHandshakeKey();
+    const handshakeKey =
+        'k' in initParameters
+            ? await deriveSymmetricKey(initParameters.k)
+            : await generateHandshakeKey();
     const { hash, isHost } = await initHash(
         'h' in initParameters ? initParameters.h : undefined,
         encryptionKey
@@ -74,7 +77,7 @@ export const createSession = async (initParameters: SessionParameters): Promise<
     const protocol = initParameters.p;
     const server = initParameters.s;
 
-    const signaling: SignalingLayer = mqtt({ topic: sessionId, url: server });
+    const signaling: SignalingLayer = ntfy({ topic: sessionId, url: server });
     const signal = await signaling({
         h: hash,
         canEncrypt() {
@@ -115,15 +118,6 @@ export const createSession = async (initParameters: SessionParameters): Promise<
             signal.subscribe((message) => {
                 console.log('Session: received message from signaling', message);
             });
-
-            if (isHost) {
-                //
-                console.log('I am groot');
-            } else {
-                //
-                console.log('I am not groot');
-                signal.flash();
-            }
         },
         getState() {
             return { state, signaling: signal.getState() };

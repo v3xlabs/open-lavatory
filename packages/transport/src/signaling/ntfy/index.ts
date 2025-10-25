@@ -61,9 +61,16 @@ export const ntfy: SignalLayerCreator = ({ topic, url }: SignalBaseProperties) =
                 console.error('NTFY: Closed WebSocket', event);
             };
 
-            connection.onmessage = (event) => {
-                console.log('NTFY: Received message:', event.data);
-            };
+            const awaitOpenConfirm = new Promise<void>((resolve) => {
+                connection!.onmessage = (event) => {
+                    console.log('NTFY: Received message:', event.data);
+                    const data = JSON.parse(event.data) as NtfyMessage;
+
+                    if (data.event == 'open') {
+                        resolve();
+                    }
+                };
+            });
 
             const awaitOpen = new Promise<void>((resolve) => {
                 connection!.onopen = () => {
@@ -73,6 +80,7 @@ export const ntfy: SignalLayerCreator = ({ topic, url }: SignalBaseProperties) =
             });
 
             await awaitOpen;
+            await awaitOpenConfirm;
         },
         teardown() {
             connection?.close();

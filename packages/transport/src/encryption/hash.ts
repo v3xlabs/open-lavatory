@@ -1,4 +1,4 @@
-import { EncryptionKey } from './index.js';
+import { EncryptionKey } from './asymmetric.js';
 
 const HASH_LENGTH = 16;
 
@@ -29,10 +29,12 @@ export const validatePublicKeyHash = async (
  * determines/or generates the hash and dictates wether is host or not
  */
 export const initHash = async (initialHash: string | undefined, encryptionKey: EncryptionKey) => {
+    console.log('initialHash', initialHash);
     const ourHash = await hashPublicKey(encryptionKey);
 
-    const hash = initialHash ?? ourHash;
-    const isHost = initialHash ? initialHash === ourHash : false;
+    console.log('ourHash', ourHash);
+    const hash = initialHash || ourHash;
+    const isHost = hash === ourHash;
 
     return {
         hash,

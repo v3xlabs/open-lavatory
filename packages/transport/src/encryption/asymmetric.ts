@@ -1,172 +1,107 @@
+import * as nacl from 'tweetnacl';
+
 import { SessionParameters } from '../session/index.js';
+import { fromBase64, toBase64 } from './base64.js';
 
-/**
- * WARNING, this is a potentially unsafe implementation of RSA-OAEP encryption.
- * As it repeats chunked encryption.
- *
- * This is to be replaced in the future with a more secure implementation.
- * The reason is RSA-OAEP (as provided by the browser) does not allow signing messages below its key size.
- */
+const PUBLIC_KEY_BYTE_LENGTH = nacl.box.publicKeyLength;
+const NONCE_BYTE_LENGTH = nacl.box.nonceLength;
 
-const BASE64_DELIMITER = '.';
-const SHA256_HASH_BYTE_LENGTH = 32;
+const composePayload = (
+    ephemeralPublicKey: Uint8Array,
+    nonce: Uint8Array,
+    ciphertext: Uint8Array
+): string => {
+    const payload = new Uint8Array(ephemeralPublicKey.length + nonce.length + ciphertext.length);
 
-const toBase64 = (data: Uint8Array): string => {
-    let binary = '';
+    payload.set(ephemeralPublicKey, 0);
+    payload.set(nonce, ephemeralPublicKey.length);
+    payload.set(ciphertext, ephemeralPublicKey.length + nonce.length);
 
-    for (let index = 0; index < data.length; index += 1) {
-        binary += String.fromCharCode(data[index]);
-    }
-
-    return btoa(binary);
+    return toBase64(payload);
 };
 
-const fromBase64 = (value: string): Uint8Array => {
-    const binary = atob(value);
-    const bytes = new Uint8Array(binary.length);
+const decomposePayload = (
+    payload: string
+): {
+    ephemeralPublicKey: Uint8Array;
+    nonce: Uint8Array;
+    ciphertext: Uint8Array;
+} => {
+    const bytes = new Uint8Array(
+        atob(payload)
+            .split('')
+            .map((char) => char.charCodeAt(0))
+    );
 
-    for (let index = 0; index < binary.length; index += 1) {
-        bytes[index] = binary.charCodeAt(index);
+    if (bytes.length <= PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH) {
+        throw new Error('Encrypted payload is malformed.');
     }
 
-    return bytes;
-};
+    const ephemeralPublicKey = bytes.slice(0, PUBLIC_KEY_BYTE_LENGTH);
+    const nonce = bytes.slice(PUBLIC_KEY_BYTE_LENGTH, PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH);
+    const ciphertext = bytes.slice(PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH);
 
-const normalizeBase64UrlPadding = (value: string): string => {
-    const paddingRemainder = value.length % 4;
-
-    if (paddingRemainder === 0) {
-        return value;
-    }
-
-    return `${value}${'='.repeat(4 - paddingRemainder)}`;
-};
-
-const fromBase64Url = (value: string): Uint8Array => {
-    const normalized = normalizeBase64UrlPadding(value).replace(/-/g, '+').replace(/_/g, '/');
-
-    return fromBase64(normalized);
-};
-
-const getMaxRsaOaepChunkSize = (exportedKey: JsonWebKey): number => {
-    if (!exportedKey.n) {
-        throw new Error('Missing modulus information for RSA key.');
-    }
-
-    const modulusBytes = fromBase64Url(exportedKey.n);
-    const chunkSize = modulusBytes.length - 2 * SHA256_HASH_BYTE_LENGTH - 2;
-
-    if (chunkSize <= 0) {
-        throw new Error('Unsupported RSA key length for OAEP chunking.');
-    }
-
-    return chunkSize;
+    return {
+        ephemeralPublicKey,
+        nonce,
+        ciphertext,
+    };
 };
 
 export type EncryptionKey = {
     toString: () => string;
     encrypt: (message: string) => Promise<string>;
 };
+
 export type DecryptionKey = {
     toString: () => string;
     decrypt: (message: string) => Promise<string>;
 };
 
-export const createEncryptionKey = async (key: CryptoKey): Promise<EncryptionKey> => {
-    const exportKey = await crypto.subtle.exportKey('jwk', key);
-    const encodedKey = JSON.stringify(exportKey);
-    const maxChunkSize = getMaxRsaOaepChunkSize(exportKey);
+export const createEncryptionKey = async (key: Uint8Array): Promise<EncryptionKey> => {
+    const serializedPublicKey = toBase64(key);
 
     return {
-        toString: () => encodedKey,
+        toString: () => serializedPublicKey,
         encrypt: async (message: string) => {
-            const data = new TextEncoder().encode(message);
-            const chunks: string[] = [];
+            const messageBytes = new TextEncoder().encode(message);
+            const ephemeralKeyPair = nacl.box.keyPair();
+            const nonce = nacl.randomBytes(NONCE_BYTE_LENGTH);
+            const ciphertext = nacl.box(messageBytes, nonce, key, ephemeralKeyPair.secretKey);
 
-            const encryptChunk = async (chunk: Uint8Array): Promise<void> => {
-                const encryptedBuffer = await crypto.subtle.encrypt(
-                    { name: 'RSA-OAEP' },
-                    key,
-                    Buffer.from(chunk)
-                );
-
-                chunks.push(toBase64(new Uint8Array(encryptedBuffer)));
-            };
-
-            if (data.length === 0) {
-                await encryptChunk(new Uint8Array(0));
-            } else {
-                for (let offset = 0; offset < data.length; offset += maxChunkSize) {
-                    const chunk = data.subarray(
-                        offset,
-                        Math.min(offset + maxChunkSize, data.length)
-                    );
-
-                    await encryptChunk(chunk);
-                }
+            if (!ciphertext) {
+                throw new Error('Failed to encrypt message.');
             }
 
-            return chunks.join(BASE64_DELIMITER);
+            return composePayload(ephemeralKeyPair.publicKey, nonce, ciphertext);
         },
     };
 };
 
-export const parseEncryptionKey = async (key: string): Promise<EncryptionKey> => {
-    const cryptoKey = await crypto.subtle.importKey(
-        'jwk',
-        JSON.parse(key),
-        { name: 'RSA-OAEP', hash: 'SHA-256' },
-        true,
-        ['encrypt']
-    );
+export const parseEncryptionKey = async (serializedKey: string): Promise<EncryptionKey> => {
+    const decodedPublicKey = fromBase64(serializedKey);
 
-    return createEncryptionKey(cryptoKey);
+    return createEncryptionKey(decodedPublicKey);
 };
 
-export const createDecryptionKey = async (key: CryptoKey): Promise<DecryptionKey> => {
-    const exportKey = await crypto.subtle.exportKey('jwk', key);
-    const encodedKey = JSON.stringify(exportKey);
+export const createDecryptionKey = async (key: Uint8Array): Promise<DecryptionKey> => {
+    const serializedSecretKey = toBase64(key);
 
     return {
-        toString: () => encodedKey,
+        toString: () => serializedSecretKey,
         decrypt: async (message: string) => {
             if (!message) {
                 return '';
             }
 
-            const encryptedChunks = message.split(BASE64_DELIMITER);
-            const decryptedChunks: Uint8Array[] = [];
+            const { ephemeralPublicKey, nonce, ciphertext } = decomposePayload(message);
+            const decrypted = nacl.box.open(ciphertext, nonce, ephemeralPublicKey, key);
 
-            for (const chunk of encryptedChunks) {
-                if (!chunk) {
-                    continue;
-                }
-
-                const encryptedBytes = fromBase64(chunk);
-                const decryptedBuffer = await crypto.subtle.decrypt(
-                    { name: 'RSA-OAEP' },
-                    key,
-                    Buffer.from(encryptedBytes)
-                );
-
-                decryptedChunks.push(new Uint8Array(decryptedBuffer));
+            if (!decrypted) {
+                throw new Error('Failed to decrypt message.');
             }
 
-            if (decryptedChunks.length === 0) {
-                return '';
-            }
-
-            const totalLength = decryptedChunks.reduce((length, part) => length + part.length, 0);
-            const combined = new Uint8Array(totalLength);
-
-            for (let index = 0, offset = 0; index < decryptedChunks.length; index += 1) {
-                const part = decryptedChunks[index];
-
-                combined.set(part, offset);
-                offset += part.length;
-            }
-
-            return new TextDecoder().decode(combined);
+            return new TextDecoder().decode(decrypted);
         },
     };
 };
@@ -174,32 +109,30 @@ export const createDecryptionKey = async (key: CryptoKey): Promise<DecryptionKey
 export type EncKeypair = { encryptionKey: EncryptionKey; decryptionKey: DecryptionKey };
 
 export const generateKeyPair = async (): Promise<EncKeypair> => {
-    const { publicKey, privateKey } = await crypto.subtle.generateKey(
-        {
-            name: 'RSA-OAEP',
-            modulusLength: 2048,
-            publicExponent: new Uint8Array([1, 0, 1]),
-            hash: 'SHA-256',
-        },
-        true,
-        ['encrypt', 'decrypt']
-    );
-
+    const { publicKey, secretKey } = nacl.box.keyPair();
     const encryptionKey = await createEncryptionKey(publicKey);
-    const decryptionKey = await createDecryptionKey(privateKey);
+    const decryptionKey = await createDecryptionKey(secretKey);
 
     return { encryptionKey, decryptionKey };
 };
 
 export const initEncryptionKeys = async (initParameters?: SessionParameters) => {
-    // if initParameters contains encryptionKey and decryptionKey, verify them and return them
-    // TODO: import & verify keys from connection parameters
-
-    // otherwise generate a new keypair
+    const keyPair = nacl.box.keyPair();
     const { encryptionKey, decryptionKey } = await generateKeyPair();
+
+    if (initParameters && 'publicKey' in initParameters && initParameters.publicKey) {
+        const relyingEncryptionKey = await parseEncryptionKey(initParameters.publicKey as string);
+
+        return {
+            encryptionKey,
+            decryptionKey,
+            relyingEncryptionKey,
+        };
+    }
 
     return {
         encryptionKey,
         decryptionKey,
+        relyingEncryptionKey: await createEncryptionKey(keyPair.publicKey),
     };
 };

@@ -7,7 +7,8 @@ import {
     parseEncryptionKey,
 } from '../encryption/index.js';
 import { generateSessionId } from '../encryption/random.js';
-import { SignalingLayer, SignalingMode, SignalLayerCreator } from '../signaling/index.js';
+import { SignalLayerCreator } from '../signaling/base.js';
+import { SignalingLayer, SignalingMode } from '../signaling/index.js';
 import { mqtt } from '../signaling/mqtt/index.js';
 import { ntfy } from '../signaling/ntfy/index.js';
 import { decodeConnectionURL } from '../utils/url.js';
@@ -103,10 +104,11 @@ export const createSession = async (
             return await decryptionKey.decrypt(message);
         },
         publicKey: encryptionKey,
-        sessionId,
         k: handshakeKey,
         async rpDiscovered(rpKey) {
-            console.log('rpKey', rpKey);
+            const role = isHost ? 'host' : 'client';
+
+            console.log('rpKey discovered by ' + role, rpKey);
 
             relyingPublicKey = await parseEncryptionKey(rpKey);
         },

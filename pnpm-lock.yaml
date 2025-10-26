@@ -82,7 +82,7 @@ importers:
         version: 19.2.0(react@19.2.0)
       tailwindcss:
         specifier: ^4.1.14
-        version: 4.1.14
+        version: 4.1.15
       ts-pattern:
         specifier: ^5.8.0
         version: 5.8.0
@@ -553,7 +553,7 @@ importers:
         version: 1.5.2
       tailwindcss:
         specifier: ^4.0.7
-        version: 4.1.14
+        version: 4.1.15
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.10.2
@@ -582,6 +582,9 @@ importers:
       ts-pattern:
         specifier: ^5.8.0
         version: 5.8.0
+      tweetnacl:
+        specifier: ^1.0.3
+        version: 1.0.3
       viem:
         specifier: '2'
         version: 2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.11)
@@ -7769,6 +7772,9 @@ packages:
     resolution: {integrity: sha512-ytQKuwgmrrkDTFP4LjR0ToE2nqgy886GpvRSpU0JAnrdBYppuY5rLkRUYPU1yCryb24SsKBTL/hlDQAEFVwtZg==}
     engines: {node: '>=18.0.0'}
     hasBin: true
+
+  tweetnacl@1.0.3:
+    resolution: {integrity: sha512-6rt+RN7aOi1nGMyC4Xa5DdYiukl2UWCbcJft7YhxReBGQD7OAM8Pbxw6YMo4r2diNEA8FEmu32YOn9rhaiE5yw==}
 
   twoslash-protocol@0.2.12:
     resolution: {integrity: sha512-5qZLXVYfZ9ABdjqbvPc4RWMr7PrpPaaDSeaYY55vl/w1j6H6kzsWK/urAEIXlzYlyrFmyz1UbwIt+AA0ck+wbg==}
@@ -18801,6 +18807,8 @@ snapshots:
       get-tsconfig: 4.10.1
     optionalDependencies:
       fsevents: 2.3.3
+
+  tweetnacl@1.0.3: {}
 
   twoslash-protocol@0.2.12: {}
 

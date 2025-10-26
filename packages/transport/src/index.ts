@@ -6,7 +6,6 @@
  */
 
 // Main connection class
-export { OpenLVConnection } from './connection.js';
 export { OpenLVProvider } from './provider.js';
 
 // URL utilities
@@ -29,8 +28,3 @@ export type {
     SessionConfig,
     WalletInfo,
 } from './types.js';
-
-// Utilities (for advanced usage)
-export type { SignalingConfig, SignalingMessage } from './signaling/mqtt.js';
-export { MQTTSignaling } from './signaling/mqtt.js';
-export { EncryptionUtils } from './utils/encryption.js';

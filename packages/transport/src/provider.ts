@@ -2,7 +2,6 @@
 import { EventEmitter } from 'eventemitter3';
 import type { EIP1193Parameters, EIP1474Methods } from 'viem';
 
-import { OpenLVConnection } from './index.js';
 import type { JsonRpcRequest, JsonRpcResponse } from './types.js';
 
 export class OpenLVProvider extends EventEmitter<

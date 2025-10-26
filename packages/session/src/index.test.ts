@@ -44,5 +44,7 @@ describe("Session", () => {
     //
     console.log("A", sessionA.getState());
     console.log("B", sessionB.getState());
+
+    const response = await sessionA.send({ data: "test" });
   });
 });

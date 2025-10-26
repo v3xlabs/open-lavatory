@@ -2,39 +2,40 @@
   "name": "@openlv/modal",
   "version": "0.0.1-beta.1",
   "description": "Preact-based modal custom element for Open Lavatory",
-  "keywords": ["open-lavatory", "modal", "preact", "web-component"],
-  "author": {
-    "name": "Open-Lavatory",
-    "url": "https://github.com/v3xlabs/open-lavatory"
+  "keywords": [
+    "open-lavatory",
+    "modal",
+    "preact",
+    "web-component"
+  ],
+  "homepage": "https://github.com/v3xlabs/open-lavatory",
+  "bugs": {
+    "url": "https://github.com/v3xlabs/open-lavatory/issues"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/v3xlabs/open-lavatory.git",
     "directory": "packages/modal"
   },
-  "homepage": "https://github.com/v3xlabs/open-lavatory",
-  "bugs": {
-    "url": "https://github.com/v3xlabs/open-lavatory/issues"
-  },
-  "publishConfig": {
-    "access": "public"
+  "author": {
+    "name": "Open-Lavatory",
+    "url": "https://github.com/v3xlabs/open-lavatory"
   },
   "type": "module",
-  "main": "./dist/index.js",
-  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js"
     }
   },
-  "packageManager": "pnpm@10.10.0",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
-    "dev": "vite dev",
     "build": "vite build",
-    "preview": "vite preview",
+    "dev": "vite dev",
     "lint": "pnpx eslint .",
-    "lint:fix": "pnpx eslint . --fix"
+    "lint:fix": "pnpx eslint . --fix",
+    "preview": "vite preview"
   },
   "dependencies": {
     "classnames": "^2.5.1",
@@ -47,5 +48,9 @@
     "@preact/preset-vite": "^2.10.2",
     "typescript": "^5.8.3",
     "vite": "^5.4.10"
+  },
+  "packageManager": "pnpm@10.10.0",
+  "publishConfig": {
+    "access": "public"
   }
 }

@@ -18,7 +18,9 @@ export type SignalingBaseLayer = {
     subscribe: (handler: (payload: string) => void) => MaybePromise<void>;
 };
 
-export type SignalLayerCreator = (properties: SignalBaseProperties) => MaybePromise<SignalingLayer>;
+export type CreateSignalLayerFn = (
+    properties: SignalBaseProperties
+) => MaybePromise<SignalingLayer>;
 
 export type SignalingProperties = {
     isHost: boolean;

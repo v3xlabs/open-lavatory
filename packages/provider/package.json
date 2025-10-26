@@ -1,5 +1,5 @@
 {
-  "name": "@openlv/signaling",
+  "name": "@openlv/provider",
   "version": "0.0.1-beta.1",
   "keywords": [
     "open-lavatory"
@@ -11,44 +11,32 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/v3xlabs/open-lavatory.git",
-    "directory": "packages/signaling"
+    "directory": "packages/provider"
   },
   "author": {
     "name": "Open-Lavatory",
     "url": "https://github.com/v3xlabs/open-lavatory"
   },
   "type": "module",
-  "exports": {
-    ".": {
-      "default": "./dist/index.js"
-    },
-    "./ntfy": {
-      "default": "./dist/ntfy/index.js"
-    },
-    "./mqtt": {
-      "default": "./dist/mqtt/index.js"
-    }
-  },
+  "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "dev": "tsc --watch"
   },
   "dependencies": {
-    "@openlv/core": "workspace:*",
-    "eventemitter3": "^5.0.1",
-    "globals": "^16.2.0",
-    "mqtt": "^5.13.1",
-    "ts-pattern": "^5.8.0"
+    "@openlv/modal": "workspace:*",
+    "@openlv/transport": "workspace:*",
+    "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "vitest": "^4.0.3"
+    "@wagmi/core": "^2.17.3",
+    "globals": "^16.2.0",
+    "typescript": "^5.8.3"
   },
   "peerDependencies": {
     "@wagmi/core": "2",
-    "viem": "2",
-    "wagmi": "2"
+    "viem": "2"
   },
   "packageManager": "pnpm@10.10.0",
   "publishConfig": {

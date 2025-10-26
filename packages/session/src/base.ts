@@ -17,6 +17,9 @@ import {
 } from "@openlv/signaling";
 import { mqtt } from "@openlv/signaling/mqtt";
 import { ntfy } from "@openlv/signaling/ntfy";
+import { EventEmitter } from "eventemitter3";
+
+import { SessionMessage } from "./messages/index.js";
 
 export type SessionState =
   | "create"
@@ -29,12 +32,15 @@ export type Session = {
   getState(): { state: SessionState; signaling?: { state: SignalingMode } };
   getHandshakeParameters(): SessionHandshakeParameters;
   connect(): Promise<void>;
+  // Send with response
+  send(message: object): Promise<unknown>;
 };
 
 export const createSession = async (
   initParameters: SessionParameters,
   signalLayer: SignalLayerCreator,
 ): Promise<Session> => {
+  const messages = new EventEmitter<{ message: SessionMessage }>();
   const sessionId =
     "sessionId" in initParameters
       ? initParameters.sessionId
@@ -102,6 +108,13 @@ export const createSession = async (
 
       signal.subscribe((message) => {
         console.log("Session: received message from signaling", message);
+
+        const sessionMsg = message as SessionMessage;
+
+        if (sessionMsg.type === "data") {
+          console.log("Session: received data message", sessionMsg.payload);
+          messages.emit("message", sessionMsg);
+        }
       });
     },
     getState() {
@@ -116,14 +129,31 @@ export const createSession = async (
         s: server,
       };
     },
-    // getAsParameters() {
-    //     return {
-    //         ...initParameters,
-    //         relyingPublicKey,
-    //         encryptionKey,
-    //         decryptionKey,
-    //     };
-    // },
+    async send(message: object) {
+      const ready = signal.getState().state === "xr-encrypted";
+
+      if (!ready) {
+        throw new Error("Session not ready");
+      }
+
+      const randomID = crypto.randomUUID();
+      const sessionMessage: SessionMessage = {
+        type: "data",
+        messageId: randomID,
+        payload: message,
+      };
+
+      // for now use signaling
+      await signal.send(sessionMessage);
+
+      return new Promise((resolve) => {
+        messages.on("message", (message) => {
+          if (message.messageId === randomID && message.type === "data") {
+            resolve(message.payload);
+          }
+        });
+      });
+    },
   };
 };
 

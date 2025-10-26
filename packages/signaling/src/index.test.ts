@@ -1,13 +1,13 @@
 import { generateKeyPair } from '@openlv/core';
 import { describe, expect, it } from 'vitest';
 
-import { SignalBaseProperties, SignalLayerCreator } from './base.js';
+import { CreateSignalLayerFn, SignalBaseProperties } from './base.js';
 import { mqtt } from './mqtt/index.js';
 import { ntfy } from './ntfy/index.js';
 
 const hKey = 'test';
 
-const layers: [SignalLayerCreator, SignalBaseProperties][] = [
+const layers: [CreateSignalLayerFn, SignalBaseProperties][] = [
     [mqtt, { topic: 'mytesttopic1111', url: 'wss://test.mosquitto.org:8081/mqtt' }],
     [ntfy, { topic: 'mytesttopic1111', url: 'https://ntfy.sh/' }],
 ];

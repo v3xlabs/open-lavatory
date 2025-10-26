@@ -11,9 +11,9 @@ import {
   SessionParameters,
 } from "@openlv/core";
 import {
+  CreateSignalLayerFn,
   SignalingLayer,
   SignalingMode,
-  SignalLayerCreator,
 } from "@openlv/signaling";
 import { mqtt } from "@openlv/signaling/mqtt";
 import { ntfy } from "@openlv/signaling/ntfy";
@@ -38,7 +38,7 @@ export type Session = {
 
 export const createSession = async (
   initParameters: SessionParameters,
-  signalLayer: SignalLayerCreator,
+  signalLayer: CreateSignalLayerFn,
 ): Promise<Session> => {
   const messages = new EventEmitter<{ message: SessionMessage }>();
   const sessionId =

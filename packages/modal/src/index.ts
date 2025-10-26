@@ -11,6 +11,8 @@ export type {
   ConnectorModalInterface,
   ModalConnectionInterface,
 } from "./types/connection";
+import { encodeConnectionURL } from "../../core/dist/utils/url";
+import type { OpenLVProvider } from "../../provider/src";
 import OpenLVModalElementDefault from "./openlv-modal-element";
 export { OPENLV_ICON_128 } from "./assets/logo";
 
@@ -42,17 +44,38 @@ export const registerOpenLVModal = (tagName = "openlv-modal") => {
 // eslint-disable-next-line import/no-default-export
 export default OpenLVModalElementDefault;
 
-export const triggerOpenModal = () => {
+export const triggerOpenModal = (provider: OpenLVProvider) => {
   const modal = document.querySelector('openlv-modal');
+
+  if (modal) modal.remove();
 
   if (!modal) {
     registerOpenLVModal();
-    document.body.appendChild(new OpenLVModalElementDefault());
-  }
+    const x = new OpenLVModalElementDefault();
 
-  if (modal instanceof OpenLVModalElementDefault) {
-    modal.showModal();
-  } else {
-    console.warn('OpenLV modal not found');
+    document.body.appendChild(x);
+    x.showModal();
+    x.onClose = () => {
+      console.log('modal closed');
+      x.remove();
+    };
+    x.onStartConnection = async () => {
+      x.updateConnectionState({ state: 'initializing' });
+
+      console.log('modal start connection');
+      const session = await provider.createSession();
+
+      console.log('session state:', session.getState());
+      const params = session.getHandshakeParameters();
+      const url = encodeConnectionURL(params);
+
+      console.log('url:', url);
+
+      x.setProps(url, () => {
+        console.log('testttt');
+      });
+
+      x.updateConnectionState({ state: 'qr-ready', uri: url, });
+    };
   }
 };

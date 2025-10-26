@@ -27,6 +27,8 @@
   "dependencies": {
     "@openlv/modal": "workspace:*",
     "@openlv/transport": "workspace:*",
+    "@openlv/session": "workspace:*",
+    "@openlv/signaling": "workspace:*",
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {

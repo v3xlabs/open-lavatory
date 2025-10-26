@@ -1,3 +1,5 @@
+import { createSession, Session } from '@openlv/session';
+import { ntfy } from '@openlv/signaling/ntfy';
 import { Emitter } from "@wagmi/core/internal";
 
 import { ProviderEvents } from "./events";
@@ -9,9 +11,10 @@ export type OpenLVProviderParameters = {
 export type OpenLVProvider = {
   emitter: Emitter<ProviderEvents>;
   connect: () => Promise<void>;
+  createSession: () => Promise<Session>;
 };
 
-let modal: (() => void) | undefined;
+let modal: ((provider: OpenLVProvider) => void) | undefined;
 
 export const getModal = async () => {
   if (!modal) {
@@ -23,7 +26,6 @@ export const getModal = async () => {
 
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVProvider => {
-  // hello
   const emitter = new Emitter('x');
   //
 
@@ -32,7 +34,33 @@ export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVPro
       const modal = await getModal();
 
       console.log('loading modal');
-      modal?.();
+      modal?.(this);
+
+      const modalDismissed = new Promise((_resolve) => {
+        // modal?.onClose
+
+        // resolve();
+      });
+
+      const connectionCompleted = new Promise((_resolve) => {
+        // modal?.onStartConnection
+
+        // resolve();
+      });
+
+      await Promise.race([
+        modalDismissed,
+        connectionCompleted,
+      ]);
+    },
+    createSession: async () => {
+      const session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
+
+      console.log('session created');
+      await session.connect();
+      console.log('session connected');
+
+      return session;
     },
     emitter,
   };

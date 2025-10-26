@@ -5,8 +5,7 @@
  * without relying on centralized infrastructure.
  */
 
-// Main connection class
-// export { OpenLVProvider } from "./provider.js";
+export * from "./base.js";
 
 // Types
 export type {

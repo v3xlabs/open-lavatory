@@ -22,6 +22,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
         log('connect');
 
         await provider.connect();
+        // if sessions fails close modal
 
         return {
           accounts: [],

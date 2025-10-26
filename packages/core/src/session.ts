@@ -1,0 +1,44 @@
+import { DecryptionKey, EncryptionKey } from "./encryption/asymmetric.js";
+
+// typescript type for 32 character hex string
+// @ts-ignore
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
+export type Hex<L> = string;
+
+/**
+ * The parameters from the connection url
+ */
+export type SessionHandshakeParameters = {
+  // Unique session identifier
+  sessionId: Hex<16>;
+  // Hash of peerA's public key
+  h: Hex<16>;
+  // Shared key for symmetric encryption during handshake
+  k: Hex<16>;
+  // Protocol for signaling
+  p: string;
+  // Signaling server URL
+  s: string;
+};
+
+/**
+ * The parameters that describe a session
+ * these can be used to restart a session
+ */
+export type SessionConnectionParameters = SessionHandshakeParameters & {
+  relyingPublicKey: EncryptionKey;
+  // Our public key for the relying party to encrypt messages to us
+  encryptionKey: EncryptionKey;
+  // Our private key for decrypting messages from the relying party
+  decryptionKey: DecryptionKey;
+};
+
+export type SessionCreationParameters = Pick<
+  SessionHandshakeParameters,
+  "p" | "s"
+>;
+
+export type SessionParameters =
+  | SessionConnectionParameters
+  | SessionHandshakeParameters
+  | SessionCreationParameters;

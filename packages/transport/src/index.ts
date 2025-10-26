@@ -5,26 +5,4 @@
  * without relying on centralized infrastructure.
  */
 
-// Main connection class
-export { OpenLVProvider } from './provider.js';
-
-// URL utilities
-export { decodeConnectionURL, encodeConnectionURL } from './utils/url.js';
-
-// Types
-export type {
-    ConnectionEvents,
-    ConnectionPhase,
-    ConnectionState,
-    DAppInfo,
-    ErrorHandler,
-    EthereumMethod,
-    EthereumRequest,
-    JsonRpcError,
-    JsonRpcRequest,
-    JsonRpcResponse,
-    MessageHandler,
-    PhaseHandler,
-    SessionConfig,
-    WalletInfo,
-} from './types.js';
+export * from './base.js';

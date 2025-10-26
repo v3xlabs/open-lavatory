@@ -32,6 +32,8 @@ export type SignalMessagePubkey = SignalMessageBase<
     }
 >;
 
+export type SignalMessageAck = SignalMessageBase<'ack', undefined>;
+
 export type SignalMessageHello = SignalMessageBase<
     'hello',
     {

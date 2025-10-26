@@ -3,8 +3,8 @@ import { MaybePromise } from 'viem';
 
 import { SymmetricKey } from '../encryption/handshake.js';
 import { EncryptionKey } from '../encryption/index.js';
-import { SignalBaseProperties, SignalingBaseLayer } from './base.js';
-import { SignalMessage, SignalMessageFlash, SignalMessagePubkey } from './messages/index.js';
+import { SignalingBaseLayer } from './base.js';
+import { SignalMessage, SignalMessageAck, SignalMessageFlash, SignalMessagePubkey } from './messages/index.js';
 
 export type SignalingProperties = {
     isHost: boolean;
@@ -37,14 +37,22 @@ export type SignalingLayer = (properties: SignalingProperties) => Promise<{
     };
 }>;
 
-export type SignalLayerCreator = (properties: SignalBaseProperties) => MaybePromise<SignalingLayer>;
-
 export const XR_PREFIX = 'x';
 export const XR_H_PREFIX = 'h';
 
 export type SignalingMode =
     // We hold the pubKey that matches the `h`, and are awaiting a relying party
-    'handshake-open' | 'handshake-closed' | 'xr-encrypted';
+    | 'handshake-open'
+    //
+    | 'handshaking'
+    //
+    | 'handshake-closed'
+    //
+    | 'xr-encrypted'
+    // Connecting
+    | 'connecting'
+    // Disconnected, or not setup yet
+    | 'disconnected';
 
 export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer => {
     // shared signaling layer logic goes here
@@ -61,7 +69,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
     }: SignalingProperties) => {
         // shared signaling layer logic goes here
         const handshakeKey = k ? k : undefined;
-        let mode: SignalingMode = canEncrypt() ? 'xr-encrypted' : 'handshake-open';
+        let mode: SignalingMode = 'disconnected';
         const subscribeHandler = new EventEmitter<{ message: string }>();
 
         const flash = async () => {
@@ -121,29 +129,47 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
         };
 
         const flashAckEncrypted = async () => {
-            //
+            if (!canEncrypt()) return;
+
+            const payload: SignalMessageAck = {
+                type: 'ack',
+                payload: undefined,
+                timestamp: Date.now(),
+            };
+
+            const message = await encrypt(JSON.stringify(payload));
+
+            await init.publish(XR_PREFIX + 'c' + message);
         };
 
         return {
             type: init.type,
             async setup() {
+                mode = 'connecting';
                 await init.setup();
 
-                if (!isHost && mode === 'handshake-open') {
-                    console.log('I am not groot, I must flash');
-                    await flash();
+                if (!canEncrypt()) {
+                    if (!isHost) {
+                        console.log('I am not groot, I must flash');
+                        mode = 'handshaking';
+                        await flash();
+                    }
+
+                    if (isHost) {
+                        mode = 'handshake-open';
+                    }
                 }
 
                 await init.subscribe(async (payload) => {
-                    console.log('RAW MESSAGE RECEIVED (' + isHost ? 'h' : 'c' + ')', payload);
-
-                    if (payload.startsWith(XR_H_PREFIX) && mode == 'handshake-open') {
+                    if (
+                        payload.startsWith(XR_H_PREFIX) &&
+                        (mode == 'handshake-open' || mode == 'handshaking')
+                    ) {
                         const recipient = payload[XR_H_PREFIX.length];
                         const isRecipient = isHost ? 'h' : 'c' === recipient;
                         let body = payload.slice(XR_H_PREFIX.length + 1);
 
                         if (!handshakeKey) {
-                            // throw new Error('Handshake key not found');
                             console.error(
                                 "Dropping message, couldn't decrypt as there is no handshake key present."
                             );
@@ -156,13 +182,10 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                         }
 
                         body = await handshakeKey.decrypt(body);
-                        console.log('RECEIVED HANDSHAKE MESSAGE', body, isHost);
-
-                        //
                         const msg = JSON.parse(body) as SignalMessage;
 
                         if (msg.type === 'flash' && isHost) {
-                            console.log('RECEIVED FLASH MESSAGE', msg);
+                            mode = 'handshaking';
 
                             await flashPub();
 
@@ -170,7 +193,6 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                         }
 
                         if (msg.type === 'pubkey' && !isHost) {
-                            console.log('RECEIVED PUBKEY MESSAGE', msg);
                             await rpDiscovered(msg.payload.publicKey);
 
                             mode = 'handshake-closed';
@@ -181,7 +203,6 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                         }
 
                         return;
-                        // handler(body);
                     }
 
                     if (payload.startsWith(XR_PREFIX)) {
@@ -194,17 +215,19 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                         }
 
                         body = await decrypt(body);
-
-                        //
                         const msg = JSON.parse(body) as SignalMessage;
 
                         if (msg.type === 'pubkey' && isHost) {
-                            console.log('RECEIVED PUBKEY MESSAGE', msg);
-
                             await rpDiscovered(msg.payload.publicKey);
                             mode = 'xr-encrypted';
 
                             await flashAckEncrypted();
+
+                            return;
+                        }
+
+                        if (msg.type === 'ack' && !isHost) {
+                            mode = 'xr-encrypted';
 
                             return;
                         }

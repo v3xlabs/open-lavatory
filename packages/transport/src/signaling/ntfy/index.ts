@@ -1,5 +1,5 @@
-import { SignalBaseProperties } from '../base.js';
-import { createSignalingLayer, SignalLayerCreator } from '../index.js';
+import { SignalBaseProperties, SignalLayerCreator } from '../base.js';
+import { createSignalingLayer } from '../index.js';
 import { parseNtfyUrl } from './url.js';
 
 export type NtfyMessage = {

@@ -35,6 +35,7 @@
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "mqtt": "^5.13.1",
+    "ts-pattern": "^5.8.0",
     "vitest": "^4.0.3"
   },
   "peerDependencies": {

@@ -7,7 +7,7 @@ export const Header = ({
   onToggleSettings,
 }: {
   title: string;
-  view: "qr" | "settings";
+  view: "start" | "uri" | "settings";
   onBack: () => void;
   onToggleSettings: () => void;
 }) => (

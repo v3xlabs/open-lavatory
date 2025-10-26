@@ -1,4 +1,4 @@
-import * as nacl from "tweetnacl";
+import nacl from "tweetnacl";
 
 import { SessionParameters } from "../session.js";
 import { fromBase64, toBase64 } from "./base64.js";

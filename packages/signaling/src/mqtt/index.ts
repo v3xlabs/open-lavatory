@@ -1,5 +1,5 @@
 import type { MqttClient } from 'mqtt';
-import { connect } from 'mqtt';
+import MQTT from 'mqtt';
 
 import { CreateSignalLayerFn, SignalBaseProperties } from '../base.js';
 import { createSignalingLayer } from '../index.js';
@@ -15,8 +15,8 @@ export const mqtt: CreateSignalLayerFn = ({
 
     return createSignalingLayer({
         type: 'mqtt',
-        setup() {
-            connection = connect(url);
+        async setup() {
+            connection = await MQTT.connectAsync(url);
         },
         teardown() {
             connection?.end();

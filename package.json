@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "pnpm -r build",
+    "build": "pnpm -r --filter !@openlv/example-dapp --filter !@openlv/sandbox --filter !@openlv/example-wallet --filter !@openlv/extension build",
     "build:connector": "pnpm --filter @openlv/connector build",
     "build:docs": "pnpm --filter docs build",
     "build:extension": "pnpm build:lib && pnpm --filter @openlv/extension build",

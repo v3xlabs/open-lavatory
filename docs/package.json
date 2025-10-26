@@ -11,6 +11,7 @@
     "dependencies": {
         "@openlv/connector": "workspace:*",
         "@tanstack/react-query": "^5.83.0",
+        "mqtt": "^5.14.1",
         "react": "latest",
         "react-dom": "latest",
         "tailwindcss": "^4.1.14",

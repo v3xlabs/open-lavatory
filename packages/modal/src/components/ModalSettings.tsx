@@ -36,7 +36,7 @@ export const ModalSettings = ({
         )}
       >
         <span
-          className="absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white shadow-md transition-transform"
+          className="absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white border transition-transform"
           style={{
             transform: preferences[key] ? "translateX(18px)" : "translateX(0)",
           }}

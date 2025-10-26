@@ -1,5 +1,7 @@
+import classNames from "classnames";
 import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
 import QRCode from "qrcode-generator";
+import { match, P } from "ts-pattern";
 
 import { OPENLV_ICON_128 } from "../assets/logo";
 import {
@@ -25,7 +27,7 @@ export interface ModalRootProps {
   onCopy?: (uri: string) => void;
 }
 
-type ModalView = "qr" | "settings";
+type ModalView = "start" | "uri" | "settings";
 
 type PreferenceKey = keyof ModalPreferences;
 
@@ -64,108 +66,12 @@ const copyToClipboard = async (text: string): Promise<boolean> => {
   }
 };
 
-const QrPreview = ({
-  svg,
-  blurred,
-  isHovering,
-  onHover,
-  onCopy,
-}: {
-  svg: string;
-  blurred: boolean;
-  isHovering: boolean;
-  onHover: (next: boolean) => void;
-  onCopy: () => void;
-}) => (
-  <div
-    className={`relative mx-auto flex w-fit items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-4 transition-shadow ${
-      isHovering || !blurred ? "shadow-lg border-blue-500" : ""
-    }`}
-    title="Click to copy connection URL"
-    onClick={(event) => {
-      event.stopPropagation();
-      onCopy();
-    }}
-    onMouseEnter={() => onHover(true)}
-    onMouseLeave={() => onHover(false)}
-  >
-    <div
-      className="flex h-[200px] w-[200px] items-center justify-center"
-      style={{ filter: blurred && !isHovering ? "blur(8px)" : "none" }}
-      dangerouslySetInnerHTML={{ __html: svg }}
-    />
-    {blurred ? (
-      <div
-        className="absolute inset-0 flex flex-col items-center justify-center rounded-md bg-gray-50/90 transition-opacity"
-        style={{ opacity: isHovering ? 0 : 1 }}
-      >
-        <div className="mb-2 text-xl">🔒</div>
-        <p className="mt-2 text-xs italic text-gray-500">Hover to reveal</p>
-        <p className="mt-2 text-xs italic text-gray-500">Hidden for privacy</p>
-      </div>
-    ) : null}
-  </div>
-);
-
-const ConnectionDetails = ({
-  uri,
-  svg,
-  blurred,
-  isQrHovering,
-  onQrHover,
-  isUrlHovering,
-  onUrlHover,
-  onCopy,
-  subtitle,
-  hint,
-}: {
-  uri: string;
-  svg: string;
-  blurred: boolean;
-  isQrHovering: boolean;
-  onQrHover: (next: boolean) => void;
-  isUrlHovering: boolean;
-  onUrlHover: (next: boolean) => void;
-  onCopy: () => void;
-  subtitle: string;
-  hint: string;
-}) => (
-  <>
-    <div className="mt-4 rounded-2xl bg-gray-50 p-4 shadow-lg">
-      <QrPreview
-        blurred={blurred}
-        isHovering={isQrHovering}
-        onCopy={onCopy}
-        onHover={onQrHover}
-        svg={svg}
-      />
-      <p className="mt-2 text-xs italic text-gray-500">{hint}</p>
-    </div>
-    <div
-      className={`mt-4 cursor-pointer rounded-lg bg-gray-100 p-3 text-left transition-shadow ${
-        isUrlHovering ? "shadow-lg" : ""
-      }`}
-      onClick={(event) => {
-        event.stopPropagation();
-        onCopy();
-      }}
-      onMouseEnter={() => onUrlHover(true)}
-      onMouseLeave={() => onUrlHover(false)}
-      title="Click to copy connection URL"
-    >
-      <p className="text-xs font-semibold text-gray-700">Connection URL</p>
-      <p className="mt-1 break-all text-xs text-gray-500">{uri}</p>
-    </div>
-    <p className="mt-4 text-sm text-gray-500">{subtitle}</p>
-  </>
-);
-
 const useModalState = (
   uri: string,
   initialPreferences: ModalPreferences,
   onPreferencesChange?: (preferences: ModalPreferences) => void,
 ) => {
-  const [view, setView] = useState<ModalView>("qr");
+  const [view, setView] = useState<ModalView>("start");
   const [copied, setCopied] = useState(false);
   const [isQrHovering, setIsQrHovering] = useState(false);
   const [isUrlHovering, setIsUrlHovering] = useState(false);
@@ -185,7 +91,7 @@ const useModalState = (
   }, [copied]);
 
   useEffect(() => {
-    setView("qr");
+    setView("uri");
   }, [uri]);
 
   const handlePreferenceToggle = useCallback(
@@ -294,77 +200,48 @@ export const ModalRoot = ({
       data-openlv-modal-root
     >
       <div
-        className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center shadow-xl space-y-4"
+        className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center border space-y-4"
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
       >
         <Header
-          onBack={() => (view === "settings" ? setView("qr") : safeOnClose())}
+          onBack={() => match({ view, info: connectionInfo?.state })
+          .with({ view: 'settings' }, () => setView("uri"))
+          .with({ view: 'uri', info: P.not('idle') }, () => closeSession())
+          .otherwise(() => safeOnClose())}
           onToggleSettings={() =>
-            setView(view === "settings" ? "qr" : "settings")
+            setView(view === "settings" ? "uri" : "settings")
           }
           title={title}
           view={view}
         />
 
-        {view === "qr" ? (
-          connectionInfo ? (
-            <ConnectionFlow
-              connectionInfo={connectionInfo}
-              onStartConnection={onStartConnection || (() => {})}
-              onRetry={onRetry || (() => {})}
-              onClose={safeOnClose}
-              onCopy={onCopy || handleCopy}
-            />
-          ) : uri ? (
-            <ConnectionDetails
-              blurred={privacyBlurEnabled}
-              isQrHovering={isQrHovering}
-              isUrlHovering={isUrlHovering}
-              onCopy={() => void handleCopy()}
-              onQrHover={setIsQrHovering}
-              onUrlHover={setIsUrlHovering}
-              subtitle={subtitle}
-              hint={interactionHint}
-              svg={qrSvg}
-              uri={uri}
-            />
-          ) : (
-            <div className="flex flex-col items-center gap-4 p-6">
-              <div className="text-center">
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  Ready to Connect
-                </h3>
-                <p className="text-sm text-gray-500 mb-4">
-                  Click the button below to start the connection process and
-                  generate a QR code for your wallet to scan.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={handleStartConnection}
-                disabled={isStarting}
-                className="w-full rounded-lg bg-blue-500 px-6 py-3 text-sm font-semibold text-white transition hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isStarting ? "Starting Connection..." : "Start Connection"}
-              </button>
-            </div>
-          )
-        ) : (
-          <ModalSettings
-            continueLabel={continueLabel}
-            onBack={() => setView("qr")}
-            onToggle={handlePreferenceToggle}
-            preferences={preferences}
-          />
-        )}
+        {
+          match(view)
+            .with("uri", () => (
+              <ConnectionFlow
+                connectionInfo={connectionInfo || { state: "idle" }}
+                onStartConnection={handleStartConnection}
+                onRetry={onRetry || (() => { })}
+                onClose={safeOnClose}
+                onCopy={onCopy || handleCopy}
+              />
+            ))
+            .with("settings", () => (
+              <ModalSettings
+                continueLabel={continueLabel}
+                onBack={() => setView("start")}
+                onToggle={handlePreferenceToggle}
+                preferences={preferences}
+              />
+            ))
+            .otherwise(() => null)
+        }
 
         <div
-          className={`absolute right-5 top-5 rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white transition-all ${
-            copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
-          }`}
+          className={classNames('absolute right-5 top-5 rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white transition-all', copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0")}
         >
           📋 Connection URL copied to clipboard!
         </div>
@@ -387,6 +264,6 @@ export const ModalRoot = ({
           </a>
         </div>
       </div>
-    </div>
+    </div >
   );
 };

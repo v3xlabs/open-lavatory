@@ -42,7 +42,8 @@
     "preact": "^10.24.3",
     "preact-custom-element": "^4.4.3",
     "qrcode-generator": "^1.5.0",
-    "tailwindcss": "^4.0.7"
+    "tailwindcss": "^4.0.7",
+    "ts-pattern": "^5.9.0"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",

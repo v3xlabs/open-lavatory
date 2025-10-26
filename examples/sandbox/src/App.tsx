@@ -1,3 +1,5 @@
+/* eslint-disable sonarjs/no-duplicate-string */
+/* eslint-disable max-lines */
  
 import type { ConnectionPhase } from '@openlv/transport';
 import { OpenLVConnection } from '@openlv/transport';
@@ -314,6 +316,7 @@ const App = () => {
                     if (connectionRef.current) {
                         connectionRef.current.sendMessage({
                             jsonrpc: '2.0',
+                            // eslint-disable-next-line no-restricted-syntax
                             id: request.id, // Use the original request ID
                             result: walletAddresses,
                         });

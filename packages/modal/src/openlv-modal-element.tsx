@@ -139,4 +139,5 @@ export class OpenLVModalElement
   }
 }
 
+// eslint-disable-next-line import/no-default-export
 export default OpenLVModalElement;

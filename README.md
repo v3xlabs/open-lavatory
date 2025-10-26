@@ -32,6 +32,14 @@ A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectiv
 
 Open Lavatory Protocol eliminates centralized relay servers by enabling direct peer-to-peer connections between decentralized applications (dApps) and cryptocurrency wallets. Using public signaling servers for initial handshake and WebRTC combined with asymmetric encryption, it prioritizes **privacy** and **self-sovereignty**.
 
+### Remaining work
+
+- Re-implement provider from scratch in new @openlv/provider package
+- Re-implement connector from scratch in new @openlv/connector package
+- Improve modal implementation in new @openlv/modal package
+- Cleanup package dependencies
+- Implement proper errors
+
 ## 📦 Repository Structure
 
 This repository includes the following packages:

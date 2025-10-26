@@ -3,32 +3,31 @@
   "version": "0.0.1-beta.1",
   "private": true,
   "description": "Open Lavatory Browser Extension - Privacy-first wallet connection",
-  "author": {
-    "name": "Open-Lavatory",
-    "url": "https://github.com/v3xlabs/open-lavatory"
+  "homepage": "https://github.com/v3xlabs/open-lavatory",
+  "bugs": {
+    "url": "https://github.com/v3xlabs/open-lavatory/issues"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/v3xlabs/open-lavatory.git",
     "directory": "packages/extension"
   },
-  "homepage": "https://github.com/v3xlabs/open-lavatory",
-  "bugs": {
-    "url": "https://github.com/v3xlabs/open-lavatory/issues"
+  "author": {
+    "name": "Open-Lavatory",
+    "url": "https://github.com/v3xlabs/open-lavatory"
   },
   "type": "module",
-  "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "dev": "wxt",
-    "dev:firefox": "wxt -b firefox",
     "build": "wxt build",
     "build:firefox": "wxt build -b firefox",
-    "zip": "wxt zip",
-    "zip:firefox": "wxt zip -b firefox",
     "compile": "tsc --noEmit",
+    "dev": "wxt",
+    "dev:firefox": "wxt -b firefox",
     "postinstall": "wxt prepare",
     "lint": "pnpx eslint .",
-    "lint:fix": "pnpx eslint . --fix"
+    "lint:fix": "pnpx eslint . --fix",
+    "zip": "wxt zip",
+    "zip:firefox": "wxt zip -b firefox"
   },
   "dependencies": {
     "@openlv/transport": "workspace:*",
@@ -56,7 +55,8 @@
   },
   "peerDependencies": {
     "@wagmi/core": "2",
-    "wagmi": "2",
-    "viem": "2"
-  }
+    "viem": "2",
+    "wagmi": "2"
+  },
+  "packageManager": "pnpm@10.10.0"
 }

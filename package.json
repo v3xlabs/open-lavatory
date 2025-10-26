@@ -3,29 +3,28 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "packageManager": "pnpm@10.10.0",
   "scripts": {
-    "dev:docs": "pnpm --filter docs dev",
-    "build:docs": "pnpm --filter docs build",
-    "sandbox": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/sandbox dev",
-    "dapp": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/example-dapp dev",
-    "wallet": "pnpm --filter @openlv/example-wallet dev",
-    "extension": "pnpm build:lib && pnpm --filter @openlv/extension dev",
-    "extension:firefox": "pnpm build:lib && pnpm --filter @openlv/extension dev:firefox",
-    "build:lib": "pnpm --filter @openlv/transport build",
+    "build": "pnpm -r build",
     "build:connector": "pnpm --filter @openlv/connector build",
-    "build:modal": "pnpm --filter @openlv/modal build",
+    "build:docs": "pnpm --filter docs build",
     "build:extension": "pnpm build:lib && pnpm --filter @openlv/extension build",
     "build:extension:firefox": "pnpm build:lib && pnpm --filter @openlv/extension build:firefox",
-    "build": "pnpm -r build",
+    "build:lib": "pnpm --filter @openlv/transport build",
+    "build:modal": "pnpm --filter @openlv/modal build",
+    "dapp": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/example-dapp dev",
+    "dev:docs": "pnpm --filter docs dev",
+    "extension": "pnpm build:lib && pnpm --filter @openlv/extension dev",
+    "extension:firefox": "pnpm build:lib && pnpm --filter @openlv/extension dev:firefox",
+    "lint": "eslint",
+    "lint:fix": "eslint --fix",
+    "sandbox": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/sandbox dev",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
-    "lint:fix": "pnpm -r lint:fix"
+    "wallet": "pnpm --filter @openlv/example-wallet dev"
   },
   "devDependencies": {
-    "@eslint/js": "^9.23.0",
+    "@eslint/js": "^9",
     "@wagmi/core": "2",
-    "eslint": "^9.25.0",
+    "eslint": "^9",
     "eslint-config-prettier": "^10.1.2",
     "eslint-plugin-import": "^2.31.0",
     "eslint-plugin-prettier": "^5.2.6",
@@ -41,5 +40,6 @@
     "typescript-eslint": "^8.28.0",
     "viem": "2",
     "wagmi": "2"
-  }
+  },
+  "packageManager": "pnpm@10.10.0"
 }

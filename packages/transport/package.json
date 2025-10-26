@@ -36,6 +36,7 @@
     "globals": "^16.2.0",
     "mqtt": "^5.13.1",
     "ts-pattern": "^5.8.0",
+    "tweetnacl": "^1.0.3",
     "vitest": "^4.0.3"
   },
   "peerDependencies": {

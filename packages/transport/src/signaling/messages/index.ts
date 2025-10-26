@@ -5,16 +5,6 @@ export type SignalMessageBase<T extends string, P> = {
 };
 
 /**
- * Heartbeat message
- */
-export type SignalMessagePing = SignalMessageBase<
-    'ping',
-    {
-        mailboxId: string;
-    }
->;
-
-/**
  * Flash message
  * Sent to initiate handshake by non-host
  */
@@ -34,56 +24,10 @@ export type SignalMessagePubkey = SignalMessageBase<
 
 export type SignalMessageAck = SignalMessageBase<'ack', undefined>;
 
-export type SignalMessageHello = SignalMessageBase<
-    'hello',
-    {
-        publicKey: string;
-        walletInfo: {
-            name: string;
-            version: string;
-            icon: string;
-        };
-    }
->;
-
-export type SignalMessageWebRTCOffer = SignalMessageBase<
-    'webrtc-offer',
-    {
-        type: 'offer';
-        sdp: string;
-    }
->;
-
-export type SignalMessageWebRTCAnswer = SignalMessageBase<
-    'webrtc-answer',
-    {
-        type: 'answer';
-        sdp: string;
-    }
->;
-
-export type SignalMessageICECandidate = SignalMessageBase<
-    'ice-candidate',
-    {
-        candidate: string;
-        sdpMid: string;
-        sdpMLineIndex: number;
-    }
->;
-
-export type SignalMessageData = SignalMessageBase<
-    'data',
-    {
-        data: string;
-    }
->;
+export type SignalMessageData = SignalMessageBase<'data', object>;
 
 export type SignalMessage =
-    | SignalMessagePing
     | SignalMessageFlash
     | SignalMessagePubkey
-    | SignalMessageHello
-    | SignalMessageWebRTCOffer
-    | SignalMessageWebRTCAnswer
-    | SignalMessageICECandidate
+    | SignalMessageAck
     | SignalMessageData;

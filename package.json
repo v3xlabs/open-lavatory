@@ -17,12 +17,10 @@
     "build:modal": "pnpm --filter @openlv/modal build",
     "build:extension": "pnpm build:lib && pnpm --filter @openlv/extension build",
     "build:extension:firefox": "pnpm build:lib && pnpm --filter @openlv/extension build:firefox",
-    "build:all": "pnpm build:lib && pnpm build:modal && pnpm build:connector && pnpm build:extension",
-    "test": "pnpm --filter @openlv/tests test",
-    "test:ui": "pnpm --filter @openlv/tests test:ui",
-    "test:headed": "pnpm --filter @openlv/tests test:headed",
-    "lint": "pnpm --filter \"@openlv/*\" --filter \"!@openlv/tests\" --filter \"!docs\" --filter \"!@openlv/extension\" lint",
-    "lint:fix": "pnpm --filter \"@openlv/*\" --filter \"!@openlv/tests\" --filter \"!docs\" --filter \"!@openlv/extension\" lint:fix"
+    "build": "pnpm -r build",
+    "test": "pnpm -r test",
+    "lint": "pnpm -r lint",
+    "lint:fix": "pnpm -r lint:fix"
   },
   "devDependencies": {
     "@eslint/js": "^9.23.0",

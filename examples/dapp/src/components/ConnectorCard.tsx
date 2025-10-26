@@ -12,6 +12,7 @@ export const ConnectorCard = ({
 
     return (
         <div
+            // eslint-disable-next-line no-restricted-syntax
             key={`${connector.id}-${refreshKey}`}
             className="border border-gray-200 rounded-lg p-4 hover:border-gray-300 transition-colors duration-200 flex flex-col"
         >

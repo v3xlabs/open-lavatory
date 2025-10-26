@@ -1,6 +1,9 @@
+/* eslint-disable no-restricted-syntax */
+/* eslint-disable @typescript-eslint/no-unused-vars */
 // Background script for OpenLV Extension - EIP-6963 Compatible
 // This script manages wallet operations and communicates with content scripts
 
+// eslint-disable-next-line import/no-default-export
 export default defineBackground(() => {
   console.log("OpenLV EIP-6963 Extension Background Script Started");
 
@@ -156,7 +159,7 @@ export default defineBackground(() => {
 
   async function handleSendTransaction(
     data: { transaction: any },
-    tabId?: number,
+    _tabId?: number,
   ) {
     console.log("Handling eth_sendTransaction:", data.transaction);
 
@@ -190,7 +193,7 @@ export default defineBackground(() => {
 
   async function handlePersonalSign(
     data: { message: string; address: string },
-    tabId?: number,
+    _tabId?: number,
   ) {
     console.log("Handling personal_sign");
 
@@ -219,7 +222,7 @@ export default defineBackground(() => {
 
   async function handleEthSign(
     data: { address: string; message: string },
-    tabId?: number,
+    _tabId?: number,
   ) {
     console.log("Handling eth_sign");
 
@@ -248,8 +251,8 @@ export default defineBackground(() => {
 
   async function handleSignTypedData(
     method: string,
-    data: { params: any[] },
-    tabId?: number,
+    _data: { params: any[] },
+    _tabId?: number,
   ) {
     console.log("Handling", method);
 
@@ -276,7 +279,9 @@ export default defineBackground(() => {
     }
   }
 
-  async function handleSwitchChain(data: { chainId?: string }, tabId?: number) {
+  async function handleSwitchChain(data: { chainId?: string },
+    _tabId?: number
+    ) {
     console.log("Handling wallet_switchEthereumChain to:", data.chainId);
 
     try {
@@ -289,7 +294,7 @@ export default defineBackground(() => {
         `Switch to chain ${data.chainId}?`,
       );
 
-      const oldChainId = walletState.chainId;
+      // const oldChainId = walletState.chainId;
 
       walletState.chainId = data.chainId;
 
@@ -315,7 +320,9 @@ export default defineBackground(() => {
     }
   }
 
-  async function handleAddChain(data: any, tabId?: number) {
+  async function handleAddChain(data: any,
+    _tabId?: number
+  ) {
     console.log("Handling wallet_addEthereumChain");
 
     try {
@@ -335,7 +342,9 @@ export default defineBackground(() => {
     }
   }
 
-  async function handleGetPermissions(data: { tabId: number }) {
+  async function handleGetPermissions(
+    _data: { tabId: number }
+  ) {
     console.log("Handling wallet_getPermissions");
 
     return {
@@ -346,7 +355,7 @@ export default defineBackground(() => {
 
   async function handleRequestPermissions(
     data: { permissions: any },
-    tabId?: number,
+    _tabId?: number,
   ) {
     console.log("Handling wallet_requestPermissions");
 
@@ -389,7 +398,7 @@ export default defineBackground(() => {
     title: string,
     message: string,
   ): Promise<boolean> {
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       // In a real extension, this would show a proper UI
       // For demonstration, we'll just log and auto-approve after a delay
       console.log(`User Consent Required: ${title}\n${message}`);

@@ -1,6 +1,8 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 // Content script for OpenLV Extension - EIP-6963 Compatible
 // This script runs in the context of web pages and provides EIP-1193 wallet connectivity
 
+// eslint-disable-next-line import/no-default-export
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {
@@ -383,6 +385,7 @@ async function handleForwardRequest(data: { method: string; params: any[] }) {
 async function getCurrentTabId(): Promise<number> {
   return new Promise((resolve) => {
     browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+      // eslint-disable-next-line no-restricted-syntax
       resolve(tabs[0]?.id || 0);
     });
   });

@@ -1,5 +1,5 @@
-import { test, expect } from './fixtures';
-import { waitForOpenLVProvider, hasOpenLVProvider } from './utils/helpers';
+import { expect,test } from './fixtures';
+import { hasOpenLVProvider,waitForOpenLVProvider } from './utils/helpers';
 
 test.describe('OpenLV Extension - Basic Functionality', () => {
   test('should work across different websites', async ({ page }) => {
@@ -14,10 +14,12 @@ test.describe('OpenLV Extension - Basic Functionality', () => {
 
       // Wait for provider injection
       const providerInjected = await waitForOpenLVProvider(page);
+
       expect(providerInjected).toBe(true);
 
       // Verify provider is available
       const hasProvider = await hasOpenLVProvider(page);
+
       expect(hasProvider).toBe(true);
 
       console.log(`✅ OpenLV provider working on ${website}`);

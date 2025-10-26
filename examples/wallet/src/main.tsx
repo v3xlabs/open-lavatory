@@ -6,7 +6,7 @@ import { createRoot } from "react-dom/client";
 import { WagmiProvider } from "wagmi";
 
 import { config } from "../lib/wagmi.ts";
-import App from "./App.tsx";
+import { App } from "./App.tsx";
 
 const client = new QueryClient();
 

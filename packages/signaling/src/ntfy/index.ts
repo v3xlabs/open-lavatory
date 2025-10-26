@@ -3,6 +3,7 @@ import { createSignalingLayer } from '../index.js';
 import { parseNtfyUrl } from './url.js';
 
 export type NtfyMessage = {
+    // eslint-disable-next-line no-restricted-syntax
     id: string;
     time: number;
     expires: number;
@@ -90,7 +91,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
             // TODO: Add response handling
             // @ts-ignore
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-vars
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const response = await fetch(
                 connectionInfo.protocol + '://' + connectionInfo.host + '/' + topic,
                 { method: 'POST', body, headers }

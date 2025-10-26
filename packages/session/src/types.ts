@@ -27,6 +27,7 @@ export type SessionConfig = {
 // JSON-RPC 2.0 types for Ethereum wallet connectivity
 export interface JsonRpcRequest {
   jsonrpc: "2.0";
+  // eslint-disable-next-line no-restricted-syntax
   id: string | number;
   method: string;
   params?: any[];
@@ -34,6 +35,7 @@ export interface JsonRpcRequest {
 
 export interface JsonRpcResponse {
   jsonrpc: "2.0";
+  // eslint-disable-next-line no-restricted-syntax
   id: string | number;
   result?: any;
   error?: JsonRpcError;

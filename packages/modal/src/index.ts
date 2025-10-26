@@ -39,4 +39,20 @@ export const registerOpenLVModal = (tagName = "openlv-modal") => {
   return tagName;
 };
 
+// eslint-disable-next-line import/no-default-export
 export default OpenLVModalElementDefault;
+
+export const triggerOpenModal = () => {
+  const modal = document.querySelector('openlv-modal');
+
+  if (!modal) {
+    registerOpenLVModal();
+    document.body.appendChild(new OpenLVModalElementDefault());
+  }
+
+  if (modal instanceof OpenLVModalElementDefault) {
+    modal.showModal();
+  } else {
+    console.warn('OpenLV modal not found');
+  }
+};

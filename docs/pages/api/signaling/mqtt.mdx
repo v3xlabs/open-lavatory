@@ -1,7 +1,21 @@
 # MQTT
 
-## Public Infrastructure
+MQTT is a lightweight publish/subscribe messaging protocol for connecting remote devices with minimal network bandwidth
+
+```typescript
+import { mqtt } from '@openlv/signaling/mqtt';
+
+const session = await createSession({ p: 'mqtt', s: 'wss://test.mosquitto.org:8081/mqtt' }, mqtt);
+```
+
+## Hosted Infrastructure (test.mosquitto.org)
 
 You read that right.
 
 ## Self-Hosted
+
+### URL Format
+
+```yaml
+wss://test.mosquitto.org:8081/mqtt
+```

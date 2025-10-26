@@ -16,9 +16,11 @@ export async function waitForOpenLVProvider(page: Page, timeout = 10000): Promis
       () => typeof (window as any).openlv !== 'undefined',
       { timeout }
     );
+
     return true;
-  } catch (error) {
+  } catch {
     console.log('OpenLV provider not found within timeout');
+
     return false;
   }
 }
@@ -37,15 +39,18 @@ export async function hasOpenLVProvider(page: Page): Promise<boolean> {
  */
 export async function getOpenLVMethods(page: Page): Promise<string[]> {
   return await page.evaluate(() => {
-    const openlv = (window as any).openlv;
+    const { openlv } = (window as any);
+
     if (!openlv) return [];
 
     const methods: string[] = [];
 
     // Get methods from the object and its prototype chain
     let obj = openlv;
+
     while (obj && obj !== Object.prototype) {
       const props = Object.getOwnPropertyNames(obj);
+
       for (const prop of props) {
         if (prop !== 'constructor' && typeof openlv[prop] === 'function') {
           if (!methods.includes(prop)) {
@@ -72,7 +77,8 @@ export async function testEIP6963Discovery(page: Page): Promise<EIP6963Discovery
 
       // Listen for provider announcements
       window.addEventListener('eip6963:announceProvider', (event: any) => {
-        const detail = event.detail;
+        const { detail } = event;
+
         providers.push(detail);
 
         if (detail.info.name?.toLowerCase().includes('openlv') ||

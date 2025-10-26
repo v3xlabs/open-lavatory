@@ -1,0 +1,31 @@
+# Ntfy.sh
+
+**ntfy** (pronounced *notify*) is a simple HTTP-based __pub-sub__ notification service.
+
+```typescript
+import { ntfy } from '@openlv/signaling/ntfy';
+
+const session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
+```
+
+## Hosted Infrastructure (ntfy.sh)
+
+You read that right.
+
+## Self-Hosted
+
+### URL Format
+
+```yaml
+# Hosted ntfy.sh instance
+https://ntfy.sh/
+# Auth via token
+https://mytoken1@ntfy.example.com/
+# Auth via username and password
+https://myuser:mypassword@ntfy.example.com/
+# Any parameters are forwarded
+https://ntfy.example.com/?auth=mytoken1
+# Ntfy (http) & Ntfys (https) are supported
+ntfy://mytoken1@ntfy.example.com/
+ntfys://myuser:mypassword@ntfy.example.com/
+```

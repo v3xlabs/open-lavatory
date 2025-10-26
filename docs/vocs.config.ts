@@ -1,5 +1,6 @@
-import tailwindcss from '@tailwindcss/vite'
-import { defineConfig } from 'vocs'
+// eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-imports
+import _tailwindcss from '@tailwindcss/vite';
+import { defineConfig } from 'vocs';
 
 // eslint-disable-next-line import/no-default-export
 export default defineConfig({
@@ -59,7 +60,7 @@ export default defineConfig({
       ]
     },
     {
-      text: 'API Reference',
+      text: 'API',
       items: [
         {
           text: 'Introduction',
@@ -76,7 +77,11 @@ export default defineConfig({
             {
               text: 'MQTT',
               link: '/api/signaling/mqtt'
-            }
+            },
+            {
+              text: 'Ntfy',
+              link: '/api/signaling/ntfy'
+            },
           ]
         },
         {
@@ -128,4 +133,4 @@ export default defineConfig({
     light: '/openlavatory.png',
   },
   basePath: '/open-lavatory',
-})
+});

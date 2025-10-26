@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import { openlv } from '@openlv/connector';
 import { injected, metaMask, walletConnect } from '@wagmi/connectors';
 import { createConfig, http } from 'wagmi';
@@ -10,7 +11,7 @@ export const config = createConfig({
         walletConnect({
             projectId: 'demo-project-id', // Replace with actual project ID
         }),
-        openlv(),
+        openlv({}),
         metaMask(),
     ],
     multiInjectedProviderDiscovery: true,

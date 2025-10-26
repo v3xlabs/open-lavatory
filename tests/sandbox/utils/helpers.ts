@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { expect, type Page } from "@playwright/test";
 
 /**

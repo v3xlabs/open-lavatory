@@ -1,3 +1,4 @@
+/* eslint-disable no-restricted-syntax */
 import "../styles.css";
 
 import { openlv } from "@openlv/connector";
@@ -101,14 +102,22 @@ export const Inner = () => {
   );
 };
 
-export const TryItOut = () => {
+export const Outter = () => {
   return (
-    <div className="border border-[var(--vocs-color_codeInlineBorder)] rounded-lg px-3 pb-2 pt-4">
-      <QueryClientProvider client={queryClient}>
-        <WagmiProvider config={config}>
-          <Inner />
-        </WagmiProvider>
-      </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>
+      <WagmiProvider config={config}>
+        <Inner />
+      </WagmiProvider>
+    </QueryClientProvider>
+  );
+};
+
+export const TryItOut = () => {
+  const inBrowser = typeof window !== 'undefined';
+
+  return (
+    <div className="border border-[var(--vocs-color_codeInlineBorder)] rounded-lg px-3 pb-2 pt-4" suppressHydrationWarning>
+      {inBrowser && <Outter />}
     </div>
   );
 };

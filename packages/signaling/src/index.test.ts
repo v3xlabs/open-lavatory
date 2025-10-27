@@ -1,4 +1,4 @@
-import { generateKeyPair } from '@openlv/core';
+import { generateKeyPair } from '@openlv/core/encryption';
 import { describe, expect, it } from 'vitest';
 
 import type { CreateSignalLayerFn, SignalBaseProperties } from './base.js';

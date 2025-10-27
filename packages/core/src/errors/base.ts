@@ -1,9 +1,9 @@
 const version = `openlv@0.0.1-beta.1`;
 
 type ErrorConfig = {
-    getDocsUrl?: ((args: BaseErrorParameters) => string | undefined) | undefined
-    version?: string | undefined
-}
+    getDocsUrl?: ((args: BaseErrorParameters) => string | undefined) | undefined;
+    version?: string | undefined;
+};
 
 let errorConfig: ErrorConfig = {
     // getDocsUrl: ({
@@ -23,16 +23,16 @@ export function setErrorConfig(config: ErrorConfig) {
 }
 
 type BaseErrorParameters = {
-    cause?: BaseError | Error | undefined
-    details?: string | undefined
-    docsBaseUrl?: string | undefined
-    docsPath?: string | undefined
-    docsSlug?: string | undefined
-    metaMessages?: string[] | undefined
-    name?: string | undefined
-}
+    cause?: BaseError | Error | undefined;
+    details?: string | undefined;
+    docsBaseUrl?: string | undefined;
+    docsPath?: string | undefined;
+    docsSlug?: string | undefined;
+    metaMessages?: string[] | undefined;
+    name?: string | undefined;
+};
 
-export type BaseErrorType = BaseError & { name: 'BaseError' }
+export type BaseErrorType = BaseError & { name: 'BaseError' };
 export class BaseError extends Error {
     details: string;
     docsPath?: string | undefined;
@@ -51,8 +51,7 @@ export class BaseError extends Error {
             return args.details!;
         })();
         const docsPath = (() => {
-            if (args.cause instanceof BaseError)
-                return args.cause.docsPath || args.docsPath;
+            if (args.cause instanceof BaseError) return args.cause.docsPath || args.docsPath;
 
             return args.docsPath;
         })();
@@ -78,25 +77,17 @@ export class BaseError extends Error {
         this.version = version;
     }
 
-    walk(): Error
-    walk(fn: (err: unknown) => boolean): Error | null
+    walk(): Error;
+    walk(fn: (err: unknown) => boolean): Error | null;
     walk(fn?: any): any {
         return walk(this, fn);
     }
 }
 
-function walk(
-    err: unknown,
-    fn?: ((err: unknown) => boolean) | undefined,
-): unknown {
+function walk(err: unknown, fn?: ((err: unknown) => boolean) | undefined): unknown {
     if (fn?.(err)) return err;
 
-    if (
-        err &&
-        typeof err === 'object' &&
-        'cause' in err &&
-        err.cause !== undefined
-    )
+    if (err && typeof err === 'object' && 'cause' in err && err.cause !== undefined)
         return walk(err.cause, fn);
 
     return fn ? null : err;

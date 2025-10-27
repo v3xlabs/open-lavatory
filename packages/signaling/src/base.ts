@@ -1,4 +1,4 @@
-import type { EncryptionKey, SymmetricKey } from '@openlv/core';
+import type { EncryptionKey, SymmetricKey } from '@openlv/core/encryption';
 import { EventEmitter } from 'eventemitter3';
 import { match } from 'ts-pattern';
 import type { MaybePromise } from 'viem';

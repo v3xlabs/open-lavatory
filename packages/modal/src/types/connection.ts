@@ -1,38 +1,38 @@
 export type ConnectionState =
-  | "idle"
-  | "initializing"
-  | "connecting"
-  | "qr-ready"
-  | "connected"
-  | "error"
-  | "disconnected";
+    | 'idle'
+    | 'initializing'
+    | 'connecting'
+    | 'qr-ready'
+    | 'connected'
+    | 'error'
+    | 'disconnected';
 
 export interface ConnectionInfo {
-  state: ConnectionState;
-  uri?: string;
-  error?: string;
-  connectedAccount?: string;
-  chainId?: number;
+    state: ConnectionState;
+    uri?: string;
+    error?: string;
+    connectedAccount?: string;
+    chainId?: number;
 }
 
 export interface ModalConnectionInterface {
-  // Methods the connector can call on the modal
-  updateConnectionState: (info: ConnectionInfo) => void;
-  showModal: () => void;
-  hideModal: () => void;
+    // Methods the connector can call on the modal
+    updateConnectionState: (info: ConnectionInfo) => void;
+    showModal: () => void;
+    hideModal: () => void;
 
-  // Events the modal can emit to the connector
-  onStartConnection: () => void;
-  onClose: () => void;
-  onRetry: () => void;
+    // Events the modal can emit to the connector
+    onStartConnection: () => void;
+    onClose: () => void;
+    onRetry: () => void;
 }
 
 export interface ConnectorModalInterface {
-  // Methods the modal can call on the connector
-  startConnection: () => Promise<void>;
-  retryConnection: () => Promise<void>;
-  closeConnection: () => void;
+    // Methods the modal can call on the connector
+    startConnection: () => Promise<void>;
+    retryConnection: () => Promise<void>;
+    closeConnection: () => void;
 
-  // Events the connector can emit to the modal
-  onConnectionStateChange: (info: ConnectionInfo) => void;
+    // Events the connector can emit to the modal
+    onConnectionStateChange: (info: ConnectionInfo) => void;
 }

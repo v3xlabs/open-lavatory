@@ -1,15 +1,15 @@
-import styles from "./App.module.css";
-import { QRScanner } from "./components/QRScanner";
-import { WalletInfo } from "./components/WalletInfo";
+import styles from './App.module.css';
+import { QRScanner } from './components/QRScanner';
+import { WalletInfo } from './components/WalletInfo';
 
 export function App() {
-  return (
-    <>
-      <header className={styles.header}>
-        <span>&ldquo;Mobile&ldquo; Wallet</span>
-        <QRScanner />
-      </header>
-      <WalletInfo />
-    </>
-  );
+    return (
+        <>
+            <header className={styles.header}>
+                <span>&ldquo;Mobile&ldquo; Wallet</span>
+                <QRScanner />
+            </header>
+            <WalletInfo />
+        </>
+    );
 }

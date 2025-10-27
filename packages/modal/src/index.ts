@@ -1,6 +1,6 @@
 /** biome-ignore-all lint/performance/noBarrelFile: package entrypoint */
-/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 /** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
+/** biome-ignore-all lint/suspicious/noConsole: temp */
 
 export type { ModalRootProps } from './components/ModalRoot';
 export { ModalRoot } from './components/ModalRoot';
@@ -14,7 +14,8 @@ export type {
     ConnectorModalInterface,
     ModalConnectionInterface,
 } from './types/connection';
-import { encodeConnectionURL } from '../../core/dist/utils/url';
+import { encodeConnectionURL } from '@openlv/core';
+
 import type { OpenLVProvider } from '../../provider/src';
 import OpenLVModalElementDefault from './openlv-modal-element';
 export { OPENLV_ICON_128 } from './assets/logo';

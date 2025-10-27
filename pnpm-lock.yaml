@@ -484,6 +484,9 @@ importers:
 
   packages/modal:
     dependencies:
+      '@openlv/core':
+        specifier: workspace:*
+        version: link:../core
       classnames:
         specifier: ^2.5.1
         version: 2.5.1

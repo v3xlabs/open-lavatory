@@ -1,5 +1,32 @@
-import { TryItOut } from '../components/TryItOut'
-
 # How it works
 
-<TryItOut />
+Open Lavatory establishes a connection through a two phase process; signaling and transport.
+When a session is created, something something setup provided using the users [signaling layer](/api/signaling).
+After performing a handshake to exchange encryption keys, the session is taken over by the [transport layer](/api/transport).
+
+## Signaling
+
+There are currently two signaling protocols supported; [MQTT](/api/signaling/mqtt) and [Ntfy](/api/signaling/ntfy).
+Both of which have public infrastructure available for use, but also allow for self-hosting.
+
+| Protocol | Description |
+|----------|-------------|
+| [MQTT](/api/signaling/mqtt) | MQTT is a lightweight messaging protocol that is used to send and receive messages between devices. |
+| [Ntfy](/api/signaling/ntfy) | Ntfy is a p2p messaging protocol that is used to send and receive messages between devices. |
+| Waku (not implemented) | Waku is a p2p messaging protocol that is used to send and receive messages between devices. |
+| Nostr (not implemented) | Nostr is a p2p messaging protocol that is used to send and receive messages between devices. |
+
+:::info
+Depending on configuration the signaling layer can also be configured for transportation.
+This allows for a mailbox style design where the signaling layer is used to deliver messages.
+:::
+
+## Transport
+
+Currently the only transport protocol supported is [WebRTC](/api/transport/webrtc).
+
+| Protocol | Description |
+|----------|-------------|
+| [WebRTC](/api/transport/webrtc) | WebRTC is a p2p messaging protocol that is used to send and receive messages between devices. |
+
+Ideally at some point we support direct transport layer communication through [WebHID](), [WebUSB](), [WebSerial]() and [WebBluetooth]().

@@ -22,6 +22,10 @@ export default defineConfig({
       link: '/how',
     },
     {
+      text: 'Try it out',
+      link: '/try',
+    },
+    {
       text: 'FAQ',
       link: '/faq',
     },

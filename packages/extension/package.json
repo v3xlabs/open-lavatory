@@ -30,8 +30,8 @@
     "zip:firefox": "wxt zip -b firefox"
   },
   "dependencies": {
-    "@openlv/transport": "workspace:*",
     "@openlv/provider": "workspace:*",
+    "@openlv/transport": "workspace:*",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "mqtt": "^5.13.1"

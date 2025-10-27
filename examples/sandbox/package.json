@@ -1,30 +1,25 @@
 {
   "name": "@openlv/sandbox",
-  "private": true,
   "version": "0.0.0",
+  "private": true,
   "description": "",
   "type": "module",
   "scripts": {
-    "start": "vite",
-    "dev": "vite",
     "build": "vite build",
-    "serve": "vite preview",
+    "dev": "vite",
     "lint": "pnpx eslint .",
-    "lint:fix": "pnpx eslint . --fix"
-  },
-  "license": "MIT",
-  "devDependencies": {
-    "typescript": "^5.7.2",
-    "vite": "^6.0.0"
+    "lint:fix": "pnpx eslint . --fix",
+    "serve": "vite preview",
+    "start": "vite"
   },
   "dependencies": {
+    "@openlv/transport": "workspace:*",
     "@tailwindcss/postcss": "^4.1.10",
     "@tanstack/router-plugin": "^1.121.9",
     "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.5.2",
     "autoprefixer": "^10.4.21",
     "globals": "^16.0.0",
-    "@openlv/transport": "workspace:*",
     "mqtt": "^5.13.1",
     "postcss": "^8.5.1",
     "postcss-nested": "^7.0.2",
@@ -37,9 +32,13 @@
     "typescript-eslint": "^8.28.0",
     "vite-tsconfig-paths": "^5.1.4"
   },
+  "devDependencies": {
+    "typescript": "^5.7.2",
+    "vite": "^6.0.0"
+  },
   "peerDependencies": {
     "@wagmi/core": "2",
-    "wagmi": "2",
-    "viem": "2"
+    "viem": "2",
+    "wagmi": "2"
   }
 }

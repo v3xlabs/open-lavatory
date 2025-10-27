@@ -21,6 +21,9 @@
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test",
     "wallet": "pnpm --filter @openlv/example-wallet dev"
   },
+  "dependencies": {
+    "@biomejs/biome": "^2.3.1"
+  },
   "devDependencies": {
     "@eslint/js": "^9",
     "@stylistic/eslint-plugin": "^5.5.0",
@@ -42,8 +45,5 @@
     "viem": "2",
     "wagmi": "2"
   },
-  "packageManager": "pnpm@10.10.0",
-  "dependencies": {
-    "@biomejs/biome": "^2.3.1"
-  }
+  "packageManager": "pnpm@10.10.0"
 }

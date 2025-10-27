@@ -26,8 +26,8 @@
   },
   "dependencies": {
     "@openlv/modal": "workspace:*",
-    "@openlv/transport": "workspace:*",
-    "@openlv/provider": "workspace:*"
+    "@openlv/provider": "workspace:*",
+    "@openlv/transport": "workspace:*"
   },
   "devDependencies": {
     "@wagmi/core": "^2.17.3",

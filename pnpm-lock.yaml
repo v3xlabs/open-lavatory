@@ -411,6 +411,9 @@ importers:
 
   packages/extension:
     dependencies:
+      '@openlv/provider':
+        specifier: workspace:*
+        version: link:../provider
       '@openlv/transport':
         specifier: workspace:*
         version: link:../transport

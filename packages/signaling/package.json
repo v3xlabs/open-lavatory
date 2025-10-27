@@ -30,6 +30,10 @@
     "./mqtt": {
       "default": "./dist/mqtt/index.js",
       "types": "./dist/mqtt/index.d.ts"
+    },
+    "./gundb": {
+      "default": "./dist/gundb/index.js",
+      "types": "./dist/gundb/index.d.ts"
     }
   },
   "types": "./dist/index.d.ts",

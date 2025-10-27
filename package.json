@@ -23,6 +23,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9",
+    "@stylistic/eslint-plugin": "^5.5.0",
     "@wagmi/core": "2",
     "eslint": "^9",
     "eslint-config-prettier": "^10.1.2",
@@ -41,5 +42,8 @@
     "viem": "2",
     "wagmi": "2"
   },
-  "packageManager": "pnpm@10.10.0"
+  "packageManager": "pnpm@10.10.0",
+  "dependencies": {
+    "@biomejs/biome": "^2.3.1"
+  }
 }

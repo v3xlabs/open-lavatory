@@ -1,4 +1,7 @@
-export { ConnectionFlow } from "./components/ConnectionFlow";
+/** biome-ignore-all lint/performance/noBarrelFile: package entrypoint */
+/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
+/** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
+
 export type { ModalRootProps } from "./components/ModalRoot";
 export { ModalRoot } from "./components/ModalRoot";
 export { useConnectionState } from "./hooks/useConnectionState";

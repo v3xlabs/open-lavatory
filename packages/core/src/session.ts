@@ -1,9 +1,8 @@
-import { DecryptionKey, EncryptionKey } from "./encryption/asymmetric.js";
+import type { DecryptionKey, EncryptionKey } from "./encryption/asymmetric.js";
 
 // typescript type for 32 character hex string
-// @ts-ignore
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
-export type Hex<L> = string;
+export type Hex<_L> = string;
 
 /**
  * The parameters from the connection url

@@ -208,9 +208,9 @@ export const ModalRoot = ({
       >
         <Header
           onBack={() => match({ view, info: connectionInfo?.state })
-          .with({ view: 'settings' }, () => setView("uri"))
-          .with({ view: 'uri', info: P.not('idle') }, () => closeSession())
-          .otherwise(() => safeOnClose())}
+            .with({ view: 'settings' }, () => setView("uri"))
+            .with({ view: 'uri', info: P.not('idle') }, () => closeSession())
+            .otherwise(() => safeOnClose())}
           onToggleSettings={() =>
             setView(view === "settings" ? "uri" : "settings")
           }

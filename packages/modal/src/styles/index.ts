@@ -1,7 +1,7 @@
 import "./index.css";
 
 // Import CSS as a string using Vite's ?inline query
-// @ts-ignore - Vite handles this import at build time
+// @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";
 
 export const ensureStyles = async (shadowRoot?: ShadowRoot) => {

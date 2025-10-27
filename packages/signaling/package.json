@@ -20,13 +20,16 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.js"
+      "default": "./dist/index.js",
+      "types": "./dist/index.d.ts"
     },
     "./ntfy": {
-      "default": "./dist/ntfy/index.js"
+      "default": "./dist/ntfy/index.js",
+      "types": "./dist/ntfy/index.d.ts"
     },
     "./mqtt": {
-      "default": "./dist/mqtt/index.js"
+      "default": "./dist/mqtt/index.js",
+      "types": "./dist/mqtt/index.d.ts"
     }
   },
   "types": "./dist/index.d.ts",

@@ -5,6 +5,7 @@ import tseslint from "typescript-eslint";
 import eslintPluginSonarjs from "eslint-plugin-sonarjs"; import eslintPluginSimpleImportSort from "eslint-plugin-simple-import-sort";
 import eslintPluginUnicorn from "eslint-plugin-unicorn";
 import eslintPluginUnusedImports from "eslint-plugin-unused-imports";
+import stylistic from '@stylistic/eslint-plugin'
 
 export default [
   {
@@ -27,6 +28,7 @@ export default [
       "unused-imports": eslintPluginUnusedImports,
       sonarjs: eslintPluginSonarjs,
       unicorn: eslintPluginUnicorn,
+      '@stylistic': stylistic
     },
     languageOptions: {
       ecmaVersion: "latest",
@@ -56,6 +58,7 @@ export default [
       "prefer-destructuring": "warn",
       "prefer-arrow-callback": "warn",
       "max-lines": ["error", 500],
+      "@stylistic/max-len": ["error", { code: 100, tabWidth: 4, ignoreComments: true }],
 
       // Import rules
       "import/no-duplicates": "error",

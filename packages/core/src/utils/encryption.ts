@@ -2,6 +2,8 @@
  * Encryption utilities for Open Lavatory Protocol
  * Implements ECDH key exchange with P-256 curve and ECIES encryption
  */
+/** biome-ignore-all lint/suspicious/noConsole: temp */
+/** biome-ignore-all lint/complexity/noStaticOnlyClass: temp */
 
 export class EncryptionUtils {
   /**
@@ -20,7 +22,7 @@ export class EncryptionUtils {
 
     return Array.from(array)
       .map(
-        (byte) => this.URL_SAFE_ALPHABET[byte % this.URL_SAFE_ALPHABET.length],
+        (byte) => EncryptionUtils.URL_SAFE_ALPHABET[byte % EncryptionUtils.URL_SAFE_ALPHABET.length],
       )
       .join("");
   }
@@ -29,7 +31,7 @@ export class EncryptionUtils {
    * Generate a 16-character URL-safe session ID
    */
   static generateSessionId(): string {
-    return this.generateUrlSafeRandomString(16);
+    return EncryptionUtils.generateUrlSafeRandomString(16);
   }
 
   /**
@@ -115,7 +117,7 @@ export class EncryptionUtils {
    * Compute SHA-256 hash of public key and return first 8 bytes as hex
    */
   static async computePublicKeyHash(publicKey: CryptoKey): Promise<string> {
-    const exportedKey = await this.exportPublicKey(publicKey);
+    const exportedKey = await EncryptionUtils.exportPublicKey(publicKey);
     const hashBuffer = await crypto.subtle.digest("SHA-256", exportedKey);
     const hashArray = new Uint8Array(hashBuffer);
     const shortHash = hashArray.slice(0, 8); // First 8 bytes
@@ -131,7 +133,7 @@ export class EncryptionUtils {
   static async computePublicKeyHashFromRaw(
     publicKeyData: Uint8Array,
   ): Promise<string> {
-    // @ts-ignore
+    // @ts-expect-error
     const hashBuffer = await crypto.subtle.digest("SHA-256", publicKeyData);
     const hashArray = new Uint8Array(hashBuffer);
     const shortHash = hashArray.slice(0, 8); // First 8 bytes
@@ -175,7 +177,7 @@ export class EncryptionUtils {
     senderPrivateKey: CryptoKey,
     senderPublicKey: CryptoKey,
   ): Promise<string> {
-    const sharedKey = await this.deriveSharedKey(
+    const sharedKey = await EncryptionUtils.deriveSharedKey(
       senderPrivateKey,
       recipientPublicKey,
     );
@@ -190,7 +192,7 @@ export class EncryptionUtils {
     );
 
     // Get ephemeral public key for ECIES
-    const ephemeralPublicKey = await this.exportPublicKey(senderPublicKey);
+    const ephemeralPublicKey = await EncryptionUtils.exportPublicKey(senderPublicKey);
 
     // Combine ephemeral public key, IV and encrypted data
     const combined = new Uint8Array(
@@ -229,12 +231,12 @@ export class EncryptionUtils {
       const encrypted = combined.slice(77);
 
       // Import ephemeral public key
-      const senderPublicKey = await this.importPublicKey(
+      const senderPublicKey = await EncryptionUtils.importPublicKey(
         ephemeralPublicKey.buffer,
       );
 
       // Derive shared key
-      const sharedKey = await this.deriveSharedKey(
+      const sharedKey = await EncryptionUtils.deriveSharedKey(
         recipientPrivateKey,
         senderPublicKey,
       );
@@ -259,7 +261,7 @@ export class EncryptionUtils {
    * Convert public key to base64 string for transmission
    */
   static async publicKeyToBase64(publicKey: CryptoKey): Promise<string> {
-    const exportedKey = await this.exportPublicKey(publicKey);
+    const exportedKey = await EncryptionUtils.exportPublicKey(publicKey);
 
     return btoa(
       String.fromCharCode.apply(null, Array.from(new Uint8Array(exportedKey))),
@@ -276,15 +278,15 @@ export class EncryptionUtils {
         .map((char) => char.charCodeAt(0)),
     );
 
-    return await this.importPublicKey(keyData.buffer);
+    return await EncryptionUtils.importPublicKey(keyData.buffer);
   }
 
   /**
    * Derive symmetric key from hex-encoded shared secret (for initial handshake)
    */
   static async deriveSymmetricKey(sharedSecretHex: string): Promise<CryptoKey> {
-    const sharedSecretBytes = this.hexToBytes(sharedSecretHex);
-    // @ts-ignore
+    const sharedSecretBytes = EncryptionUtils.hexToBytes(sharedSecretHex);
+    // @ts-expect-error
     const sharedSecretBytesBufferSource: BufferSource = sharedSecretBytes;
     const keyMaterial = await crypto.subtle.importKey(
       "raw",

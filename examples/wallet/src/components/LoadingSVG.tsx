@@ -2,6 +2,7 @@ import type { SVGProps } from "react";
 
 export const LoadingSVG = (props: SVGProps<SVGSVGElement>) => {
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: SVG for loading spinner
     <svg
       fill="hsl(228, 97%, 42%)"
       viewBox="0 0 24 24"

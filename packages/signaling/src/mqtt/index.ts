@@ -1,7 +1,8 @@
+import { SignalNoConnectionError } from '@openlv/core/errors';
 import type { MqttClient } from 'mqtt';
 import MQTT from 'mqtt';
 
-import { CreateSignalLayerFn, SignalBaseProperties } from '../base.js';
+import type { CreateSignalLayerFn, SignalBaseProperties } from '../base.js';
 import { createSignalingLayer } from '../index.js';
 
 /**
@@ -32,9 +33,7 @@ export const mqtt: CreateSignalLayerFn = ({
             connection?.publish(topic, Buffer.from(encoded));
         },
         async subscribe(handler) {
-            if (!connection) {
-                throw new Error('MQTT: No connection to subscribe to');
-            }
+            if (!connection) throw new SignalNoConnectionError();
 
             console.log('MQTT: Subscribing to topic', topic);
 

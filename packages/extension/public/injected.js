@@ -1,8 +1,8 @@
 // EIP-6963 Compatible Wallet Provider - Injected Script
 // This script implements EIP-6963 Multi Injected Provider Discovery
 
-(function () {
-  "use strict";
+(() => {
+  
 
   // Prevent multiple injections
   if (window.openlv && window.openlv.isOpenLV) {

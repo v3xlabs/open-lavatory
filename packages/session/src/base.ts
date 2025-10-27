@@ -1,16 +1,16 @@
 import {
   decodeConnectionURL,
   deriveSymmetricKey,
-  EncryptionKey,
+  type EncryptionKey,
   generateHandshakeKey,
   generateSessionId,
   initEncryptionKeys,
   initHash,
   parseEncryptionKey,
-  SessionHandshakeParameters,
-  SessionParameters,
+  type SessionHandshakeParameters,
+  type SessionParameters,
 } from "@openlv/core";
-import {
+import type {
   CreateSignalLayerFn,
   SignalingLayer,
   SignalingMode,
@@ -19,7 +19,7 @@ import { mqtt } from "@openlv/signaling/mqtt";
 import { ntfy } from "@openlv/signaling/ntfy";
 import { EventEmitter } from "eventemitter3";
 
-import { SessionMessage } from "./messages/index.js";
+import type { SessionMessage } from "./messages/index.js";
 
 export type SessionState =
   | "create"

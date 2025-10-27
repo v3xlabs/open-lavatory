@@ -1,6 +1,6 @@
 import nacl from "tweetnacl";
 
-import { SessionParameters } from "../session.js";
+import type { SessionParameters } from "../session.js";
 import { fromBase64, toBase64 } from "./base64.js";
 
 const PUBLIC_KEY_BYTE_LENGTH = nacl.box.publicKeyLength;

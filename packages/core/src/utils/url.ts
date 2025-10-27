@@ -1,4 +1,4 @@
-import { SessionHandshakeParameters } from "../session.js";
+import type { SessionHandshakeParameters } from "../session.js";
 
 export const encodeConnectionURL = (payload: SessionHandshakeParameters) => {
   const params = new URLSearchParams();
@@ -73,7 +73,7 @@ export const decodeConnectionURL = (
     // Validate shared key format (32 hex characters)
     if (!/^[0-9a-f]{32}$/.test(k)) {
       throw new Error(
-        "Invalid shared key format: must be 32 hex characters, received: " + k,
+        `Invalid shared key format: must be 32 hex characters, received: ${k}`,
       );
     }
 

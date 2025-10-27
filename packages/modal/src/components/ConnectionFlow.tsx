@@ -1,8 +1,11 @@
+/* eslint-disable @stylistic/max-len */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 import { useCallback } from "preact/hooks";
 import QRCode from "qrcode-generator";
+import { match } from "ts-pattern";
 
 import type { ConnectionInfo } from "../types/connection";
-import { match } from "ts-pattern";
 
 interface ConnectionFlowProps {
   connectionInfo: ConnectionInfo;

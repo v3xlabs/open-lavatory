@@ -21,6 +21,14 @@
   "exports": {
     ".": {
       "default": "./dist/index.js"
+    },
+    "./encryption": {
+      "default": "./dist/encryption/index.js",
+      "types": "./dist/encryption/index.d.ts"
+    },
+    "./errors": {
+      "default": "./dist/errors/index.js",
+      "types": "./dist/errors/index.d.ts"
     }
   },
   "types": "./dist/index.d.ts",

@@ -1,4 +1,4 @@
-import { CreateConnectorFn } from "@wagmi/core";
+import type { CreateConnectorFn } from "@wagmi/core";
 
 import { OPENLV_ICON_128 } from "./icon";
 

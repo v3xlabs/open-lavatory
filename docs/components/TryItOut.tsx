@@ -4,7 +4,7 @@ import "../styles.css";
 import { openlv } from "@openlv/connector";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { match } from "ts-pattern";
-import { Address } from "viem";
+import type { Address } from "viem";
 import {
   createConfig,
   http,

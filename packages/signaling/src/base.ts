@@ -1,9 +1,9 @@
-import { EncryptionKey, SymmetricKey } from '@openlv/core';
+import type { EncryptionKey, SymmetricKey } from '@openlv/core';
 import { EventEmitter } from 'eventemitter3';
 import { match } from 'ts-pattern';
-import { MaybePromise } from 'viem';
+import type { MaybePromise } from 'viem';
 
-import { SignalMessage } from './messages/index.js';
+import type { SignalMessage } from './messages/index.js';
 
 export type SignalBaseProperties = {
     topic: string;

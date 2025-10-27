@@ -1,8 +1,8 @@
-import { createSession, Session } from '@openlv/session';
+import { createSession, type Session } from '@openlv/session';
 import { ntfy } from '@openlv/signaling/ntfy';
 import { Emitter } from "@wagmi/core/internal";
 
-import { ProviderEvents } from "./events";
+import type { ProviderEvents } from "./events";
 
 export type OpenLVProviderParameters = {
   foo: 'bar';

@@ -37,7 +37,7 @@ function injectOpenLVProvider() {
   const script = document.createElement("script");
 
   script.src = chrome.runtime.getURL("injected.js");
-  script.onload = function () {
+  script.onload = () => {
     script.remove();
   };
 
@@ -61,7 +61,7 @@ function setupCommunicationBridge() {
     if (!message || message.source !== "openlv-provider") return;
 
     try {
-      let response;
+      let response: any;
 
       switch (message.type) {
         case "eth_requestAccounts":

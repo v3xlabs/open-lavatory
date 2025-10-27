@@ -1,4 +1,5 @@
-import { CreateSignalLayerFn } from '../base.js';
+import { SignalConnectionError, SignalNoConnectionError } from '@openlv/core/errors';
+import type { CreateSignalLayerFn } from '../base.js';
 import { createSignalingLayer } from '../index.js';
 import { parseNtfyUrl } from './url.js';
 
@@ -90,7 +91,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             const headers = { 'Content-Type': 'application/json' } as HeadersInit;
 
             // TODO: Add response handling
-            // @ts-ignore
+            // @ts-expect-error
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const response = await fetch(
                 connectionInfo.protocol + '://' + connectionInfo.host + '/' + topic,
@@ -98,11 +99,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             );
         },
         async subscribe(handler) {
-            if (!connection) {
-                console.error('NTFY: No connection to subscribe to');
-
-                return;
-            }
+            if (!connection) throw new SignalNoConnectionError();
 
             connection.onmessage = (event) => {
                 console.log('NTFY: Received message:', event.data);

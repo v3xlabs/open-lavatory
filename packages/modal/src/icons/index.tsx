@@ -1,5 +1,7 @@
 export const ChevronLeftIcon = ({ size = 24 }: { size?: number }) => (
+  // biome-ignore lint/a11y/noSvgWithoutTitle: Chevron left icon
   <svg
+    title="Chevron left icon"
     width={size}
     height={size}
     viewBox="0 0 24 24"
@@ -17,7 +19,9 @@ export const ChevronLeftIcon = ({ size = 24 }: { size?: number }) => (
 );
 
 export const CogIcon = ({ size = 24 }: { size?: number }) => (
-  <svg
+  // biome-ignore lint/a11y/noSvgWithoutTitle: Cog icon
+<svg
+    title="Cog icon"
     width={size}
     height={size}
     viewBox="0 0 24 24"

@@ -1,4 +1,4 @@
-import { MaybePromise } from 'viem';
+import type { MaybePromise } from 'viem';
 
 export type TransportInit = {
     type: string;

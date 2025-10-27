@@ -1,4 +1,4 @@
-import { EncryptionKey } from "./asymmetric.js";
+import type { EncryptionKey } from "./asymmetric.js";
 
 const HASH_LENGTH = 16;
 

@@ -1,4 +1,4 @@
-import { type Page } from '@playwright/test';
+import type { Page } from '@playwright/test';
 
 // Type for EIP-6963 discovery results
 export interface EIP6963DiscoveryResult {

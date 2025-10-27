@@ -2,13 +2,17 @@ export type NtfyUrl = {
   host: string;
   protocol: "http" | "https";
   credentials?:
-    | {
-        user: string;
-        password: string;
-      }
-    | { token: string };
+  | {
+    user: string;
+    password: string;
+  }
+  | { token: string };
   parameters?: string;
 };
+
+export const NTFY_URL_REGEX =
+  // eslint-disable-next-line @stylistic/max-len
+  /^(?<protocol>https?|ntfys?):\/\/(?:(?:(?<user>[^:@]+):)?(?<password>[^@]+)?@)?(?<host>[^/?]+)\/?(?<parameters>.*)$/;
 
 /*
  * URL format supports the ?auth= parameter
@@ -21,9 +25,7 @@ export type NtfyUrl = {
  * https variant: ntfys://{user}:{password}@{host}/
  */
 export const parseNtfyUrl = (url: string): NtfyUrl => {
-  const regex =
-    /^(?<protocol>https?|ntfys?):\/\/(?:(?:(?<user>[^:@]+):)?(?<password>[^@]+)?@)?(?<host>[^/?]+)\/?(?<parameters>.*)$/;
-  const match = url.match(regex);
+  const match = url.match(NTFY_URL_REGEX);
 
   if (!match) {
     throw new Error(`Invalid NTFY URL: ${url}`);

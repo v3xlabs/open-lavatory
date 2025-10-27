@@ -25,9 +25,7 @@ jobs:
         uses: ./.github/actions/setup-workspace
 
       - name: Test packages (if tests exist)
-        run: |
-          # Add package-level tests here when implemented
-          echo "Package tests will run here when implemented"
+        run: pnpm test
 
       - name: Build extension (basic compile check)
         run: pnpm build:extension

@@ -26,7 +26,7 @@ export type Session = {
     getHandshakeParameters(): SessionHandshakeParameters;
     connect(): Promise<void>;
     // Send with response
-    send(message: object): Promise<unknown>;
+    send(message: object, timeout?: number): Promise<unknown>;
 };
 
 export const createSession = async (
@@ -119,7 +119,7 @@ export const createSession = async (
                 s: server,
             };
         },
-        async send(message: object) {
+        async send(message: object, timeout: number = 1000) {
             const ready = signal.getState().state === 'xr-encrypted';
 
             if (!ready) {
@@ -136,13 +136,20 @@ export const createSession = async (
             // for now use signaling
             await signal.send(sessionMessage);
 
-            return new Promise((resolve) => {
-                messages.on('message', (message) => {
-                    if (message.messageId === randomID && message.type === 'data') {
-                        resolve(message.payload);
-                    }
-                });
-            });
+            return Promise.race([
+                new Promise((resolve) => {
+                    messages.on('message', (message) => {
+                        if (message.messageId === randomID && message.type === 'data') {
+                            resolve(message.payload);
+                        }
+                    });
+                }),
+                new Promise((resolve) => {
+                    setTimeout(() => {
+                        resolve(new Error('Timeout'));
+                    }, timeout);
+                }),
+            ]);
         },
     };
 };

@@ -40,7 +40,8 @@
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.3"
   },
   "peerDependencies": {
     "@wagmi/core": "2",

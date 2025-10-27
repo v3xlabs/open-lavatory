@@ -389,6 +389,9 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.3
+        version: 4.0.3(@types/debug@4.1.12)(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
 
   packages/core:
     dependencies:
@@ -408,6 +411,9 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.3
+        version: 4.0.3(@types/debug@4.1.12)(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
 
   packages/extension:
     dependencies:
@@ -493,6 +499,10 @@ importers:
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
+    devDependencies:
+      '@preact/preset-vite':
+        specifier: ^2.10.2
+        version: 2.10.2(@babel/core@7.28.5)(preact@10.27.2)(vite@5.4.21(@types/node@24.6.2)(lightningcss@1.30.2))
       preact:
         specifier: ^10.24.3
         version: 10.27.2
@@ -508,10 +518,6 @@ importers:
       ts-pattern:
         specifier: ^5.9.0
         version: 5.9.0
-    devDependencies:
-      '@preact/preset-vite':
-        specifier: ^2.10.2
-        version: 2.10.2(@babel/core@7.28.5)(preact@10.27.2)(vite@5.4.21(@types/node@24.6.2)(lightningcss@1.30.2))
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
@@ -567,15 +573,9 @@ importers:
       globals:
         specifier: ^16.2.0
         version: 16.4.0
-      mqtt:
-        specifier: ^5.13.1
-        version: 5.14.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       ts-pattern:
         specifier: ^5.8.0
         version: 5.9.0
-      tweetnacl:
-        specifier: ^1.0.3
-        version: 1.0.3
       viem:
         specifier: '2'
         version: 2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.11)
@@ -638,21 +638,12 @@ importers:
       globals:
         specifier: ^16.2.0
         version: 16.4.0
-      mqtt:
-        specifier: ^5.13.1
-        version: 5.14.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       ts-pattern:
         specifier: ^5.8.0
         version: 5.9.0
-      tweetnacl:
-        specifier: ^1.0.3
-        version: 1.0.3
       viem:
         specifier: '2'
         version: 2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.11)
-      vitest:
-        specifier: ^4.0.3
-        version: 4.0.3(@types/debug@4.1.12)(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
       wagmi:
         specifier: '2'
         version: 2.17.5(@tanstack/query-core@5.90.2)(@tanstack/react-query@5.90.2(react@19.2.0))(@types/react@19.2.2)(bufferutil@4.0.9)(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.11))(zod@4.1.11)
@@ -660,6 +651,9 @@ importers:
       typescript:
         specifier: ^5.8.3
         version: 5.9.3
+      vitest:
+        specifier: ^4.0.3
+        version: 4.0.3(@types/debug@4.1.12)(@types/node@24.6.2)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.20.6)(yaml@2.8.1)
 
   tests:
     devDependencies:

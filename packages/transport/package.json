@@ -31,13 +31,11 @@
   "dependencies": {
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
-    "mqtt": "^5.13.1",
-    "ts-pattern": "^5.8.0",
-    "tweetnacl": "^1.0.3",
-    "vitest": "^4.0.3"
+    "ts-pattern": "^5.8.0"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^4.0.3"
   },
   "peerDependencies": {
     "@wagmi/core": "2",

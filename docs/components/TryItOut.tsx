@@ -3,6 +3,7 @@ import '../styles.css';
 
 import { openlv } from '@openlv/connector';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import classNames from 'classnames';
 import { match } from 'ts-pattern';
 import type { Address } from 'viem';
 import { createConfig, http, useAccount, useConnect, useDisconnect, WagmiProvider } from 'wagmi';
@@ -48,36 +49,45 @@ const Connectors = () => {
 
     return (
         <>
-            <div className="text-sm px-2 font-bold text-[var(--vocs-color_codeTitle)]">
-                Available Connectors:
+            <div className="space-y-2 p-2 mt-4">
+                <ul className="space-y-2 mx-auto w-full max-w-xs">
+                    {connectors.map((connector) => (
+                        <li key={connector.id} className="">
+                            <button
+                                onClick={() => {
+                                    connect({ connector: connector });
+                                }}
+                                className={classNames(
+                                    '!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 text-sm w-full flex justify-between items-center',
+                                    connector.type === 'openLv'
+                                        ? 'border border-[var(--vocs-color_codeInlineText)] hover:!bg-[var(--vocs-color_backgroundAccent)]/10'
+                                        : 'hover:!bg-[var(--vocs-color_codeHighlightBackground)]'
+                                )}
+                            >
+                                <span
+                                    className={classNames(
+                                        'text-sm font-bold',
+                                        connector.type === 'openLv' &&
+                                            'text-[var(--vocs-color_codeInlineText)]'
+                                    )}
+                                >
+                                    {connector.name}
+                                </span>
+                                {connector.icon && (
+                                    <img
+                                        src={connector.icon}
+                                        alt={`${connector.name} icon`}
+                                        className="w-12 h-12"
+                                    />
+                                )}
+                            </button>
+                        </li>
+                    ))}
+                </ul>
             </div>
-            <ul className="space-y-2">
-                {connectors.map((connector) => (
-                    <li
-                        key={connector.id}
-                        className="flex items-center justify-between border pr-2 pl-4 py-2 rounded-md border-[var(--vocs-color_codeInlineBorder)] gap-2"
-                    >
-                        <div className="flex items-center gap-2">
-                            {connector.icon && (
-                                <img
-                                    src={connector.icon}
-                                    alt={`${connector.name} icon`}
-                                    className="w-12 h-12"
-                                />
-                            )}
-                            <div className="text-sm">{connector.name}</div>
-                        </div>
-                        <button
-                            onClick={() => {
-                                connect({ connector: connector });
-                            }}
-                            className="border border-[var(--vocs-color_codeInlineBorder)] !bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 text-sm w-full max-w-2xl"
-                        >
-                            Connect
-                        </button>
-                    </li>
-                ))}
-            </ul>
+            <div className="w-full bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2 border-t border-[var(--vocs-color_codeInlineBorder)] rounded-b-md">
+                <div>The above is a sample wagmi snippet</div>
+            </div>
         </>
     );
 };
@@ -110,7 +120,7 @@ export const TryItOut = () => {
 
     return (
         <div
-            className="border border-[var(--vocs-color_codeInlineBorder)] rounded-lg px-3 pb-2 pt-4"
+            className="border border-[var(--vocs-color_codeInlineBorder)] rounded-lg"
             suppressHydrationWarning
         >
             {inBrowser && <Outter />}

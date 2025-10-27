@@ -109,6 +109,9 @@ importers:
       '@types/react':
         specifier: latest
         version: 19.2.2
+      classnames:
+        specifier: ^2.5.1
+        version: 2.5.1
       typescript:
         specifier: latest
         version: 5.9.3

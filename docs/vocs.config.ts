@@ -1,5 +1,4 @@
-// eslint-disable-next-line @typescript-eslint/no-unused-vars, unused-imports/no-unused-imports
-import _tailwindcss from '@tailwindcss/vite';
+import tailwindcss from '@tailwindcss/vite';
 import { defineConfig } from 'vocs';
 
 // eslint-disable-next-line import/no-default-export
@@ -140,4 +139,7 @@ export default defineConfig({
         light: '/openlavatory.png',
     },
     basePath: '/open-lavatory',
+    vite: {
+        plugins: [tailwindcss() as unknown as any],
+    },
 });

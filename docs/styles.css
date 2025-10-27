@@ -1,5 +1,2 @@
 @import "tailwindcss";
-
-.max-w-2xl {
-    max-width: 12rem;
-}
+@source "../**/*.{ts,tsx}";

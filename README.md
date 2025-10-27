@@ -39,6 +39,9 @@ Open Lavatory Protocol eliminates centralized relay servers by enabling direct p
 - Improve modal implementation in new @openlv/modal package
 - Cleanup package dependencies
 - Implement proper errors
+- Update icons
+- Update sandbox
+- Update wallet example
 
 ## 📦 Repository Structure
 

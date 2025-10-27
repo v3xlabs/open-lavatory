@@ -58,18 +58,18 @@ const Connectors = () => {
       <div className="text-sm px-2 font-bold text-[var(--vocs-color_codeTitle)]">
         Available Connectors:
       </div>
-      <ul>
+      <ul className="space-y-2">
         {connectors.map((connector) => (
           <li
             key={connector.id}
-            className="mb-2 flex items-center justify-between border pr-2 pl-4 py-2 rounded-md border-[var(--vocs-color_codeInlineBorder)]"
+            className="flex items-center justify-between border pr-2 pl-4 py-2 rounded-md border-[var(--vocs-color_codeInlineBorder)] gap-2"
           >
             <div className="flex items-center gap-2">
               {connector.icon && (
                 <img
                   src={connector.icon}
                   alt={`${connector.name} icon`}
-                  className="w-4 h-4"
+                  className="w-12 h-12"
                 />
               )}
               <div className="text-sm">{connector.name}</div>
@@ -78,7 +78,7 @@ const Connectors = () => {
               onClick={() => {
                 connect({ connector: connector });
               }}
-              className="border border-[var(--vocs-color_codeInlineBorder)] !bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 text-sm"
+              className="border border-[var(--vocs-color_codeInlineBorder)] !bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 text-sm w-full max-w-2xl"
             >
               Connect
             </button>

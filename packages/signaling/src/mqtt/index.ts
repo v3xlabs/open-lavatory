@@ -1,3 +1,4 @@
+/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 import { SignalNoConnectionError } from '@openlv/core/errors';
 import type { MqttClient } from 'mqtt';
 import MQTT from 'mqtt';
@@ -30,7 +31,7 @@ export const mqtt: CreateSignalLayerFn = ({
 
             const encoded = new TextEncoder().encode(payload);
 
-            connection?.publish(topic, Buffer.from(encoded));
+            connection?.publish(topic, Buffer.from(encoded), { retain: false });
         },
         async subscribe(handler) {
             if (!connection) throw new SignalNoConnectionError();

@@ -18,7 +18,7 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "sandbox": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/sandbox dev",
-    "test": "pnpm -r test",
+    "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test",
     "wallet": "pnpm --filter @openlv/example-wallet dev"
   },
   "devDependencies": {

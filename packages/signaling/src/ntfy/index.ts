@@ -1,4 +1,5 @@
-import { SignalNoConnectionError } from '@openlv/core/errors';
+import { EventEmitter } from 'eventemitter3';
+import { match } from 'ts-pattern';
 
 import type { CreateSignalLayerFn } from '../base.js';
 import { createSignalingLayer } from '../index.js';
@@ -32,12 +33,11 @@ export type NtfyMessage = {
 export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     let connection: WebSocket | null = null;
     const connectionInfo = parseNtfyUrl(url);
-    const wsProtocol =
-        connectionInfo.protocol === 'https'
-            ? 'wss'
-            : connectionInfo.protocol === 'http'
-              ? 'ws'
-              : connectionInfo.protocol;
+    const wsProtocol = match(connectionInfo.protocol)
+        .with('https', () => 'wss')
+        .with('http', () => 'ws')
+        .exhaustive();
+    const events = new EventEmitter<{ message: string }>();
 
     return createSignalingLayer({
         type: 'ntfy',
@@ -69,8 +69,10 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
                     console.log('NTFY: Received message:', event.data);
                     const data = JSON.parse(event.data) as NtfyMessage;
 
-                    if (data.event == 'open') {
+                    if (data.event === 'open') {
                         resolve();
+                    } else if (data.event === 'message') {
+                        events.emit('message', data.message);
                     }
                 };
             });
@@ -99,23 +101,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
                 { method: 'POST', body, headers }
             );
         },
-        async subscribe(handler) {
-            if (!connection) throw new SignalNoConnectionError();
-
-            connection.onmessage = (event) => {
-                console.log('NTFY: Received message:', event.data);
-                const data = JSON.parse(event.data) as NtfyMessage;
-
-                console.log('NTFY: Message:', data);
-
-                if (data.event !== 'message') {
-                    console.log('NTFY: Not a message event', data.event);
-
-                    return;
-                }
-
-                handler(data.message);
-            };
+        subscribe: (handler) => {
+            events.on('message', handler);
         },
     });
 };

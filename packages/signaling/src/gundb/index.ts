@@ -1,0 +1,51 @@
+import { SignalNoConnectionError } from '@openlv/core/errors';
+import Gun, { IGun, IGunInstance } from 'gun';
+
+import { createSignalingLayer, CreateSignalLayerFn } from '../base.js';
+
+export const gundb: CreateSignalLayerFn = ({ topic, url = 'wss://try.axe.eco/gun' }) => {
+    let connection: IGunInstance | undefined;
+
+    return createSignalingLayer({
+        type: 'gundb',
+        async setup() {
+            console.log('GUNDB: Setting up');
+            const x = new (Gun as unknown as IGun)({
+                peers: [url],
+                file: undefined,
+                localStorage: undefined,
+            });
+
+            connection = x;
+
+            await connection?.get(topic);
+        },
+        teardown() {
+            // connection?.();
+            connection = undefined;
+        },
+        async publish(payload) {
+            if (!connection) throw new SignalNoConnectionError();
+
+            console.log('GUNDB: Publishing message', topic, payload);
+            connection.get(topic).put({ data: payload });
+        },
+        async subscribe(handler) {
+            if (!connection) throw new SignalNoConnectionError();
+
+            connection.get(topic).on((data) => {
+                console.log('GUNDB: Received message', data);
+
+                const message = data.data?.toString();
+
+                if (!message) return;
+
+                handler(message);
+            });
+        },
+    });
+};
+
+Object.assign(gundb, {
+    __name: 'gundb',
+});

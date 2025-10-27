@@ -117,8 +117,8 @@ export class OpenLVModalElement
             onClose: this.onClose ?? (() => this.remove()),
             connectionInfo: this.connectionInfo,
             onStartConnection: this.onStartConnection,
-            getProvider: () => this.provider,
             onCopy: this.onCopy,
+            provider: this.provider,
         };
 
         render(h(ModalRoot, props), this.shadow);

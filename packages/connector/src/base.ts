@@ -1,9 +1,10 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createProvider } from '@openlv/provider';
+import { createProvider, type OpenLVProvider } from '@openlv/provider';
 import { createConnector } from '@wagmi/core';
 
 import { openlvDetails } from './config';
 import { log } from './log';
+import { getTriggerModal } from './modal';
 
 export type OpenLVConnectorParameters = unknown;
 // type ConnectorProperties = { foo: string };
@@ -11,7 +12,7 @@ export type OpenLVConnectorParameters = unknown;
 export const openlv = (_parameters?: OpenLVConnectorParameters) => {
     const provider = createProvider({ foo: 'bar' });
 
-    return createConnector((wagmiConfig) => {
+    return createConnector<OpenLVProvider>((wagmiConfig) => {
         const { chains } = wagmiConfig;
         // const transports = wagmiConfig.transports;
 
@@ -21,7 +22,23 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
             async connect() {
                 log('connect');
 
-                await provider.connect();
+                const modal = await getTriggerModal();
+
+                console.log('loading modal');
+                modal?.(provider);
+
+                const modalDismissed = new Promise((_resolve) => {
+                    // modal?.onClose
+                    // resolve();
+                });
+
+                const connectionCompleted = new Promise((_resolve) => {
+                    // modal?.onStartConnection
+                    // resolve();
+                });
+
+                await Promise.race([modalDismissed, connectionCompleted]);
+
                 // if sessions fails close modal
 
                 return {

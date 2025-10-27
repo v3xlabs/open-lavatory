@@ -25,7 +25,7 @@ export interface ModalRootProps {
     onStartConnection?: () => void;
     onRetry?: () => void;
     onCopy?: (uri: string) => void;
-    getProvider: () => OpenLVProvider;
+    provider: OpenLVProvider;
 }
 
 type ModalView = 'start' | 'uri' | 'settings';
@@ -142,7 +142,7 @@ export const ModalRoot = ({
     continueLabel = 'Save & continue',
     connectionInfo,
     onStartConnection,
-    getProvider,
+    provider,
     onRetry,
     onCopy,
 }: ModalRootProps) => {
@@ -159,7 +159,7 @@ export const ModalRoot = ({
     useEscapeToClose(safeOnClose);
 
     const handleCopy = useCallback(async () => {
-        const success = await copyToClipboard(uri);
+        const success = uri && (await copyToClipboard(uri));
 
         if (success) setCopied(true);
     }, [uri, setCopied]);
@@ -171,12 +171,10 @@ export const ModalRoot = ({
 
     const closeSession = useCallback(async () => {
         console.log('closing session');
-        safeOnClose();
+        // safeOnClose();
 
-        const provider = getProvider();
-
-        await provider?.closeSession();
-    }, [safeOnClose]);
+        await provider.closeSession();
+    }, [safeOnClose, provider]);
 
     return (
         <div

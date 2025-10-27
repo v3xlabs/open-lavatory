@@ -25,7 +25,6 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@openlv/modal": "workspace:*",
     "@openlv/session": "workspace:*",
     "@openlv/signaling": "workspace:*",
     "@openlv/transport": "workspace:*",

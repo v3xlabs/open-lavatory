@@ -545,9 +545,6 @@ importers:
 
   packages/provider:
     dependencies:
-      '@openlv/modal':
-        specifier: workspace:*
-        version: link:../modal
       '@openlv/session':
         specifier: workspace:*
         version: link:../session

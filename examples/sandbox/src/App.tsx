@@ -1,6 +1,6 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 /* eslint-disable max-lines */
- 
+
 import type { ConnectionPhase } from '@openlv/transport';
 import { OpenLVConnection } from '@openlv/transport';
 import { QRCodeSVG } from 'qrcode.react';

@@ -1,4 +1,5 @@
-import { SignalConnectionError, SignalNoConnectionError } from '@openlv/core/errors';
+import { SignalNoConnectionError } from '@openlv/core/errors';
+
 import type { CreateSignalLayerFn } from '../base.js';
 import { createSignalingLayer } from '../index.js';
 import { parseNtfyUrl } from './url.js';

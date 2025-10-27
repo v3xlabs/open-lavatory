@@ -1,269 +1,248 @@
-import classNames from "classnames";
-import { useCallback, useEffect, useMemo, useState } from "preact/hooks";
-import QRCode from "qrcode-generator";
-import { match, P } from "ts-pattern";
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+import classNames from 'classnames';
+import { useCallback, useEffect, useState } from 'preact/hooks';
+import { match, P } from 'ts-pattern';
 
-import { OPENLV_ICON_128 } from "../assets/logo";
-import {
-  getDefaultModalPreferences,
-  type ModalPreferences,
-} from "../preferences";
-import type { ConnectionInfo } from "../types/connection";
-import { ConnectionFlow } from "./ConnectionFlow";
-import { Header } from "./Header";
-import { ModalSettings } from "./ModalSettings";
+import { OPENLV_ICON_128 } from '../assets/logo';
+import { getDefaultModalPreferences, type ModalPreferences } from '../preferences';
+import type { ConnectionInfo } from '../types/connection';
+import { ConnectionFlow } from './ConnectionFlow';
+import { Header } from './Header';
+import { ModalSettings } from './ModalSettings';
 
 export interface ModalRootProps {
-  uri?: string;
-  title?: string;
-  subtitle?: string;
-  onClose?: () => void;
-  initialPreferences?: ModalPreferences;
-  onPreferencesChange?: (preferences: ModalPreferences) => void;
-  continueLabel?: string;
-  connectionInfo?: ConnectionInfo;
-  onStartConnection?: () => void;
-  onRetry?: () => void;
-  onCopy?: (uri: string) => void;
+    uri?: string;
+    title?: string;
+    subtitle?: string;
+    onClose?: () => void;
+    initialPreferences?: ModalPreferences;
+    onPreferencesChange?: (preferences: ModalPreferences) => void;
+    continueLabel?: string;
+    connectionInfo?: ConnectionInfo;
+    onStartConnection?: () => void;
+    onRetry?: () => void;
+    onCopy?: (uri: string) => void;
 }
 
-type ModalView = "start" | "uri" | "settings";
+type ModalView = 'start' | 'uri' | 'settings';
 
 type PreferenceKey = keyof ModalPreferences;
 
 const copyToClipboard = async (text: string): Promise<boolean> => {
-  if (!text) return false;
+    if (!text) return false;
 
-  try {
-    if (navigator?.clipboard?.writeText) {
-      await navigator.clipboard.writeText(text);
+    try {
+        if (navigator?.clipboard?.writeText) {
+            await navigator.clipboard.writeText(text);
 
-      return true;
+            return true;
+        }
+    } catch (error) {
+        console.warn('OpenLV modal: Clipboard API failed, falling back', error);
     }
-  } catch (error) {
-    console.warn("OpenLV modal: Clipboard API failed, falling back", error);
-  }
 
-  try {
-    const textArea = document.createElement("textarea");
+    try {
+        const textArea = document.createElement('textarea');
 
-    textArea.value = text;
-    textArea.style.position = "fixed";
-    textArea.style.left = "-999999px";
-    textArea.style.top = "-999999px";
-    document.body.appendChild(textArea);
-    textArea.focus();
-    textArea.select();
-    const result = document.execCommand("copy");
+        textArea.value = text;
+        textArea.style.position = 'fixed';
+        textArea.style.left = '-999999px';
+        textArea.style.top = '-999999px';
+        document.body.appendChild(textArea);
+        textArea.focus();
+        textArea.select();
+        const result = document.execCommand('copy');
 
-    document.body.removeChild(textArea);
+        document.body.removeChild(textArea);
 
-    return result;
-  } catch (fallbackError) {
-    console.error("OpenLV modal: fallback copy failed", fallbackError);
+        return result;
+    } catch (fallbackError) {
+        console.error('OpenLV modal: fallback copy failed', fallbackError);
 
-    return false;
-  }
+        return false;
+    }
 };
 
 const useModalState = (
-  uri: string,
-  initialPreferences: ModalPreferences,
-  onPreferencesChange?: (preferences: ModalPreferences) => void,
+    uri: string,
+    initialPreferences: ModalPreferences,
+    onPreferencesChange?: (preferences: ModalPreferences) => void
 ) => {
-  const [view, setView] = useState<ModalView>("start");
-  const [copied, setCopied] = useState(false);
-  const [isQrHovering, setIsQrHovering] = useState(false);
-  const [isUrlHovering, setIsUrlHovering] = useState(false);
-  const [preferences, setPreferences] =
-    useState<ModalPreferences>(initialPreferences);
+    const [view, setView] = useState<ModalView>('start');
+    const [copied, setCopied] = useState(false);
+    const [isQrHovering, setIsQrHovering] = useState(false);
+    const [isUrlHovering, setIsUrlHovering] = useState(false);
+    const [preferences, setPreferences] = useState<ModalPreferences>(initialPreferences);
 
-  useEffect(() => {
-    setPreferences(initialPreferences);
-  }, [initialPreferences]);
+    useEffect(() => {
+        setPreferences(initialPreferences);
+    }, [initialPreferences]);
 
-  useEffect(() => {
-    if (!copied) return;
+    useEffect(() => {
+        if (!copied) return;
 
-    const timeout = window.setTimeout(() => setCopied(false), 2000);
+        const timeout = window.setTimeout(() => setCopied(false), 2000);
 
-    return () => window.clearTimeout(timeout);
-  }, [copied]);
+        return () => window.clearTimeout(timeout);
+    }, [copied]);
 
-  useEffect(() => {
-    setView("uri");
-  }, [uri]);
+    useEffect(() => {
+        setView('uri');
+    }, [uri]);
 
-  const handlePreferenceToggle = useCallback(
-    (key: PreferenceKey) => {
-      setPreferences((current) => {
-        const next = { ...current, [key]: !current[key] };
+    const handlePreferenceToggle = useCallback(
+        (key: PreferenceKey) => {
+            setPreferences((current) => {
+                const next = { ...current, [key]: !current[key] };
 
-        onPreferencesChange?.(next);
+                onPreferencesChange?.(next);
 
-        return next;
-      });
-    },
-    [onPreferencesChange],
-  );
+                return next;
+            });
+        },
+        [onPreferencesChange]
+    );
 
-  return {
-    view,
-    setView,
-    copied,
-    setCopied,
-    isQrHovering,
-    setIsQrHovering,
-    isUrlHovering,
-    setIsUrlHovering,
-    preferences,
-    handlePreferenceToggle,
-  };
+    return {
+        view,
+        setView,
+        copied,
+        setCopied,
+        isQrHovering,
+        setIsQrHovering,
+        isUrlHovering,
+        setIsUrlHovering,
+        preferences,
+        handlePreferenceToggle,
+    };
 };
 
 const useEscapeToClose = (handler: () => void) => {
-  useEffect(() => {
-    const keyHandler = (event: KeyboardEvent) => {
-      if (event.key === "Escape") handler();
-    };
+    useEffect(() => {
+        const keyHandler = (event: KeyboardEvent) => {
+            if (event.key === 'Escape') handler();
+        };
 
-    document.addEventListener("keydown", keyHandler);
+        document.addEventListener('keydown', keyHandler);
 
-    return () => document.removeEventListener("keydown", keyHandler);
-  }, [handler]);
+        return () => document.removeEventListener('keydown', keyHandler);
+    }, [handler]);
 };
 
 export const ModalRoot = ({
-  uri,
-  title = "Connect Wallet",
-  subtitle = "Scan QR code or copy URL to connect",
-  onClose,
-  initialPreferences = getDefaultModalPreferences(),
-  onPreferencesChange,
-  continueLabel = "Save & continue",
-  connectionInfo,
-  onStartConnection,
-  onRetry,
-  onCopy,
+    uri,
+    title = 'Connect Wallet',
+    onClose,
+    initialPreferences = getDefaultModalPreferences(),
+    onPreferencesChange,
+    continueLabel = 'Save & continue',
+    connectionInfo,
+    onStartConnection,
+    onRetry,
+    onCopy,
 }: ModalRootProps) => {
-  const [isStarting, setIsStarting] = useState(false);
-  const {
-    view,
-    setView,
-    copied,
-    setCopied,
-    isQrHovering,
-    setIsQrHovering,
-    isUrlHovering,
-    setIsUrlHovering,
-    preferences,
-    handlePreferenceToggle,
-  } = useModalState(uri || "", initialPreferences, onPreferencesChange);
+    const { view, setView, copied, setCopied, preferences, handlePreferenceToggle } = useModalState(
+        uri || '',
+        initialPreferences,
+        onPreferencesChange
+    );
 
-  const safeOnClose = useCallback(() => {
-    onClose?.();
-  }, [onClose]);
+    const safeOnClose = useCallback(() => {
+        onClose?.();
+    }, [onClose]);
 
-  useEscapeToClose(safeOnClose);
+    useEscapeToClose(safeOnClose);
 
-  const qrSvg = useMemo(() => {
-    const qr = QRCode(0, "M");
+    const handleCopy = useCallback(async () => {
+        const success = await copyToClipboard(uri);
 
-    qr.addData(uri);
-    qr.make();
+        if (success) setCopied(true);
+    }, [uri, setCopied]);
 
-    return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
-  }, [uri]);
+    const handleStartConnection = useCallback(() => {
+        // This will be handled by the connector - don't close the modal
+        onStartConnection?.();
+    }, [onStartConnection]);
 
-  const privacyBlurEnabled = preferences.sessionPrivacy;
-  const interactionHint = privacyBlurEnabled
-    ? "QR code is blurred for privacy protection • Click to copy URL"
-    : "QR code is visible • Click to copy connection URL";
+    const closeSession = useCallback(() => {
+        console.log('closing session');
+        onClose?.();
+    }, [onClose]);
 
-  const handleCopy = useCallback(async () => {
-    const success = await copyToClipboard(uri);
-
-    if (success) setCopied(true);
-  }, [uri, setCopied]);
-
-  const handleStartConnection = useCallback(() => {
-    setIsStarting(true);
-    // This will be handled by the connector - don't close the modal
-    onStartConnection?.();
-  }, [onStartConnection]);
-
-  return (
-    <div
-      className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4 font-sans text-slate-800"
-      onClick={safeOnClose}
-      role="presentation"
-      data-openlv-modal-root
-    >
-      <div
-        className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center border space-y-4"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-        onClick={(event) => event.stopPropagation()}
-      >
-        <Header
-          onBack={() => match({ view, info: connectionInfo?.state })
-            .with({ view: 'settings' }, () => setView("uri"))
-            .with({ view: 'uri', info: P.not('idle') }, () => closeSession())
-            .otherwise(() => safeOnClose())}
-          onToggleSettings={() =>
-            setView(view === "settings" ? "uri" : "settings")
-          }
-          title={title}
-          view={view}
-        />
-
-        {
-          match(view)
-            .with("uri", () => (
-              <ConnectionFlow
-                connectionInfo={connectionInfo || { state: "idle" }}
-                onStartConnection={handleStartConnection}
-                onRetry={onRetry || (() => { })}
-                onClose={safeOnClose}
-                onCopy={onCopy || handleCopy}
-              />
-            ))
-            .with("settings", () => (
-              <ModalSettings
-                continueLabel={continueLabel}
-                onBack={() => setView("start")}
-                onToggle={handlePreferenceToggle}
-                preferences={preferences}
-              />
-            ))
-            .otherwise(() => null)
-        }
-
+    return (
         <div
-          className={classNames('absolute right-5 top-5 rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white transition-all', copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0")}
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4 font-sans text-slate-800"
+            onClick={safeOnClose}
+            role="presentation"
+            data-openlv-modal-root
         >
-          📋 Connection URL copied to clipboard!
-        </div>
+            <div
+                className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center border space-y-4"
+                role="dialog"
+                aria-modal="true"
+                aria-label={title}
+                onClick={(event) => event.stopPropagation()}
+            >
+                <Header
+                    onBack={() =>
+                        match({ view, info: connectionInfo?.state })
+                            .with({ view: 'settings' }, () => setView('uri'))
+                            .with({ view: 'uri', info: P.not('idle') }, () => closeSession())
+                            .otherwise(() => safeOnClose())
+                    }
+                    onToggleSettings={() => setView(view === 'settings' ? 'uri' : 'settings')}
+                    title={title}
+                    view={view}
+                />
 
-        <div className="mt-6 flex items-center gap-2 text-gray-500">
-          <a
-            href="https://github.com/v3xlabs/open-lavatory"
-            target="_blank"
-            rel="noreferrer"
-            className="flex items-center gap-2 text-sm font-semibold text-gray-500"
-          >
-            <img
-              src={OPENLV_ICON_128}
-              alt="Open Lavatory Logo"
-              width={20}
-              height={20}
-              className="rounded"
-            />
-            <span>openlv</span>
-          </a>
+                {match(view)
+                    .with('uri', () => (
+                        <ConnectionFlow
+                            connectionInfo={connectionInfo || { state: 'idle' }}
+                            onStartConnection={handleStartConnection}
+                            onRetry={onRetry || (() => {})}
+                            onClose={safeOnClose}
+                            onCopy={onCopy || handleCopy}
+                        />
+                    ))
+                    .with('settings', () => (
+                        <ModalSettings
+                            continueLabel={continueLabel}
+                            onBack={() => setView('start')}
+                            onToggle={handlePreferenceToggle}
+                            preferences={preferences}
+                        />
+                    ))
+                    .otherwise(() => null)}
+
+                <div
+                    className={classNames(
+                        'absolute right-5 top-5 rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white transition-all',
+                        copied ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
+                    )}
+                >
+                    📋 Connection URL copied to clipboard!
+                </div>
+
+                <div className="mt-6 flex items-center gap-2 text-gray-500">
+                    <a
+                        href="https://github.com/v3xlabs/open-lavatory"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="flex items-center gap-2 text-sm font-semibold text-gray-500"
+                    >
+                        <img
+                            src={OPENLV_ICON_128}
+                            alt="Open Lavatory Logo"
+                            width={20}
+                            height={20}
+                            className="rounded"
+                        />
+                        <span>openlv</span>
+                    </a>
+                </div>
+            </div>
         </div>
-      </div>
-    </div >
-  );
+    );
 };

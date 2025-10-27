@@ -1,9 +1,9 @@
 export interface ModalPreferences {
-  autoConnect: boolean;
-  sessionPrivacy: boolean;
+    autoConnect: boolean;
+    sessionPrivacy: boolean;
 }
 
 export const getDefaultModalPreferences = (): ModalPreferences => ({
-  autoConnect: true,
-  sessionPrivacy: true,
+    autoConnect: true,
+    sessionPrivacy: true,
 });

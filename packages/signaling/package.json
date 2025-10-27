@@ -20,20 +20,20 @@
   "type": "module",
   "exports": {
     ".": {
-      "default": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     },
     "./ntfy": {
-      "default": "./dist/ntfy/index.js",
-      "types": "./dist/ntfy/index.d.ts"
+      "types": "./dist/ntfy/index.d.ts",
+      "default": "./dist/ntfy/index.js"
     },
     "./mqtt": {
-      "default": "./dist/mqtt/index.js",
-      "types": "./dist/mqtt/index.d.ts"
+      "types": "./dist/mqtt/index.d.ts",
+      "default": "./dist/mqtt/index.js"
     },
     "./gundb": {
-      "default": "./dist/gundb/index.js",
-      "types": "./dist/gundb/index.d.ts"
+      "types": "./dist/gundb/index.d.ts",
+      "default": "./dist/gundb/index.js"
     }
   },
   "types": "./dist/index.d.ts",

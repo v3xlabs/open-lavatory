@@ -37,7 +37,7 @@
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "vite build",
+    "build": "tsc",
     "test": "vitest"
   },
   "dependencies": {
@@ -45,8 +45,6 @@
   },
   "devDependencies": {
     "typescript": "^5",
-    "vite": "^7",
-    "vite-plugin-dts": "^4.5.4",
     "vitest": "^4"
   },
   "peerDependencies": {

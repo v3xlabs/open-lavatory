@@ -36,11 +36,11 @@
     "@openlv/signaling": "workspace:*",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
-    "ts-pattern": "^5.8.0"
+    "ts-pattern": "^5"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "vitest": "^4.0.3"
+    "typescript": "^5",
+    "vitest": "^4"
   },
   "peerDependencies": {
     "@wagmi/core": "2",

@@ -25,16 +25,16 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
+    "@openlv/core": "workspace:*",
     "@openlv/modal": "workspace:*",
     "@openlv/provider": "workspace:*",
-    "@openlv/transport": "workspace:*",
-    "@openlv/core": "workspace:*"
+    "@openlv/transport": "workspace:*"
   },
   "devDependencies": {
     "@wagmi/core": "^2.17.3",
     "globals": "^16.2.0",
-    "typescript": "^5.8.3",
-    "vitest": "^4.0.3"
+    "typescript": "^5",
+    "vitest": "^4"
   },
   "peerDependencies": {
     "@wagmi/core": "2",

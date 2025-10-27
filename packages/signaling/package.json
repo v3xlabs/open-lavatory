@@ -50,8 +50,8 @@
     "ts-pattern": "^5"
   },
   "devDependencies": {
-    "typescript": "^5.8.3",
-    "vitest": "^4.0.3"
+    "typescript": "^5",
+    "vitest": "^4"
   },
   "peerDependencies": {
     "@wagmi/core": "2",

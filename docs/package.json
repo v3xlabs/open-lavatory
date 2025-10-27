@@ -14,15 +14,15 @@
         "mqtt": "^5.14.1",
         "react": "latest",
         "react-dom": "latest",
-        "tailwindcss": "^4.1.14",
-        "ts-pattern": "^5.8.0",
+        "tailwindcss": "^4",
+        "ts-pattern": "^5",
         "vocs": "latest"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.1.16",
         "@types/react": "latest",
         "classnames": "^2.5.1",
-        "typescript": "latest"
+        "typescript": "^5"
     },
     "peerDependencies": {
         "@wagmi/core": "2",

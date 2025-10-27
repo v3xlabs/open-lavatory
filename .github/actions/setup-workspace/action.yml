@@ -49,4 +49,4 @@ runs:
       if: inputs.build-packages == 'true'
       shell: bash
       run: |
-        pnpm build:all
+        pnpm build

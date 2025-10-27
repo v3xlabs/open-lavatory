@@ -58,7 +58,7 @@ pnpm build:extension            # Chrome extension
 pnpm build:extension:firefox    # Firefox extension
 
 # Build everything
-pnpm build:all                  # Build lib, connector, and extension
+pnpm build                  # Build lib, connector, and extension
 pnpm build:docs                 # Build documentation
 ```
 

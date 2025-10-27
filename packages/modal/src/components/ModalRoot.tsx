@@ -172,13 +172,13 @@ export const ModalRoot = ({
 
     return (
         <div
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/70 p-4 font-sans text-slate-800"
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 p-4 font-sans text-slate-800 animate-[bg-in_0.15s_ease-in-out]"
             onClick={safeOnClose}
             role="presentation"
             data-openlv-modal-root
         >
             <div
-                className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center border space-y-4"
+                className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center border space-y-4 animate-[fade-in_0.15s_ease-in-out]"
                 role="dialog"
                 aria-modal="true"
                 aria-label={title}

@@ -23,17 +23,21 @@
       "default": "./dist/index.js"
     },
     "./encryption": {
-      "default": "./dist/encryption/index.js",
-      "types": "./dist/encryption/index.d.ts"
+      "types": "./dist/encryption/index.d.ts",
+      "default": "./dist/encryption/index.js"
     },
     "./errors": {
-      "default": "./dist/errors/index.js",
-      "types": "./dist/errors/index.d.ts"
+      "types": "./dist/errors/index.d.ts",
+      "default": "./dist/errors/index.js"
+    },
+    "./icons": {
+      "types": "./dist/icons/index.d.ts",
+      "default": "./dist/icons/index.js"
     }
   },
   "types": "./dist/index.d.ts",
   "scripts": {
-    "build": "tsc",
+    "build": "vite build",
     "test": "vitest"
   },
   "dependencies": {
@@ -41,6 +45,8 @@
   },
   "devDependencies": {
     "typescript": "^5.8.3",
+    "vite": "^7.1.12",
+    "vite-plugin-dts": "^4.5.4",
     "vitest": "^4.0.3"
   },
   "peerDependencies": {

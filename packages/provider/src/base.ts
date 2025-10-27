@@ -13,6 +13,7 @@ export type OpenLVProvider = {
     emitter: Emitter<ProviderEvents>;
     connect: () => Promise<void>;
     createSession: () => Promise<Session>;
+    closeSession: () => Promise<void>;
 };
 
 let modal: ((provider: OpenLVProvider) => void) | undefined;
@@ -27,7 +28,7 @@ export const getModal = async () => {
 
 export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVProvider => {
     const emitter = new Emitter('x');
-    //
+    let session: Session | undefined;
 
     return {
         async connect() {
@@ -49,7 +50,7 @@ export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVPro
             await Promise.race([modalDismissed, connectionCompleted]);
         },
         createSession: async () => {
-            const session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
+            session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
 
             console.log('session created');
             await session.connect();
@@ -57,6 +58,7 @@ export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVPro
 
             return session;
         },
+        closeSession: async () => await session?.close(),
         emitter,
     };
 };

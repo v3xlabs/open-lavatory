@@ -50,7 +50,7 @@ export const triggerOpenModal = (provider: OpenLVProvider) => {
 
     if (!modal) {
         registerOpenLVModal();
-        const x = new OpenLVModalElementDefault();
+        const x = new OpenLVModalElementDefault(provider);
 
         document.body.appendChild(x);
         x.showModal();
@@ -70,9 +70,7 @@ export const triggerOpenModal = (provider: OpenLVProvider) => {
 
             console.log('url:', url);
 
-            x.setProps(url, () => {
-                console.log('testttt');
-            });
+            x.setProps(url);
 
             x.updateConnectionState({ state: 'qr-ready', uri: url });
         };

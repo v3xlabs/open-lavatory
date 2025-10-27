@@ -505,6 +505,9 @@ importers:
       '@openlv/core':
         specifier: workspace:*
         version: link:../core
+      '@openlv/provider':
+        specifier: workspace:*
+        version: link:../provider
       classnames:
         specifier: ^2.5.1
         version: 2.5.1

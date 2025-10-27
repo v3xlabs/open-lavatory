@@ -1,3 +1,4 @@
+import type { OpenLVProvider } from '@openlv/provider';
 import { h, render } from 'preact';
 
 import { ModalRoot, type ModalRootProps } from './components/ModalRoot';
@@ -18,8 +19,7 @@ const attributeNameMap: Record<string, keyof OpenLVModalElementProps> = {
 
 export class OpenLVModalElement
     extends HTMLElement
-    implements OpenLVModalElementProps, ModalConnectionInterface
-{
+    implements OpenLVModalElementProps, ModalConnectionInterface {
     public uri: string = '';
     public title: string = '';
     public subtitle?: string;
@@ -29,14 +29,15 @@ export class OpenLVModalElement
     public onClose?: () => void;
     public connectionInfo?: ConnectionInfo;
     public onStartConnection?: () => void;
-    public onRetry?: () => void;
     public onCopy?: (uri: string) => void;
+    public provider: OpenLVProvider;
 
     private readonly shadow: ShadowRoot;
     private renderRequested = false;
 
-    constructor() {
+    constructor(_provider: OpenLVProvider) {
         super();
+        this.provider = _provider;
         this.shadow = this.attachShadow({ mode: 'open' });
         ensureStyles(this.shadow);
     }
@@ -64,9 +65,8 @@ export class OpenLVModalElement
         this.requestRender();
     }
 
-    setProps(uri: string, onClose?: () => void) {
+    setProps(uri: string) {
         this.uri = uri;
-        this.onClose = onClose;
         this.requestRender();
     }
 
@@ -117,7 +117,7 @@ export class OpenLVModalElement
             onClose: this.onClose ?? (() => this.remove()),
             connectionInfo: this.connectionInfo,
             onStartConnection: this.onStartConnection,
-            onRetry: this.onRetry,
+            getProvider: () => this.provider,
             onCopy: this.onCopy,
         };
 

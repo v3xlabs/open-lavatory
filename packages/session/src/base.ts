@@ -25,6 +25,7 @@ export type Session = {
     getState(): { state: SessionState; signaling?: { state: SignalingMode } };
     getHandshakeParameters(): SessionHandshakeParameters;
     connect(): Promise<void>;
+    close(): Promise<void>;
     // Send with response
     send(message: object, timeout?: number): Promise<unknown>;
 };
@@ -106,6 +107,9 @@ export const createSession = async (
                     messages.emit('message', sessionMsg);
                 }
             });
+        },
+        async close() {
+            await signal?.teardown();
         },
         getState() {
             return { state, signaling: signal.getState() };

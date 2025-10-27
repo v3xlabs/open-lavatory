@@ -1,5 +1,7 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+
+import type { OpenLVProvider } from '@openlv/provider';
 import classNames from 'classnames';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { match, P } from 'ts-pattern';
@@ -23,6 +25,7 @@ export interface ModalRootProps {
     onStartConnection?: () => void;
     onRetry?: () => void;
     onCopy?: (uri: string) => void;
+    getProvider: () => OpenLVProvider;
 }
 
 type ModalView = 'start' | 'uri' | 'settings';
@@ -139,6 +142,7 @@ export const ModalRoot = ({
     continueLabel = 'Save & continue',
     connectionInfo,
     onStartConnection,
+    getProvider,
     onRetry,
     onCopy,
 }: ModalRootProps) => {
@@ -165,20 +169,24 @@ export const ModalRoot = ({
         onStartConnection?.();
     }, [onStartConnection]);
 
-    const closeSession = useCallback(() => {
+    const closeSession = useCallback(async () => {
         console.log('closing session');
-        onClose?.();
-    }, [onClose]);
+        safeOnClose();
+
+        const provider = getProvider();
+
+        await provider?.closeSession();
+    }, [safeOnClose]);
 
     return (
         <div
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 p-4 font-sans text-slate-800 animate-[bg-in_0.15s_ease-in-out]"
+            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 p-4 font-sans text-slate-800 animate-[bg-in_0.15s_ease-in-out] backdrop-blur-sm"
             onClick={safeOnClose}
             role="presentation"
             data-openlv-modal-root
         >
             <div
-                className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center border space-y-4 animate-[fade-in_0.15s_ease-in-out]"
+                className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center space-y-4 animate-[fade-in_0.15s_ease-in-out]"
                 role="dialog"
                 aria-modal="true"
                 aria-label={title}

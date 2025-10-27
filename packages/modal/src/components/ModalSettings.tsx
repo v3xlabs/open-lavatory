@@ -1,21 +1,12 @@
 import classNames from 'classnames';
 
-import type { ModalPreferences } from '../preferences';
-
 export interface ModalSettingsProps {
-    preferences: ModalPreferences;
-    onToggle: (key: keyof ModalPreferences) => void;
     onBack: () => void;
     continueLabel: string;
 }
 
-export const ModalSettings = ({
-    preferences,
-    onToggle,
-    onBack,
-    continueLabel,
-}: ModalSettingsProps) => {
-    const renderToggle = (label: string, description: string, key: keyof ModalPreferences) => (
+export const ModalSettings = ({ onBack, continueLabel }: ModalSettingsProps) => {
+    const renderToggle = (label: string, description: string) => (
         <div className="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-100 p-4">
             <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold text-gray-900">{label}</div>
@@ -23,20 +14,20 @@ export const ModalSettings = ({
             </div>
             <button
                 type="button"
-                role="switch"
-                aria-checked={preferences[key]}
-                onClick={() => onToggle(key)}
+                // role="switch"
+                // aria-checked={preferences[key]}
+                // onClick={() => onToggle(key)}
                 className={classNames(
-                    'relative h-6 w-10 cursor-pointer rounded-full transition-colors',
-                    preferences[key] ? 'bg-blue-500' : 'bg-gray-200'
+                    'relative h-6 w-10 cursor-pointer rounded-full transition-colors'
+                    // preferences[key] ? 'bg-blue-500' : 'bg-gray-200'
                 )}
             >
-                <span
+                {/* <span
                     className="absolute top-[3px] left-[3px] h-[18px] w-[18px] rounded-full bg-white border transition-transform"
                     style={{
                         transform: preferences[key] ? 'translateX(18px)' : 'translateX(0)',
                     }}
-                />
+                /> */}
             </button>
         </div>
     );
@@ -52,14 +43,9 @@ export const ModalSettings = ({
             <div className="flex flex-col gap-3">
                 {renderToggle(
                     'Remember this device',
-                    'Automatically reconnect on this browser next time.',
-                    'autoConnect'
+                    'Automatically reconnect on this browser next time.'
                 )}
-                {renderToggle(
-                    'Blur QR for privacy',
-                    'Keep the QR hidden until you hover over it.',
-                    'sessionPrivacy'
-                )}
+                {renderToggle('Blur QR for privacy', 'Keep the QR hidden until you hover over it.')}
             </div>
             <button
                 type="button"

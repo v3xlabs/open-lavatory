@@ -77,7 +77,7 @@ const Connectors = () => {
                                     <img
                                         src={connector.icon}
                                         alt={`${connector.name} icon`}
-                                        className="w-12 h-12"
+                                        className="w-10 h-10 rounded-md"
                                     />
                                 )}
                             </button>

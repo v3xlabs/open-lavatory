@@ -19,7 +19,8 @@ const attributeNameMap: Record<string, keyof OpenLVModalElementProps> = {
 
 export class OpenLVModalElement
     extends HTMLElement
-    implements OpenLVModalElementProps, ModalConnectionInterface {
+    implements OpenLVModalElementProps, ModalConnectionInterface
+{
     public uri: string = '';
     public title: string = '';
     public subtitle?: string;

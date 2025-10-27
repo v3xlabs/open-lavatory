@@ -1,16 +1,37 @@
 ---
 layout: landing
+showLogo: false
 ---
 
 import { HomePage } from 'vocs/components'
+import { TryItOut } from '../components/TryItOut'
 
 <HomePage.Root>
-  <HomePage.Logo />
-  <HomePage.Tagline>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</HomePage.Tagline>
-  <HomePage.InstallPackage name="@openlv/connector" type="install" />
-  <HomePage.Description>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</HomePage.Description>
-  <HomePage.Buttons>
-    <HomePage.Button href="/getting-started" variant="accent">Get started</HomePage.Button>
-    <HomePage.Button href="https://github.com/v3xlabs/open-lavatory">GitHub</HomePage.Button>
-  </HomePage.Buttons>
+  <div className="flex flex-col md:grid grid-cols-2 gap-8 w-full text-start">
+    <div className="flex flex-col items-start gap-4">
+      <HomePage.Logo />
+      <HomePage.Tagline>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</HomePage.Tagline>
+      <HomePage.Description>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</HomePage.Description>
+      <div className="w-full">
+        <HomePage.InstallPackage name="@openlv/connector" type="install" />
+      </div>
+      <div className="w-full flex flex-col gap-2 md:grid grid-cols-2">
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
+      </div>
+      <div className="w-full flex gap-4 text-sm items-center text-nowrap"><span>Ready to get started?</span><div className="w-full h-[1px] bg-gray-200" /></div>
+      <HomePage.Buttons>
+        <HomePage.Button href="/getting-started" variant="accent">Get started</HomePage.Button>
+        <HomePage.Button href="https://github.com/v3xlabs/open-lavatory">GitHub</HomePage.Button>
+      </HomePage.Buttons>
+    </div>
+    <div className="w-full h-full space-y-4">
+      <TryItOut />
+      <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">
+        <div>Supported Wallets</div>
+      </div>
+    </div>
+  </div>
 </HomePage.Root>

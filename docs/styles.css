@@ -1,2 +1,8 @@
 @import "tailwindcss";
-@source "../**/*.{ts,tsx}";
+@source "../**/*.{ts,tsx,mdx}";
+
+[data-layout=landing] {
+    --vocs-content_width: calc(957px + var(--vocs-space_16) * 2);
+    --vocs-content_horizontalPadding: var(--vocs-space_16);
+    --vocs-content_verticalPadding: var(--vocs-space_32);
+}

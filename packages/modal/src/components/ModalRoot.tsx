@@ -6,22 +6,15 @@ import classNames from 'classnames';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { match, P } from 'ts-pattern';
 
-import { OPENLV_ICON_128 } from '../assets/logo';
-import { getDefaultModalPreferences, type ModalPreferences } from '../preferences';
-import type { ConnectionInfo } from '../types/connection';
+import { copyToClipboard } from '../hooks/useClipboard';
+import { useProvider } from '../hooks/useProvider';
 import { ConnectionFlow } from './ConnectionFlow';
+import { Footer } from './Footer';
 import { Header } from './Header';
 import { ModalSettings } from './ModalSettings';
 
 export interface ModalRootProps {
-    uri?: string;
-    title?: string;
-    subtitle?: string;
     onClose?: () => void;
-    initialPreferences?: ModalPreferences;
-    onPreferencesChange?: (preferences: ModalPreferences) => void;
-    continueLabel?: string;
-    connectionInfo?: ConnectionInfo;
     onStartConnection?: () => void;
     onRetry?: () => void;
     onCopy?: (uri: string) => void;
@@ -30,57 +23,9 @@ export interface ModalRootProps {
 
 type ModalView = 'start' | 'uri' | 'settings';
 
-type PreferenceKey = keyof ModalPreferences;
-
-const copyToClipboard = async (text: string): Promise<boolean> => {
-    if (!text) return false;
-
-    try {
-        if (navigator?.clipboard?.writeText) {
-            await navigator.clipboard.writeText(text);
-
-            return true;
-        }
-    } catch (error) {
-        console.warn('OpenLV modal: Clipboard API failed, falling back', error);
-    }
-
-    try {
-        const textArea = document.createElement('textarea');
-
-        textArea.value = text;
-        textArea.style.position = 'fixed';
-        textArea.style.left = '-999999px';
-        textArea.style.top = '-999999px';
-        document.body.appendChild(textArea);
-        textArea.focus();
-        textArea.select();
-        const result = document.execCommand('copy');
-
-        document.body.removeChild(textArea);
-
-        return result;
-    } catch (fallbackError) {
-        console.error('OpenLV modal: fallback copy failed', fallbackError);
-
-        return false;
-    }
-};
-
-const useModalState = (
-    uri: string,
-    initialPreferences: ModalPreferences,
-    onPreferencesChange?: (preferences: ModalPreferences) => void
-) => {
-    const [view, setView] = useState<ModalView>('start');
+const useModalState = (provider: OpenLVProvider) => {
+    const [view, setView] = useState<ModalView>(provider.getSession() ? 'uri' : 'start');
     const [copied, setCopied] = useState(false);
-    const [isQrHovering, setIsQrHovering] = useState(false);
-    const [isUrlHovering, setIsUrlHovering] = useState(false);
-    const [preferences, setPreferences] = useState<ModalPreferences>(initialPreferences);
-
-    useEffect(() => {
-        setPreferences(initialPreferences);
-    }, [initialPreferences]);
 
     useEffect(() => {
         if (!copied) return;
@@ -90,34 +35,11 @@ const useModalState = (
         return () => window.clearTimeout(timeout);
     }, [copied]);
 
-    useEffect(() => {
-        setView('uri');
-    }, [uri]);
-
-    const handlePreferenceToggle = useCallback(
-        (key: PreferenceKey) => {
-            setPreferences((current) => {
-                const next = { ...current, [key]: !current[key] };
-
-                onPreferencesChange?.(next);
-
-                return next;
-            });
-        },
-        [onPreferencesChange]
-    );
-
     return {
         view,
         setView,
         copied,
         setCopied,
-        isQrHovering,
-        setIsQrHovering,
-        isUrlHovering,
-        setIsUrlHovering,
-        preferences,
-        handlePreferenceToggle,
     };
 };
 
@@ -134,29 +56,18 @@ const useEscapeToClose = (handler: () => void) => {
 };
 
 export const ModalRoot = ({
-    uri,
-    title = 'Connect Wallet',
-    onClose,
-    initialPreferences = getDefaultModalPreferences(),
-    onPreferencesChange,
-    continueLabel = 'Save & continue',
-    connectionInfo,
+    onClose = () => {},
     onStartConnection,
     provider,
     onRetry,
     onCopy,
 }: ModalRootProps) => {
-    const { view, setView, copied, setCopied, preferences, handlePreferenceToggle } = useModalState(
-        uri || '',
-        initialPreferences,
-        onPreferencesChange
-    );
+    const { view, setView, copied, setCopied } = useModalState(provider);
+    const { uri } = useProvider(provider);
+    const title = 'Connect Wallet';
+    const continueLabel = 'Save & continue';
 
-    const safeOnClose = useCallback(() => {
-        onClose?.();
-    }, [onClose]);
-
-    useEscapeToClose(safeOnClose);
+    useEscapeToClose(onClose);
 
     const handleCopy = useCallback(async () => {
         const success = uri && (await copyToClipboard(uri));
@@ -171,15 +82,17 @@ export const ModalRoot = ({
 
     const closeSession = useCallback(async () => {
         console.log('closing session');
-        // safeOnClose();
+        onClose();
 
         await provider.closeSession();
-    }, [safeOnClose, provider]);
+    }, [onClose, provider]);
+
+    console.log('view', view);
 
     return (
         <div
             className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 p-4 font-sans text-slate-800 animate-[bg-in_0.15s_ease-in-out] backdrop-blur-sm"
-            onClick={safeOnClose}
+            onClick={onClose}
             role="presentation"
             data-openlv-modal-root
         >
@@ -192,10 +105,10 @@ export const ModalRoot = ({
             >
                 <Header
                     onBack={() =>
-                        match({ view, info: connectionInfo?.state })
+                        match({ view })
                             .with({ view: 'settings' }, () => setView('uri'))
-                            .with({ view: 'uri', info: P.not('idle') }, () => closeSession())
-                            .otherwise(() => safeOnClose())
+                            .with({ view: 'uri' }, () => closeSession())
+                            .otherwise(() => onClose())
                     }
                     onToggleSettings={() => setView(view === 'settings' ? 'uri' : 'settings')}
                     title={title}
@@ -203,12 +116,11 @@ export const ModalRoot = ({
                 />
 
                 {match(view)
-                    .with('uri', () => (
+                    .with(P.union('uri', 'start'), () => (
                         <ConnectionFlow
-                            connectionInfo={connectionInfo || { state: 'idle' }}
                             onStartConnection={handleStartConnection}
                             onRetry={onRetry || (() => {})}
-                            onClose={safeOnClose}
+                            onClose={onClose}
                             onCopy={onCopy || handleCopy}
                         />
                     ))
@@ -216,8 +128,6 @@ export const ModalRoot = ({
                         <ModalSettings
                             continueLabel={continueLabel}
                             onBack={() => setView('start')}
-                            onToggle={handlePreferenceToggle}
-                            preferences={preferences}
                         />
                     ))
                     .otherwise(() => null)}
@@ -231,23 +141,7 @@ export const ModalRoot = ({
                     📋 Connection URL copied to clipboard!
                 </div>
 
-                <div className="mt-6 flex items-center gap-2 text-gray-500">
-                    <a
-                        href="https://github.com/v3xlabs/open-lavatory"
-                        target="_blank"
-                        rel="noreferrer"
-                        className="flex items-center gap-2 text-sm font-semibold text-gray-500"
-                    >
-                        <img
-                            src={OPENLV_ICON_128}
-                            alt="Open Lavatory Logo"
-                            width={20}
-                            height={20}
-                            className="rounded"
-                        />
-                        <span>openlv</span>
-                    </a>
-                </div>
+                <Footer />
             </div>
         </div>
     );

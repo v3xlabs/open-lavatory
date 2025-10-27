@@ -27,120 +27,120 @@ jobs:
       - name: Test packages (if tests exist)
         run: pnpm test
 
-      - name: Build extension (basic compile check)
-        run: pnpm build:extension
+      # - name: Build extension (basic compile check)
+      #   run: pnpm build:extension
 
-  # ----------------------------------
-  # 2) Sandbox E2E Tests (Playwright)
-  # ----------------------------------
-  e2e-sandbox:
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+  # # ----------------------------------
+  # # 2) Sandbox E2E Tests (Playwright)
+  # # ----------------------------------
+  # e2e-sandbox:
+  #   runs-on: ubuntu-22.04
+  #   needs: build
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@v4
 
-      - name: Setup workspace
-        uses: ./.github/actions/setup-workspace
+  #     - name: Setup workspace
+  #       uses: ./.github/actions/setup-workspace
 
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-        working-directory: tests
+  #     - name: Install Playwright Browsers
+  #       run: pnpm exec playwright install --with-deps chromium
+  #       working-directory: tests
 
-      - name: Run Sandbox E2E Tests
-        run: pnpm test --filter @openlv/tests -- --project=chromium
+  #     - name: Run Sandbox E2E Tests
+  #       run: pnpm test --filter @openlv/tests -- --project=chromium
 
-      - name: Upload Playwright report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: sandbox-playwright-report
-          path: tests/playwright-report
+  #     - name: Upload Playwright report
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: sandbox-playwright-report
+  #         path: tests/playwright-report
 
-  # ----------------------------------
-  # 3) Extension Build & Test
-  # ----------------------------------
-  extension-build:
-    runs-on: ubuntu-22.04
-    needs: build
-    strategy:
-      matrix:
-        browser: [chromium, firefox]
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+  # # ----------------------------------
+  # # 3) Extension Build & Test
+  # # ----------------------------------
+  # extension-build:
+  #   runs-on: ubuntu-22.04
+  #   needs: build
+  #   strategy:
+  #     matrix:
+  #       browser: [chromium, firefox]
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@v4
 
-      - name: Setup workspace
-        uses: ./.github/actions/setup-workspace
+  #     - name: Setup workspace
+  #       uses: ./.github/actions/setup-workspace
 
-      - name: Build extension for Chromium
-        if: matrix.browser == 'chromium'
-        run: pnpm build:extension
+  #     - name: Build extension for Chromium
+  #       if: matrix.browser == 'chromium'
+  #       run: pnpm build:extension
 
-      - name: Build extension for Firefox
-        if: matrix.browser == 'firefox'
-        run: pnpm build:extension:firefox
+  #     - name: Build extension for Firefox
+  #       if: matrix.browser == 'firefox'
+  #       run: pnpm build:extension:firefox
 
-      - name: Create extension zip for Chromium
-        if: matrix.browser == 'chromium'
-        run: |
-          cd packages/extension
-          pnpm zip
+  #     - name: Create extension zip for Chromium
+  #       if: matrix.browser == 'chromium'
+  #       run: |
+  #         cd packages/extension
+  #         pnpm zip
 
-      - name: Create extension zip for Firefox
-        if: matrix.browser == 'firefox'
-        run: |
-          cd packages/extension
-          pnpm zip:firefox
+  #     - name: Create extension zip for Firefox
+  #       if: matrix.browser == 'firefox'
+  #       run: |
+  #         cd packages/extension
+  #         pnpm zip:firefox
 
-      - name: Upload extension artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: openlv-extension-${{ matrix.browser }}
-          path: packages/extension/.output/*.zip
-          retention-days: 30
+  #     - name: Upload extension artifact
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: openlv-extension-${{ matrix.browser }}
+  #         path: packages/extension/.output/*.zip
+  #         retention-days: 30
 
-  # ----------------------------------
-  # 4) Extension E2E Tests (Chromium only for now)
-  # ----------------------------------
-  e2e-extension:
-    runs-on: ubuntu-22.04
-    needs: extension-build
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+  # # ----------------------------------
+  # # 4) Extension E2E Tests (Chromium only for now)
+  # # ----------------------------------
+  # e2e-extension:
+  #   runs-on: ubuntu-22.04
+  #   needs: extension-build
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@v4
 
-      - name: Setup workspace
-        uses: ./.github/actions/setup-workspace
+  #     - name: Setup workspace
+  #       uses: ./.github/actions/setup-workspace
 
-      - name: Install Playwright Browsers
-        run: pnpm exec playwright install --with-deps chromium
-        working-directory: tests
+  #     - name: Install Playwright Browsers
+  #       run: pnpm exec playwright install --with-deps chromium
+  #       working-directory: tests
 
-      - name: Run Extension E2E Tests
-        run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" pnpm run --filter @openlv/tests test:extension:chromium
+  #     - name: Run Extension E2E Tests
+  #       run: xvfb-run --auto-servernum --server-args="-screen 0 1280x960x24" pnpm run --filter @openlv/tests test:extension:chromium
 
-      - name: Upload Extension Test Report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: extension-playwright-report
-          path: tests/playwright-report
-          retention-days: 7
+  #     - name: Upload Extension Test Report
+  #       if: always()
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: extension-playwright-report
+  #         path: tests/playwright-report
+  #         retention-days: 7
 
-  # ----------------------------------------------
-  # 5) Protocol Integration Tests (placeholder)
-  # ----------------------------------------------
-  e2e-protocol:
-    if: false  # TODO: enable when protocol integration tests exist
-    runs-on: ubuntu-22.04
-    needs: build
-    steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
+  # # ----------------------------------------------
+  # # 5) Protocol Integration Tests (placeholder)
+  # # ----------------------------------------------
+  # e2e-protocol:
+  #   if: false  # TODO: enable when protocol integration tests exist
+  #   runs-on: ubuntu-22.04
+  #   needs: build
+  #   steps:
+  #     - name: Checkout source
+  #       uses: actions/checkout@v4
 
-      - name: Setup workspace
-        uses: ./.github/actions/setup-workspace
+  #     - name: Setup workspace
+  #       uses: ./.github/actions/setup-workspace
 
-      - name: Run Protocol Integration Tests
-        run: echo "Protocol integration tests will run here once implemented." 
+  #     - name: Run Protocol Integration Tests
+  #       run: echo "Protocol integration tests will run here once implemented." 

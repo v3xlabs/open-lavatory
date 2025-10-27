@@ -11,10 +11,11 @@ Both of which have public infrastructure available for use, but also allow for s
 
 | Protocol | Description |
 |----------|-------------|
-| [MQTT](/api/signaling/mqtt) | MQTT is a lightweight messaging protocol that is used to send and receive messages between devices. |
-| [Ntfy](/api/signaling/ntfy) | Ntfy is a p2p messaging protocol that is used to send and receive messages between devices. |
-| Waku (not implemented) | Waku is a p2p messaging protocol that is used to send and receive messages between devices. |
-| Nostr (not implemented) | Nostr is a p2p messaging protocol that is used to send and receive messages between devices. |
+| [MQTT](/api/signaling/mqtt) | A lightweight pub-sub protocol used for IoT and messaging |
+| [Ntfy](/api/signaling/ntfy) | A simple http-based push notification protocol |
+| [Gun](/api/signaling/gun) | A decentralized database for data retrieval |
+| Waku (not implemented) | A p2p messaging protocol |
+| Nostr (not implemented) | A p2p social layer |
 
 :::info
 Depending on configuration the signaling layer can also be configured for transportation.
@@ -27,6 +28,6 @@ Currently the only transport protocol supported is [WebRTC](/api/transport/webrt
 
 | Protocol | Description |
 |----------|-------------|
-| [WebRTC](/api/transport/webrtc) | WebRTC is a p2p messaging protocol that is used to send and receive messages between devices. |
+| [WebRTC](/api/transport/webrtc) | A p2p messaging protocol for sending and receiving messages between devices |
 
 Ideally at some point we support direct transport layer communication through [WebHID](), [WebUSB](), [WebSerial]() and [WebBluetooth]().

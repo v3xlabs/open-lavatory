@@ -86,6 +86,10 @@ export default defineConfig({
                             text: 'Ntfy',
                             link: '/api/signaling/ntfy',
                         },
+                        {
+                            text: 'Gun',
+                            link: '/api/signaling/gun',
+                        },
                     ],
                 },
                 {

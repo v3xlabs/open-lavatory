@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createSession, type Session, SessionStateObject } from '@openlv/session';
+import type { SessionParameters } from '@openlv/core';
+import { createSession, type Session, type SessionStateObject } from '@openlv/session';
 import { ntfy } from '@openlv/signaling/ntfy';
 import EventEmitter from 'eventemitter3';
 
@@ -10,13 +11,13 @@ export type OpenLVProviderParameters = {
     foo: 'bar';
 };
 
-export type ProviderStatus = 'disconnected' | 'connecting' | 'connected' | 'error';
+export type ProviderStatus = 'disconnected' | 'creating' | 'connecting' | 'connected' | 'error';
 
 export type ProviderState = { status: ProviderStatus; session?: SessionStateObject };
 
 export type OpenLVProvider = {
     emitter: EventEmitter<ProviderEvents>;
-    createSession: () => Promise<Session>;
+    createSession: (parameters?: SessionParameters) => Promise<Session>;
     getSession: () => Session | undefined;
     getState: () => ProviderState;
     closeSession: () => Promise<void>;
@@ -33,9 +34,12 @@ export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVPro
     };
 
     return {
-        createSession: async () => {
+        createSession: async (
+            parameters: SessionParameters = { p: 'ntfy', s: 'https://ntfy.sh/' }
+        ) => {
+            updateStatus('creating');
+            session = await createSession(parameters, ntfy);
             updateStatus('connecting');
-            session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
 
             log('session created');
             await session.connect();

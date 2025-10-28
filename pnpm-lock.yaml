@@ -209,6 +209,15 @@ importers:
 
   examples/sandbox:
     dependencies:
+      '@openlv/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+      '@openlv/provider':
+        specifier: workspace:*
+        version: link:../../packages/provider
+      '@openlv/session':
+        specifier: workspace:*
+        version: link:../../packages/session
       '@openlv/transport':
         specifier: workspace:*
         version: link:../../packages/transport
@@ -554,6 +563,9 @@ importers:
 
   packages/provider:
     dependencies:
+      '@openlv/core':
+        specifier: workspace:*
+        version: link:../core
       '@openlv/session':
         specifier: workspace:*
         version: link:../session

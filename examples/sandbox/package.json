@@ -14,6 +14,9 @@
   },
   "dependencies": {
     "@openlv/transport": "workspace:*",
+    "@openlv/session": "workspace:*",
+    "@openlv/provider": "workspace:*",
+    "@openlv/core": "workspace:*",
     "@tailwindcss/postcss": "^4.1.10",
     "@tanstack/router-plugin": "^1.121.9",
     "@types/react": "^19.1.8",

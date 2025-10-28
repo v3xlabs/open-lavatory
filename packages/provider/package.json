@@ -28,6 +28,7 @@
     "@openlv/session": "workspace:*",
     "@openlv/signaling": "workspace:*",
     "@openlv/transport": "workspace:*",
+    "@openlv/core": "workspace:*",
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {

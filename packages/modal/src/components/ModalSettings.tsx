@@ -33,7 +33,7 @@ export const ModalSettings = ({ onBack, continueLabel }: ModalSettingsProps) => 
     );
 
     return (
-        <div className="flex flex-col gap-4 text-left">
+        <div className="flex flex-col gap-4 px-2 text-left">
             <div>
                 <h3 className="font-semibold text-gray-900 text-lg">Connection preferences</h3>
                 <p className="mt-1 text-gray-500 text-sm">

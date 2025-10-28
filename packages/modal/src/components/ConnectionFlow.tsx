@@ -55,7 +55,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
                     </div>
                 ))
                 .with({ state: 'handshake-open' }, () => (
-                    <div className="flex flex-col items-center gap-4">
+                    <div className="flex flex-col items-center gap-4 px-2">
                         <div className="w-full space-y-4 rounded-md border border-neutral-200 bg-neutral-100 p-4">
                             {uri && (
                                 <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-4">

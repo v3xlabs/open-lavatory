@@ -35,7 +35,7 @@ const FooterStatus = () => {
     if (!data) return <></>;
 
     return (
-        <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-gray-100">
+        <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-neutral-200">
             <div className="text-gray-900 text-xs opacity-0 transition-opacity duration-300 group-hover:opacity-100">
                 {data.text}
             </div>
@@ -45,12 +45,12 @@ const FooterStatus = () => {
 };
 
 export const Footer = () => (
-    <div className="mt-6 flex items-center justify-between gap-2 text-gray-500">
+    <div className="mt-2 flex items-end justify-between gap-2 px-1 text-gray-500">
         <a
             href="https://github.com/v3xlabs/open-lavatory"
             target="_blank"
             rel="noreferrer"
-            className="flex items-center gap-2 font-semibold text-gray-500 text-sm"
+            className="flex items-center gap-2 p-1 font-semibold text-gray-500 text-sm"
         >
             <img
                 src={OPENLV_ICON_128}

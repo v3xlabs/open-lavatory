@@ -8,20 +8,40 @@ const FooterStatus = () => {
     const { status: sessionStatus } = useSession();
     const { status: providerStatus } = useProvider();
 
-    return match(providerStatus)
-        .with('disconnected', () => '')
+    const data = match(providerStatus)
+        .with('disconnected', () => undefined)
         .with(P.union('connected', 'connecting', 'error'), () =>
             match(sessionStatus)
-                .with({ status: 'disconnected' }, () => '🫲')
+                .with({ status: 'disconnected' }, () => ({ icon: '🫲', text: 'Disconnected' }))
                 .with({ status: 'signaling' }, (x) =>
                     match(x.signaling)
-                        .with({ state: 'handshake-open' }, () => '👋')
-                        .with({ state: 'handshake-closed' }, () => '🤝')
-                        .otherwise(() => 'unknown-signaling ' + x.signaling?.state)
+                        .with({ state: 'handshake-open' }, () => ({
+                            icon: '👋',
+                            text: 'Handshake Open',
+                        }))
+                        .with({ state: 'handshake-closed' }, () => ({
+                            icon: '🤝',
+                            text: 'Handshake Closed',
+                        }))
+                        .otherwise(() => ({ icon: '❓', text: 'Unknown ' + x.signaling?.state }))
                 )
-                .otherwise((status) => 'unknown ' + JSON.stringify(status))
+                .otherwise((status) => ({ icon: '❓', text: 'Unknown ' + JSON.stringify(status) }))
         )
-        .otherwise(() => 'unknown provider status ' + JSON.stringify(providerStatus));
+        .otherwise(() => ({
+            icon: '❓',
+            text: 'Unknown provider status ' + JSON.stringify(providerStatus),
+        }));
+
+    if (!data) return <></>;
+
+    return (
+        <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-gray-100">
+            <div className="text-gray-900 text-xs opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                {data.text}
+            </div>
+            <div>{data.icon}</div>
+        </div>
+    );
 };
 
 export const Footer = () => (

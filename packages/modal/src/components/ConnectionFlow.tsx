@@ -19,7 +19,7 @@ const LoadingSpinner = () => (
 );
 
 export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
-    const { uri, status: sessionStatus } = useSession();
+    const { uri, status: sessionStatus = { status: 'created' } } = useSession();
     const connectedAccount = '';
 
     const handleCopy = useCallback(() => {

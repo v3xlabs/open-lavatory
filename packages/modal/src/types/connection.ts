@@ -17,14 +17,11 @@ export interface ConnectionInfo {
 
 export interface ModalConnectionInterface {
     // Methods the connector can call on the modal
-    updateConnectionState: (info: ConnectionInfo) => void;
     showModal: () => void;
     hideModal: () => void;
 
     // Events the modal can emit to the connector
-    onStartConnection: () => void;
-    onClose: () => void;
-    onRetry: () => void;
+    onClose?: () => void;
 }
 
 export interface ConnectorModalInterface {

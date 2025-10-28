@@ -22,11 +22,14 @@ export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVPro
 
     return {
         createSession: async () => {
+            emitter.emit('session_started');
             session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
 
+            emitter.emit('state_change', session.getState());
             console.log('session created');
             await session.connect();
             console.log('session connected');
+            emitter.emit('state_change', session.getState());
 
             return session;
         },
@@ -34,6 +37,7 @@ export const createProvider = (_parameters: OpenLVProviderParameters): OpenLVPro
         closeSession: async () => {
             await session?.close();
             session = undefined;
+            emitter.emit('state_change', undefined);
             emitter.emit('disconnect');
         },
         emitter,

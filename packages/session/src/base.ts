@@ -17,23 +17,32 @@ import { mqtt } from '@openlv/signaling/mqtt';
 import { ntfy } from '@openlv/signaling/ntfy';
 import { EventEmitter } from 'eventemitter3';
 
+import type { SessionEvents } from './events.js';
 import type { SessionMessage } from './messages/index.js';
 
 export type SessionState = 'create' | 'handshake' | 'signaling' | 'encrypted' | 'connected';
+export type SessionStateObject = {
+    state: SessionState;
+    signaling?: {
+        state: SignalingMode;
+    };
+};
 
 export type Session = {
-    getState(): { state: SessionState; signaling?: { state: SignalingMode } };
+    getState(): SessionStateObject;
     getHandshakeParameters(): SessionHandshakeParameters;
     connect(): Promise<void>;
     close(): Promise<void>;
     // Send with response
     send(message: object, timeout?: number): Promise<unknown>;
+    emitter: EventEmitter<SessionEvents>;
 };
 
 export const createSession = async (
     initParameters: SessionParameters,
     signalLayer: CreateSignalLayerFn
 ): Promise<Session> => {
+    const emitter = new EventEmitter<SessionEvents>();
     const messages = new EventEmitter<{ message: SessionMessage }>();
     const sessionId =
         'sessionId' in initParameters ? initParameters.sessionId : generateSessionId();
@@ -86,6 +95,11 @@ export const createSession = async (
             relyingPublicKey = await parseEncryptionKey(rpKey);
         },
         isHost,
+    });
+
+    signal.emitter.on('state_change', (mode) => {
+        // todo: fix later
+        emitter.emit('state_change', { state, signaling: { state: mode } });
     });
 
     // let transport: TransportLayer | undefined;
@@ -155,6 +169,7 @@ export const createSession = async (
                 }),
             ]);
         },
+        emitter,
     };
 };
 

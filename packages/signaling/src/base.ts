@@ -3,6 +3,7 @@ import { EventEmitter } from 'eventemitter3';
 import { match } from 'ts-pattern';
 import type { MaybePromise } from 'viem';
 
+import { SignalingEvents } from './events.js';
 import type { SignalMessage } from './messages/index.js';
 
 export type SignalBaseProperties = {
@@ -50,6 +51,7 @@ export type SignalingLayer = (properties: SignalingProperties) => Promise<{
     getState: () => {
         state: SignalingMode;
     };
+    emitter: EventEmitter<SignalingEvents>;
 }>;
 
 export const XR_PREFIX = 'x';
@@ -71,6 +73,7 @@ export type SignalingMode =
 
 export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer => {
     // shared signaling layer logic goes here
+    const emitter = new EventEmitter<SignalingEvents>();
 
     return async ({
         canEncrypt,
@@ -85,6 +88,10 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
         const handshakeKey = k ? k : undefined;
         let mode: SignalingMode = 'disconnected';
         const subscribeHandler = new EventEmitter<{ message: object }>();
+        const setMode = (_mode: SignalingMode) => {
+            mode = _mode;
+            emitter.emit('state_change', _mode);
+        };
 
         const send = async (
             method: 'handshake' | 'encrypted',
@@ -133,7 +140,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                         .with({ type: 'flash' }, async () => {
                             if (!isHost) return;
 
-                            mode = 'handshaking';
+                            setMode('handshaking');
                             await send('handshake', 'c', {
                                 type: 'pubkey',
                                 payload: {
@@ -146,7 +153,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                             if (isHost) return;
 
                             await rpDiscovered(payload.publicKey);
-                            mode = 'handshake-closed';
+                            setMode('handshake-closed');
 
                             return await send('encrypted', 'h', {
                                 type: 'pubkey',
@@ -169,7 +176,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                             if (!isHost) return;
 
                             await rpDiscovered(payload.publicKey);
-                            mode = 'xr-encrypted';
+                            setMode('xr-encrypted');
 
                             return await send('encrypted', 'c', {
                                 type: 'ack',
@@ -180,7 +187,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                         .with({ type: 'ack' }, async () => {
                             if (isHost) return;
 
-                            mode = 'xr-encrypted';
+                            setMode('xr-encrypted');
                         })
                         .with({ type: 'data' }, async () =>
                             subscribeHandler.emit('message', msg.payload)
@@ -197,12 +204,12 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
         return {
             type: init.type,
             async setup() {
-                mode = 'connecting';
+                setMode('connecting');
                 await init.setup();
 
                 if (!canEncrypt()) {
                     if (!isHost) {
-                        mode = 'handshaking';
+                        setMode('handshaking');
                         await send('handshake', 'h', {
                             type: 'flash',
                             payload: {},
@@ -211,7 +218,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                     }
 
                     if (isHost) {
-                        mode = 'handshake-open';
+                        setMode('handshake-open');
                     }
                 }
 
@@ -246,6 +253,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
             getState() {
                 return { state: mode };
             },
+            emitter,
         };
     };
 };

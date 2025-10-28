@@ -40,7 +40,8 @@
   "dependencies": {
     "@openlv/core": "workspace:*",
     "@openlv/provider": "workspace:*",
-    "classnames": "^2.5.1"
+    "classnames": "^2.5.1",
+    "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",

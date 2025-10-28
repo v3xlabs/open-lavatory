@@ -4,10 +4,10 @@ import { useCallback } from 'preact/hooks';
 import QRCode from 'qrcode-generator';
 import { match } from 'ts-pattern';
 
-import type { ConnectionInfo } from '../types/connection';
+import { useSession } from '../hooks/useSession';
+import { UnknownState } from './UnknownState';
 
 interface ConnectionFlowProps {
-    connectionInfo: ConnectionInfo;
     onStartConnection: () => void;
     onRetry: () => void;
     onClose: () => void;
@@ -20,14 +20,14 @@ const LoadingSpinner = () => (
     </div>
 );
 
-const ConnectionStatus = ({
-    connectionInfo,
+export const ConnectionFlow = ({
     onStartConnection,
     onRetry,
     onClose,
     onCopy,
 }: ConnectionFlowProps) => {
-    const { state, uri, error, connectedAccount } = connectionInfo;
+    const { uri, state } = useSession();
+    const connectedAccount = '';
 
     const handleCopy = useCallback(() => {
         if (uri) {
@@ -44,7 +44,7 @@ const ConnectionStatus = ({
         return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
     }, []);
 
-    return match({ state })
+    return match({ state: state?.state })
         .with({ state: 'idle' }, () => (
             <div className="flex flex-col items-center gap-4 p-6">
                 <div className="text-center">
@@ -177,7 +177,5 @@ const ConnectionStatus = ({
                 </button>
             </div>
         ))
-        .otherwise(() => null);
+        .otherwise(() => <UnknownState state={state} />);
 };
-
-export const ConnectionFlow = ConnectionStatus;

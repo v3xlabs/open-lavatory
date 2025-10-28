@@ -7,8 +7,6 @@ export { ModalRoot } from './components/ModalRoot';
 export { useConnectionState } from './hooks/useConnectionState';
 export type { OpenLVModalElementProps } from './openlv-modal-element';
 export { OpenLVModalElement } from './openlv-modal-element';
-export type { ModalPreferences } from './preferences';
-export { getDefaultModalPreferences } from './preferences';
 export type {
     ConnectionInfo,
     ConnectorModalInterface,
@@ -18,6 +16,7 @@ import { encodeConnectionURL } from '@openlv/core';
 
 import type { OpenLVProvider } from '../../provider/src';
 import OpenLVModalElementDefault from './openlv-modal-element';
+import { log } from './utils/log';
 export { OPENLV_ICON_128 } from './assets/logo';
 
 export const registerOpenLVModal = (tagName = 'openlv-modal') => {
@@ -55,24 +54,24 @@ export const triggerOpenModal = (provider: OpenLVProvider) => {
         document.body.appendChild(x);
         x.showModal();
         x.onClose = () => {
-            console.log('modal closed');
+            log('modal closed');
             x.remove();
         };
-        x.onStartConnection = async () => {
-            x.updateConnectionState({ state: 'initializing' });
+        // x.onStartConnection = async () => {
+        //     x.updateConnectionState({ state: 'initializing' });
 
-            console.log('modal start connection');
-            const session = await provider.createSession();
+        //     log('modal start connection');
+        //     const session = await provider.createSession();
 
-            console.log('session state:', session.getState());
-            const params = session.getHandshakeParameters();
-            const url = encodeConnectionURL(params);
+        //     log('session state:', session.getState());
+        //     const params = session.getHandshakeParameters();
+        //     const url = encodeConnectionURL(params);
 
-            console.log('url:', url);
+        //     log('url:', url);
 
-            x.setProps(url);
+        //     x.setProps(url);
 
-            x.updateConnectionState({ state: 'qr-ready', uri: url });
-        };
+        //     x.updateConnectionState({ state: 'qr-ready', uri: url });
+        // };
     }
 };

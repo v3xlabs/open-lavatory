@@ -511,6 +511,9 @@ importers:
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.10.2

@@ -1,30 +1,31 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
 
-import type { OpenLVProvider } from '@openlv/provider';
 import classNames from 'classnames';
 import { useCallback, useEffect, useState } from 'preact/hooks';
 import { match, P } from 'ts-pattern';
 
 import { copyToClipboard } from '../hooks/useClipboard';
 import { useProvider } from '../hooks/useProvider';
+import { useSession } from '../hooks/useSession';
+import { log } from '../utils/log';
 import { ConnectionFlow } from './ConnectionFlow';
 import { Footer } from './Footer';
 import { Header } from './Header';
 import { ModalSettings } from './ModalSettings';
+import { UnknownState } from './UnknownState';
 
 export interface ModalRootProps {
     onClose?: () => void;
     onStartConnection?: () => void;
     onRetry?: () => void;
     onCopy?: (uri: string) => void;
-    provider: OpenLVProvider;
 }
 
 type ModalView = 'start' | 'uri' | 'settings';
 
-const useModalState = (provider: OpenLVProvider) => {
-    const [view, setView] = useState<ModalView>(provider.getSession() ? 'uri' : 'start');
+const useModalState = () => {
+    const [view, setView] = useState<ModalView>('start');
     const [copied, setCopied] = useState(false);
 
     useEffect(() => {
@@ -58,12 +59,12 @@ const useEscapeToClose = (handler: () => void) => {
 export const ModalRoot = ({
     onClose = () => {},
     onStartConnection,
-    provider,
     onRetry,
     onCopy,
 }: ModalRootProps) => {
-    const { view, setView, copied, setCopied } = useModalState(provider);
-    const { uri } = useProvider(provider);
+    const { view, setView, copied, setCopied } = useModalState();
+    const { uri } = useSession();
+    const provider = useProvider();
     const title = 'Connect Wallet';
     const continueLabel = 'Save & continue';
 
@@ -81,13 +82,13 @@ export const ModalRoot = ({
     }, [onStartConnection]);
 
     const closeSession = useCallback(async () => {
-        console.log('closing session');
+        log('closing session');
         onClose();
 
         await provider.closeSession();
-    }, [onClose, provider]);
+    }, [onClose]);
 
-    console.log('view', view);
+    log('view', view);
 
     return (
         <div
@@ -122,6 +123,7 @@ export const ModalRoot = ({
                             onRetry={onRetry || (() => {})}
                             onClose={onClose}
                             onCopy={onCopy || handleCopy}
+                            provider={provider}
                         />
                     ))
                     .with('settings', () => (
@@ -130,7 +132,9 @@ export const ModalRoot = ({
                             onBack={() => setView('start')}
                         />
                     ))
-                    .otherwise(() => null)}
+                    .otherwise(() => (
+                        <UnknownState state={view} />
+                    ))}
 
                 <div
                     className={classNames(

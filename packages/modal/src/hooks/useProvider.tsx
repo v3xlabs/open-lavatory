@@ -30,14 +30,16 @@ export const ModalProvider: FC<ModalProviderProps> = ({ provider, onClose }) => 
 export const useProvider = () => {
     const context = useContext(ProviderContext);
 
-    if (!context.provider) throw new Error('Provider not found');
-
     const { provider } = context;
-    const [status, setStatus] = useState<ProviderStatus>(provider.getState().status);
+    const [status, setStatus] = useState<ProviderStatus>(
+        provider?.getState().status || 'disconnected'
+    );
 
-    useEventEmitter(provider.emitter, 'status_change', (newStatus: ProviderStatus) => {
+    useEventEmitter(provider?.emitter, 'status_change', (newStatus: ProviderStatus) => {
         setStatus(newStatus);
     });
+
+    if (!context.provider) throw new Error('Provider not found');
 
     return { provider, status };
 };

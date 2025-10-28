@@ -11,7 +11,7 @@ import { useSession } from '../hooks/useSession';
 import { log } from '../utils/log';
 import { ConnectionFlow } from './ConnectionFlow';
 import { Disconnected } from './disconnected/Disconnected';
-import { Footer } from './Footer';
+import { Footer } from './footer/Footer';
 import { Header } from './Header';
 import { ModalSettings } from './ModalSettings';
 import { UnknownState } from './UnknownState';
@@ -19,7 +19,6 @@ import { UnknownState } from './UnknownState';
 export interface ModalRootProps {
     onClose?: () => void;
     onStartConnection?: () => void;
-    onRetry?: () => void;
     onCopy?: (uri: string) => void;
 }
 
@@ -57,7 +56,7 @@ const useEscapeToClose = (handler: () => void) => {
     }, [handler]);
 };
 
-export const ModalRoot = ({ onClose = () => {}, onRetry, onCopy }: ModalRootProps) => {
+export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     const { view, setView, copied, setCopied } = useModalState();
     const { uri } = useSession();
     const { status } = useProvider();

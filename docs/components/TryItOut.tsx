@@ -30,13 +30,13 @@ const Connected = () => {
     const { address } = useAccount();
 
     return (
-        <div className="bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 border border-[var(--vocs-color_codeInlineBorder)] flex items-center justify-between">
+        <div className="flex items-center justify-between rounded-lg border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
             <div>Connected to {trimAddress(address)}</div>
             <button
                 onClick={() => {
                     disconnect();
                 }}
-                className="border border-[var(--vocs-color_codeInlineBorder)] !bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-1"
+                className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
             >
                 Disconnect
             </button>
@@ -49,8 +49,8 @@ const Connectors = () => {
 
     return (
         <>
-            <div className="space-y-2 p-2 mt-4">
-                <ul className="space-y-2 mx-auto w-full max-w-xs">
+            <div className="mt-4 space-y-2 p-2">
+                <ul className="mx-auto w-full max-w-xs space-y-2">
                     {connectors.map((connector) => (
                         <li key={connector.id} className="">
                             <button
@@ -58,15 +58,15 @@ const Connectors = () => {
                                     connect({ connector: connector });
                                 }}
                                 className={classNames(
-                                    '!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg px-4 py-2 text-sm w-full flex justify-between items-center',
+                                    '!bg-[var(--vocs-color_codeBlockBackground)] flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm',
                                     connector.type === 'openLv'
-                                        ? 'border border-[var(--vocs-color_codeInlineText)] hover:!bg-[var(--vocs-color_backgroundAccent)]/10'
+                                        ? 'hover:!bg-[var(--vocs-color_backgroundAccent)]/10 border border-[var(--vocs-color_codeInlineText)]'
                                         : 'hover:!bg-[var(--vocs-color_codeHighlightBackground)]'
                                 )}
                             >
                                 <span
                                     className={classNames(
-                                        'text-sm font-bold',
+                                        'font-bold text-sm',
                                         connector.type === 'openLv' &&
                                             'text-[var(--vocs-color_codeInlineText)]'
                                     )}
@@ -77,7 +77,7 @@ const Connectors = () => {
                                     <img
                                         src={connector.icon}
                                         alt={`${connector.name} icon`}
-                                        className="w-10 h-10 rounded-md"
+                                        className="h-10 w-10 rounded-md"
                                     />
                                 )}
                             </button>
@@ -85,7 +85,7 @@ const Connectors = () => {
                     ))}
                 </ul>
             </div>
-            <div className="w-full bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2 border-t border-[var(--vocs-color_codeInlineBorder)] rounded-b-md">
+            <div className="w-full rounded-b-md border-[var(--vocs-color_codeInlineBorder)] border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
                 <div>The above is a sample wagmi snippet</div>
             </div>
         </>
@@ -120,7 +120,7 @@ export const TryItOut = () => {
 
     return (
         <div
-            className="border border-[var(--vocs-color_codeInlineBorder)] rounded-lg"
+            className="rounded-lg border border-[var(--vocs-color_codeInlineBorder)]"
             suppressHydrationWarning
         >
             {inBrowser && <Outter />}

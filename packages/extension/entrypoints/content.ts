@@ -111,7 +111,6 @@ function setupCommunicationBridge() {
                     break;
 
                 default:
-                    console.warn('Unknown message type from provider:', message.type);
                     response = { success: false, error: 'Unknown message type' };
             }
 
@@ -125,7 +124,6 @@ function setupCommunicationBridge() {
                 '*'
             );
         } catch (error) {
-            console.error('Content script error:', error);
 
             // Send error response back to injected provider
             window.postMessage(

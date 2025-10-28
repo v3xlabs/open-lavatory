@@ -1,9 +1,10 @@
-import type { OpenLVProvider } from '@openlv/provider';
+import type { OpenLVProvider, ProviderStatus } from '@openlv/provider';
 import { createContext } from 'preact';
 import type { FC } from 'preact/compat';
-import { useContext } from 'preact/hooks';
+import { useContext, useState } from 'preact/hooks';
 
 import { ModalRoot } from '../components/ModalRoot';
+import { useEventEmitter } from './useEventEmitter';
 
 export type ProviderContextO = {
     provider: OpenLVProvider | undefined;
@@ -31,7 +32,14 @@ export const useProvider = () => {
 
     if (!context.provider) throw new Error('Provider not found');
 
-    return context.provider;
+    const { provider } = context;
+    const [status, setStatus] = useState<ProviderStatus>(provider.getState().status);
+
+    useEventEmitter(provider.emitter, 'status_change', (newStatus: ProviderStatus) => {
+        setStatus(newStatus);
+    });
+
+    return { provider, status };
 };
 
 // export const useProvider = (provider: OpenLVProvider) => {

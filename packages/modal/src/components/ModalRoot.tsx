@@ -10,6 +10,7 @@ import { useProvider } from '../hooks/useProvider';
 import { useSession } from '../hooks/useSession';
 import { log } from '../utils/log';
 import { ConnectionFlow } from './ConnectionFlow';
+import { Disconnected } from './disconnected/Disconnected';
 import { Footer } from './Footer';
 import { Header } from './Header';
 import { ModalSettings } from './ModalSettings';
@@ -22,7 +23,7 @@ export interface ModalRootProps {
     onCopy?: (uri: string) => void;
 }
 
-type ModalView = 'start' | 'uri' | 'settings';
+type ModalView = 'start' | 'settings';
 
 const useModalState = () => {
     const [view, setView] = useState<ModalView>('start');
@@ -56,15 +57,10 @@ const useEscapeToClose = (handler: () => void) => {
     }, [handler]);
 };
 
-export const ModalRoot = ({
-    onClose = () => {},
-    onStartConnection,
-    onRetry,
-    onCopy,
-}: ModalRootProps) => {
+export const ModalRoot = ({ onClose = () => {}, onRetry, onCopy }: ModalRootProps) => {
     const { view, setView, copied, setCopied } = useModalState();
     const { uri } = useSession();
-    const provider = useProvider();
+    const { status } = useProvider();
     const title = 'Connect Wallet';
     const continueLabel = 'Save & continue';
 
@@ -76,69 +72,52 @@ export const ModalRoot = ({
         if (success) setCopied(true);
     }, [uri, setCopied]);
 
-    const handleStartConnection = useCallback(() => {
-        // This will be handled by the connector - don't close the modal
-        onStartConnection?.();
-    }, [onStartConnection]);
-
-    const closeSession = useCallback(async () => {
-        log('closing session');
-        onClose();
-
-        await provider.closeSession();
-    }, [onClose]);
-
     log('view', view);
 
     return (
         <div
-            className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/30 p-4 font-sans text-slate-800 animate-[bg-in_0.15s_ease-in-out] backdrop-blur-sm"
+            className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-center justify-center bg-black/30 p-4 font-sans text-slate-800 backdrop-blur-sm"
             onClick={onClose}
             role="presentation"
             data-openlv-modal-root
         >
             <div
-                className="relative w-full max-w-[400px] rounded-2xl bg-gray-50 p-4 text-center space-y-4 animate-[fade-in_0.15s_ease-in-out]"
+                className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] space-y-4 rounded-2xl bg-gray-50 p-4 text-center"
                 role="dialog"
                 aria-modal="true"
                 aria-label={title}
                 onClick={(event) => event.stopPropagation()}
             >
                 <Header
-                    onBack={() =>
-                        match({ view })
-                            .with({ view: 'settings' }, () => setView('uri'))
-                            .with({ view: 'uri' }, () => closeSession())
-                            .otherwise(() => onClose())
-                    }
-                    onToggleSettings={() => setView(view === 'settings' ? 'uri' : 'settings')}
+                    setView={setView}
+                    onToggleSettings={() => setView(view === 'settings' ? 'start' : 'settings')}
                     title={title}
                     view={view}
+                    onClose={onClose}
                 />
 
-                {match(view)
-                    .with(P.union('uri', 'start'), () => (
-                        <ConnectionFlow
-                            onStartConnection={handleStartConnection}
-                            onRetry={onRetry || (() => {})}
-                            onClose={onClose}
-                            onCopy={onCopy || handleCopy}
-                            provider={provider}
-                        />
-                    ))
-                    .with('settings', () => (
-                        <ModalSettings
-                            continueLabel={continueLabel}
-                            onBack={() => setView('start')}
-                        />
+                {match(status)
+                    .with('disconnected', () =>
+                        match(view)
+                            .with('start', () => <Disconnected />)
+                            .with('settings', () => (
+                                <ModalSettings
+                                    continueLabel={continueLabel}
+                                    onBack={() => setView('start')}
+                                />
+                            ))
+                            .otherwise(() => <UnknownState state={view} />)
+                    )
+                    .with(P.union('connecting', 'connected'), () => (
+                        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
                     ))
                     .otherwise(() => (
-                        <UnknownState state={view} />
+                        <UnknownState state={'unknown status'} />
                     ))}
 
                 <div
                     className={classNames(
-                        'absolute right-5 top-5 rounded-lg bg-blue-500 px-4 py-3 text-sm font-medium text-white transition-all',
+                        'absolute top-5 right-5 rounded-lg bg-blue-500 px-4 py-3 font-medium text-sm text-white transition-all',
                         copied ? 'translate-x-0 opacity-100' : 'translate-x-full opacity-0'
                     )}
                 >

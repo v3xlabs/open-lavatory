@@ -5,7 +5,7 @@ const { createProvider } = require("@openlv/provider");
 
 (() => {
   // Prevent multiple injections
-  if (window.openlv && window.openlv.isOpenLV) {
+  if (window.openlv?.isOpenLV) {
     return;
   }
 

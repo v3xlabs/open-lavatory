@@ -20,9 +20,9 @@ import { EventEmitter } from 'eventemitter3';
 import type { SessionEvents } from './events.js';
 import type { SessionMessage } from './messages/index.js';
 
-export type SessionState = 'create' | 'handshake' | 'signaling' | 'encrypted' | 'connected';
+export type SessionStatus = 'created' | 'ready' | 'signaling' | 'connected' | 'disconnected';
 export type SessionStateObject = {
-    state: SessionState;
+    status: SessionStatus;
     signaling?: {
         state: SignalingMode;
     };
@@ -56,7 +56,7 @@ export const createSession = async (
         'h' in initParameters ? initParameters.h : undefined,
         encryptionKey
     );
-    const state: SessionState = 'handshake';
+    let status: SessionStatus = 'created';
     const protocol = initParameters.p;
     const server = initParameters.s;
 
@@ -74,7 +74,7 @@ export const createSession = async (
                 throw new Error('Relying party public key not found');
             }
 
-            console.log('encrypting to ' + relyingPublicKey.toString());
+            console.log(`encrypting to ${relyingPublicKey.toString()}`);
 
             return await relyingPublicKey.encrypt(message);
         },
@@ -90,22 +90,27 @@ export const createSession = async (
         async rpDiscovered(rpKey) {
             const role = isHost ? 'host' : 'client';
 
-            console.log('rpKey discovered by ' + role, rpKey);
+            console.log(`rpKey discovered by ${role}`, rpKey);
 
             relyingPublicKey = await parseEncryptionKey(rpKey);
         },
         isHost,
     });
 
-    signal.emitter.on('state_change', (mode) => {
-        // todo: fix later
-        emitter.emit('state_change', { state, signaling: { state: mode } });
+    const updateStatus = (newStatus: SessionStatus) => {
+        status = newStatus;
+        emitter.emit('state_change', { status, signaling: signal.getState() });
+    };
+
+    signal?.emitter.on('state_change', () => {
+        updateStatus(status);
     });
 
     // let transport: TransportLayer | undefined;
 
     return {
         connect: async () => {
+            updateStatus('signaling');
             console.log('connecting to session, isHost:', isHost);
             // TODO: implement
             console.log('connecting to session');
@@ -123,10 +128,12 @@ export const createSession = async (
             });
         },
         async close() {
+            console.log('session teardown');
             await signal?.teardown();
+            updateStatus('disconnected');
         },
         getState() {
-            return { state, signaling: signal.getState() };
+            return { status, signaling: signal.getState() };
         },
         getHandshakeParameters() {
             return {

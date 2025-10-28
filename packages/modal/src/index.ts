@@ -12,7 +12,6 @@ export type {
     ConnectorModalInterface,
     ModalConnectionInterface,
 } from './types/connection';
-import { encodeConnectionURL } from '@openlv/core';
 
 import type { OpenLVProvider } from '../../provider/src';
 import OpenLVModalElementDefault from './openlv-modal-element';

@@ -33,8 +33,7 @@ const Body = ({
 }) => {
     if (!isConnecting && !uri) {
         return (
-            <>
-                <form
+            <form
                     onSubmit={(e) => {
                         e.preventDefault();
 
@@ -55,7 +54,6 @@ const Body = ({
                         <input name="uri" className={styles.input} placeholder="openlv://<uuid>" />
                     )}
                 </form>
-            </>
         );
     }
 

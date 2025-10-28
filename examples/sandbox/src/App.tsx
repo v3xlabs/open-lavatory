@@ -373,8 +373,7 @@ const App = () => {
             startStatusMonitoring();
 
             addDebugMessage(`Session initialized with ${accounts.length} wallet accounts`);
-        } catch (error) {
-            console.error('Failed to initialize session:', error);
+        } catch (_error) {
             setMessages((prev) => [
                 ...prev,
                 `[${new Date().toLocaleTimeString()}] Error: Failed to initialize session`,
@@ -425,8 +424,7 @@ const App = () => {
             addDebugMessage(
                 `Connecting from ${browserInfo} browser with ${accounts.length} wallet accounts`
             );
-        } catch (error) {
-            console.error('Failed to connect to session:', error);
+        } catch (_error) {
             setMessages((prev) => [
                 ...prev,
                 `[${new Date().toLocaleTimeString()}] Error: Failed to connect to session`,
@@ -485,7 +483,6 @@ const App = () => {
                     await initSession();
                 }
             } catch (error) {
-                console.error('Retry failed:', error);
                 setMessages((prev) => [
                     ...prev,
                     `[${new Date().toLocaleTimeString()}] Retry failed: ${error instanceof Error ? error.message : 'Unknown error'}`,
@@ -525,12 +522,12 @@ const App = () => {
 
     return (
         <div className="min-h-screen bg-gray-100 p-4">
-            <div className="max-w-4xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
-                    <h1 className="text-3xl font-bold">OpenLV Wallet Demo</h1>
+            <div className="mx-auto max-w-4xl">
+                <div className="mb-8 flex items-center justify-between">
+                    <h1 className="font-bold text-3xl">OpenLV Wallet Demo</h1>
                     <button
                         onClick={() => setDebugMode(!debugMode)}
-                        className={`px-3 py-1 rounded text-sm ${
+                        className={`rounded px-3 py-1 text-sm ${
                             debugMode ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'
                         }`}
                     >
@@ -539,16 +536,16 @@ const App = () => {
                 </div>
 
                 {/* Wallet Status */}
-                <div className="bg-white rounded-lg p-4 mb-6 shadow">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg font-semibold">Wallet Status:</span>
+                <div className="mb-6 rounded-lg bg-white p-4 shadow">
+                    <div className="mb-2 flex items-center justify-between">
+                        <span className="font-semibold text-lg">Wallet Status:</span>
                         <div className="flex items-center gap-2">
-                            <span className="text-sm font-medium">
+                            <span className="font-medium text-sm">
                                 {accounts.length} account{accounts.length !== 1 ? 's' : ''}
                             </span>
                             <button
                                 onClick={handleAddAccount}
-                                className="bg-green-500 text-white px-2 py-1 rounded text-xs hover:bg-green-600"
+                                className="rounded bg-green-500 px-2 py-1 text-white text-xs hover:bg-green-600"
                             >
                                 + Add Account
                             </button>
@@ -556,15 +553,15 @@ const App = () => {
                     </div>
 
                     {accounts.length > 0 && (
-                        <div className="text-sm space-y-1">
+                        <div className="space-y-1 text-sm">
                             {accounts.map((account, index) => (
-                                <div key={index} className="bg-gray-50 p-2 rounded">
+                                <div key={index} className="rounded bg-gray-50 p-2">
                                     <div className="font-mono text-xs">
                                         <span className="text-gray-600">Account {index + 1}:</span>{' '}
                                         {account.address}
                                     </div>
                                     {debugMode && (
-                                        <div className="font-mono text-xs text-gray-500 mt-1">
+                                        <div className="mt-1 font-mono text-gray-500 text-xs">
                                             Private Key: {account.privateKey.substring(0, 20)}...
                                         </div>
                                     )}
@@ -573,22 +570,22 @@ const App = () => {
                         </div>
                     )}
 
-                    <div className="mt-2 text-xs text-yellow-600 bg-yellow-50 p-2 rounded">
+                    <div className="mt-2 rounded bg-yellow-50 p-2 text-xs text-yellow-600">
                         ⚠️ Note: In this demo, keys are stored in memory only. In production, use
                         secure storage with proper encryption.
                     </div>
                 </div>
 
                 {/* Connection Status */}
-                <div className="bg-white rounded-lg p-4 mb-6 shadow">
-                    <div className="flex items-center justify-between mb-2">
-                        <span className="text-lg font-semibold">Connection Status:</span>
+                <div className="mb-6 rounded-lg bg-white p-4 shadow">
+                    <div className="mb-2 flex items-center justify-between">
+                        <span className="font-semibold text-lg">Connection Status:</span>
                         <div className="flex items-center gap-2">
                             {isConnecting && (
-                                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                                <div className="h-4 w-4 animate-spin rounded-full border-blue-600 border-b-2"></div>
                             )}
                             <span
-                                className={`text-sm font-semibold ${getStatusColor()}`}
+                                className={`font-semibold text-sm ${getStatusColor()}`}
                                 data-testid="connection-status"
                             >
                                 {getStatusText()}
@@ -598,18 +595,18 @@ const App = () => {
 
                     {connectionStatus !== 'disconnected' && (
                         <>
-                            <div className="flex items-center justify-between mb-2">
-                                <span className="text-sm text-gray-600">Connection Quality:</span>
+                            <div className="mb-2 flex items-center justify-between">
+                                <span className="text-gray-600 text-sm">Connection Quality:</span>
                                 <div className="flex items-center gap-2">
                                     <div
-                                        className={`w-3 h-3 rounded-full ${getQualityColor()}`}
+                                        className={`h-3 w-3 rounded-full ${getQualityColor()}`}
                                     ></div>
-                                    <span className="text-sm font-medium">{getQualityText()}</span>
+                                    <span className="font-medium text-sm">{getQualityText()}</span>
                                 </div>
                             </div>
 
                             {connectionPhase && (
-                                <div className="text-xs text-gray-500 mt-2 p-2 bg-gray-50 rounded">
+                                <div className="mt-2 rounded bg-gray-50 p-2 text-gray-500 text-xs">
                                     <div className="flex items-center justify-between">
                                         <span>Phase: {connectionPhase.state}</span>
                                         <span>
@@ -624,15 +621,15 @@ const App = () => {
                     )}
                 </div>
 
-                <div className="grid md:grid-cols-2 gap-6">
+                <div className="grid gap-6 md:grid-cols-2">
                     {/* Peer A - Session Initiator */}
-                    <div className="bg-white rounded-lg p-6 shadow">
-                        <h2 className="text-xl font-semibold mb-4">Peer A - Create Session</h2>
+                    <div className="rounded-lg bg-white p-6 shadow">
+                        <h2 className="mb-4 font-semibold text-xl">Peer A - Create Session</h2>
 
                         <button
                             onClick={initSession}
                             disabled={connectionStatus !== 'disconnected'}
-                            className="w-full bg-blue-500 text-white py-2 px-4 rounded mb-4 hover:bg-blue-600 disabled:bg-gray-400"
+                            className="mb-4 w-full rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:bg-gray-400"
                             data-testid="init-session-button"
                         >
                             Initialize Session
@@ -640,28 +637,28 @@ const App = () => {
 
                         {openLVUrl && (
                             <div className="space-y-4">
-                                <div className="bg-gray-50 p-3 rounded">
-                                    <label className="block text-sm font-medium mb-2">
+                                <div className="rounded bg-gray-50 p-3">
+                                    <label className="mb-2 block font-medium text-sm">
                                         Connection URL:
                                     </label>
                                     <div
-                                        className="text-xs break-all bg-white p-2 rounded border"
+                                        className="break-all rounded border bg-white p-2 text-xs"
                                         data-testid="connection-url"
                                     >
                                         {openLVUrl}
                                     </div>
                                 </div>
 
-                                <div className="flex justify-center bg-white p-4 rounded border">
+                                <div className="flex justify-center rounded border bg-white p-4">
                                     <QRCodeSVG value={openLVUrl} size={200} />
                                 </div>
 
-                                <div className="text-xs text-center text-gray-600">
+                                <div className="text-center text-gray-600 text-xs">
                                     Share this QR code or URL with Peer B
                                 </div>
 
                                 {debugMode && (
-                                    <div className="bg-yellow-50 p-2 rounded text-xs">
+                                    <div className="rounded bg-yellow-50 p-2 text-xs">
                                         <strong>Debug:</strong> Open browser console to see detailed
                                         WebRTC logs
                                     </div>
@@ -671,12 +668,12 @@ const App = () => {
                     </div>
 
                     {/* Peer B - Session Joiner */}
-                    <div className="bg-white rounded-lg p-6 shadow">
-                        <h2 className="text-xl font-semibold mb-4">Peer B - Join Session</h2>
+                    <div className="rounded-lg bg-white p-6 shadow">
+                        <h2 className="mb-4 font-semibold text-xl">Peer B - Join Session</h2>
 
                         <div className="space-y-4">
                             <div>
-                                <label className="block text-sm font-medium mb-2">
+                                <label className="mb-2 block font-medium text-sm">
                                     Paste Connection URL:
                                 </label>
                                 <input
@@ -684,7 +681,7 @@ const App = () => {
                                     value={connectedAsUrl}
                                     onChange={(e) => setConnectedAsUrl(e.target.value)}
                                     placeholder="openlv://..."
-                                    className="w-full p-2 border rounded"
+                                    className="w-full rounded border p-2"
                                     disabled={connectionStatus !== 'disconnected'}
                                     data-testid="connection-url-input"
                                 />
@@ -695,13 +692,13 @@ const App = () => {
                                 disabled={
                                     !connectedAsUrl.trim() || connectionStatus !== 'disconnected'
                                 }
-                                className="w-full bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 disabled:bg-gray-400"
+                                className="w-full rounded bg-green-500 px-4 py-2 text-white hover:bg-green-600 disabled:bg-gray-400"
                                 data-testid="connect-session-button"
                             >
                                 Connect to Session
                             </button>
 
-                            <div className="text-xs text-gray-600">
+                            <div className="text-gray-600 text-xs">
                                 After connecting, the pairing process will begin automatically
                             </div>
                         </div>
@@ -710,28 +707,28 @@ const App = () => {
 
                 {/* Messaging Interface */}
                 {connectionStatus !== 'disconnected' && (
-                    <div className="bg-white rounded-lg p-6 shadow mt-6">
-                        <div className="flex items-center justify-between mb-4">
-                            <h2 className="text-xl font-semibold">Messages</h2>
+                    <div className="mt-6 rounded-lg bg-white p-6 shadow">
+                        <div className="mb-4 flex items-center justify-between">
+                            <h2 className="font-semibold text-xl">Messages</h2>
                             <div className="flex gap-2">
                                 {connectionStatus === 'mqtt-only' && !isConnecting && (
                                     <button
                                         onClick={forceRetryWebRTC}
-                                        className="bg-orange-500 text-white py-1 px-3 rounded text-sm hover:bg-orange-600"
+                                        className="rounded bg-orange-500 px-3 py-1 text-sm text-white hover:bg-orange-600"
                                     >
                                         Retry WebRTC
                                     </button>
                                 )}
                                 <button
                                     onClick={sendTestMessage}
-                                    className="bg-blue-500 text-white py-1 px-3 rounded text-sm hover:bg-blue-600"
+                                    className="rounded bg-blue-500 px-3 py-1 text-sm text-white hover:bg-blue-600"
                                     data-testid="send-test-button"
                                 >
                                     Send Test
                                 </button>
                                 <button
                                     onClick={disconnect}
-                                    className="bg-red-500 text-white py-1 px-3 rounded text-sm hover:bg-red-600"
+                                    className="rounded bg-red-500 px-3 py-1 text-sm text-white hover:bg-red-600"
                                 >
                                     Disconnect
                                 </button>
@@ -740,11 +737,11 @@ const App = () => {
 
                         {/* Message Display */}
                         <div
-                            className="bg-gray-50 p-4 rounded mb-4 h-48 overflow-y-auto"
+                            className="mb-4 h-48 overflow-y-auto rounded bg-gray-50 p-4"
                             data-testid="message-log"
                         >
                             {messages.length === 0 ? (
-                                <p className="text-gray-500 text-center">No messages yet...</p>
+                                <p className="text-center text-gray-500">No messages yet...</p>
                             ) : (
                                 messages.map((message, index) => (
                                     <div key={index} className="mb-2 text-sm">
@@ -755,11 +752,11 @@ const App = () => {
                                                     : message.includes('🤝') ||
                                                         message.includes('🔐') ||
                                                         message.includes('⚡')
-                                                      ? 'text-purple-600 font-semibold'
+                                                      ? 'font-semibold text-purple-600'
                                                       : message.includes('✅')
-                                                        ? 'text-green-600 font-semibold'
+                                                        ? 'font-semibold text-green-600'
                                                         : message.includes('💼')
-                                                          ? 'text-orange-600 font-semibold'
+                                                          ? 'font-semibold text-orange-600'
                                                           : ''
                                             }`}
                                         >
@@ -778,18 +775,18 @@ const App = () => {
                                 onChange={(e) => setInputMessage(e.target.value)}
                                 onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
                                 placeholder="Type a message..."
-                                className="flex-1 p-2 border rounded"
+                                className="flex-1 rounded border p-2"
                             />
                             <button
                                 onClick={sendMessage}
                                 disabled={!inputMessage.trim()}
-                                className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 disabled:bg-gray-400"
+                                className="rounded bg-blue-500 px-4 py-2 text-white hover:bg-blue-600 disabled:bg-gray-400"
                             >
                                 Send
                             </button>
                         </div>
 
-                        <div className="mt-2 text-xs text-gray-600">
+                        <div className="mt-2 text-gray-600 text-xs">
                             Messages are sent via{' '}
                             {connectionStatus === 'webrtc-connected'
                                 ? 'WebRTC (direct P2P)'
@@ -797,7 +794,7 @@ const App = () => {
                         </div>
 
                         {connectionPhase && connectionPhase.state === 'webrtc-connected' && (
-                            <div className="mt-2 p-2 bg-green-50 rounded text-xs text-green-800">
+                            <div className="mt-2 rounded bg-green-50 p-2 text-green-800 text-xs">
                                 ✅ Direct P2P connection established! MQTT connection has been
                                 closed to save resources. Messages are now sent directly between
                                 peers via WebRTC DataChannel.
@@ -808,7 +805,7 @@ const App = () => {
                             ['pairing', 'key-exchange', 'webrtc-negotiating'].includes(
                                 connectionPhase.state
                             ) && (
-                                <div className="mt-2 p-2 bg-blue-50 rounded text-xs text-blue-800">
+                                <div className="mt-2 rounded bg-blue-50 p-2 text-blue-800 text-xs">
                                     🔄 Connection in progress: {connectionPhase.description}
                                     {navigator.userAgent.includes('Firefox')
                                         ? ' Firefox may take longer due to TURN server requirements.'
@@ -817,7 +814,7 @@ const App = () => {
                             )}
 
                         {debugMode && connectionPhase && (
-                            <div className="mt-2 p-2 bg-yellow-50 rounded text-xs text-yellow-600">
+                            <div className="mt-2 rounded bg-yellow-50 p-2 text-xs text-yellow-600">
                                 🔧 Debug: Current state = {connectionPhase.state}, Browser ={' '}
                                 {navigator.userAgent.includes('Firefox')
                                     ? 'Firefox'

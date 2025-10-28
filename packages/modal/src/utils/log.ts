@@ -1,3 +1,1 @@
-export const log = (...message: any[]) => {
-    console.log(`[Modal]`, ...message);
-};
+export const log = (...x: Parameters<typeof console.log>) => console.log('[modal]', ...x);

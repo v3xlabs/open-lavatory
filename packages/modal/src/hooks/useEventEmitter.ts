@@ -6,15 +6,15 @@ export const useEventEmitter = <
     E extends EventEmitter.EventNames<R> = EventEmitter.EventNames<R>,
     Fn extends EventEmitter.EventListener<R, E> = EventEmitter.EventListener<R, E>,
 >(
-    emitter: EventEmitter<R>,
+    emitter: EventEmitter<R> | undefined,
     event: E,
     fn: Fn
 ) => {
     useEffect(() => {
-        emitter.on(event, fn);
+        emitter?.on(event, fn);
 
         return () => {
-            emitter.off(event, fn);
+            emitter?.off(event, fn);
         };
     }, [emitter, event]);
 };

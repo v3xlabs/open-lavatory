@@ -18,7 +18,7 @@ const layers: [CreateSignalLayerFn, SignalBaseProperties][] = [
 
 describe('Signaling layers', () => {
     layers.forEach(([layer, props]) => {
-        const layername = (layer as { __name?: string })['__name'] as string | undefined;
+        const layername = (layer as { __name?: string }).__name as string | undefined;
 
         it(`should create a signaling layer for ${layername} - ${props.url}`, async () => {
             const { encryptionKey: publicKey, decryptionKey } = await generateKeyPair();

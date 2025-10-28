@@ -7,8 +7,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
 
             return true;
         }
-    } catch (error) {
-        console.warn('OpenLV modal: Clipboard API failed, falling back', error);
+    } catch (_error) {
     }
 
     try {
@@ -26,8 +25,7 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
         document.body.removeChild(textArea);
 
         return result;
-    } catch (fallbackError) {
-        console.error('OpenLV modal: fallback copy failed', fallbackError);
+    } catch (_fallbackError) {
 
         return false;
     }

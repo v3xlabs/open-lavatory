@@ -39,6 +39,7 @@
   },
   "dependencies": {
     "@openlv/core": "workspace:*",
+    "@openlv/session": "workspace:*",
     "@openlv/provider": "workspace:*",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1"

@@ -79,6 +79,9 @@
                         ]
                     }
                 }
+            },
+            "nursery": {
+                "useSortedClasses": "error"
             }
         }
     },

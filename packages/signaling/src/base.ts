@@ -3,7 +3,7 @@ import { EventEmitter } from 'eventemitter3';
 import { match } from 'ts-pattern';
 import type { MaybePromise } from 'viem';
 
-import { SignalingEvents } from './events.js';
+import type { SignalingEvents } from './events.js';
 import type { SignalMessage } from './messages/index.js';
 
 export type SignalBaseProperties = {

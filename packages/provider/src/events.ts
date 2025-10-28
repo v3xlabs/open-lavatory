@@ -1,10 +1,12 @@
-import type { SessionStateObject } from '@openlv/session';
+import type { Session } from '@openlv/session';
+
+import type { ProviderStatus } from './base';
 
 export type EventMessage = { foo: 'bar' };
 
 export type ProviderEvents = {
-    state_change: (state?: SessionStateObject) => void;
-    session_started: () => void;
+    status_change: (status: ProviderStatus) => void;
+    session_started: (session: Session) => void;
 
     message: EventMessage;
 

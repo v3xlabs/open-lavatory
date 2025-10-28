@@ -1,7 +1,7 @@
 import { SignalNoConnectionError } from '@openlv/core/errors';
-import Gun, { IGun, IGunInstance } from 'gun';
+import Gun, { type IGun, type IGunInstance } from 'gun';
 
-import { createSignalingLayer, CreateSignalLayerFn } from '../base.js';
+import { createSignalingLayer, type CreateSignalLayerFn } from '../base.js';
 
 export const gundb: CreateSignalLayerFn = ({ topic, url = 'wss://try.axe.eco/gun' }) => {
     let connection: IGunInstance | undefined;

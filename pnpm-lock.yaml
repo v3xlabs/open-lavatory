@@ -48,6 +48,9 @@ importers:
       eslint-plugin-sonarjs:
         specifier: ^3.0.2
         version: 3.0.5(eslint@9.37.0(jiti@2.6.1))
+      eslint-plugin-tailwindcss:
+        specifier: 4.0.0-beta.0
+        version: 4.0.0-beta.0(tailwindcss@4.1.16)
       eslint-plugin-unicorn:
         specifier: ^58.0.0
         version: 58.0.0(eslint@9.37.0(jiti@2.6.1))
@@ -508,6 +511,9 @@ importers:
       '@openlv/provider':
         specifier: workspace:*
         version: link:../provider
+      '@openlv/session':
+        specifier: workspace:*
+        version: link:../session
       classnames:
         specifier: ^2.5.1
         version: 2.5.1
@@ -4866,6 +4872,12 @@ packages:
     peerDependencies:
       eslint: ^8.0.0 || ^9.0.0
 
+  eslint-plugin-tailwindcss@4.0.0-beta.0:
+    resolution: {integrity: sha512-WWCajZgQu38Sd67ZCl2W6i3MRzqB0d+H8s4qV9iB6lBJbsDOIpIlj6R1Fj2FXkoWErbo05pZnZYbCGIU9o/DsA==}
+    engines: {node: '>=18.12.0'}
+    peerDependencies:
+      tailwindcss: ^3.4.0 || ^4.0.0
+
   eslint-plugin-unicorn@58.0.0:
     resolution: {integrity: sha512-fc3iaxCm9chBWOHPVjn+Czb/wHS0D2Mko7wkOdobqo9R2bbFObc4LyZaLTNy0mhZOP84nKkLhTUQxlLOZ7EjKw==}
     engines: {node: ^18.20.0 || ^20.10.0 || >=21.0.0}
@@ -7726,6 +7738,11 @@ packages:
 
   tabbable@6.2.0:
     resolution: {integrity: sha512-Cat63mxsVJlzYvN51JmVXIgNoUokrIaT2zLclCXjRd8boZ0004U4KCs/sToJ75C6sdlByWxpYnb5Boif1VSFew==}
+
+  tailwind-api-utils@1.0.3:
+    resolution: {integrity: sha512-KpzUHkH1ug1sq4394SLJX38ZtpeTiqQ1RVyFTTSY2XuHsNSTWUkRo108KmyyrMWdDbQrLYkSHaNKj/a3bmA4sQ==}
+    peerDependencies:
+      tailwindcss: ^3.3.0 || ^4.0.0 || ^4.0.0-beta
 
   tailwindcss@3.4.18:
     resolution: {integrity: sha512-6A2rnmW5xZMdw11LYjhcI5846rt9pbLSabY5XPxo+XWdxwZaFEn47Go4NzFiHu9sNNmr/kXivP1vStfvMaK1GQ==}
@@ -14134,6 +14151,14 @@ snapshots:
       semver: 7.7.2
       typescript: 5.9.3
 
+  eslint-plugin-tailwindcss@4.0.0-beta.0(tailwindcss@4.1.16):
+    dependencies:
+      fast-glob: 3.3.3
+      postcss: 8.5.6
+      synckit: 0.11.8
+      tailwind-api-utils: 1.0.3(tailwindcss@4.1.16)
+      tailwindcss: 4.1.16
+
   eslint-plugin-unicorn@58.0.0(eslint@9.37.0(jiti@2.6.1)):
     dependencies:
       '@babel/helper-validator-identifier': 7.27.1
@@ -17713,6 +17738,13 @@ snapshots:
       '@pkgr/core': 0.2.7
 
   tabbable@6.2.0: {}
+
+  tailwind-api-utils@1.0.3(tailwindcss@4.1.16):
+    dependencies:
+      enhanced-resolve: 5.18.3
+      jiti: 2.6.1
+      local-pkg: 1.1.1
+      tailwindcss: 4.1.16
 
   tailwindcss@3.4.18:
     dependencies:

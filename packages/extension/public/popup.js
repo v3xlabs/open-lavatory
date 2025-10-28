@@ -51,8 +51,7 @@ async function initializeWallet() {
 
     // Update UI
     updateUI();
-  } catch (error) {
-    console.error("Failed to initialize wallet:", error);
+  } catch (_error) {
     showError("Failed to initialize wallet");
   }
 }
@@ -71,8 +70,7 @@ async function loadWalletState() {
       isConnected: true,
       connectedSites: 2,
     };
-  } catch (error) {
-    console.error("Failed to load wallet state:", error);
+  } catch (_error) {
   }
 }
 
@@ -104,8 +102,7 @@ async function handleConnect() {
     }
 
     updateUI();
-  } catch (error) {
-    console.error("Connection failed:", error);
+  } catch (_error) {
     showError("Connection failed");
   } finally {
     connectBtn.disabled = false;
@@ -120,29 +117,19 @@ function handleSettings() {
 
 // Connect wallet
 async function connectWallet() {
-  try {
     // Simulate account connection
     walletState.isConnected = true;
     walletState.connectedSites += 1;
 
     console.log("Wallet connected");
-  } catch (error) {
-    console.error("Failed to connect wallet:", error);
-    throw error;
-  }
 }
 
 // Disconnect wallet
 async function disconnectWallet() {
-  try {
     walletState.isConnected = false;
     walletState.connectedSites = Math.max(0, walletState.connectedSites - 1);
 
     console.log("Wallet disconnected");
-  } catch (error) {
-    console.error("Failed to disconnect wallet:", error);
-    throw error;
-  }
 }
 
 // Handle messages from background script
@@ -211,7 +198,7 @@ function updateAccountsList() {
 }
 
 // Create account item element
-function createAccountItem(address, index) {
+function createAccountItem(address, _index) {
   const accountItem = document.createElement("div");
 
   accountItem.className = "account-item";
@@ -287,15 +274,12 @@ async function copyToClipboard(text) {
       document.execCommand("copy");
       document.body.removeChild(textArea);
     }
-  } catch (error) {
-    console.error("Failed to copy to clipboard:", error);
+  } catch (_error) {
   }
 }
 
 // Show error message
 function showError(message) {
-  // In a real wallet, this would show a proper error UI
-  console.error(message);
   alert(message);
 }
 

@@ -26,7 +26,7 @@ export default defineBackground(() => {
     const connectedTabs = new Set<number>();
 
     // Handle messages from content scripts
-    browser.runtime.onMessage.addListener(async (message: any, sender: any, sendResponse: any) => {
+    browser.runtime.onMessage.addListener(async (message: any, sender: any, _sendResponse: any) => {
         try {
             console.log('Background received message:', message.type);
 
@@ -67,12 +67,10 @@ export default defineBackground(() => {
                     return await handleForwardRequest(message.data);
 
                 default:
-                    console.warn('Unknown message type:', message.type);
 
                     return { success: false, error: 'Unknown message type' };
             }
         } catch (error) {
-            console.error('Background script error:', error);
 
             return {
                 success: false,
@@ -83,10 +81,8 @@ export default defineBackground(() => {
 
     // Handler functions for EIP-1193 methods
 
-    async function handleRequestAccounts(data: { tabId: number }, tabId?: number) {
+    async function handleRequestAccounts(_data: { tabId: number }, tabId?: number) {
         console.log('Handling eth_requestAccounts');
-
-        try {
             // In a real wallet, this would:
             // 1. Show user consent dialog
             // 2. Get user's approval
@@ -117,8 +113,7 @@ export default defineBackground(() => {
                         type: 'accountsChanged',
                         data: { accounts: walletState.accounts },
                     });
-                } catch (error) {
-                    console.warn('Failed to notify tab:', error);
+                } catch (_error) {
                 }
             }
 
@@ -126,10 +121,6 @@ export default defineBackground(() => {
                 success: true,
                 accounts: walletState.accounts,
             };
-        } catch (error) {
-            console.error('Failed to request accounts:', error);
-            throw error;
-        }
     }
 
     async function handleGetBalance(data: { address: string; blockTag: string }) {
@@ -147,8 +138,6 @@ export default defineBackground(() => {
 
     async function handleSendTransaction(data: { transaction: any }, _tabId?: number) {
         console.log('Handling eth_sendTransaction:', data.transaction);
-
-        try {
             // In a real wallet, this would:
             // 1. Validate the transaction
             // 2. Show user confirmation dialog
@@ -170,16 +159,10 @@ export default defineBackground(() => {
                 success: true,
                 hash: mockTxHash,
             };
-        } catch (error) {
-            console.error('Failed to send transaction:', error);
-            throw error;
-        }
     }
 
     async function handlePersonalSign(data: { message: string; address: string }, _tabId?: number) {
         console.log('Handling personal_sign');
-
-        try {
             await showUserConsentDialog('Sign Message', `Sign this message?\n\n${data.message}`);
 
             // Mock signature
@@ -193,16 +176,10 @@ export default defineBackground(() => {
                 success: true,
                 signature: mockSignature,
             };
-        } catch (error) {
-            console.error('Failed to sign message:', error);
-            throw error;
-        }
     }
 
     async function handleEthSign(data: { address: string; message: string }, _tabId?: number) {
         console.log('Handling eth_sign');
-
-        try {
             await showUserConsentDialog('Sign Data', `Sign this data with ${data.address}?`);
 
             // Mock signature
@@ -216,16 +193,10 @@ export default defineBackground(() => {
                 success: true,
                 signature: mockSignature,
             };
-        } catch (error) {
-            console.error('Failed to sign data:', error);
-            throw error;
-        }
     }
 
     async function handleSignTypedData(method: string, _data: { params: any[] }, _tabId?: number) {
         console.log('Handling', method);
-
-        try {
             await showUserConsentDialog('Sign Typed Data', 'Sign this structured data?');
 
             // Mock signature
@@ -239,16 +210,10 @@ export default defineBackground(() => {
                 success: true,
                 signature: mockSignature,
             };
-        } catch (error) {
-            console.error('Failed to sign typed data:', error);
-            throw error;
-        }
     }
 
     async function handleSwitchChain(data: { chainId?: string }, _tabId?: number) {
         console.log('Handling wallet_switchEthereumChain to:', data.chainId);
-
-        try {
             if (!data.chainId) {
                 throw new Error('Chain ID is required');
             }
@@ -266,8 +231,7 @@ export default defineBackground(() => {
                         type: 'chainChanged',
                         data: { chainId: walletState.chainId },
                     });
-                } catch (error) {
-                    console.warn('Failed to notify tab about chain change:', error);
+                } catch (_error) {
                 }
             }
 
@@ -275,16 +239,10 @@ export default defineBackground(() => {
                 success: true,
                 chainId: walletState.chainId,
             };
-        } catch (error) {
-            console.error('Failed to switch chain:', error);
-            throw error;
-        }
     }
 
     async function handleAddChain(data: any, _tabId?: number) {
         console.log('Handling wallet_addEthereumChain');
-
-        try {
             await showUserConsentDialog(
                 'Add Network',
                 `Add new network ${data.chainName || 'Unknown'}?`
@@ -295,10 +253,6 @@ export default defineBackground(() => {
                 success: true,
                 message: 'Chain added successfully',
             };
-        } catch (error) {
-            console.error('Failed to add chain:', error);
-            throw error;
-        }
     }
 
     async function handleGetPermissions(_data: { tabId: number }) {
@@ -312,8 +266,6 @@ export default defineBackground(() => {
 
     async function handleRequestPermissions(data: { permissions: any }, _tabId?: number) {
         console.log('Handling wallet_requestPermissions');
-
-        try {
             await showUserConsentDialog('Grant Permissions', 'Grant the requested permissions?');
 
             // Mock permissions
@@ -325,10 +277,6 @@ export default defineBackground(() => {
                 success: true,
                 permissions: grantedPermissions,
             };
-        } catch (error) {
-            console.error('Failed to request permissions:', error);
-            throw error;
-        }
     }
 
     async function handleForwardRequest(data: { method: string; params: any[] }) {

@@ -8,8 +8,6 @@ import { useSession } from '../hooks/useSession';
 import { UnknownState } from './UnknownState';
 
 interface ConnectionFlowProps {
-    onStartConnection: () => void;
-    onRetry: () => void;
     onClose: () => void;
     onCopy: (uri: string) => void;
 }
@@ -20,13 +18,8 @@ const LoadingSpinner = () => (
     </div>
 );
 
-export const ConnectionFlow = ({
-    onStartConnection,
-    onRetry,
-    onClose,
-    onCopy,
-}: ConnectionFlowProps) => {
-    const { uri, state } = useSession();
+export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
+    const { uri, status } = useSession();
     const connectedAccount = '';
 
     const handleCopy = useCallback(() => {
@@ -44,138 +37,139 @@ export const ConnectionFlow = ({
         return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
     }, []);
 
-    return match({ state: state?.state })
-        .with({ state: 'idle' }, () => (
-            <div className="flex flex-col items-center gap-4 p-6">
-                <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Ready to Connect</h3>
-                    <p className="text-sm text-gray-500 mb-4">
-                        Click the button below to start the connection process and generate a QR
-                        code for your wallet to scan.
-                    </p>
-                </div>
-                <button
-                    type="button"
-                    onClick={onStartConnection}
-                    className="w-full rounded-lg bg-blue-500 px-6 py-3 text-sm cursor-pointer font-semibold text-white transition hover:bg-blue-600"
-                >
-                    Start Connection
-                </button>
-            </div>
-        ))
-        .with({ state: 'initializing' }, () => (
-            <div className="flex flex-col items-center gap-4 p-6">
-                <LoadingSpinner />
-                <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Initializing Connection
-                    </h3>
-                    <p className="text-sm text-gray-500">Setting up secure connection...</p>
-                </div>
-            </div>
-        ))
-        .with({ state: 'connecting' }, () => (
-            <div className="flex flex-col items-center gap-4 p-6">
-                <LoadingSpinner />
-                <div className="text-center">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Connecting</h3>
-                    <p className="text-sm text-gray-500">Waiting for wallet to connect...</p>
-                </div>
-            </div>
-        ))
-        .with({ state: 'qr-ready' }, () => (
-            <div className="flex flex-col items-center gap-4">
-                <div className="w-full p-4 rounded-md bg-neutral-100 border border-neutral-200 space-y-4">
-                    {uri && (
-                        <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-4">
-                            <div
-                                className="flex h-[200px] w-[200px] items-center justify-center cursor-pointer"
-                                onClick={handleCopy}
-                                title="Click to copy connection URL"
-                                dangerouslySetInnerHTML={{ __html: generateQRCode(uri) }}
-                            />
-                        </div>
-                    )}
+    console.log('connection flow here: ', status);
 
-                    <div className="w-full">
-                        <button
-                            type="button"
-                            onClick={handleCopy}
-                            className="w-full rounded-lg bg-gray-200 border border-gray-300 cursor-pointer px-4 py-2 text-sm text-gray-700 hover:bg-gray-300 transition"
-                        >
-                            Copy Connection URL
-                        </button>
+    return (
+        match({ state: status?.signaling?.state })
+            // .with({ s: 'handshake' }, () => (
+            //     <div className="flex flex-col items-center gap-4 p-6">
+            //         <LoadingSpinner />
+            //         <div className="text-center">
+            //             <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+            //                 Initializing Connection
+            //             </h3>
+            //             <p className="text-gray-500 text-sm">Setting up secure connection...</p>
+            //         </div>
+            //     </div>
+            // ))
+            .with({ state: 'connecting' }, () => (
+                <div className="flex flex-col items-center gap-4 p-6">
+                    <LoadingSpinner />
+                    <div className="text-center">
+                        <h3 className="mb-2 font-semibold text-gray-900 text-lg">Connecting</h3>
+                        <p className="text-gray-500 text-sm">Waiting for wallet to connect...</p>
                     </div>
                 </div>
-                <div className="w-full">
-                    <span>Scan the link above using your mobile wallet.</span>
-                    <br />
-                    <span>Or copy the link and paste it into your wallet.</span>
+            ))
+            .with({ state: 'handshake-open' }, () => (
+                <div className="flex flex-col items-center gap-4">
+                    <div className="w-full space-y-4 rounded-md border border-neutral-200 bg-neutral-100 p-4">
+                        {uri && (
+                            <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-4">
+                                <div
+                                    className="flex h-[200px] w-[200px] cursor-pointer items-center justify-center"
+                                    onClick={handleCopy}
+                                    title="Click to copy connection URL"
+                                    dangerouslySetInnerHTML={{ __html: generateQRCode(uri) }}
+                                />
+                            </div>
+                        )}
+
+                        <div className="w-full">
+                            <button
+                                type="button"
+                                onClick={handleCopy}
+                                className="w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 text-gray-700 text-sm transition hover:bg-gray-300"
+                            >
+                                Copy Connection URL
+                            </button>
+                        </div>
+                    </div>
+                    <div className="w-full">
+                        <span>Scan the link above using your mobile wallet.</span>
+                        <br />
+                        <span>Or copy the link and paste it into your wallet.</span>
+                    </div>
                 </div>
-            </div>
-        ))
-        .with({ state: 'connected' }, () => (
-            <div className="flex flex-col items-center gap-4 p-6">
-                <div className="text-center">
-                    <div className="mb-4 text-4xl">✅</div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Connected Successfully!
-                    </h3>
-                    {connectedAccount && (
-                        <p className="text-sm text-gray-500 mb-4">
-                            Connected with: {connectedAccount.slice(0, 6)}...
-                            {connectedAccount.slice(-4)}
+            ))
+            .with({ state: 'handshake-closed' }, () => (
+                <div className="flex flex-col items-center gap-4 p-6">
+                    <div className="text-center">
+                        <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+                            Establishing e2e encryption...
+                        </h3>
+                    </div>
+                </div>
+            ))
+            .with({ state: 'xr-encrypted' }, () => (
+                <div className="flex flex-col items-center gap-4 p-6">
+                    <div className="text-center">
+                        <div className="mb-4 text-4xl">✅</div>
+                        <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+                            Connected Successfully!
+                        </h3>
+                        {connectedAccount && (
+                            <p className="mb-4 text-gray-500 text-sm">
+                                Connected with: {connectedAccount.slice(0, 6)}...
+                                {connectedAccount.slice(-4)}
+                            </p>
+                        )}
+                        <p className="text-gray-500 text-sm">
+                            Your wallet is now connected and ready to use.
                         </p>
-                    )}
-                    <p className="text-sm text-gray-500">
-                        Your wallet is now connected and ready to use.
-                    </p>
+                    </div>
                 </div>
-            </div>
-        ))
-        .with({ state: 'error' }, () => (
-            <div className="flex flex-col items-center gap-4 p-6">
-                <div className="text-center">
-                    <div className="mb-4 text-4xl">❌</div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Connection Failed</h3>
-                    {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
-                    <p className="text-sm text-gray-500 mb-4">
-                        Something went wrong during the connection process.
-                    </p>
-                </div>
-                <div className="flex gap-2 w-full">
-                    <button
-                        type="button"
-                        onClick={onRetry}
-                        className="flex-1 rounded-lg bg-blue-500 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-600"
-                    >
-                        Try Again
-                    </button>
+            ))
+            // .with({ state: 'error' }, () => (
+            //     <div className="flex flex-col items-center gap-4 p-6">
+            //         <div className="text-center">
+            //             <div className="mb-4 text-4xl">❌</div>
+            //             <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+            //                 Connection Failed
+            //             </h3>
+            //             {error && <p className="mb-4 text-red-500 text-sm">{error}</p>}
+            //             <p className="mb-4 text-gray-500 text-sm">
+            //                 Something went wrong during the connection process.
+            //             </p>
+            //         </div>
+            //         <div className="flex w-full gap-2">
+            //             <button
+            //                 type="button"
+            //                 onClick={onRetry}
+            //                 className="flex-1 rounded-lg bg-blue-500 px-4 py-2 font-semibold text-sm text-white transition hover:bg-blue-600"
+            //             >
+            //                 Try Again
+            //             </button>
+            //             <button
+            //                 type="button"
+            //                 onClick={onClose}
+            //                 className="flex-1 rounded-lg bg-gray-100 px-4 py-2 font-semibold text-gray-700 text-sm transition hover:bg-gray-200"
+            //             >
+            //                 Close
+            //             </button>
+            //         </div>
+            //     </div>
+            // ))
+            .with({ state: 'disconnected' }, () => (
+                <div className="flex flex-col items-center gap-4 p-6">
+                    <div className="text-center">
+                        <div className="mb-4 text-4xl">🔌</div>
+                        <h3 className="mb-2 font-semibold text-gray-900 text-lg">Disconnected</h3>
+                        <p className="mb-4 text-gray-500 text-sm">
+                            The connection has been closed.
+                        </p>
+                    </div>
                     <button
                         type="button"
                         onClick={onClose}
-                        className="flex-1 rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
+                        className="w-full rounded-lg bg-gray-100 px-4 py-2 font-semibold text-gray-700 text-sm transition hover:bg-gray-200"
                     >
                         Close
                     </button>
                 </div>
-            </div>
-        ))
-        .with({ state: 'disconnected' }, () => (
-            <div className="flex flex-col items-center gap-4 p-6">
-                <div className="text-center">
-                    <div className="mb-4 text-4xl">🔌</div>
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2">Disconnected</h3>
-                    <p className="text-sm text-gray-500 mb-4">The connection has been closed.</p>
-                </div>
-                <button
-                    type="button"
-                    onClick={onClose}
-                    className="w-full rounded-lg bg-gray-100 px-4 py-2 text-sm font-semibold text-gray-700 transition hover:bg-gray-200"
-                >
-                    Close
-                </button>
-            </div>
-        ))
-        .otherwise(() => <UnknownState state={state} />);
+            ))
+            .otherwise(() => (
+                <UnknownState state={status?.signaling?.state || status?.state || ''} />
+            ))
+    );
 };

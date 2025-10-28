@@ -56,12 +56,10 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             console.log('NTFY: Connecting to WebSocket', wsUrl);
             connection = new WebSocket(wsUrl);
 
-            connection.onerror = (event) => {
-                console.error('NTFY: Error on WebSocket', event);
+            connection.onerror = (_event) => {
             };
 
-            connection.onclose = (event) => {
-                console.error('NTFY: Closed WebSocket', event);
+            connection.onclose = (_event) => {
             };
 
             const awaitOpenConfirm = new Promise<void>((resolve) => {
@@ -96,8 +94,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             // TODO: Add response handling
             // @ts-expect-error
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const response = await fetch(
-                connectionInfo.protocol + '://' + connectionInfo.host + '/' + topic,
+            const _response = await fetch(
+                `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`,
                 { method: 'POST', body, headers }
             );
         },

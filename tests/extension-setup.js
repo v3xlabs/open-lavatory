@@ -1,6 +1,6 @@
-const { execSync } = require('child_process');
-const fs = require('fs');
-const path = require('path');
+const { execSync } = require('node:child_process');
+const fs = require('node:fs');
+const path = require('node:path');
 
 /**
  * Global setup for extension E2E tests
@@ -17,18 +17,12 @@ async function globalSetup() {
 
   if (!chromeBuilt) {
     console.log('📦 Building Chrome extension for testing...');
-
-    try {
       execSync('pnpm build:extension', {
         cwd: path.resolve(__dirname, '..'),
         stdio: 'inherit'
       });
 
       console.log('✅ Extension built successfully');
-    } catch (error) {
-      console.error('❌ Failed to build extension:', error.message);
-      throw error;
-    }
   } else {
     console.log('✅ Extension already built, skipping build step');
   }

@@ -1,38 +1,68 @@
+import { useCallback } from 'preact/hooks';
+import { match } from 'ts-pattern';
+
+import { useProvider } from '../hooks/useProvider';
 import { ChevronLeftIcon, CogIcon } from '../icons';
+import { log } from '../utils/log';
 
 export const Header = ({
     title,
     view,
-    onBack,
     onToggleSettings,
+    setView,
+    onClose,
 }: {
     title: string;
     view: 'start' | 'uri' | 'settings';
-    onBack: () => void;
     onToggleSettings: () => void;
-}) => (
-    <div className="flex items-center justify-between mb-2">
-        <button
-            type="button"
-            onClick={onBack}
-            aria-label={view === 'settings' ? 'Back to QR' : 'Close modal'}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors cursor-pointer hover:bg-gray-200"
-        >
-            <ChevronLeftIcon />
-        </button>
-        <h2 className="flex items-center justify-center gap-2 text-lg font-semibold text-gray-900">
-            {title}
-        </h2>
-        <button
-            type="button"
-            aria-label={
-                view === 'settings' ? 'Hide connection settings' : 'Show connection settings'
-            }
-            aria-pressed={view === 'settings'}
-            onClick={onToggleSettings}
-            className="flex h-8 w-8 items-center justify-center rounded-lg transition-colors cursor-pointer hover:bg-gray-200"
-        >
-            <CogIcon />
-        </button>
-    </div>
-);
+    setView: (view: 'start' | 'settings') => void;
+    onClose: () => void;
+}) => {
+    const { status, provider } = useProvider();
+    const closeSession = useCallback(async () => {
+        log('closing session');
+        await provider.closeSession();
+    }, [provider]);
+
+    const onBack = useCallback(() => {
+        log('status', status);
+
+        match(status)
+            .with('disconnected', () =>
+                match({ view })
+                    .with({ view: 'settings' }, () => setView('start'))
+                    .with({ view: 'start' }, onClose)
+                    .otherwise(onClose)
+            )
+            .with('connecting', closeSession)
+            .with('connected', onClose)
+            .otherwise(onClose);
+    }, [status, view, setView, onClose, closeSession]);
+
+    return (
+        <div className="mb-2 flex items-center justify-between">
+            <button
+                type="button"
+                onClick={onBack}
+                aria-label={view === 'settings' ? 'Back to QR' : 'Close modal'}
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
+            >
+                <ChevronLeftIcon />
+            </button>
+            <h2 className="flex items-center justify-center gap-2 font-semibold text-gray-900 text-lg">
+                {title}
+            </h2>
+            <button
+                type="button"
+                aria-label={
+                    view === 'settings' ? 'Hide connection settings' : 'Show connection settings'
+                }
+                aria-pressed={view === 'settings'}
+                onClick={onToggleSettings}
+                className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
+            >
+                <CogIcon />
+            </button>
+        </div>
+    );
+};

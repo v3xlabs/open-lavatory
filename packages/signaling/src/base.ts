@@ -5,6 +5,7 @@ import type { MaybePromise } from 'viem';
 
 import type { SignalingEvents } from './events.js';
 import type { SignalMessage } from './messages/index.js';
+import { log } from './utils/log.js';
 
 export type SignalBaseProperties = {
     topic: string;
@@ -125,7 +126,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
             const body = payload.slice(XR_PREFIX.length + 1);
             const isRecipient = (isHost ? 'h' : 'c') === recipient;
 
-            console.log('isRecipient', isRecipient);
+            log('isRecipient', isRecipient);
 
             if (!isRecipient) return;
 
@@ -164,7 +165,7 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                             });
                         })
                         .otherwise(() => {
-                            console.log('Received invalid message H', msg);
+                            log('Received invalid message H', msg);
                         });
                 })
                 .with({ prefix: XR_PREFIX }, async () => {
@@ -193,11 +194,11 @@ export const createSignalingLayer = (init: SignalingBaseLayer): SignalingLayer =
                             subscribeHandler.emit('message', msg.payload)
                         )
                         .otherwise(() => {
-                            console.log('Received invalid message X', msg);
+                            log('Received invalid message X', msg);
                         });
                 })
                 .otherwise(() => {
-                    console.log('Received invalid message', payload);
+                    log('Received invalid message', payload);
                 });
         };
 

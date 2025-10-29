@@ -24,7 +24,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
 
                 const modal = await getTriggerModal();
 
-                console.log('loading modal');
+                log('loading modal');
                 modal?.(provider);
 
                 const modalDismissed = new Promise((_resolve) => {

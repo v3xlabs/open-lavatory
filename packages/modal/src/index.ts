@@ -5,7 +5,6 @@
 export type { ModalRootProps } from './components/ModalRoot';
 export { ModalRoot } from './components/ModalRoot';
 export { useConnectionState } from './hooks/useConnectionState';
-export type { OpenLVModalElementProps } from './openlv-modal-element';
 export { OpenLVModalElement } from './openlv-modal-element';
 export type {
     ConnectionInfo,
@@ -56,21 +55,5 @@ export const triggerOpenModal = (provider: OpenLVProvider) => {
             log('modal closed');
             x.remove();
         };
-        // x.onStartConnection = async () => {
-        //     x.updateConnectionState({ state: 'initializing' });
-
-        //     log('modal start connection');
-        //     const session = await provider.createSession();
-
-        //     log('session state:', session.getState());
-        //     const params = session.getHandshakeParameters();
-        //     const url = encodeConnectionURL(params);
-
-        //     log('url:', url);
-
-        //     x.setProps(url);
-
-        //     x.updateConnectionState({ state: 'qr-ready', uri: url });
-        // };
     }
 };

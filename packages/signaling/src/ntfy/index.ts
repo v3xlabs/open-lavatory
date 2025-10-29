@@ -3,6 +3,7 @@ import { match } from 'ts-pattern';
 
 import type { CreateSignalLayerFn } from '../base.js';
 import { createSignalingLayer } from '../index.js';
+import { log } from '../utils/log.js';
 import { parseNtfyUrl } from './url.js';
 
 export type NtfyMessage = {
@@ -42,7 +43,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     return createSignalingLayer({
         type: 'ntfy',
         async setup() {
-            console.log('NTFY: Setting up');
+            log('NTFY: Setting up');
 
             const wsUrl =
                 wsProtocol +
@@ -53,18 +54,16 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
                 '/ws' +
                 (connectionInfo.parameters || '');
 
-            console.log('NTFY: Connecting to WebSocket', wsUrl);
+            log('NTFY: Connecting to WebSocket', wsUrl);
             connection = new WebSocket(wsUrl);
 
-            connection.onerror = (_event) => {
-            };
+            connection.onerror = (_event) => { };
 
-            connection.onclose = (_event) => {
-            };
+            connection.onclose = (_event) => { };
 
             const awaitOpenConfirm = new Promise<void>((resolve) => {
                 connection!.onmessage = (event) => {
-                    console.log('NTFY: Received message:', event.data);
+                    log('NTFY: Received message:', event.data);
                     const data = JSON.parse(event.data) as NtfyMessage;
 
                     if (data.event === 'open') {
@@ -77,7 +76,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
             const awaitOpen = new Promise<void>((resolve) => {
                 connection!.onopen = () => {
-                    console.log('NTFY: Connected to WebSocket');
+                    log('NTFY: Connected to WebSocket');
                     resolve();
                 };
             });

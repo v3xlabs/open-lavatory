@@ -45,8 +45,10 @@ describe('Session', () => {
         console.log('A', sessionA.getState());
         console.log('B', sessionB.getState());
 
-        /*const _response = */ await sessionA.send({ data: 'test' });
+        const response = await sessionA.send({ data: 'test' });
 
-        // expect(response).toEqual({ data: 'test' });
+        console.log('response', response);
+
+        expect(response).toEqual({ result: 'success' });
     });
 });

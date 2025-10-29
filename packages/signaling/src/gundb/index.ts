@@ -2,6 +2,7 @@ import { SignalNoConnectionError } from '@openlv/core/errors';
 import Gun, { type IGun, type IGunInstance } from 'gun';
 
 import { createSignalingLayer, type CreateSignalLayerFn } from '../base.js';
+import { log } from '../utils/log.js';
 
 export const gundb: CreateSignalLayerFn = ({ topic, url = 'wss://try.axe.eco/gun' }) => {
     let connection: IGunInstance | undefined;
@@ -9,7 +10,7 @@ export const gundb: CreateSignalLayerFn = ({ topic, url = 'wss://try.axe.eco/gun
     return createSignalingLayer({
         type: 'gundb',
         async setup() {
-            console.log('GUNDB: Setting up');
+            log('GUNDB: Setting up');
             const x = new (Gun as unknown as IGun)({
                 peers: [url],
                 file: undefined,
@@ -27,14 +28,14 @@ export const gundb: CreateSignalLayerFn = ({ topic, url = 'wss://try.axe.eco/gun
         async publish(payload) {
             if (!connection) throw new SignalNoConnectionError();
 
-            console.log('GUNDB: Publishing message', topic, payload);
+            log('GUNDB: Publishing message', topic, payload);
             connection.get(topic).put({ data: payload });
         },
         async subscribe(handler) {
             if (!connection) throw new SignalNoConnectionError();
 
             connection.get(topic).on((data) => {
-                console.log('GUNDB: Received message', data);
+                log('GUNDB: Received message', data);
 
                 const message = data.data?.toString();
 

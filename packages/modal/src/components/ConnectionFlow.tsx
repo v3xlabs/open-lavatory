@@ -6,6 +6,7 @@ import { match, P } from 'ts-pattern';
 
 import { useSession } from '../hooks/useSession';
 import { UnknownState } from './UnknownState';
+import { log } from '../utils/log';
 
 interface ConnectionFlowProps {
     onClose: () => void;
@@ -36,8 +37,6 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
 
         return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
     }, []);
-
-    console.log('connection flow here: ', sessionStatus);
 
     return match(sessionStatus)
         .with({ status: 'disconnected' }, () => <div>hi</div>)

@@ -18,7 +18,8 @@ import { ntfy } from '@openlv/signaling/ntfy';
 import { EventEmitter } from 'eventemitter3';
 
 import type { SessionEvents } from './events.js';
-import type { SessionMessage } from './messages/index.js';
+import type { SessionMessage, SessionMessageResponse } from './messages/index.js';
+import { log } from './utils/log.js';
 
 export type SessionStatus = 'created' | 'ready' | 'signaling' | 'connected' | 'disconnected';
 export type SessionStateObject = {
@@ -74,7 +75,7 @@ export const createSession = async (
                 throw new Error('Relying party public key not found');
             }
 
-            console.log(`encrypting to ${relyingPublicKey.toString()}`);
+            log(`encrypting to ${relyingPublicKey.toString()}`);
 
             return await relyingPublicKey.encrypt(message);
         },
@@ -90,7 +91,7 @@ export const createSession = async (
         async rpDiscovered(rpKey) {
             const role = isHost ? 'host' : 'client';
 
-            console.log(`rpKey discovered by ${role}`, rpKey);
+            log(`rpKey discovered by ${role}`, rpKey);
 
             relyingPublicKey = await parseEncryptionKey(rpKey);
         },
@@ -111,24 +112,37 @@ export const createSession = async (
     return {
         connect: async () => {
             updateStatus('signaling');
-            console.log('connecting to session, isHost:', isHost);
+            log('connecting to session, isHost:', isHost);
             // TODO: implement
-            console.log('connecting to session');
+            log('connecting to session');
             await signal.setup();
 
-            signal.subscribe((message) => {
-                console.log('Session: received message from signaling', message);
+            signal.subscribe(async (message) => {
+                log('Session: received message from signaling', message);
 
                 const sessionMsg = message as SessionMessage;
 
-                if (sessionMsg.type === 'data') {
-                    console.log('Session: received data message', sessionMsg.payload);
+                if (sessionMsg.type === 'response') {
+                    log('Session: received data message', sessionMsg.payload);
                     messages.emit('message', sessionMsg);
+                }
+
+                if (sessionMsg.type === 'request') {
+                    log('Session: received request message', sessionMsg.payload);
+                    const responseMessage: SessionMessageResponse = {
+                        type: 'response',
+                        messageId: sessionMsg.messageId,
+                        payload: {
+                            result: 'success',
+                        },
+                    };
+
+                    await signal.send(responseMessage);
                 }
             });
         },
         async close() {
-            console.log('session teardown');
+            log('session teardown');
             await signal?.teardown();
             updateStatus('disconnected');
         },
@@ -144,7 +158,7 @@ export const createSession = async (
                 s: server,
             };
         },
-        async send(message: object, timeout: number = 1000) {
+        async send(message: object, timeout: number = 5000) {
             const ready = signal.getState().state === 'xr-encrypted';
 
             if (!ready) {
@@ -153,7 +167,7 @@ export const createSession = async (
 
             const randomID = crypto.randomUUID();
             const sessionMessage: SessionMessage = {
-                type: 'data',
+                type: 'request',
                 messageId: randomID,
                 payload: message,
             };
@@ -164,7 +178,7 @@ export const createSession = async (
             return Promise.race([
                 new Promise((resolve) => {
                     messages.on('message', (message) => {
-                        if (message.messageId === randomID && message.type === 'data') {
+                        if (message.messageId === randomID && message.type === 'response') {
                             resolve(message.payload);
                         }
                     });

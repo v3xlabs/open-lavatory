@@ -5,6 +5,7 @@ import type { CreateSignalLayerFn, SignalBaseProperties } from './base.js';
 import { gundb } from './gundb/index.js';
 import { mqtt } from './mqtt/index.js';
 import { ntfy } from './ntfy/index.js';
+import { log } from './utils/log.js';
 
 const hKey = 'test';
 
@@ -27,7 +28,7 @@ describe('Signaling layers', () => {
             const signalingLayer = await layer(props);
             const signalA = await signalingLayer({
                 h,
-                rpDiscovered: (v) => console.log('rpKey', v),
+                rpDiscovered: (v) => log('rpKey', v),
                 canEncrypt: () => true,
                 encrypt: publicKey.encrypt,
                 decrypt: decryptionKey.decrypt,
@@ -36,7 +37,7 @@ describe('Signaling layers', () => {
             });
             const signalB = await signalingLayer({
                 h,
-                rpDiscovered: (v) => console.log('rpKey', v),
+                rpDiscovered: (v) => log('rpKey', v),
                 canEncrypt: () => true,
                 encrypt: publicKey.encrypt,
                 decrypt: decryptionKey.decrypt,
@@ -51,14 +52,14 @@ describe('Signaling layers', () => {
 
             const messageReceivedA = new Promise<void>((resolve) => {
                 signalA.subscribe((message) => {
-                    console.log('messageReceivedA', message);
+                    log('messageReceivedA', message);
                     expect(message).toEqual({ data: 'test2' });
                     resolve();
                 });
             });
             const messageReceivedB = new Promise<void>((resolve) => {
                 signalB.subscribe((message) => {
-                    console.log('messageReceivedB', message);
+                    log('messageReceivedB', message);
                     expect(message).toEqual({ data: 'test1' });
                     resolve();
                 });

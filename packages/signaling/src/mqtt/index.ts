@@ -1,10 +1,10 @@
-/** biome-ignore-all lint/suspicious/noConsole: <explanation> */
 import { SignalNoConnectionError } from '@openlv/core/errors';
 import type { MqttClient } from 'mqtt';
 import MQTT from 'mqtt';
 
 import type { CreateSignalLayerFn, SignalBaseProperties } from '../base.js';
 import { createSignalingLayer } from '../index.js';
+import { log } from '../utils/log.js';
 
 /**
  * Signaling over MQTT
@@ -36,10 +36,10 @@ export const mqtt: CreateSignalLayerFn = ({
         async subscribe(handler) {
             if (!connection) throw new SignalNoConnectionError();
 
-            console.log('MQTT: Subscribing to topic', topic);
+            log('MQTT: Subscribing to topic', topic);
 
             connection.on('message', (receivedTopic, message) => {
-                console.log('MQTT: Received message on topic', topic);
+                log('MQTT: Received message on topic', topic);
 
                 if (receivedTopic !== topic) return;
 
@@ -51,7 +51,7 @@ export const mqtt: CreateSignalLayerFn = ({
             return new Promise((resolve, reject) => {
                 connection?.subscribe(topic, (err) => {
                     if (err) {
-                        console.error('MQTT: Error subscribing to topic', err);
+                        log('MQTT: Error subscribing to topic', err);
                         reject(err);
                     }
 

@@ -2,7 +2,7 @@ import { encodeConnectionURL } from '@openlv/core';
 import type { Session, SessionStateObject } from '@openlv/session';
 import { useEffect, useState } from 'preact/hooks';
 
-import { log } from '../utils/log';
+import { log } from '../utils/log.js';
 import { useEventEmitter } from './useEventEmitter';
 import { useProvider } from './useProvider';
 
@@ -14,11 +14,11 @@ export const useSession = () => {
     const [status, setStatus] = useState<SessionStateObject | undefined>(session?.getState());
 
     useEventEmitter(session?.emitter, 'state_change', (event) => {
-        console.log('session state change: ', event);
+        log('session state change: ', event);
         setStatus(event);
     });
     useEventEmitter(provider?.emitter, 'session_started', (session) => {
-        console.log('session started: ', session);
+        log('session started: ', session);
         setSession(session);
         setStatus(session.getState());
     });
@@ -42,7 +42,7 @@ export const useSessionStart = () => {
 
     return {
         start: () => {
-            provider.createSession();
+            provider?.createSession();
         },
     };
 };

@@ -13,7 +13,7 @@ import { ConnectionFlow } from './ConnectionFlow';
 import { Disconnected } from './disconnected/Disconnected';
 import { Footer } from './footer/Footer';
 import { Header } from './Header';
-import { ModalSettings } from './ModalSettings';
+import { ModalSettings } from './settings';
 import { UnknownState } from './UnknownState';
 
 export interface ModalRootProps {
@@ -87,32 +87,32 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
                 aria-label={title}
                 onClick={(event) => event.stopPropagation()}
             >
-                <Header
-                    setView={setView}
-                    onToggleSettings={() => setView(view === 'settings' ? 'start' : 'settings')}
-                    title={title}
-                    view={view}
-                    onClose={onClose}
-                />
+                    <Header
+                        setView={setView}
+                        onToggleSettings={() => setView(view === 'settings' ? 'start' : 'settings')}
+                        title={title}
+                        view={view}
+                        onClose={onClose}
+                    />
 
-                {match(status)
-                    .with('disconnected', () =>
-                        match(view)
-                            .with('start', () => <Disconnected />)
-                            .with('settings', () => (
-                                <ModalSettings
-                                    continueLabel={continueLabel}
-                                    onBack={() => setView('start')}
-                                />
-                            ))
-                            .otherwise(() => <UnknownState state={view} />)
-                    )
-                    .with(P.union('connecting', 'connected'), () => (
-                        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-                    ))
-                    .otherwise(() => (
-                        <UnknownState state={'unknown status'} />
-                    ))}
+						{match(status)
+							.with('disconnected', () =>
+								match(view)
+									.with('start', () => <Disconnected />)
+									.with('settings', () => (
+										<ModalSettings
+											continueLabel={continueLabel}
+											onBack={() => setView('start')}
+										/>
+									))
+									.otherwise(() => <UnknownState state={view} />)
+							)
+							.with(P.union('connecting', 'connected'), () => (
+								<ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+							))
+							.otherwise(() => (
+									<UnknownState state={'unknown status'} />
+							))}
 
                 <div
                     className={classNames(

@@ -13,7 +13,7 @@ import { ConnectionFlow } from "./ConnectionFlow";
 import { Disconnected } from "./disconnected/Disconnected";
 import { Footer } from "./footer/Footer";
 import { Header } from "./Header";
-import { ModalSettings } from "./ModalSettings";
+import { ModalSettings } from "./settings";
 import { UnknownState } from "./UnknownState";
 
 export interface ModalRootProps {

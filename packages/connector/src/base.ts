@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createProvider, type OpenLVProvider } from "@openlv/provider";
 import { createConnector } from "@wagmi/core";
-import { Address } from "viem";
+import type { Address } from "viem";
 
 import { openlvDetails } from "./config";
 import { log } from "./log";
@@ -13,6 +13,12 @@ export type OpenLVConnectorParameters = unknown;
 export const openlv = (_parameters?: OpenLVConnectorParameters) => {
   const provider = createProvider({ foo: "bar" });
   let accounts: Address[] = [];
+
+  const onDisconnect = async () => {
+    log("onDisconnect called");
+    accounts = [];
+    await provider.closeSession();
+  };
 
   return createConnector<OpenLVProvider>((wagmiConfig) => {
     const { chains } = wagmiConfig;
@@ -62,6 +68,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       },
       async disconnect() {
         log("disconnect");
+        await onDisconnect();
       },
       async getAccounts() {
         log("getAccounts");
@@ -131,8 +138,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       },
       async onDisconnect() {
         log("onDisconnect");
-        accounts = [];
-        await provider.closeSession();
+        await onDisconnect();
       },
     };
     // return connectorActions({ ...openlvDetails, getProvider: () => provider });

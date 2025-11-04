@@ -32,7 +32,7 @@
   "types": "./dist/index.d.ts",
   "scripts": {
     "build": "vite build",
-    "dev": "vite dev",
+    "dev": "vite build --watch",
     "lint": "pnpx eslint .",
     "lint:fix": "pnpx eslint . --fix",
     "preview": "vite preview"

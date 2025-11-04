@@ -231,6 +231,7 @@ export const createSignalingLayer = (
         await init.subscribe(handleReceive);
       },
       async teardown() {
+        log("teardown");
         await init.teardown?.();
 
         return await init[Symbol.asyncDispose]?.();

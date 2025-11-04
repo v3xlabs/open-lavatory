@@ -61,7 +61,6 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { uri } = useSession();
   const { status } = useProvider();
   const title = "Connect Wallet";
-  const continueLabel = "Save & continue";
 
   useEscapeToClose(onClose);
 
@@ -102,10 +101,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             match(view)
               .with("start", () => <Disconnected />)
               .with("settings", () => (
-                <ModalSettings
-                  continueLabel={continueLabel}
-                  onBack={() => setView("start")}
-                />
+                <ModalSettings onBack={() => setView("start")} />
               ))
               .otherwise(() => <UnknownState state={view} />),
           )

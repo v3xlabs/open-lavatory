@@ -2,8 +2,10 @@
 import "../styles.css";
 
 import { openlv } from "@openlv/connector";
+import { connectSession, Session } from "@openlv/session";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
+import { useState } from "react";
 import { match } from "ts-pattern";
 import type { Address } from "viem";
 import {
@@ -12,6 +14,7 @@ import {
   useAccount,
   useConnect,
   useDisconnect,
+  useWalletClient,
   WagmiProvider,
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
@@ -32,21 +35,67 @@ const trimAddress = (address: Address | undefined | null) => {
   return `${address.slice(0, 5)}...${address.slice(-4)}`;
 };
 
+let session: Session | undefined = undefined;
+
 const Connected = () => {
   const { disconnect } = useDisconnect();
   const { address } = useAccount();
+  const { data: walletClient } = useWalletClient();
+  const [url, setUrl] = useState<string | undefined>(undefined);
+
+  console.log(walletClient);
 
   return (
-    <div className="flex items-center justify-between rounded-lg border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
-      <div>Connected to {trimAddress(address)}</div>
-      <button
-        onClick={() => {
-          disconnect();
-        }}
-        className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
-      >
-        Disconnect
-      </button>
+    <div className="rounded-lg border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
+      <div className="flex items-center justify-between gap-2">
+        <div>Connected to {trimAddress(address)}</div>
+        <button
+          onClick={() => {
+            disconnect();
+          }}
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+        >
+          Disconnect
+        </button>
+      </div>
+      <div className="flex items-center gap-2">
+        <div className="grow">
+          <input
+            type="text"
+            value={url}
+            className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+            onChange={(e) => setUrl(e.target.value)}
+          />
+        </div>
+        <button
+          onClick={async () => {
+            if (!url) return;
+
+            console.log("connecting to ", url);
+            session = await connectSession(url, async (message) => {
+              console.log("received message", message);
+              const method = (message as { method: string }).method;
+
+              if (method === "eth_accounts") {
+                const result = await walletClient?.transport.request({
+                  method: "eth_accounts",
+                  params: [],
+                });
+
+                if (result) return result;
+              }
+
+              return { result: "success" };
+            });
+            console.log("session", session);
+
+            await session.connect();
+            console.log("session connected", session);
+          }}
+        >
+          Start
+        </button>
+      </div>
     </div>
   );
 };

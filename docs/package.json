@@ -10,6 +10,7 @@
     },
     "dependencies": {
         "@openlv/connector": "workspace:*",
+        "@openlv/session": "workspace:*",
         "@tanstack/react-query": "^5.83.0",
         "mqtt": "^5.14.1",
         "react": "latest",

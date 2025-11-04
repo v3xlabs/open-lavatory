@@ -37,7 +37,7 @@ export type SessionCreationParameters = Pick<
   "p" | "s"
 >;
 
-export type SessionParameters =
+export type SessionLinkParameters =
   | SessionConnectionParameters
   | SessionHandshakeParameters
   | SessionCreationParameters;

@@ -13,6 +13,11 @@ describe("Session", () => {
         s: "https://ntfy.sh/",
       },
       ntfy,
+      async (message) => {
+        console.log("sessionA received message", message);
+
+        return { result: "success" };
+      },
     );
 
     expect(sessionA).toBeDefined();
@@ -34,7 +39,11 @@ describe("Session", () => {
 
     console.log("Connecting to session B");
 
-    const sessionB = await connectSession(encodedUrl);
+    const sessionB = await connectSession(encodedUrl, async (message) => {
+      console.log("sessionB received message", message);
+
+      return { result: "success" };
+    });
 
     console.log(sessionB.getState());
     await sessionB.connect();

@@ -33,8 +33,6 @@ export const useSession = () => {
     }
   }, [session]);
 
-  log("useSession: ", session);
-
   return {
     uri,
     status,

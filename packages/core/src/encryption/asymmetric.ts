@@ -1,6 +1,6 @@
 import nacl from "tweetnacl";
 
-import type { SessionParameters } from "../session.js";
+import type { SessionLinkParameters } from "../session.js";
 import { fromBase64, toBase64 } from "./base64.js";
 
 const PUBLIC_KEY_BYTE_LENGTH = nacl.box.publicKeyLength;
@@ -142,7 +142,7 @@ export const generateKeyPair = async (): Promise<EncKeypair> => {
 };
 
 export const initEncryptionKeys = async (
-  initParameters?: SessionParameters,
+  initParameters?: SessionLinkParameters,
 ) => {
   const keyPair = nacl.box.keyPair();
   const { encryptionKey, decryptionKey } = await generateKeyPair();

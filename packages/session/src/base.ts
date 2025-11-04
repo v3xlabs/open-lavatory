@@ -1,7 +1,7 @@
 import {
   decodeConnectionURL,
   type SessionHandshakeParameters,
-  type SessionParameters,
+  SessionLinkParameters,
 } from "@openlv/core";
 import {
   deriveSymmetricKey,
@@ -45,6 +45,7 @@ export type Session = {
   getState(): SessionStateObject;
   getHandshakeParameters(): SessionHandshakeParameters;
   connect(): Promise<void>;
+  waitForLink(): Promise<void>;
   close(): Promise<void>;
   // Send with response
   send(message: object, timeout?: number): Promise<unknown>;
@@ -52,8 +53,9 @@ export type Session = {
 };
 
 export const createSession = async (
-  initParameters: SessionParameters,
+  initParameters: SessionLinkParameters,
   signalLayer: CreateSignalLayerFn,
+  onMessage: (message: object) => Promise<object>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
   const messages = new EventEmitter<{ message: SessionMessage }>();
@@ -90,7 +92,7 @@ export const createSession = async (
         throw new Error("Relying party public key not found");
       }
 
-      log(`encrypting to ${relyingPublicKey.toString()}`);
+      log(`encrypting to ${relyingPublicKey.toString()}`, message);
 
       return await relyingPublicKey.encrypt(message);
     },
@@ -99,7 +101,11 @@ export const createSession = async (
         throw new Error("Decryption key not found");
       }
 
-      return await decryptionKey.decrypt(message);
+      const response = await decryptionKey.decrypt(message);
+
+      log("decrypted message", response);
+
+      return response;
     },
     publicKey: encryptionKey,
     k: handshakeKey,
@@ -144,15 +150,25 @@ export const createSession = async (
 
         if (sessionMsg.type === "request") {
           log("Session: received request message", sessionMsg.payload);
+
+          const payload = await onMessage(sessionMsg.payload);
+
           const responseMessage: SessionMessageResponse = {
             type: "response",
             messageId: sessionMsg.messageId,
-            payload: {
-              result: "success",
-            },
+            payload,
           };
 
           await signal.send(responseMessage);
+        }
+      });
+
+      signal.emitter.on("state_change", (state) => {
+        log("signal state change", state);
+
+        if (state === "xr-encrypted") {
+          // for now cuz we just use signaling call this a full connection
+          updateStatus("connected");
         }
       });
     },
@@ -172,6 +188,15 @@ export const createSession = async (
         p: protocol,
         s: server,
       };
+    },
+    waitForLink: async () => {
+      return new Promise((resolve) => {
+        emitter.on("state_change", (state) => {
+          if (state?.status === "connected") {
+            resolve();
+          }
+        });
+      });
     },
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === "xr-encrypted";
@@ -214,6 +239,7 @@ export const createSession = async (
  */
 export const connectSession = async (
   connectionUrl: string,
+  onMessage: (message: object) => Promise<object>,
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 
@@ -226,5 +252,5 @@ export const connectSession = async (
     throw new Error(`Invalid signaling protocol: ${initParameters.p}`);
   }
 
-  return createSession(initParameters, signaling);
+  return createSession(initParameters, signaling, onMessage);
 };

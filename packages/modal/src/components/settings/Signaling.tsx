@@ -1,6 +1,5 @@
 import classNames from "classnames";
 import { useState } from "preact/hooks";
-import { match } from "ts-pattern";
 
 import { InfoTooltip } from "../ui/InfoTooltip";
 import { InputGroup } from "../ui/Input";
@@ -38,29 +37,32 @@ export const SignalingSettings = () => {
         <InfoTooltip variant="icon">Something something very cool</InfoTooltip>
       </div>
       <div className="flex flex-col gap-4 rounded-md bg-[#F4F5F6] p-2">
-        <div className="flex flex-wrap gap-2">
-          {protocolOptions.map((option) => (
-            <button
-              key={option}
-              type="button"
-              onClick={() => setSelectedProtocol(option)}
-              aria-pressed={selectedProtocol === option}
-              className={classNames(
-                "rounded-full border px-4 py-2 font-semibold text-xs transition",
-                selectedProtocol === option
-                  ? "border-blue-500 bg-blue-50 text-blue-600"
-                  : "border-gray-300 text-gray-600 hover:border-gray-400",
-              )}
-            >
-              {option}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <div>Protocol</div>
+          <div className="flex divide-x overflow-hidden rounded-md border border-gray-300">
+            {protocolOptions.map((option) => (
+              <button
+                key={option}
+                type="button"
+                onClick={() => setSelectedProtocol(option)}
+                aria-pressed={selectedProtocol === option}
+                className={classNames(
+                  "px-4 py-2 font-semibold text-xs transition",
+                  selectedProtocol === option
+                    ? "border-blue-500 bg-blue-50 text-blue-600"
+                    : "cursor-pointer border-gray-300 text-gray-600 hover:border-gray-400",
+                )}
+              >
+                {option}
+              </button>
+            ))}
+          </div>
         </div>
-        {match(selectedProtocol)
+        {/* {match(selectedProtocol)
           .with("MQTT", () => <MqttSettings />)
           .with("NTFY", () => <NtfySettings />)
           .with("GUN", () => <GunSettings />)
-          .exhaustive()}
+          .exhaustive()} */}
       </div>
     </div>
   );

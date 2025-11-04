@@ -18,7 +18,7 @@ export type SignalingBaseLayer = {
   teardown: () => MaybePromise<void>;
   publish: (payload: string) => MaybePromise<void>;
   subscribe: (handler: (payload: string) => void) => MaybePromise<void>;
-} & { [Symbol.asyncDispose]: () => MaybePromise<void> };
+} & { [Symbol.asyncDispose]?: () => MaybePromise<void> };
 
 export type CreateSignalLayerFn = (
   properties: SignalBaseProperties,
@@ -53,6 +53,7 @@ export type SignalingLayer = (properties: SignalingProperties) => Promise<{
     state: SignalingMode;
   };
   emitter: EventEmitter<SignalingEvents>;
+  [Symbol.asyncDispose]?: () => MaybePromise<void>;
 }>;
 
 export const XR_PREFIX = "x";
@@ -230,7 +231,14 @@ export const createSignalingLayer = (
         await init.subscribe(handleReceive);
       },
       async teardown() {
-        return await init[Symbol.asyncDispose]();
+        await init.teardown?.();
+
+        return await init[Symbol.asyncDispose]?.();
+      },
+      async [Symbol.asyncDispose]() {
+        await init.teardown?.();
+
+        return await init[Symbol.asyncDispose]?.();
       },
       send(message) {
         if (!canEncrypt()) {

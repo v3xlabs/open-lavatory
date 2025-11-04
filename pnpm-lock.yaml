@@ -78,6 +78,9 @@ importers:
       '@openlv/connector':
         specifier: workspace:*
         version: link:../packages/connector
+      '@openlv/session':
+        specifier: workspace:*
+        version: link:../packages/session
       '@tanstack/react-query':
         specifier: ^5.83.0
         version: 5.90.2(react@19.2.0)

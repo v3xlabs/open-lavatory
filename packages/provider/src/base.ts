@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import type { SessionParameters } from "@openlv/core";
+import type { SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
   type Session,
@@ -29,7 +29,7 @@ export type ProviderState = {
 
 export type OpenLVProvider = {
   emitter: EventEmitter<ProviderEvents>;
-  createSession: (parameters?: SessionParameters) => Promise<Session>;
+  createSession: (parameters?: SessionLinkParameters) => Promise<Session>;
   getSession: () => Session | undefined;
   getState: () => ProviderState;
   closeSession: () => Promise<void>;
@@ -47,19 +47,28 @@ export const createProvider = (
     emitter.emit("status_change", newStatus);
   };
 
+  const onMessage = async (message: object) => {
+    log("provider received message", message);
+
+    return { result: "success" };
+  };
+
   return {
     createSession: async (
-      parameters: SessionParameters = { p: "ntfy", s: "https://ntfy.sh/" },
+      parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
     ) => {
       updateStatus("creating");
-      session = await createSession(parameters, ntfy);
+      session = await createSession(parameters, ntfy, onMessage);
       updateStatus("connecting");
 
       log("session created");
       await session.connect();
       log("session connected");
-      // updateStatus('connected');
       emitter.emit("session_started", session);
+
+      await session.waitForLink();
+      log("session linked");
+      updateStatus("connected");
 
       return session;
     },

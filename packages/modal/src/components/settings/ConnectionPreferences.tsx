@@ -12,7 +12,7 @@ export const ConnectionPreferences = () => {
   const renderToggle = (label: string, value: boolean) => (
     <div className="flex items-center justify-between">
       <div className="font-semibold text-gray-900 text-sm">{label}</div>
-      <Toggle label={label} value={value} onChange={(value) => { }} />
+      <Toggle label={label} value={value} onChange={(value) => {}} />
     </div>
   );
 

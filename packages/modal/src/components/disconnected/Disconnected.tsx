@@ -10,8 +10,7 @@ export const Disconnected = () => {
           Ready to Connect
         </h3>
         <p className="mb-4 text-gray-500 text-sm">
-          Click the button below to start the connection process and generate a
-          QR code for your wallet to scan.
+          Click the button below to start the connection process.
         </p>
       </div>
       <button

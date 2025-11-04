@@ -40,7 +40,7 @@ export const Header = ({
   }, [status, view, setView, onClose, closeSession]);
 
   return (
-    <div className="mb-2 flex items-center justify-between px-2 py-2">
+    <div className="flex items-center justify-between px-2 py-2">
       <button
         type="button"
         onClick={onBack}

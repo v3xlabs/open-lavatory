@@ -1,6 +1,5 @@
-import classNames from "classnames";
-
 import { InfoTooltip } from "../ui/InfoTooltip";
+import { Toggle } from "../ui/Toggle";
 
 const PREFERENCES_TEMPLATE = {
   retainHistory: false,
@@ -12,31 +11,8 @@ export const ConnectionPreferences = () => {
 
   const renderToggle = (label: string, value: boolean) => (
     <div className="flex items-center justify-between">
-      <div className="min-w-0 flex-1">
-        <div className="font-semibold text-gray-900 text-sm">{label}</div>
-      </div>
-      <div className="flex items-center rounded-full bg-gray-200 p-0.5">
-        <button
-          type="button"
-          disabled
-          className={classNames(
-            "rounded-full px-3 py-1 font-semibold text-xs transition",
-            !value ? "bg-emerald-400 text-white shadow" : "text-gray-600",
-          )}
-        >
-          NO
-        </button>
-        <button
-          type="button"
-          disabled
-          className={classNames(
-            "rounded-full px-3 py-1 font-semibold text-xs transition",
-            value ? "bg-emerald-400 text-white shadow" : "text-gray-600",
-          )}
-        >
-          YES
-        </button>
-      </div>
+      <div className="font-semibold text-gray-900 text-sm">{label}</div>
+      <Toggle label={label} value={value} onChange={(value) => { }} />
     </div>
   );
 

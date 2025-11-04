@@ -81,7 +81,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       data-openlv-modal-root
     >
       <div
-        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] space-y-4 rounded-2xl bg-white p-2 text-center"
+        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] space-y-2 rounded-2xl bg-white p-2 text-center"
         role="dialog"
         aria-modal="true"
         aria-label={title}

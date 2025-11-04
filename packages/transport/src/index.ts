@@ -5,4 +5,4 @@
  * without relying on centralized infrastructure.
  */
 
-export * from './base.js';
+export * from "./base.js";

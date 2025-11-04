@@ -1,47 +1,54 @@
-import type { OpenLVProvider, ProviderStatus } from '@openlv/provider';
-import { createContext } from 'preact';
-import type { FC } from 'preact/compat';
-import { useContext, useState } from 'preact/hooks';
+import type { OpenLVProvider, ProviderStatus } from "@openlv/provider";
+import { createContext } from "preact";
+import type { FC } from "preact/compat";
+import { useContext, useState } from "preact/hooks";
 
-import { ModalRoot } from '../components/ModalRoot';
-import { useEventEmitter } from './useEventEmitter';
+import { ModalRoot } from "../components/ModalRoot";
+import { useEventEmitter } from "./useEventEmitter";
 
 export type ProviderContextO = {
-    provider: OpenLVProvider | undefined;
+  provider: OpenLVProvider | undefined;
 };
 
 export const ProviderContext = createContext<ProviderContextO>({
-    provider: undefined,
+  provider: undefined,
 });
 
 export type ModalProviderProps = {
-    provider: OpenLVProvider;
-    onClose?: () => void;
+  provider: OpenLVProvider;
+  onClose?: () => void;
 };
 
-export const ModalProvider: FC<ModalProviderProps> = ({ provider, onClose }) => {
-    return (
-        <ProviderContext.Provider value={{ provider }}>
-            <ModalRoot onClose={onClose} />
-        </ProviderContext.Provider>
-    );
+export const ModalProvider: FC<ModalProviderProps> = ({
+  provider,
+  onClose,
+}) => {
+  return (
+    <ProviderContext.Provider value={{ provider }}>
+      <ModalRoot onClose={onClose} />
+    </ProviderContext.Provider>
+  );
 };
 
 export const useProvider = () => {
-    const context = useContext(ProviderContext);
+  const context = useContext(ProviderContext);
 
-    const { provider } = context;
-    const [status, setStatus] = useState<ProviderStatus>(
-        provider?.getState().status || 'disconnected'
-    );
+  const { provider } = context;
+  const [status, setStatus] = useState<ProviderStatus>(
+    provider?.getState().status || "disconnected",
+  );
 
-    useEventEmitter(provider?.emitter, 'status_change', (newStatus: ProviderStatus) => {
-        setStatus(newStatus);
-    });
+  useEventEmitter(
+    provider?.emitter,
+    "status_change",
+    (newStatus: ProviderStatus) => {
+      setStatus(newStatus);
+    },
+  );
 
-    if (!context.provider) throw new Error('Provider not found');
+  if (!context.provider) throw new Error("Provider not found");
 
-    return { provider, status };
+  return { provider, status };
 };
 
 // export const useProvider = (provider: OpenLVProvider) => {

@@ -1,19 +1,19 @@
-import { EventEmitter } from 'eventemitter3';
-import { match } from 'ts-pattern';
+import { EventEmitter } from "eventemitter3";
+import { match } from "ts-pattern";
 
-import type { CreateSignalLayerFn } from '../base.js';
-import { createSignalingLayer } from '../index.js';
-import { log } from '../utils/log.js';
-import { parseNtfyUrl } from './url.js';
+import type { CreateSignalLayerFn } from "../base.js";
+import { createSignalingLayer } from "../index.js";
+import { log } from "../utils/log.js";
+import { parseNtfyUrl } from "./url.js";
 
 export type NtfyMessage = {
-    // eslint-disable-next-line no-restricted-syntax
-    id: string;
-    time: number;
-    expires: number;
-    event: string;
-    topic: string;
-    message: string;
+  // eslint-disable-next-line no-restricted-syntax
+  id: string;
+  time: number;
+  expires: number;
+  event: string;
+  topic: string;
+  message: string;
 };
 
 /**
@@ -32,76 +32,79 @@ export type NtfyMessage = {
  *
  */
 export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
-    let connection: WebSocket | null = null;
-    const connectionInfo = parseNtfyUrl(url);
-    const wsProtocol = match(connectionInfo.protocol)
-        .with('https', () => 'wss')
-        .with('http', () => 'ws')
-        .exhaustive();
-    const events = new EventEmitter<{ message: string }>();
+  let connection: WebSocket | null = null;
+  const connectionInfo = parseNtfyUrl(url);
+  const wsProtocol = match(connectionInfo.protocol)
+    .with("https", () => "wss")
+    .with("http", () => "ws")
+    .exhaustive();
+  const events = new EventEmitter<{ message: string }>();
 
-    return createSignalingLayer({
-        type: 'ntfy',
-        async setup() {
-            log('NTFY: Setting up');
+  return createSignalingLayer({
+    type: "ntfy",
+    async setup() {
+      log("NTFY: Setting up");
 
-            const wsUrl =
-                wsProtocol +
-                '://' +
-                connectionInfo.host +
-                '/' +
-                topic +
-                '/ws' +
-                (connectionInfo.parameters || '');
+      const wsUrl =
+        wsProtocol +
+        "://" +
+        connectionInfo.host +
+        "/" +
+        topic +
+        "/ws" +
+        (connectionInfo.parameters || "");
 
-            log('NTFY: Connecting to WebSocket', wsUrl);
-            connection = new WebSocket(wsUrl);
+      log("NTFY: Connecting to WebSocket", wsUrl);
+      connection = new WebSocket(wsUrl);
 
-            connection.onerror = (_event) => { };
+      connection.onerror = (_event) => {};
 
-            connection.onclose = (_event) => { };
+      connection.onclose = (_event) => {};
 
-            const awaitOpenConfirm = new Promise<void>((resolve) => {
-                connection!.onmessage = (event) => {
-                    log('NTFY: Received message:', event.data);
-                    const data = JSON.parse(event.data) as NtfyMessage;
+      const awaitOpenConfirm = new Promise<void>((resolve) => {
+        connection!.onmessage = (event) => {
+          log("NTFY: Received message:", event.data);
+          const data = JSON.parse(event.data) as NtfyMessage;
 
-                    if (data.event === 'open') {
-                        resolve();
-                    } else if (data.event === 'message') {
-                        events.emit('message', data.message);
-                    }
-                };
-            });
+          if (data.event === "open") {
+            resolve();
+          } else if (data.event === "message") {
+            events.emit("message", data.message);
+          }
+        };
+      });
 
-            const awaitOpen = new Promise<void>((resolve) => {
-                connection!.onopen = () => {
-                    log('NTFY: Connected to WebSocket');
-                    resolve();
-                };
-            });
+      const awaitOpen = new Promise<void>((resolve) => {
+        connection!.onopen = () => {
+          log("NTFY: Connected to WebSocket");
+          resolve();
+        };
+      });
 
-            await awaitOpen;
-            await awaitOpenConfirm;
-        },
-        teardown() {
-            connection?.close();
-        },
-        async publish(body) {
-            const headers = { 'Content-Type': 'application/json' } as HeadersInit;
+      await awaitOpen;
+      await awaitOpenConfirm;
+    },
+    teardown() {
+      connection?.close();
+    },
+    async publish(body) {
+      const headers = { "Content-Type": "application/json" } as HeadersInit;
 
-            // TODO: Add response handling
-            // @ts-expect-error
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-            const _response = await fetch(
-                `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`,
-                { method: 'POST', body, headers }
-            );
-        },
-        subscribe: (handler) => {
-            events.on('message', handler);
-        },
-    });
+      // TODO: Add response handling
+      // @ts-expect-error
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+      const _response = await fetch(
+        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`,
+        { method: "POST", body, headers },
+      );
+    },
+    subscribe: (handler) => {
+      events.on("message", handler);
+    },
+    async [Symbol.asyncDispose]() {
+      connection?.close();
+    },
+  });
 };
 
-Object.defineProperty(ntfy, '__name', { value: 'ntfy' });
+Object.defineProperty(ntfy, "__name", { value: "ntfy" });

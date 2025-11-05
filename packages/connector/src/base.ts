@@ -31,55 +31,59 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       return await provider.getAccounts();
     };
 
+    const connect = async (
+      { withCapabilities } = { withCapabilities: false },
+    ) => {
+      log("connect");
+
+      const modal = await getTriggerModal();
+
+      log("loading modal");
+      modal?.(provider);
+
+      const modalDismissed = new Promise((_resolve) => {
+        // modal?.onClose
+        // resolve();
+      });
+
+      const connectionCompleted = new Promise((_resolve) => {
+        // modal?.onStartConnection
+        // resolve();
+        provider.emitter.on("status_change", (status) => {
+          log("provider_status_change", status);
+
+          if (status === "connected") {
+            _resolve({});
+          }
+        });
+
+        provider.emitter.on("accountsChanged", () => {
+          log("provider_accountsChanged");
+        });
+      });
+
+      await Promise.race([modalDismissed, connectionCompleted]);
+
+      log("completing connect() call");
+
+      const accounts = await provider.getAccounts();
+
+      return {
+        accounts: (withCapabilities
+          ? accounts.map((account) => ({
+              address: account,
+              capabilities: {},
+            }))
+          : accounts) as never,
+        chainId: 1,
+        provider,
+      };
+    };
+
     return {
       ...openlvDetails,
       foo: "bar",
-      async connect({ withCapabilities } = {}) {
-        log("connect");
-
-        const modal = await getTriggerModal();
-
-        log("loading modal");
-        modal?.(provider);
-
-        const modalDismissed = new Promise((_resolve) => {
-          // modal?.onClose
-          // resolve();
-        });
-
-        const connectionCompleted = new Promise((_resolve) => {
-          // modal?.onStartConnection
-          // resolve();
-          provider.emitter.on("status_change", (status) => {
-            log("provider_status_change", status);
-
-            if (status === "connected") {
-              _resolve({});
-            }
-          });
-
-          provider.emitter.on("accountsChanged", () => {
-            log("provider_accountsChanged");
-          });
-        });
-
-        await Promise.race([modalDismissed, connectionCompleted]);
-
-        log("completing connect() call");
-
-        const accounts = await provider.getAccounts();
-
-        return {
-          accounts: (withCapabilities
-            ? accounts.map((account) => ({
-                address: account,
-                capabilities: {},
-              }))
-            : accounts) as never,
-          chainId: 1,
-          provider,
-        };
-      },
+      connect,
       async disconnect() {
         log("disconnect");
         await onDisconnect();
@@ -106,25 +110,11 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
 
         return chain;
       },
-      async getChainId() {
-        return 1;
-      },
-      async getProvider() {
-        log("getProvider");
-
-        return provider;
-      },
-      onAccountsChanged() {
-        log("onAccountsChanged");
-      },
-      onChainChanged() {
-        log("onChainChanged");
-      },
-      async onDisconnect() {
-        log("onDisconnect");
-        await onDisconnect();
-      },
+      getChainId: provider.getChainId,
+      getProvider: async () => provider,
+      onAccountsChanged: () => log("onAccountsChanged"),
+      onChainChanged: () => log("onChainChanged"),
+      onDisconnect,
     };
-    // return connectorActions({ ...openlvDetails, getProvider: () => provider });
   });
 };

@@ -40,7 +40,11 @@ export type OpenLVProvider = {
   getSession: () => Session | undefined;
   getState: () => ProviderState;
   closeSession: () => Promise<void>;
+
+  // Ease of life
+
   getAccounts: () => Promise<Address[]>;
+  getChainId: () => Promise<number>;
 } & EIP1193Provider;
 
 export const createProvider = (
@@ -140,6 +144,7 @@ export const createProvider = (
     getState: () => ({ status }),
     emitter,
     getAccounts,
+    getChainId: async () => Number(chainId),
     ...emitter,
   });
 

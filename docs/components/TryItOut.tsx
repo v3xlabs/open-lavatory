@@ -42,23 +42,25 @@ const TestSign = () => {
   const { signMessage, data: signedData } = useSignMessage();
 
   return (
-    <div className="flex justify-between">
-      <div className="flex items-center gap-2">
-        <div>Test a personal sign</div>
-        {signedData && (
-          <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
-            Signed Data: {JSON.stringify(signedData)}
-          </div>
-        )}
+    <div className="space-y-2">
+      <div className="flex justify-between">
+        <div className="flex items-center gap-2">
+          <div>Test a personal sign</div>
+        </div>
+        <button
+          onClick={() => {
+            signMessage({ message: "Hello, world!" });
+          }}
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+        >
+          Sign Message
+        </button>
       </div>
-      <button
-        onClick={() => {
-          signMessage({ message: "Hello, world!" });
-        }}
-        className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
-      >
-        Sign Message
-      </button>
+      {signedData && (
+        <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
+          Signed Data: {JSON.stringify(signedData)}
+        </div>
+      )}
     </div>
   );
 };

@@ -70,7 +70,7 @@ export const createProvider = (
       return (await session.send(request)) as never;
     }
 
-    throw new Error("Not implemented");
+    throw new Error("No session");
   };
 
   const getAccounts = async () => {

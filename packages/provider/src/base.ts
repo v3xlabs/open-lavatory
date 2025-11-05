@@ -144,11 +144,4 @@ export const createProvider = (
   });
 
   return provider;
-  // return new Proxy(provider, {
-  //   get: (target, prop) => {
-  //     log("provider touched at", prop);
-
-  //     return target[prop as keyof OpenLVProvider];
-  //   },
-  // });
 };

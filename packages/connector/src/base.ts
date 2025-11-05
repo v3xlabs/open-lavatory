@@ -21,6 +21,16 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
     const { chains } = wagmiConfig;
     // const transports = wagmiConfig.transports;
 
+    const getAccounts = async () => {
+      log("getAccounts");
+
+      if (provider.getSession() === undefined) {
+        return [];
+      }
+
+      return await provider.getAccounts();
+    };
+
     return {
       ...openlvDetails,
       foo: "bar",
@@ -62,9 +72,9 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
         return {
           accounts: (withCapabilities
             ? accounts.map((account) => ({
-                address: account,
-                capabilities: {},
-              }))
+              address: account,
+              capabilities: {},
+            }))
             : accounts) as never,
           chainId: 1,
           provider,
@@ -74,11 +84,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
         log("disconnect");
         await onDisconnect();
       },
-      async getAccounts() {
-        log("getAccounts");
-
-        return await provider.getAccounts();
-      },
+      getAccounts,
       /**
        * Note on isAuthorized, upon page load `getProvider` is called, followed by `isAuthorized` if the result is true, the `connect` function is called.
        * This can be used for auto-reconnection / persistence if a connection exists.
@@ -86,7 +92,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       async isAuthorized() {
         log("isAuthorized");
 
-        return (await provider.getAccounts()).length > 0;
+        return (await getAccounts()).length > 0;
       },
       async switchChain({ chainId }) {
         log("switchChain", chainId);

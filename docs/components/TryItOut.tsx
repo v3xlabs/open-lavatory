@@ -45,7 +45,7 @@ const TestSign = () => {
     <div>
       {signedData && (
         <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
-          Signed Data: {signedData}
+          Signed Data: {JSON.stringify(signedData)}
         </div>
       )}
       <button
@@ -105,6 +105,10 @@ const Connected = () => {
                 });
 
                 if (result) return result;
+              }
+
+              if (["personal_sign"].includes(method)) {
+                return await walletClient?.transport.request(message as never);
               }
 
               return { result: "success" };

@@ -20,9 +20,12 @@ import type {
 } from "@openlv/signaling";
 import { mqtt } from "@openlv/signaling/mqtt";
 import { ntfy } from "@openlv/signaling/ntfy";
+import { webrtc } from "@openlv/transport";
 import { EventEmitter } from "eventemitter3";
 
 import type { SessionEvents } from "./events.js";
+type WebRTCSignalT =
+  import("./messages/index.js").SessionMessageTransport["payload"]["signal"];
 import type {
   SessionMessage,
   SessionMessageResponse,
@@ -39,6 +42,16 @@ export type SessionStateObject = {
   status: SessionStatus;
   signaling?: {
     state: SignalingMode;
+  };
+  transport?: {
+    type: "webrtc";
+    state:
+      | "webrtc-negotiating"
+      | "webrtc-connecting"
+      | "webrtc-connected"
+      | "webrtc-failed"
+      | "webrtc-closed";
+    connected: boolean;
   };
 };
 
@@ -132,14 +145,69 @@ export const createSession = async (
 
   const updateStatus = (newStatus: SessionStatus) => {
     status = newStatus;
-    emitter.emit("state_change", { status, signaling: signal.getState() });
+    emitter.emit("state_change", {
+      status,
+      signaling: signal.getState(),
+      transport: transportState,
+    });
   };
 
   signal?.emitter.on("state_change", () => {
     updateStatus(status);
   });
 
-  // let transport: TransportLayer | undefined;
+  let transport = undefined as ReturnType<typeof webrtc> | undefined;
+  let transportSetup: Promise<void> | null = null;
+  let transportState: SessionStateObject["transport"] | undefined;
+
+  const ensureTransport = async () => {
+    if (!transport) {
+      transport = webrtc({
+        onSignal: (sig: WebRTCSignalT) => {
+          signal.send({
+            type: "transport",
+            messageId: crypto.randomUUID(),
+            payload: { transport: "webrtc", signal: sig },
+          });
+        },
+        onConnectionStateChange: (st) => {
+          if (st === "connected") {
+            transportState = {
+              type: "webrtc",
+              state: "webrtc-connected",
+              connected: true,
+            };
+          } else if (st === "connecting") {
+            transportState = {
+              type: "webrtc",
+              state: "webrtc-connecting",
+              connected: false,
+            };
+          } else if (st === "failed") {
+            transportState = {
+              type: "webrtc",
+              state: "webrtc-failed",
+              connected: false,
+            };
+          } else if (st === "disconnected" || st === "closed") {
+            transportState = {
+              type: "webrtc",
+              state: "webrtc-closed",
+              connected: false,
+            };
+          }
+
+          updateStatus(status);
+        },
+        createDataChannel: isHost,
+      });
+      transportSetup = Promise.resolve(transport.setup());
+    }
+
+    if (transportSetup) await transportSetup;
+
+    return transport!;
+  };
 
   return {
     connect: async () => {
@@ -152,6 +220,35 @@ export const createSession = async (
       signal.subscribe(async (message) => {
         log("Session: received message from signaling", message);
 
+        const transportMsg =
+          message as import("./messages/index.js").SessionMessageTransport;
+
+        if (transportMsg.type === "transport") {
+          try {
+            const t = await ensureTransport();
+            const { payload } = transportMsg;
+
+            if (payload.transport === "webrtc") {
+              const response = await t.handleSignal(
+                payload.signal as WebRTCSignalT,
+              );
+
+              if (response) {
+                await signal.send({
+                  type: "transport",
+                  messageId: crypto.randomUUID(),
+                  payload: { transport: "webrtc", signal: response },
+                });
+              }
+            }
+          } catch (err) {
+            log("transport signaling error", err as Error);
+          }
+
+          return;
+        }
+
+        // Normal request/response messages
         const sessionMsg = message as SessionMessage;
 
         if (sessionMsg.type === "response") {
@@ -161,9 +258,7 @@ export const createSession = async (
 
         if (sessionMsg.type === "request") {
           log("Session: received request message", sessionMsg.payload);
-
           const payload = await onMessage(sessionMsg.payload);
-
           const responseMessage: SessionMessageResponse = {
             type: "response",
             messageId: sessionMsg.messageId,
@@ -174,11 +269,27 @@ export const createSession = async (
         }
       });
 
-      signal.emitter.on("state_change", (state) => {
+      signal.emitter.on("state_change", async (state) => {
         log("signal state change", state);
 
         if (state === "xr-encrypted") {
-          // for now cuz we just use signaling call this a full connection
+          try {
+            const t = await ensureTransport();
+
+            if (isHost) {
+              const offer = await t.negotiateAsInitiator();
+
+              await signal.send({
+                type: "transport",
+                messageId: crypto.randomUUID(),
+                payload: { transport: "webrtc", signal: offer },
+              });
+            }
+          } catch (err) {
+            log("WebRTC negotiation init error", err as Error);
+          }
+
+          // For now, because we still send over signaling, mark as fully connected
           updateStatus("connected");
         }
       });

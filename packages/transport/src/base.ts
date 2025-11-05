@@ -1,14 +1,17 @@
 import type { MaybePromise } from "viem";
 
+export type TransportType = "webrtc";
+
 export type TransportInit = {
-  type: string;
+  type: TransportType;
   setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
 };
 
 export type TransportLayer = {
-  type: string;
-  foo: "bar";
+  type: TransportType;
+  setup: () => MaybePromise<void>;
+  teardown: () => MaybePromise<void>;
 };
 
 /**
@@ -19,10 +22,9 @@ export type TransportLayer = {
 export const createTransportLayerBase = (
   init: TransportInit,
 ): TransportLayer => {
-  //
-
   return {
     type: init.type,
-    foo: "bar",
+    setup: init.setup,
+    teardown: init.teardown,
   };
 };

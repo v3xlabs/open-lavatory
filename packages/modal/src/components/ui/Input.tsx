@@ -15,6 +15,7 @@ export const Label = ({ htmlFor, children }: LabelProps) => (
 );
 
 type InputProps = {
+  // eslint-disable-next-line no-restricted-syntax
   id?: string;
   value: string;
   placeholder?: string;
@@ -23,6 +24,7 @@ type InputProps = {
 };
 
 export const Input = ({
+  // eslint-disable-next-line no-restricted-syntax
   id,
   value,
   placeholder,
@@ -30,6 +32,7 @@ export const Input = ({
   readOnly = true,
 }: InputProps) => (
   <input
+    // eslint-disable-next-line no-restricted-syntax
     id={id}
     className={inputClasses}
     value={value}
@@ -55,12 +58,14 @@ export const InputGroup = ({
   <div className="grid gap-2">
     <Label>{label}</Label>
     {values.map((value, index) => {
+      // eslint-disable-next-line no-restricted-syntax
       const id = inputIdPrefix ? `${inputIdPrefix}-${index}` : undefined;
       const suffix = values.length > 1 ? ` ${index + 1}` : "";
 
       return (
         <Input
           key={`${label}-${index}`}
+          // eslint-disable-next-line no-restricted-syntax
           id={id}
           value={value}
           placeholder={placeholder}

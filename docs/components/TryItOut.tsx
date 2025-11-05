@@ -179,7 +179,7 @@ const Connectors = () => {
                   className={classNames(
                     "font-bold text-sm",
                     connector.type === "openLv" &&
-                    "text-[var(--vocs-color_codeInlineText)]",
+                      "text-[var(--vocs-color_codeInlineText)]",
                   )}
                 >
                   {connector.name}

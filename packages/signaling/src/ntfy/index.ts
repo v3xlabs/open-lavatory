@@ -57,8 +57,10 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       log("NTFY: Connecting to WebSocket", wsUrl);
       connection = new WebSocket(wsUrl);
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       connection.onerror = (_event) => {};
 
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
       connection.onclose = (_event) => {};
 
       const awaitOpenConfirm = new Promise<void>((resolve) => {

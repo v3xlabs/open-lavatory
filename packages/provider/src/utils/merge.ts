@@ -8,7 +8,8 @@ type Overwrite<L, R> = Omit<L, keyof R> & R;
 
 /** Merge a tuple of objects so later entries overwrite earlier ones */
 type MergeRight<T extends readonly unknown[]> = T extends []
-  ? {}
+  ? // eslint-disable-next-line @typescript-eslint/no-empty-object-type
+    {}
   : T extends [infer A]
     ? A
     : T extends [infer A extends object, ...infer R extends object[]]

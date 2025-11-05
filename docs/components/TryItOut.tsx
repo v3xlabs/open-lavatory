@@ -14,6 +14,7 @@ import {
   useAccount,
   useConnect,
   useDisconnect,
+  useSignMessage,
   useWalletClient,
   WagmiProvider,
 } from "wagmi";
@@ -36,6 +37,27 @@ const trimAddress = (address: Address | undefined | null) => {
 };
 
 let session: Session | undefined = undefined;
+
+const TestSign = () => {
+  const { signMessage, data: signedData } = useSignMessage();
+
+  return (
+    <div>
+      {signedData && (
+        <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
+          Signed Data: {signedData}
+        </div>
+      )}
+      <button
+        onClick={() => {
+          signMessage({ message: "Hello, world!" });
+        }}
+      >
+        Sign Message
+      </button>
+    </div>
+  );
+};
 
 const Connected = () => {
   const { disconnect } = useDisconnect();
@@ -74,7 +96,7 @@ const Connected = () => {
             console.log("connecting to ", url);
             session = await connectSession(url, async (message) => {
               console.log("received message", message);
-              const method = (message as { method: string }).method;
+              const { method } = message as { method: string };
 
               if (method === "eth_accounts") {
                 const result = await walletClient?.transport.request({
@@ -96,6 +118,7 @@ const Connected = () => {
           Start
         </button>
       </div>
+      <TestSign />
     </div>
   );
 };
@@ -124,7 +147,7 @@ const Connectors = () => {
                   className={classNames(
                     "font-bold text-sm",
                     connector.type === "openLv" &&
-                      "text-[var(--vocs-color_codeInlineText)]",
+                    "text-[var(--vocs-color_codeInlineText)]",
                   )}
                 >
                   {connector.name}

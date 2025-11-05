@@ -7,6 +7,12 @@ import {
 } from "@openlv/session";
 import { ntfy } from "@openlv/signaling/ntfy";
 import EventEmitter from "eventemitter3";
+import type {
+  Address,
+  EIP1193EventMap,
+  EIP1193Provider,
+  EIP1193RequestFn,
+} from "viem";
 
 import type { ProviderEvents } from "./events";
 import { log } from "./utils/log";
@@ -27,20 +33,24 @@ export type ProviderState = {
   session?: SessionStateObject;
 };
 
+// EIP1193Provider
 export type OpenLVProvider = {
-  emitter: EventEmitter<ProviderEvents>;
+  emitter: EventEmitter<ProviderEvents & EIP1193EventMap>;
   createSession: (parameters?: SessionLinkParameters) => Promise<Session>;
   getSession: () => Session | undefined;
   getState: () => ProviderState;
   closeSession: () => Promise<void>;
-};
+  getAccounts: () => Promise<Address[]>;
+} & EIP1193Provider;
 
 export const createProvider = (
   _parameters: OpenLVProviderParameters,
 ): OpenLVProvider => {
-  const emitter = new EventEmitter<ProviderEvents>();
+  const emitter = new EventEmitter<ProviderEvents & EIP1193EventMap>();
   let session: Session | undefined;
   let status: ProviderStatus = "disconnected";
+  const chainId: string = "1";
+  let accounts: Address[] = [];
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -53,7 +63,51 @@ export const createProvider = (
     return { result: "success" };
   };
 
-  return {
+  const request: EIP1193RequestFn = async (request) => {
+    log("provider request", request);
+
+    if (session) {
+      return (await session.send(request)) as never;
+    }
+
+    throw new Error("Not implemented");
+  };
+
+  const getAccounts = async () => {
+    if (accounts.length > 0) {
+      log("getAcc early return ", accounts);
+
+      return accounts;
+    }
+
+    log("getAcc requesting accounts");
+    accounts = (await request({
+      method: "eth_accounts",
+      params: [],
+    })) as Address[];
+
+    log("getAcc accounts found", accounts);
+
+    return accounts as Address[];
+  };
+
+  const coreProvider: EIP1193Provider = {
+    request,
+    on(event, listener) {
+      console.log("on", event, listener);
+
+      // @ts-ignore
+      emitter.on(event, listener);
+    },
+    removeListener(event, listener) {
+      console.log("removeListener", event, listener);
+
+      // @ts-ignore
+      emitter.removeListener(event, listener);
+    },
+  };
+
+  const provider: OpenLVProvider = Object.assign(coreProvider, {
     createSession: async (
       parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
     ) => {
@@ -68,7 +122,12 @@ export const createProvider = (
 
       await session.waitForLink();
       log("session linked");
+
+      accounts = await getAccounts();
+
       updateStatus("connected");
+      emitter.emit("connect", { chainId });
+      emitter.emit("accountsChanged", accounts);
 
       return session;
     },
@@ -80,5 +139,16 @@ export const createProvider = (
     },
     getState: () => ({ status }),
     emitter,
-  };
+    getAccounts,
+    ...emitter,
+  });
+
+  return provider;
+  // return new Proxy(provider, {
+  //   get: (target, prop) => {
+  //     log("provider touched at", prop);
+
+  //     return target[prop as keyof OpenLVProvider];
+  //   },
+  // });
 };

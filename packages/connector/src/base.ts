@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import { createProvider, type OpenLVProvider } from "@openlv/provider";
 import { createConnector } from "@wagmi/core";
-import type { Address } from "viem";
 
 import { openlvDetails } from "./config";
 import { log } from "./log";
@@ -12,11 +11,9 @@ export type OpenLVConnectorParameters = unknown;
 
 export const openlv = (_parameters?: OpenLVConnectorParameters) => {
   const provider = createProvider({ foo: "bar" });
-  let accounts: Address[] = [];
 
   const onDisconnect = async () => {
     log("onDisconnect called");
-    accounts = [];
     await provider.closeSession();
   };
 
@@ -27,7 +24,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
     return {
       ...openlvDetails,
       foo: "bar",
-      async connect() {
+      async connect({ withCapabilities } = {}) {
         log("connect");
 
         const modal = await getTriggerModal();
@@ -58,10 +55,17 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
 
         await Promise.race([modalDismissed, connectionCompleted]);
 
-        // if sessions fails close modal
+        log("completing connect() call");
+
+        const accounts = await provider.getAccounts();
 
         return {
-          accounts: [],
+          accounts: (withCapabilities
+            ? accounts.map((account) => ({
+                address: account,
+                capabilities: {},
+              }))
+            : accounts) as never,
           chainId: 1,
           provider,
         };
@@ -73,33 +77,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       async getAccounts() {
         log("getAccounts");
 
-        const session = provider.getSession();
-
-        if (session) {
-          if (session.getState().status === "connected") {
-            log("session is connected, sending eth_accounts");
-            //
-
-            // temp measure, figure out debouncing / periodic refetching later
-            if (accounts.length > 0) return accounts;
-
-            const x = await session.send({
-              method: "eth_accounts",
-              params: [],
-              // eslint-disable-next-line no-restricted-syntax
-              id: 1,
-              jsonrpc: "2.0",
-            });
-
-            log("eth_accounts", x);
-            // @ts-ignore
-            accounts = (x as any) || [];
-
-            return accounts;
-          }
-        }
-
-        return [];
+        return await provider.getAccounts();
       },
       /**
        * Note on isAuthorized, upon page load `getProvider` is called, followed by `isAuthorized` if the result is true, the `connect` function is called.
@@ -108,7 +86,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       async isAuthorized() {
         log("isAuthorized");
 
-        return accounts.length > 0;
+        return (await provider.getAccounts()).length > 0;
       },
       async switchChain({ chainId }) {
         log("switchChain", chainId);

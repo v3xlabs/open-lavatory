@@ -72,9 +72,9 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
         return {
           accounts: (withCapabilities
             ? accounts.map((account) => ({
-              address: account,
-              capabilities: {},
-            }))
+                address: account,
+                capabilities: {},
+              }))
             : accounts) as never,
           chainId: 1,
           provider,

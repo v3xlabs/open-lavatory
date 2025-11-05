@@ -42,16 +42,20 @@ const TestSign = () => {
   const { signMessage, data: signedData } = useSignMessage();
 
   return (
-    <div>
-      {signedData && (
-        <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
-          Signed Data: {JSON.stringify(signedData)}
-        </div>
-      )}
+    <div className="flex justify-between">
+      <div className="flex items-center gap-2">
+        <div>Test a personal sign</div>
+        {signedData && (
+          <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
+            Signed Data: {JSON.stringify(signedData)}
+          </div>
+        )}
+      </div>
       <button
         onClick={() => {
           signMessage({ message: "Hello, world!" });
         }}
+        className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
       >
         Sign Message
       </button>
@@ -59,34 +63,24 @@ const TestSign = () => {
   );
 };
 
-const Connected = () => {
-  const { disconnect } = useDisconnect();
-  const { address } = useAccount();
+const ConnectComponent = () => {
   const { data: walletClient } = useWalletClient();
   const [url, setUrl] = useState<string | undefined>(undefined);
 
-  console.log(walletClient);
-
   return (
-    <div className="rounded-lg border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
-      <div className="flex items-center justify-between gap-2">
-        <div>Connected to {trimAddress(address)}</div>
-        <button
-          onClick={() => {
-            disconnect();
-          }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
-        >
-          Disconnect
-        </button>
+    <div className="space-y-1 border-[var(--vocs-color_codeInlineBorder)] border-b pb-2">
+      <div>
+        You can connect to a dApp by entering its connection URL and hitting
+        connect.
       </div>
       <div className="flex items-center gap-2">
         <div className="grow">
           <input
             type="text"
             value={url}
-            className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+            className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1 placeholder:text-neutral-500"
             onChange={(e) => setUrl(e.target.value)}
+            placeholder="openlv://..."
           />
         </div>
         <button
@@ -118,11 +112,45 @@ const Connected = () => {
             await session.connect();
             console.log("session connected", session);
           }}
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
         >
-          Start
+          Connect
         </button>
       </div>
-      <TestSign />
+    </div>
+  );
+};
+
+const Connected = () => {
+  const { disconnect } = useDisconnect();
+  const { address, connector } = useAccount();
+
+  return (
+    <div className="rounded-lg border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] px-4 py-4">
+      <div className="mb-2 flex items-center justify-between gap-2 border-[var(--vocs-color_codeInlineBorder)] border-b pb-2">
+        <div className="flex items-center gap-2">
+          {connector?.icon && (
+            <img
+              src={connector.icon}
+              alt={`${connector.name} icon`}
+              className="h-10 w-10 rounded-md"
+            />
+          )}
+          <div>Connected to {trimAddress(address)}</div>
+        </div>
+        <button
+          onClick={() => {
+            disconnect();
+          }}
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+        >
+          Disconnect
+        </button>
+      </div>
+      <div className="space-y-2">
+        {connector?.type !== "openLv" && <ConnectComponent />}
+        <TestSign />
+      </div>
     </div>
   );
 };

@@ -35,7 +35,6 @@ jobs:
           version: pnpm changeset:version
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   release:
     name: Release
     needs: verify

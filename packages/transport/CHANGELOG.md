@@ -1,5 +1,11 @@
 # @openlv/transport
 
+## 0.0.1-beta.4
+
+### Patch Changes
+
+- 816831e: Cleanup package.json
+
 ## 0.0.1-beta.3
 
 ### Patch Changes

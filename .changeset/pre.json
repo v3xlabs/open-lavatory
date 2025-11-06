@@ -18,9 +18,12 @@
     "@openlv/tests": "0.0.0"
   },
   "changesets": [
+    "beige-squids-heal",
+    "bright-beans-guess",
     "itchy-oranges-camp",
     "modern-bats-thank",
     "twenty-deer-juggle",
+    "wide-kiwis-jam",
     "young-readers-lead"
   ]
 }

@@ -1,5 +1,17 @@
 # @openlv/modal
 
+## 0.0.1-beta.4
+
+### Patch Changes
+
+- 816831e: Move qrcode-generator to dependencies
+- 816831e: Cleanup package.json
+- Updated dependencies [6c27823]
+- Updated dependencies [816831e]
+  - @openlv/core@0.0.1-beta.5
+  - @openlv/provider@0.0.1-beta.4
+  - @openlv/session@0.0.1-beta.5
+
 ## 0.0.1-beta.3
 
 ### Patch Changes

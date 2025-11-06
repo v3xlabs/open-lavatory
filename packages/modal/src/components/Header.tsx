@@ -1,8 +1,8 @@
 import { useCallback } from "preact/hooks";
+import { LuChevronLeft, LuCog } from "react-icons/lu";
 import { match } from "ts-pattern";
 
 import { useProvider } from "../hooks/useProvider";
-import { ChevronLeftIcon, CogIcon } from "../icons";
 import { log } from "../utils/log";
 
 export const Header = ({
@@ -21,7 +21,7 @@ export const Header = ({
   const { status, provider } = useProvider();
   const closeSession = useCallback(async () => {
     log("closing session");
-    await provider.closeSession();
+    await provider?.closeSession();
   }, [provider]);
 
   const onBack = useCallback(() => {
@@ -47,7 +47,7 @@ export const Header = ({
         aria-label={view === "settings" ? "Back to QR" : "Close modal"}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
       >
-        <ChevronLeftIcon />
+        <LuChevronLeft />
       </button>
       <h2 className="flex items-center justify-center gap-2 font-semibold text-gray-900 text-lg">
         {title}
@@ -63,7 +63,7 @@ export const Header = ({
         onClick={onToggleSettings}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
       >
-        <CogIcon />
+        <LuCog />
       </button>
     </div>
   );

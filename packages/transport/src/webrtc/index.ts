@@ -1,4 +1,5 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+import { match } from "ts-pattern";
+
 import { createTransportLayerBase } from "../base.js";
 
 export type WebRTCSignal =
@@ -8,13 +9,13 @@ export type WebRTCSignal =
 
 export type WebRTCTransport = ReturnType<typeof webrtc>;
 
-export const webrtc = (opts?: {
+export const webrtc = (opts: {
   onSignal?: (signal: WebRTCSignal) => void;
   onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
   createDataChannel?: boolean; // default true (initiator should pass true)
 }) => {
   let peerConnection: RTCPeerConnection | null = null;
-  let dc: RTCDataChannel | null = null;
+  let dataChannel: RTCDataChannel | null = null;
   let messageHandler: ((data: unknown) => void) | null = null;
   const signalHandlers = new Set<(s: WebRTCSignal) => void>();
   const pendingRemoteCandidates: RTCIceCandidateInit[] = [];
@@ -23,11 +24,15 @@ export const webrtc = (opts?: {
 
   const iceServers: RTCIceServer[] = [
     { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun.services.mozilla.com:3478" },
-    {
-      urls: "stun:stun.relay.metered.ca:80",
-    },
+    { urls: "stun:stun.l.google.com:5349" },
+    { urls: "stun:stun1.l.google.com:3478" },
+    { urls: "stun:stun1.l.google.com:5349" },
+    { urls: "stun:stun2.l.google.com:19302" },
+    { urls: "stun:stun2.l.google.com:5349" },
+    { urls: "stun:stun3.l.google.com:3478" },
+    { urls: "stun:stun3.l.google.com:5349" },
+    { urls: "stun:stun4.l.google.com:19302" },
+    { urls: "stun:stun4.l.google.com:5349" },
   ];
 
   const base = createTransportLayerBase({
@@ -42,52 +47,53 @@ export const webrtc = (opts?: {
         const state = peerConnection?.connectionState;
 
         // Notify caller and log.
-        if (state) opts?.onConnectionStateChange?.(state);
+        if (state) opts.onConnectionStateChange?.(state);
 
         console.log("WebRTC connection state:", state);
       };
 
-      peerConnection.onicecandidate = (ev) => {
-        const c = ev.candidate?.toJSON();
+      peerConnection.onicecandidate = (iceEvent) => {
+        const candidate = iceEvent.candidate?.toJSON();
 
-        if (c) {
-          const sig: WebRTCSignal = { op: "ice", candidate: c };
+        if (candidate) {
+          const signal: WebRTCSignal = { op: "ice", candidate };
 
-          signalHandlers.forEach((h) => h(sig));
+          signalHandlers.forEach((h) => h(signal));
         }
       };
 
       // Create a data channel only if requested (typically only by initiator)
       if (opts?.createDataChannel !== false) {
-        dc = peerConnection.createDataChannel("openlv-data");
+        dataChannel = peerConnection.createDataChannel("openlv-data");
 
-        dc.onopen = () => {
+        dataChannel.onopen = () => {
           console.log("WebRTC data channel open");
         };
 
-        dc.onmessage = (ev: MessageEvent) => {
-          if (messageHandler) messageHandler(ev.data);
+        dataChannel.onmessage = (event: MessageEvent) => {
+          if (messageHandler) messageHandler(event.data);
         };
       }
 
-      peerConnection.ondatachannel = (ev: RTCDataChannelEvent) => {
-        dc = ev.channel;
-        dc.onopen = () => {
+      peerConnection.ondatachannel = (event: RTCDataChannelEvent) => {
+        dataChannel = event.channel;
+        dataChannel.onopen = () => {
           console.log("WebRTC data channel open");
         };
-        dc.onmessage = (e: MessageEvent) => {
-          if (messageHandler) messageHandler(e.data);
+        dataChannel.onmessage = (event: MessageEvent) => {
+          if (messageHandler) messageHandler(event.data);
         };
       };
     },
     async teardown() {
       try {
-        if (dc && dc.readyState !== "closed") dc.close();
+        if (dataChannel && dataChannel.readyState !== "closed")
+          dataChannel.close();
       } catch {
         console.error("Error closing WebRTC data channel");
       }
 
-      dc = null;
+      dataChannel = null;
 
       try {
         peerConnection?.close();
@@ -99,87 +105,81 @@ export const webrtc = (opts?: {
     },
   });
 
-  const ensurePC = () => {
+  const ensurePeerConnection = () => {
     if (!peerConnection) throw new Error("WebRTC transport not set up yet");
 
     return peerConnection;
   };
 
-  const ensureDC = () => {
-    if (!dc) throw new Error("WebRTC data channel not ready");
+  const ensureDataChannel = () => {
+    if (!dataChannel) throw new Error("WebRTC data channel not ready");
 
-    return dc;
+    return dataChannel;
   };
 
   return {
     ...base,
     async negotiateAsInitiator() {
-      const pc = ensurePC();
-      const offer = await pc.createOffer({
+      const peerConnection = ensurePeerConnection();
+      const offer = await peerConnection.createOffer({
         offerToReceiveAudio: false,
         offerToReceiveVideo: false,
       });
 
-      await pc.setLocalDescription(offer);
+      await peerConnection.setLocalDescription(offer);
 
       return { op: "offer", sdp: offer } as const;
     },
     async handleSignal(signal: WebRTCSignal) {
-      const pc = ensurePC();
+      const peerConnection = ensurePeerConnection();
 
-      if (signal.op === "offer") {
-        await pc.setRemoteDescription(signal.sdp);
-        const answer = await pc.createAnswer();
-
-        await pc.setLocalDescription(answer);
-
-        // Apply any ICE candidates we received before remote description
+      const flushPendingRemoteCandidates = async () => {
         while (pendingRemoteCandidates.length) {
-          const cand = pendingRemoteCandidates.shift()!;
+          const candidate = pendingRemoteCandidates.shift()!;
 
           try {
-            await pc.addIceCandidate(new RTCIceCandidate(cand));
+            await peerConnection.addIceCandidate(
+              new RTCIceCandidate(candidate),
+            );
           } catch (err) {
             console.warn("Failed to add queued ICE candidate", err);
           }
         }
+      };
 
-        return { op: "answer", sdp: answer } as const;
-      }
+      return match(signal)
+        .with({ op: "offer" }, async ({ sdp }) => {
+          await peerConnection.setRemoteDescription(sdp);
+          const answer = await peerConnection.createAnswer();
 
-      if (signal.op === "answer") {
-        await pc.setRemoteDescription(signal.sdp);
+          await peerConnection.setLocalDescription(answer);
+          await flushPendingRemoteCandidates();
 
-        // Apply any ICE candidates we received before remote description
-        while (pendingRemoteCandidates.length) {
-          const cand = pendingRemoteCandidates.shift()!;
+          return { op: "answer", sdp: answer } as const;
+        })
+        .with({ op: "answer" }, async ({ sdp }) => {
+          await peerConnection.setRemoteDescription(sdp);
+          await flushPendingRemoteCandidates();
 
-          try {
-            await pc.addIceCandidate(new RTCIceCandidate(cand));
-          } catch (err) {
-            console.warn("Failed to add queued ICE candidate", err);
+          return undefined;
+        })
+        .with({ op: "ice" }, async ({ candidate }) => {
+          // If remote description is not yet set, queue the candidate
+          if (!peerConnection.remoteDescription) {
+            pendingRemoteCandidates.push(candidate);
+          } else {
+            try {
+              await peerConnection.addIceCandidate(
+                new RTCIceCandidate(candidate),
+              );
+            } catch (err) {
+              console.warn("Failed to add ICE candidate", err);
+            }
           }
-        }
 
-        return undefined;
-      }
-
-      if (signal.op === "ice") {
-        // If remote description is not yet set, queue the candidate
-        if (!pc.remoteDescription) {
-          pendingRemoteCandidates.push(signal.candidate);
-        } else {
-          try {
-            await pc.addIceCandidate(new RTCIceCandidate(signal.candidate));
-          } catch (err) {
-            console.warn("Failed to add ICE candidate", err);
-          }
-        }
-
-        return undefined;
-      }
-
-      return undefined;
+          return undefined;
+        })
+        .exhaustive();
     },
     onSignal(handler: (signal: WebRTCSignal) => void) {
       signalHandlers.add(handler);
@@ -188,9 +188,9 @@ export const webrtc = (opts?: {
       messageHandler = handler;
     },
     send(text: string) {
-      const ch = ensureDC();
+      const channel = ensureDataChannel();
 
-      ch.send(text);
+      channel.send(text);
     },
     getState() {
       return {

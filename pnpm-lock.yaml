@@ -541,6 +541,9 @@ importers:
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
+      qrcode-generator:
+        specifier: ^1.5.0
+        version: 1.5.2
     devDependencies:
       '@preact/preset-vite':
         specifier: ^2.10.2
@@ -554,9 +557,6 @@ importers:
       preact-custom-element:
         specifier: ^4.4.3
         version: 4.5.1(preact@10.27.2)
-      qrcode-generator:
-        specifier: ^1.5.0
-        version: 1.5.2
       react-icons:
         specifier: ^5.5.0
         version: 5.5.0(react@19.2.0)

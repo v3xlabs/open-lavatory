@@ -1,7 +1,6 @@
 {
   "name": "@openlv/connector",
   "version": "0.0.1-beta.3",
-  "license": "LGPL-3.0-only",
   "keywords": [
     "open-lavatory"
   ],
@@ -14,12 +13,13 @@
     "url": "https://github.com/v3xlabs/open-lavatory.git",
     "directory": "packages/connector"
   },
+  "license": "LGPL-3.0-only",
   "author": {
     "name": "Open-Lavatory",
     "url": "https://github.com/v3xlabs/open-lavatory"
   },
+  "sideEffects": false,
   "type": "module",
-  "main": "./dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
@@ -27,12 +27,12 @@
       "default": "./dist/index.js"
     }
   },
+  "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
     "README.md"
   ],
-  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "dev": "tsc --watch"

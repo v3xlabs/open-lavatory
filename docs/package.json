@@ -1,8 +1,8 @@
 {
     "name": "docs",
     "version": "0.0.0",
-    "license": "LGPL-3.0-only",
     "private": true,
+    "license": "LGPL-3.0-only",
     "type": "module",
     "scripts": {
         "build": "vocs build",

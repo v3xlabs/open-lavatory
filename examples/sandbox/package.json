@@ -1,9 +1,9 @@
 {
   "name": "@openlv/sandbox",
   "version": "0.0.0",
-  "license": "LGPL-3.0-only",
   "private": true,
   "description": "",
+  "license": "LGPL-3.0-only",
   "type": "module",
   "scripts": {
     "build": "vite build",
@@ -14,10 +14,10 @@
     "start": "vite"
   },
   "dependencies": {
-    "@openlv/transport": "workspace:*",
-    "@openlv/session": "workspace:*",
-    "@openlv/provider": "workspace:*",
     "@openlv/core": "workspace:*",
+    "@openlv/provider": "workspace:*",
+    "@openlv/session": "workspace:*",
+    "@openlv/transport": "workspace:*",
     "@tailwindcss/postcss": "^4.1.10",
     "@tanstack/router-plugin": "^1.121.9",
     "@types/react": "^19.1.8",

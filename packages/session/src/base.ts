@@ -1,7 +1,8 @@
 import {
   decodeConnectionURL,
+  OPENLV_PROTOCOL_VERSION,
   type SessionHandshakeParameters,
-  SessionLinkParameters,
+  type SessionLinkParameters,
 } from "@openlv/core";
 import {
   deriveSymmetricKey,
@@ -192,6 +193,7 @@ export const createSession = async (
     },
     getHandshakeParameters() {
       return {
+        version: OPENLV_PROTOCOL_VERSION,
         sessionId,
         h: hash,
         k: handshakeKey.toString(),

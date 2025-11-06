@@ -1,5 +1,7 @@
 import type { SessionHandshakeParameters } from "../session.js";
 
+export const OPENLV_PROTOCOL_VERSION = 1;
+
 export const encodeConnectionURL = (payload: SessionHandshakeParameters) => {
   const params = new URLSearchParams();
 
@@ -14,7 +16,7 @@ export const encodeConnectionURL = (payload: SessionHandshakeParameters) => {
     params.set("s", payload.s);
   }
 
-  return `openlv://${payload.sessionId}?${params.toString()}`;
+  return `openlv://${payload.sessionId}@${OPENLV_PROTOCOL_VERSION}?${params.toString()}`;
 };
 
 export const decodeConnectionURL = (
@@ -37,10 +39,19 @@ export const decodeConnectionURL = (
 
   try {
     const urlObj = new URL(url);
-    const sessionId = urlObj.hostname || urlObj.pathname.replace("/", "");
+    const sessionId = urlObj.username;
+    const version = Number(urlObj.hostname || urlObj.pathname.replace("/", ""));
+
+    if (version !== OPENLV_PROTOCOL_VERSION) {
+      throw new Error(
+        `Invalid protocol version: expected ${OPENLV_PROTOCOL_VERSION}, got ${version}`,
+      );
+    }
+
     const h = urlObj.searchParams.get("h") || "";
     const k = urlObj.searchParams.get("k") || "";
     const s = urlObj.searchParams.get("s") || undefined;
+
     const p =
       (urlObj.searchParams.get("p") as "mqtt" | "waku" | "nostr") || "mqtt";
 
@@ -78,6 +89,7 @@ export const decodeConnectionURL = (
     }
 
     return {
+      version,
       sessionId,
       h,
       k,

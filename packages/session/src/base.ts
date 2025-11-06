@@ -22,6 +22,7 @@ import { mqtt } from "@openlv/signaling/mqtt";
 import { ntfy } from "@openlv/signaling/ntfy";
 import { webrtc } from "@openlv/transport";
 import { EventEmitter } from "eventemitter3";
+import { match } from "ts-pattern";
 
 import type { SessionEvents } from "./events.js";
 type WebRTCSignalT =
@@ -171,32 +172,33 @@ export const createSession = async (
           });
         },
         onConnectionStateChange: (st) => {
-          if (st === "connected") {
-            transportState = {
-              type: "webrtc",
-              state: "webrtc-connected",
+          transportState = match(st)
+            .with("connected", () => ({
+              type: "webrtc" as const,
+              state: "webrtc-connected" as const,
               connected: true,
-            };
-          } else if (st === "connecting") {
-            transportState = {
-              type: "webrtc",
-              state: "webrtc-connecting",
+            }))
+            .with("connecting", () => ({
+              type: "webrtc" as const,
+              state: "webrtc-connecting" as const,
               connected: false,
-            };
-          } else if (st === "failed") {
-            transportState = {
-              type: "webrtc",
-              state: "webrtc-failed",
+            }))
+            .with("failed", () => ({
+              type: "webrtc" as const,
+              state: "webrtc-failed" as const,
               connected: false,
-            };
-          } else if (st === "disconnected" || st === "closed") {
-            transportState = {
-              type: "webrtc",
-              state: "webrtc-closed",
+            }))
+            .with("disconnected", () => ({
+              type: "webrtc" as const,
+              state: "webrtc-closed" as const,
               connected: false,
-            };
-          }
-
+            }))
+            .with("closed", () => ({
+              type: "webrtc" as const,
+              state: "webrtc-closed" as const,
+              connected: false,
+            }))
+            .otherwise(() => transportState);
           updateStatus(status);
         },
         createDataChannel: isHost,

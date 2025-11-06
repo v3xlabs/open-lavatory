@@ -1,5 +1,11 @@
 # @openlv/core
 
+## 0.0.1-beta.4
+
+### Patch Changes
+
+- 0262c51: Introduce openlv version number parsing "@1"
+
 ## 0.0.1-beta.3
 
 ### Patch Changes

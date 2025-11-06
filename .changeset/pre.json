@@ -18,6 +18,7 @@
     "@openlv/tests": "0.0.0"
   },
   "changesets": [
+    "itchy-oranges-camp",
     "modern-bats-thank",
     "twenty-deer-juggle",
     "young-readers-lead"

@@ -8,6 +8,8 @@ export type Hex<_L> = string;
  * The parameters from the connection url
  */
 export type SessionHandshakeParameters = {
+  // Version of the openlv protocol
+  version: 1;
   // Unique session identifier
   sessionId: Hex<16>;
   // Hash of peerA's public key

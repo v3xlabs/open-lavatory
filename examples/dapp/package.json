@@ -1,6 +1,7 @@
 {
   "name": "@openlv/example-dapp",
   "version": "0.0.0",
+  "license": "LGPL-3.0-only",
   "private": true,
   "description": "",
   "type": "module",

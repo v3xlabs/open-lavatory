@@ -1,5 +1,6 @@
 {
     "name": "openlv",
     "version": "0.0.1-beta.0",
+    "license": "LGPL-3.0-only",
     "private": false
 }

@@ -1,6 +1,7 @@
 {
   "name": "@openlv/transport",
   "version": "0.0.1-beta.1",
+  "license": "LGPL-3.0-only",
   "keywords": [
     "open-lavatory"
   ],
@@ -18,12 +19,20 @@
     "url": "https://github.com/v3xlabs/open-lavatory"
   },
   "type": "module",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     }
   },
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "vitest"

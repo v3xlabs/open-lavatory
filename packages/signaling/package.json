@@ -1,6 +1,7 @@
 {
   "name": "@openlv/signaling",
   "version": "0.0.1-beta.1",
+  "license": "LGPL-3.0-only",
   "keywords": [
     "open-lavatory"
   ],
@@ -18,35 +19,46 @@
     "url": "https://github.com/v3xlabs/open-lavatory"
   },
   "type": "module",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./ntfy": {
       "types": "./dist/ntfy/index.d.ts",
+      "import": "./dist/ntfy/index.js",
       "default": "./dist/ntfy/index.js"
     },
     "./mqtt": {
       "types": "./dist/mqtt/index.d.ts",
+      "import": "./dist/mqtt/index.js",
       "default": "./dist/mqtt/index.js"
     },
     "./gundb": {
       "types": "./dist/gundb/index.d.ts",
+      "import": "./dist/gundb/index.js",
       "default": "./dist/gundb/index.js"
     },
     "./dynamic": {
       "types": "./dist/dynamic.d.ts",
+      "import": "./dist/dynamic.js",
       "default": "./dist/dynamic.js"
     }
   },
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "vitest"
   },
   "dependencies": {
-    "@openlv/core": "workspace:*",
+    "@openlv/core": "^0.0.1-beta.1",
     "eventemitter3": "^5",
     "globals": "^16",
     "gun": "^0.2020.1241",

@@ -1,6 +1,7 @@
 {
   "name": "@openlv/session",
   "version": "0.0.1-beta.1",
+  "license": "LGPL-3.0-only",
   "keywords": [
     "open-lavatory"
   ],
@@ -18,22 +19,32 @@
     "url": "https://github.com/v3xlabs/open-lavatory"
   },
   "type": "module",
+  "main": "./dist/index.js",
   "exports": {
     ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
     "./provider": {
+      "types": "./dist/provider.d.ts",
+      "import": "./dist/provider.js",
       "default": "./dist/provider.js"
     }
   },
   "types": "./dist/index.d.ts",
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
   "scripts": {
     "build": "tsc",
     "test": "vitest"
   },
   "dependencies": {
-    "@openlv/core": "workspace:*",
-    "@openlv/signaling": "workspace:*",
+    "@openlv/core": "^0.0.1-beta.1",
+    "@openlv/signaling": "^0.0.1-beta.1",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "ts-pattern": "^5"

@@ -3,6 +3,5 @@
 
 export * from "./messages/index.js";
 export * from "./session.js";
-export * from "./session.js";
 export * from "./settings.js";
-export * from "./utils/url.js";
+export * from "./url/index.js";

@@ -8,25 +8,18 @@
   <p><strong>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</strong></p>
 
   <div align="center">
-    <a href="https://hackathon.web3privacy.info">
-      <img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-blue?style=for-the-badge" alt="Built at W3PN Hacks 2025">
-    </a>
-    <a href="#">
-      <img src="https://img.shields.io/badge/Status-Proof%20of%20Concept-orange?style=for-the-badge" alt="Status: Proof of Concept">
-    </a>
+    <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-blue?style=for-the-badge" alt="Documentation: openlv.sh"></a>
+    <a href="#"><img src="https://img.shields.io/badge/Status-Proof%20of%20Concept-orange?style=for-the-badge" alt="Status: Proof of Concept"></a>
+    <a href="https://hackathon.web3privacy.info"><img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-green?style=for-the-badge" alt="Built at W3PN Hacks 2025"></a>
   </div>
 </div>
 
 ---
 
-## 🌟 Overview
-
 > [!IMPORTANT]
-> You are currently viewing the **development** branch of the repository.
+> You are currently viewing the **beta** version of the repository.
 
-> [!NOTE]
-> This project was built during 48 hours at [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin.
-> It is to be treated as a proof of concept.
+## Overview
 
 A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
 
@@ -39,7 +32,7 @@ Open Lavatory Protocol eliminates centralized relay servers by enabling direct p
 - Update icons
 - Update sandbox with more debugging information
 
-## 📦 Repository Structure
+## Repository Structure
 
 This repository includes the following packages:
 
@@ -60,14 +53,14 @@ This repository includes the following packages:
 | 👛 [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
 | 🌐 [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
 
-## 📋 Specification
+## Specification
 
 > [!IMPORTANT]
 > This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#%EF%B8%8F-known-limitations) section for more details.
 
 You can find the entire specification in [spec.md](./docs/spec.md).
 
-### 📝 The Open Lavatory Protocol
+### The Open Lavatory Protocol
 
 In short detail, the protocol works as follows:
 
@@ -78,7 +71,7 @@ In short detail, the protocol works as follows:
 5. **🌐 WebRTC**: Asymmetric encryption negotiates direct P2P connection
 6. **💬 Communication**: Encrypted JSON-RPC over local-preferred WebRTC
 
-### ⚠️ Known Limitations
+### Known Limitations
 
 As always there is room for improvement;
 
@@ -86,20 +79,20 @@ The current specification implements a full symmetric-to-asymmetric encryption s
 
 In a similar manner, the `h` parameter specifies a hash of the public key, which allows for double verification when initiating a handshake during the signaling phase. This too could use improvements.
 
-### 🔐 Security Features
+### Security Features
 
 - **🛡️ End-to-End Encryption**: ECDH P-256 + AES-256-GCM
 - **🚫 No Central Authority**: Direct peer-to-peer communication
 - **🔄 Fallback Mechanism**: MQTT reopens on WebRTC failure
 - **✅ Key Verification**: SHA-256 public key hashing
 
-### 🌐 Browser support
+### Browser support
 
 - ✅ **Chromium-based browsers**: Full support with & w/out TURN servers
 - ⚠️ **Firefox**: Requires TURN servers (potential centralization point)
 - ❓ **Safari**: Limited testing
 
-## 🛠️ Getting Started
+## Getting Started
 
 There are several ways to run this project
 
@@ -145,18 +138,10 @@ pnpm dapp
 
 And then open [localhost:5173](http://localhost:5173) & [localhost:5174](http://localhost:5174) in your browser.
 
-## 🤝 Contributing
+## Contributing
 
-Built with ❤️ during a 48-hour hackathon. Contributions welcome!
+We accept contributions via pull requests. Please ensure to push changesets for your changes. Also see issues to comment on RFCs.
 
-## 👥 Attribution
+## Attribution
 
-**Builders**: [@talentlessguy](https://github.com/talentlessguy) & [@lucemans](https://github.com/lucemans) & [@nevvdev](https://github.com/nevvdev)
-
-**Event**: [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin
-
----
-
-<div align="center">
-  <sub>🔒 Privacy-first • 🌐 Peer-to-peer • 🚀 Built for Web3</sub>
-</div>
+The initial proof of concept was built during 48 hours at [W3PN Hacks 2025](https://hackathon.web3privacy.info) in Berlin by [@talentlessguy](https://github.com/talentlessguy) & [@lucemans](https://github.com/lucemans) & [@nevvdev](https://github.com/nevvdev).

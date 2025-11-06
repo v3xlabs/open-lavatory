@@ -26,8 +26,12 @@ jobs:
         uses: ./.github/actions/setup-workspace
         with:
           build-packages: false
+      - name: Build dependencies
+        run: pnpm --filter "docs^..." build
       - name: Build Docs
         run: pnpm --filter docs build
+        env:
+          DOCS_BASE_PATH: "/open-lavatory"
       - name: Edgeserver Upload
         uses: v3xlabs/edgeserver-upload@v0.2.1-pre.4
         with:
@@ -36,12 +40,6 @@ jobs:
           token: ${{ secrets.EDGE_TOKEN }}
           directory: docs/dist
           context: true
-      - name: Build dependencies
-        run: pnpm --filter "docs^..." build
-      - name: Build Docs
-        run: pnpm --filter docs build
-        env:
-          DOCS_BASE_PATH: "/open-lavatory"
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

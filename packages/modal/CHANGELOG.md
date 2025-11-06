@@ -1,5 +1,15 @@
 # @openlv/modal
 
+## 0.0.1-beta.3
+
+### Patch Changes
+
+- ebbd7d9: Update release
+- Updated dependencies [ebbd7d9]
+  - @openlv/core@0.0.1-beta.3
+  - @openlv/provider@0.0.1-beta.3
+  - @openlv/session@0.0.1-beta.3
+
 ## 0.0.1-beta.2
 
 ### Patch Changes

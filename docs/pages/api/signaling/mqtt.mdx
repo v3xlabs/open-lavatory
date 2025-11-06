@@ -5,17 +5,26 @@ MQTT is a lightweight publish/subscribe messaging protocol for connecting remote
 ```typescript
 import { mqtt } from '@openlv/signaling/mqtt';
 
-const session = await createSession({ p: 'mqtt', s: 'wss://test.mosquitto.org:8081/mqtt' }, mqtt);
+const session = await createSession({
+    p: 'mqtt',
+    s: 'wss://test.mosquitto.org:8081/mqtt'
+}, mqtt);
 ```
 
-## Hosted Infrastructure (test.mosquitto.org)
-
-You read that right.
-
-## Self-Hosted
-
-### URL Format
+## URL Format
 
 ```yaml
 wss://test.mosquitto.org:8081/mqtt
 ```
+
+## Hosted Infrastructure (test.mosquitto.org)
+
+The `test.mosquitto.org` instance is hosted by the [Eclipse Foundation](https://www.eclipse.org/mosquitto/) as a publicly available MQTT broker with reasonable rate limits.
+
+You can findout more about the Mosquitto MQTT broker [here](https://mosquitto.org/).
+
+## Self-Hosted
+
+You can host your own MQTT broker (either publicly or behind for example a private network), ensure to enable websockets with preference for SSL/TLS enabled.
+
+This can easily be accomplished through the [eclipse/mosquitto](https://hub.docker.com/_/eclipse-mosquitto/) docker container.

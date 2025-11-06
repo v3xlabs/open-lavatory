@@ -5,16 +5,12 @@
 ```typescript
 import { ntfy } from '@openlv/signaling/ntfy';
 
-const session = await createSession({ p: 'ntfy', s: 'https://ntfy.sh/' }, ntfy);
+const session = await createSession({
+    p: 'ntfy',
+    s: 'https://ntfy.sh/'
+}, ntfy);
 ```
-
-## Hosted Infrastructure (ntfy.sh)
-
-You read that right.
-
-## Self-Hosted
-
-### URL Format
+## URL Format
 
 ```yaml
 # Hosted ntfy.sh instance
@@ -29,3 +25,14 @@ https://ntfy.example.com/?auth=mytoken1
 ntfy://mytoken1@ntfy.example.com/
 ntfys://myuser:mypassword@ntfy.example.com/
 ```
+
+## Hosted Infrastructure (ntfy.sh)
+
+The official `ntfy.sh` instance is hosted by the ntfy team and is publicly available without authentication.
+This means anyone can publish and subscribe to any topic.
+
+## Self-Hosted
+
+You can easily [self-host your own ntfy instance](https://docs.ntfy.sh/install/) with a variety of supported platforms.
+
+Authentication is supported via token or username and password, this means you authenticate with your own instance should you so choose.

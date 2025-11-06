@@ -148,7 +148,7 @@ export default defineConfig({
     dark: "/openlavatory_dark.png",
     light: "/openlavatory.png",
   },
-  basePath: "/open-lavatory",
+  basePath: process.env.DOCS_BASE_PATH || "/",
   vite: {
     plugins: [tailwindcss() as unknown as any],
   },

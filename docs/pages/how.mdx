@@ -1,8 +1,12 @@
 # How it works
 
-Open Lavatory establishes a connection through a two phase process; signaling and transport.
-When a session is created, something something setup provided using the users [signaling layer](/api/signaling).
-After performing a handshake to exchange encryption keys, the session is taken over by the [transport layer](/api/transport).
+Open Lavatory establishes a link through a **two phase process**;
+
+First a handshake-like process occurs on public or user-configured infrastructure, we call this process [signaling](/api/signaling).
+Through this connection public keys are exchanged.
+
+From then on communication is handled by the [transport](/api/transport) layer.
+Through direct communication between the two devices or a relayed process.
 
 ## Signaling
 

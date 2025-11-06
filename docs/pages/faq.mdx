@@ -4,7 +4,7 @@
 
 Open Lavatory is a secure peer-to-peer (with some extra steps) JSON-RPC that allows you to connect any dApp to your mobile or desktop wallet.
 
-It is open, decentralized, and won't force you to migrate to a centralized _"version two"[*](https://walletconnect.mirror.xyz/vVOIJaXAl9o7H-b7ZSfKvfxyzxTqxjAgM6ha2Y32kAE)_
+It is open, decentralized, and won't force you to migrate to a centralized _"version two"[*](https://walletconnect.mirror.xyz/vVOIJaXAl9o7H-b7ZSfKvfxyzxTqxjAgM6ha2Y32kAE)_, change license on you[**](https://github.com/WalletConnect/walletconnect-monorepo/pull/6867/files), or spy on you.
 
 ## Where is it hosted?
 
@@ -17,18 +17,29 @@ This includes but is not limited to:
 
 See [configuration](/guides/configuration) for defining your app defaults.
 
+## Why have signaling at all?
+
+Establishing a connection between two devices on varying platforms, runtimes, or more restrictive networks is not always as easy.
+
+To establish a [WebRTC](https://webrtc.org/getting-started/peer-connections) connection for example between two devices the back-and-forth sharing of JSON-encoded "signaling" data is required.
+In order to do this, have sufficient cryptographic security, and fit it all in a QR code or copy-able URL we leverage [signaling](/api/signaling).
+
 ## Why doesn't my mobile wallet work with OpenLV (yet)?
 
 Open Lavatory is brand new, you're reading about it right now!
 We care about you, please contact your wallet developer and ask them to look into [implementing it](/wallets).
+
+In addition some wallets require SDKs in differing programming languages, this is a challenge we are working to address.
 
 ## How does OpenLV differ from WalletConnect?
 
 | | OpenLV | WalletConnect (now Reown.. i guess) |
 | -- | --------|---------------|
 | Source Availability | Open Source | Closed Source |
+| License | ~ | [euhm..](https://github.com/WalletConnect/walletconnect-monorepo/pull/6867/files) |
 | Privacy | E2EE, private by design | Tracks your every move (see [their website](https://reown.com/privacy-policy)) |
 | Communication | P2P when possible | Central Relayer (relay.walletconnect.org) |
+| dApp requirements | None | Requires an API key 🤔 ? |
 | Motivation | Public Good | Venture Capital |
 | Usage in the wild | None, you're first | Has a monopoly (this is a problem) |
 

@@ -1,4 +1,4 @@
-# OpenLV Connector
+# @openlv/connector
 
 The OpenLV Connector is a Wagmi connector for dApp integration.
 
@@ -22,3 +22,5 @@ export const wagmiConfig = createConfig({
   },
 })
 ```
+
+[Documentation](https://openlv.sh/api/connector)

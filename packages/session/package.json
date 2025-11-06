@@ -60,6 +60,7 @@
   },
   "packageManager": "pnpm@10.10.0",
   "publishConfig": {
-    "access": "public"
+    "access": "public",
+    "tag": "beta"
   }
 }

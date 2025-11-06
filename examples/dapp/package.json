@@ -19,7 +19,7 @@
     "@tanstack/router-plugin": "^1.121.9",
     "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.5.2",
-    "@wagmi/connectors": "^5.8.5",
+    "@wagmi/connectors": "6",
     "autoprefixer": "^10.4.21",
     "globals": "^16.0.0",
     "mqtt": "^5.13.1",

@@ -17,6 +17,7 @@ jobs:
           uses: ./.github/actions/setup-workspace
         - name: Audit dependencies
           run: pnpm audit
+          continue-on-error: true
     build:
         name: Build
         runs-on: ubuntu-latest

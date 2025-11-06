@@ -45,7 +45,7 @@
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
-    "@wagmi/core": "^2.17.3",
+    "@wagmi/core": "2",
     "globals": "^16.2.0",
     "typescript": "^5",
     "vitest": "^4"

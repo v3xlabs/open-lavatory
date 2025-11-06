@@ -16,16 +16,18 @@ import { TryItOut } from '../components/TryItOut'
         <HomePage.InstallPackage name="@openlv/connector" type="install" />
       </div>
       <div className="w-full flex flex-col gap-2 md:grid grid-cols-2">
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Item</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Open Specification</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Privacy-first</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Self-hostable</div>
+        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Permissionless</div>
       </div>
-      <div className="w-full flex gap-4 text-sm items-center text-nowrap"><span>Ready to get started?</span><div className="w-full h-[1px] bg-gray-200" /></div>
+      <div className="w-full flex gap-4 text-sm items-center text-nowrap"><div className="w-full h-[1px] bg-[var(--vocs-color_border)]" /><span>Ready to get started?</span></div>
+      <div className="w-full flex justify-end">
       <HomePage.Buttons>
-        <HomePage.Button href="/getting-started" variant="accent">Get started</HomePage.Button>
         <HomePage.Button href="https://github.com/v3xlabs/open-lavatory">GitHub</HomePage.Button>
+        <HomePage.Button href="/getting-started" variant="accent">Read docs</HomePage.Button>
       </HomePage.Buttons>
+      </div>
     </div>
     <div className="w-full h-full space-y-4">
       <TryItOut />

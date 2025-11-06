@@ -21,6 +21,7 @@ type InputProps = {
   placeholder?: string;
   ariaLabel?: string;
   readOnly?: boolean;
+  onChange?: (value: string) => void;
 };
 
 export const Input = ({
@@ -30,6 +31,7 @@ export const Input = ({
   placeholder,
   ariaLabel,
   readOnly = true,
+  onChange,
 }: InputProps) => (
   <input
     // eslint-disable-next-line no-restricted-syntax
@@ -39,6 +41,11 @@ export const Input = ({
     placeholder={placeholder}
     aria-label={ariaLabel}
     readOnly={readOnly}
+    onChange={(e) => {
+      if (e.target instanceof HTMLInputElement) {
+        onChange?.(e.target.value);
+      }
+    }}
   />
 );
 

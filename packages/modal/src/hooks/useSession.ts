@@ -5,6 +5,7 @@ import { useEffect, useState } from "preact/hooks";
 import { log } from "../utils/log.js";
 import { useEventEmitter } from "./useEventEmitter";
 import { useProvider } from "./useProvider";
+import { useSettings } from "./useSettings.js";
 
 export const useSession = () => {
   const { provider } = useProvider();
@@ -41,10 +42,11 @@ export const useSession = () => {
 
 export const useSessionStart = () => {
   const { provider } = useProvider();
+  const { settings } = useSettings();
 
   return {
     start: () => {
-      provider?.createSession();
+      provider?.createSession(settings?.session);
     },
   };
 };

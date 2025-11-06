@@ -1,3 +1,4 @@
+import type { ConnectorStorage } from "@openlv/core";
 import type { OpenLVProvider } from "@openlv/provider";
 import { h, render } from "preact";
 
@@ -11,13 +12,15 @@ export class OpenLVModalElement
 {
   public onClose?: () => void;
   public provider: OpenLVProvider;
+  public storage: ConnectorStorage;
 
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
 
-  constructor(_provider: OpenLVProvider) {
+  constructor(_provider: OpenLVProvider, _storage: ConnectorStorage) {
     super();
     this.provider = _provider;
+    this.storage = _storage;
     this.shadow = this.attachShadow({ mode: "open" });
     ensureStyles(this.shadow);
   }
@@ -54,6 +57,7 @@ export class OpenLVModalElement
     const props: ModalProviderProps = {
       onClose: this.onClose ?? (() => this.remove()),
       provider: this.provider,
+      storage: this.storage,
     };
 
     render(h(ModalProvider, props), this.shadow);

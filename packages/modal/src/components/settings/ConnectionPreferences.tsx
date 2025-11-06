@@ -1,20 +1,9 @@
+import { useSettings } from "../../hooks/useSettings";
 import { InfoTooltip } from "../ui/InfoTooltip";
 import { Toggle } from "../ui/Toggle";
 
-const PREFERENCES_TEMPLATE = {
-  retainHistory: false,
-  autoReconnect: false,
-} as const;
-
 export const ConnectionPreferences = () => {
-  const preferences = PREFERENCES_TEMPLATE;
-
-  const renderToggle = (label: string, value: boolean) => (
-    <div className="flex items-center justify-between">
-      <div className="font-semibold text-gray-900 text-sm">{label}</div>
-      <Toggle label={label} value={value} onChange={(value) => {}} />
-    </div>
-  );
+  const { settings, updateSettings } = useSettings();
 
   return (
     <div>
@@ -23,8 +12,27 @@ export const ConnectionPreferences = () => {
         <InfoTooltip variant="icon">Something something very cool</InfoTooltip>
       </div>
       <div className="flex flex-col gap-4 rounded-md bg-[#F4F5F6] p-2">
-        {renderToggle("Retain session history", preferences.retainHistory)}
-        {renderToggle("Auto reconnect", preferences.autoReconnect)}
+        {(
+          [
+            [
+              "Retain session history",
+              "retainHistory",
+              settings?.retainHistory ?? false,
+              (value: boolean) => updateSettings({ retainHistory: value }),
+            ],
+            [
+              "Auto reconnect",
+              "autoReconnect",
+              settings?.autoReconnect ?? false,
+              (value: boolean) => updateSettings({ autoReconnect: value }),
+            ],
+          ] as const
+        ).map(([label, key, value, onChange]) => (
+          <div className="flex items-center justify-between" key={key}>
+            <div className="font-semibold text-gray-900 text-sm">{label}</div>
+            <Toggle label={label} value={value} onChange={onChange} />
+          </div>
+        ))}
       </div>
     </div>
   );

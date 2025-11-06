@@ -5,12 +5,20 @@ import { createConnector } from "@wagmi/core";
 import { openlvDetails } from "./config";
 import { log } from "./log";
 import { getTriggerModal } from "./modal";
+import {
+  type ConnectorStorageParameters,
+  createConnectorStorage,
+} from "./storage";
 
-export type OpenLVConnectorParameters = unknown;
+export type OpenLVConnectorParameters = Pick<
+  ConnectorStorageParameters,
+  "storage"
+>;
 // type ConnectorProperties = { foo: string };
 
-export const openlv = (_parameters?: OpenLVConnectorParameters) => {
+export const openlv = ({ storage }: OpenLVConnectorParameters = {}) => {
   const provider = createProvider({ foo: "bar" });
+  const connectorStorage = createConnectorStorage({ storage });
 
   const onDisconnect = async () => {
     log("onDisconnect called");
@@ -39,7 +47,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
       const modal = await getTriggerModal();
 
       log("loading modal");
-      modal?.(provider);
+      modal?.(provider, connectorStorage);
 
       const modalDismissed = new Promise((_resolve) => {
         // modal?.onClose
@@ -64,9 +72,10 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
 
       await Promise.race([modalDismissed, connectionCompleted]);
 
-      log("completing connect() call");
-
       const accounts = await provider.getAccounts();
+      const chainId = await provider.getChainId();
+
+      log("completing connect() call");
 
       return {
         accounts: (withCapabilities
@@ -75,7 +84,7 @@ export const openlv = (_parameters?: OpenLVConnectorParameters) => {
               capabilities: {},
             }))
           : accounts) as never,
-        chainId: 1,
+        chainId,
         provider,
       };
     };

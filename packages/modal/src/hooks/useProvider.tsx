@@ -1,3 +1,4 @@
+import { ConnectorStorage } from "@openlv/core";
 import type { OpenLVProvider, ProviderStatus } from "@openlv/provider";
 import { createContext } from "preact";
 import type { FC } from "preact/compat";
@@ -8,23 +9,27 @@ import { useEventEmitter } from "./useEventEmitter";
 
 export type ProviderContextO = {
   provider: OpenLVProvider | undefined;
+  storage: ConnectorStorage | undefined;
 };
 
 export const ProviderContext = createContext<ProviderContextO>({
   provider: undefined,
+  storage: undefined,
 });
 
 export type ModalProviderProps = {
   provider: OpenLVProvider;
+  storage: ConnectorStorage;
   onClose?: () => void;
 };
 
 export const ModalProvider: FC<ModalProviderProps> = ({
   provider,
+  storage,
   onClose,
 }) => {
   return (
-    <ProviderContext.Provider value={{ provider }}>
+    <ProviderContext.Provider value={{ provider, storage }}>
       <ModalRoot onClose={onClose} />
     </ProviderContext.Provider>
   );
@@ -33,7 +38,7 @@ export const ModalProvider: FC<ModalProviderProps> = ({
 export const useProvider = () => {
   const context = useContext(ProviderContext);
 
-  const { provider } = context;
+  const { provider, storage } = context;
   const [status, setStatus] = useState<ProviderStatus>(
     provider?.getState().status || "disconnected",
   );
@@ -48,7 +53,7 @@ export const useProvider = () => {
 
   if (!context.provider) throw new Error("Provider not found");
 
-  return { provider, status };
+  return { provider, status, storage };
 };
 
 // export const useProvider = (provider: OpenLVProvider) => {

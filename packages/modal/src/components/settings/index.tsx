@@ -9,7 +9,6 @@ export interface ModalSettingsProps {
 export const ModalSettings = ({ onBack }: ModalSettingsProps) => (
   <div className="text-left">
     <div className="flex flex-col gap-2 px-2">
-      <div>These settings are mock for now.</div>
       <SignalingSettings />
       <TransportSettings />
       <ConnectionPreferences />

@@ -400,6 +400,9 @@ importers:
       '@openlv/transport':
         specifier: workspace:*
         version: link:../transport
+      eventemitter3:
+        specifier: ^5.0.1
+        version: 5.0.1
       viem:
         specifier: '2'
         version: 2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.11)

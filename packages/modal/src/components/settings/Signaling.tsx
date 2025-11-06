@@ -1,7 +1,6 @@
-import { useState } from "preact/hooks";
-
+import { useSettings } from "../../hooks/useSettings";
 import { InfoTooltip } from "../ui/InfoTooltip";
-import { InputGroup } from "../ui/Input";
+import { Input, InputGroup } from "../ui/Input";
 import { Select } from "../ui/Select";
 
 type SignalingProtocol = "MQTT" | "NTFY" | "GUN";
@@ -27,8 +26,13 @@ const SIGNALING_TEMPLATE = {
 const protocolOptions: SignalingProtocol[] = ["MQTT", "NTFY", "GUN"];
 
 export const SignalingSettings = () => {
-  const [selectedProtocol, setSelectedProtocol] =
-    useState<SignalingProtocol>("MQTT");
+  const { settings, updateSettings } = useSettings();
+
+  const setProtocol = (protocol: string) =>
+    updateSettings({ session: { p: protocol } });
+
+  const setServer = (server: string) =>
+    updateSettings({ session: { s: server } });
 
   return (
     <div>
@@ -40,18 +44,22 @@ export const SignalingSettings = () => {
         <div className="flex items-center justify-between">
           <div>Protocol</div>
           <Select
-            options={protocolOptions.map((option) => [option, option])}
-            value={selectedProtocol}
-            onChange={(value) =>
-              setSelectedProtocol(value as SignalingProtocol)
-            }
+            options={protocolOptions.map((option) => [
+              option.toLowerCase(),
+              option,
+            ])}
+            value={settings?.session.p || ""}
+            onChange={setProtocol}
           />
         </div>
-        {/* {match(selectedProtocol)
-          .with("MQTT", () => <MqttSettings />)
-          .with("NTFY", () => <NtfySettings />)
-          .with("GUN", () => <GunSettings />)
-          .exhaustive()} */}
+        <Input
+          id="server"
+          value={settings?.session.s || ""}
+          onChange={(value) => setServer(value)}
+          placeholder="Server URL"
+          ariaLabel="Server URL"
+          readOnly={false}
+        />
       </div>
     </div>
   );

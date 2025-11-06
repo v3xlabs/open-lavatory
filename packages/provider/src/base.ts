@@ -5,7 +5,7 @@ import {
   type Session,
   type SessionStateObject,
 } from "@openlv/session";
-import { ntfy } from "@openlv/signaling/ntfy";
+import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
 import EventEmitter from "eventemitter3";
 import type {
   Address,
@@ -116,7 +116,11 @@ export const createProvider = (
       parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
     ) => {
       updateStatus("creating");
-      session = await createSession(parameters, ntfy, onMessage);
+      session = await createSession(
+        parameters,
+        await dynamicSignalingLayer(parameters.p),
+        onMessage,
+      );
       updateStatus("connecting");
 
       log("session created");

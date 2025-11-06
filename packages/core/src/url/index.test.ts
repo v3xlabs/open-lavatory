@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { decodeConnectionURL, encodeConnectionURL } from "./url.js";
+import { decodeConnectionURL, encodeConnectionURL } from "./index.js";
 
 const testCases = [
   {

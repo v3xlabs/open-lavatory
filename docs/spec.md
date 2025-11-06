@@ -38,7 +38,7 @@ Open Lavatory aims to address these issues using public signaling & existing p2p
 ### 2.1 Standard Format
 
 ```
-openlv://<session-id>?h=<pubkey-hash>&k=<shared-key>&s=<pairing-server>&p=<protocol-type>
+openlv://<session-id>@1?h=<pubkey-hash>&k=<shared-key>&s=<pairing-server>&p=<protocol-type>
 ```
 
 ### 2.2 Parameters

@@ -2,7 +2,7 @@
 import {
   createProvider,
   type OpenLVProvider,
-  OpenLVProviderParameters,
+  type OpenLVProviderParameters,
 } from "@openlv/provider";
 import { createConnector } from "@wagmi/core";
 
@@ -18,7 +18,6 @@ export type OpenLVConnectorParameters = Pick<
   ConnectorStorageParameters,
   "storage"
 > & { config?: OpenLVProviderParameters };
-// type ConnectorProperties = { foo: string };
 
 /*
  * openlv connector
@@ -38,7 +37,6 @@ export const openlv = ({
 
   return createConnector<OpenLVProvider>((wagmiConfig) => {
     const { chains } = wagmiConfig;
-    // const transports = wagmiConfig.transports;
 
     const getAccounts = async () => {
       log("getAccounts");

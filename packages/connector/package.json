@@ -1,6 +1,6 @@
 {
   "name": "@openlv/connector",
-  "version": "0.0.1-beta.1",
+  "version": "0.0.1-beta.2",
   "license": "LGPL-3.0-only",
   "keywords": [
     "open-lavatory"
@@ -38,10 +38,10 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@openlv/core": "workspace:^0.0.1-beta.1",
-    "@openlv/modal": "workspace:^0.0.1-beta.1",
-    "@openlv/provider": "workspace:^0.0.1-beta.1",
-    "@openlv/transport": "workspace:^0.0.1-beta.1",
+    "@openlv/core": "workspace:^0.0.1-beta.2",
+    "@openlv/modal": "workspace:^0.0.1-beta.2",
+    "@openlv/provider": "workspace:^0.0.1-beta.2",
+    "@openlv/transport": "workspace:^0.0.1-beta.2",
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {

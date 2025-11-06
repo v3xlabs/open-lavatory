@@ -23,13 +23,3 @@ export interface ModalConnectionInterface {
   // Events the modal can emit to the connector
   onClose?: () => void;
 }
-
-export interface ConnectorModalInterface {
-  // Methods the modal can call on the connector
-  startConnection: () => Promise<void>;
-  retryConnection: () => Promise<void>;
-  closeConnection: () => void;
-
-  // Events the connector can emit to the modal
-  onConnectionStateChange: (info: ConnectionInfo) => void;
-}

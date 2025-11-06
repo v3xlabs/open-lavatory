@@ -5,12 +5,12 @@ import classNames from "classnames";
 import { useCallback, useEffect, useState } from "preact/hooks";
 import { match, P } from "ts-pattern";
 
+import { ConnectionFlow } from "../flow/ConnectionFlow";
+import { Disconnected } from "../flow/disconnected/Disconnected";
 import { copyToClipboard } from "../hooks/useClipboard";
 import { useProvider } from "../hooks/useProvider";
 import { useSession } from "../hooks/useSession";
 import { log } from "../utils/log";
-import { ConnectionFlow } from "./ConnectionFlow";
-import { Disconnected } from "./disconnected/Disconnected";
 import { Footer } from "./footer/Footer";
 import { Header } from "./Header";
 import { ModalSettings } from "./settings";
@@ -56,7 +56,7 @@ const useEscapeToClose = (handler: () => void) => {
   }, [handler]);
 };
 
-export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
+export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
   const { view, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();

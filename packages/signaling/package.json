@@ -58,7 +58,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@openlv/core": "^0.0.1-beta.1",
+    "@openlv/core": "workspace:^0.0.1-beta.1",
     "eventemitter3": "^5",
     "globals": "^16",
     "gun": "^0.2020.1241",

@@ -1,0 +1,35 @@
+{
+  "$schema": "https://unpkg.com/@changesets/config@3.1.1/schema.json",
+  "changelog": "@changesets/cli/changelog",
+  "commit": false,
+  "fixed": [],
+  "linked": [],
+  "tag": "beta",
+  "access": "public",
+  "baseBranch": "master",
+  "updateInternalDependencies": "patch",
+  "ignore": [
+    "@openlv/example-*",
+    "@openlv/extension",
+    "@openlv/sandbox",
+    "@openlv/tests",
+    "docs",
+    "openlv"
+  ],
+  "initialVersions": {
+    "docs": "0.0.0",
+    "@openlv/example-dapp": "0.0.0",
+    "@openlv/sandbox": "0.0.0",
+    "@openlv/example-wallet": "0.0.0",
+    "@openlv/connector": "0.0.1-beta.1",
+    "@openlv/core": "0.0.1-beta.1",
+    "@openlv/extension": "0.0.1-beta.1",
+    "@openlv/modal": "0.0.1-beta.1",
+    "@openlv/provider": "0.0.1-beta.1",
+    "openlv": "0.0.1-beta.0",
+    "@openlv/session": "0.0.1-beta.1",
+    "@openlv/signaling": "0.0.1-beta.1",
+    "@openlv/transport": "0.0.1-beta.1",
+    "@openlv/tests": "0.0.0"
+  }
+}

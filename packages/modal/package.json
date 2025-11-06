@@ -45,9 +45,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@openlv/core": "^0.0.1-beta.1",
-    "@openlv/session": "^0.0.1-beta.1",
-    "@openlv/provider": "^0.0.1-beta.1",
+    "@openlv/core": "workspace:^0.0.1-beta.1",
+    "@openlv/session": "workspace:^0.0.1-beta.1",
+    "@openlv/provider": "workspace:^0.0.1-beta.1",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1"
   },

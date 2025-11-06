@@ -20,12 +20,16 @@
     "lint:fix": "eslint --fix",
     "sandbox": "pnpm build:lib && pnpm build:connector && pnpm --filter @openlv/sandbox dev",
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test",
-    "wallet": "pnpm --filter @openlv/example-wallet dev"
+    "wallet": "pnpm --filter @openlv/example-wallet dev",
+    "changeset": "changeset",
+    "changeset:version": "changeset version",
+    "changeset:publish": "changeset publish --tag beta"
   },
   "dependencies": {
     "@biomejs/biome": "^2.3.1"
   },
   "devDependencies": {
+    "@changesets/cli": "^2.29.7",
     "@eslint/js": "^9",
     "@stylistic/eslint-plugin": "^5.5.0",
     "@wagmi/core": "2",

@@ -22,7 +22,7 @@
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test",
     "wallet": "pnpm --filter @openlv/example-wallet dev",
     "changeset": "changeset",
-    "changeset:version": "changeset version",
+    "changeset:version": "changeset version && pnpm version:update && pnpm check",
     "changeset:publish": "changeset publish"
   },
   "dependencies": {

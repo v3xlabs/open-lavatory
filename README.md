@@ -34,14 +34,10 @@ Open Lavatory Protocol eliminates centralized relay servers by enabling direct p
 
 ### Remaining work
 
-- Re-implement provider from scratch in new @openlv/provider package
-- Re-implement connector from scratch in new @openlv/connector package
-- Improve modal implementation in new @openlv/modal package
 - Cleanup package dependencies
 - Implement proper errors
 - Update icons
-- Update sandbox
-- Update wallet example
+- Update sandbox with more debugging information
 
 ## 📦 Repository Structure
 
@@ -49,9 +45,14 @@ This repository includes the following packages:
 
 | Package                              | Description                                         |
 | ------------------------------------ | --------------------------------------------------- |
-| 🔧 [transport](./packages/transport) | Core implementation of the OpenLV transport layer   |
-| 🔌 [connector](./packages/connector) | Wagmi connector for dApp integration                |
-| 🌐 [extension](./packages/extension) | Browser extension for dApp integration              |
+| [@openlv/session](./packages/session) | a session represents a connection between dApp and wallet   |
+| [@openlv/signaling](./packages/signaling) | Implementation of various signaling layers   |
+| [@openlv/transport](./packages/transport) | Implementation of various transport layers   |
+| [@openlv/provider](./packages/provider) | a session represents a connection between dApp and wallet   |
+| [@openlv/core](./packages/core) | shared types and utilities   |
+| [@openlv/modal](./packages/modal) | preact modal for dApp connection management   |
+| [@openlv/connector](./packages/connector) | Wagmi connector for dApp integration                |
+| [WIP] [extension](./packages/extension) | Browser extension for improved dApp support              |
 
 | Examples                             | Description                                         |
 | ------------------------------------ | --------------------------------------------------- |

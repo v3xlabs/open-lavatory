@@ -2,13 +2,14 @@
 import "../styles.css";
 
 import { openlv } from "@openlv/connector";
-import { connectSession, Session } from "@openlv/session";
+import { connectSession, type Session } from "@openlv/session";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
 import type { Address } from "viem";
 import {
+  type Connector,
   createConfig,
   http,
   useAccount,
@@ -157,8 +158,37 @@ const Connected = () => {
   );
 };
 
+const ConnectorPreview = ({ connector }: { connector: Connector }) => {
+  const { connect } = useConnect();
+
+  return (
+    <button
+      className="hover:!bg-[var(--vocs-color_codeHighlightBackground)] inline-flex translate-y-0.5 items-center gap-2 rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-2 py-0.5"
+      onClick={() => {
+        connect({ connector: connector });
+      }}
+    >
+      {connector.icon && (
+        <img
+          src={connector.icon}
+          alt={`${connector.name} icon`}
+          className="h-4 w-4 rounded-md"
+        />
+      )}
+      <span>{connector.name}</span>
+    </button>
+  );
+};
+
 const Connectors = () => {
   const { connect, connectors } = useConnect();
+
+  const openLvConnector = connectors.find(
+    (connector) => connector.type === "openLv",
+  );
+  const firstNonOpenLvConnector = connectors.find(
+    (connector) => connector.type !== "openLv",
+  );
 
   return (
     <>
@@ -199,7 +229,30 @@ const Connectors = () => {
         </ul>
       </div>
       <div className="w-full rounded-b-md border-[var(--vocs-color_codeInlineBorder)] border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
-        <div>The above is a sample wagmi snippet</div>
+        <div>
+          The above is a sample wagmi snippet. You can use it to test out openlv
+          right here! <br />
+          <div>
+            <div>Steps:</div>
+            <ul className="list-inside list-disc">
+              <li>
+                Open this page in <span className="font-bold">a new tab</span>
+              </li>
+              <li>
+                Click <ConnectorPreview connector={openLvConnector} /> on one
+                and{" "}
+                {firstNonOpenLvConnector ? (
+                  <ConnectorPreview connector={firstNonOpenLvConnector} />
+                ) : (
+                  <span className="font-bold">your wallet</span>
+                )}{" "}
+                on the other
+              </li>
+              <li>Copy the connection URL</li>
+              <li>Watch the magic happen</li>
+            </ul>
+          </div>
+        </div>
       </div>
     </>
   );

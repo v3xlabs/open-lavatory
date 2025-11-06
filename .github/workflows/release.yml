@@ -18,6 +18,7 @@ jobs:
     permissions:
       contents: read
   changesets:
+    name: Changesets
     runs-on: ubuntu-latest
     permissions:
       contents: write

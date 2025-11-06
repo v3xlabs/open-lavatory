@@ -609,7 +609,7 @@ importers:
   packages/session:
     dependencies:
       '@openlv/core':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:^0.0.1-beta.4
         version: link:../core
       '@openlv/signaling':
         specifier: workspace:^0.0.1-beta.3

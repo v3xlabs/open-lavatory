@@ -26,6 +26,14 @@ jobs:
         uses: ./.github/actions/setup-workspace
       - name: Build Docs
         run: pnpm --filter docs build
+      - name: Edgeserver Upload
+        uses: v3xlabs/edgeserver-upload@v0.2.1-pre.4
+        with:
+          site_id: s_6956587901
+          server: https://edgeserver.dev/api
+          token: ${{ secrets.EDGE_TOKEN }}
+          directory: docs/dist
+          context: true
       - name: Setup Pages
         uses: actions/configure-pages@v5
       - name: Upload artifact

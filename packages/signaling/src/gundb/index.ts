@@ -4,6 +4,10 @@ import Gun, { type IGun, type IGunInstance } from "gun";
 import { createSignalingLayer, type CreateSignalLayerFn } from "../base.js";
 import { log } from "../utils/log.js";
 
+/**
+ * GunDB Signaling Layer
+ * https://openlv.sh/api/signaling/gun
+ */
 export const gundb: CreateSignalLayerFn = ({
   topic,
   url = "wss://try.axe.eco/gun",

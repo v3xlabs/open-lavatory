@@ -7,7 +7,9 @@ import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 
 /**
- * Signaling over MQTT
+ * MQTT Signaling Layer
+ *
+ * https://openlv.sh/api/signaling/mqtt
  */
 export const mqtt: CreateSignalLayerFn = ({
   url = "wss://test.mosquitto.org:8081/mqtt",

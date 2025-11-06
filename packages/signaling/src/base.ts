@@ -73,6 +73,11 @@ export type SignalingMode =
   // Disconnected, or not setup yet
   | "disconnected";
 
+/**
+ * Base Signaling Layer implementation
+ *
+ * https://openlv.sh/api/signaling
+ */
 export const createSignalingLayer = (
   init: SignalingBaseLayer,
 ): SignalingLayer => {

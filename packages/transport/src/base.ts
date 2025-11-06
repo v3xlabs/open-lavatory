@@ -11,6 +11,11 @@ export type TransportLayer = {
   foo: "bar";
 };
 
+/**
+ * Base Transport Layer implementation
+ *
+ * https://openlv.sh/api/transport
+ */
 export const createTransportLayerBase = (
   init: TransportInit,
 ): TransportLayer => {

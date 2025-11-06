@@ -41,6 +41,11 @@ export type SessionStateObject = {
   };
 };
 
+/**
+ * an OpenLV Session
+ *
+ * https://openlv.sh/api/session
+ */
 export type Session = {
   getState(): SessionStateObject;
   getHandshakeParameters(): SessionHandshakeParameters;
@@ -52,6 +57,11 @@ export type Session = {
   emitter: EventEmitter<SessionEvents>;
 };
 
+/**
+ * OpenLV Session
+ *
+ * https://openlv.sh/api/session
+ */
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: CreateSignalLayerFn,

@@ -17,7 +17,7 @@ export type NtfyMessage = {
 };
 
 /**
- * Signaling over NTFY
+ * Ntfy Signaling Layer
  *
  * Uses HTTP Post for publishing
  * Uses WebSocket for subscribing
@@ -30,6 +30,7 @@ export type NtfyMessage = {
  * example: ntfy://{user}:{password}@{hostname}/{topic}
  * https variant: ntfys://{user}:{password}@{hostname}/{topic}
  *
+ * https://openlv.sh/api/signaling/ntfy
  */
 export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   let connection: WebSocket | null = null;

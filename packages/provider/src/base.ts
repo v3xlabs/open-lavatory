@@ -17,9 +17,7 @@ import type {
 import type { ProviderEvents } from "./events";
 import { log } from "./utils/log";
 
-export type OpenLVProviderParameters = {
-  foo: "bar";
-};
+export type OpenLVProviderParameters = { config?: object };
 
 export type ProviderStatus =
   | "disconnected"
@@ -47,6 +45,11 @@ export type OpenLVProvider = {
   getChainId: () => Promise<number>;
 } & EIP1193Provider;
 
+/**
+ * OpenLV Provider
+ *
+ * https://openlv.sh/api/provider
+ */
 export const createProvider = (
   _parameters: OpenLVProviderParameters,
 ): OpenLVProvider => {

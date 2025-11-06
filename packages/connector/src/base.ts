@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
-import { createProvider, type OpenLVProvider } from "@openlv/provider";
+import {
+  createProvider,
+  type OpenLVProvider,
+  OpenLVProviderParameters,
+} from "@openlv/provider";
 import { createConnector } from "@wagmi/core";
 
 import { openlvDetails } from "./config";
@@ -13,11 +17,18 @@ import {
 export type OpenLVConnectorParameters = Pick<
   ConnectorStorageParameters,
   "storage"
->;
+> & { config?: OpenLVProviderParameters };
 // type ConnectorProperties = { foo: string };
 
-export const openlv = ({ storage }: OpenLVConnectorParameters = {}) => {
-  const provider = createProvider({ foo: "bar" });
+/*
+ * openlv connector
+ * https://openlv.sh/
+ */
+export const openlv = ({
+  storage,
+  config = {},
+}: OpenLVConnectorParameters = {}) => {
+  const provider = createProvider(config);
   const connectorStorage = createConnectorStorage({ storage });
 
   const onDisconnect = async () => {

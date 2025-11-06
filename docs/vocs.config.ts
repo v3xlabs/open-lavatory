@@ -72,8 +72,12 @@ export default defineConfig({
           link: "/api/intro",
         },
         {
-          text: "Establishing a link",
+          text: "URI Specification",
           link: "/api/uri",
+        },
+        {
+          text: "Establishing a link",
+          link: "/api/session",
         },
         {
           text: "Signaling",
@@ -106,6 +110,10 @@ export default defineConfig({
         {
           text: "Connector",
           link: "/api/connector",
+        },
+        {
+          text: "Provider",
+          link: "/api/provider",
         },
       ],
     },

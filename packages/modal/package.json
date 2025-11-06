@@ -45,9 +45,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@openlv/core": "workspace:^0.0.1-beta.3",
-    "@openlv/provider": "workspace:^0.0.1-beta.3",
-    "@openlv/session": "workspace:^0.0.1-beta.3",
+    "@openlv/core": "workspace:*",
+    "@openlv/provider": "workspace:*",
+    "@openlv/session": "workspace:*",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
     "qrcode-generator": "^1.5.0"

@@ -38,10 +38,10 @@
     "dev": "tsc --watch"
   },
   "dependencies": {
-    "@openlv/core": "workspace:^0.0.1-beta.3",
-    "@openlv/session": "workspace:^0.0.1-beta.3",
-    "@openlv/signaling": "workspace:^0.0.1-beta.3",
-    "@openlv/transport": "workspace:^0.0.1-beta.3",
+    "@openlv/core": "workspace:*",
+    "@openlv/session": "workspace:*",
+    "@openlv/signaling": "workspace:*",
+    "@openlv/transport": "workspace:*",
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {

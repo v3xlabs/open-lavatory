@@ -392,16 +392,16 @@ importers:
   packages/connector:
     dependencies:
       '@openlv/core':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../core
       '@openlv/modal':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../modal
       '@openlv/provider':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../provider
       '@openlv/transport':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../transport
       eventemitter3:
         specifier: ^5.0.1
@@ -527,13 +527,13 @@ importers:
   packages/modal:
     dependencies:
       '@openlv/core':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../core
       '@openlv/provider':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../provider
       '@openlv/session':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../session
       classnames:
         specifier: ^2.5.1
@@ -576,16 +576,16 @@ importers:
   packages/provider:
     dependencies:
       '@openlv/core':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../core
       '@openlv/session':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../session
       '@openlv/signaling':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../signaling
       '@openlv/transport':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../transport
       eventemitter3:
         specifier: ^5.0.1
@@ -609,10 +609,10 @@ importers:
   packages/session:
     dependencies:
       '@openlv/core':
-        specifier: workspace:^0.0.1-beta.4
+        specifier: workspace:*
         version: link:../core
       '@openlv/signaling':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../signaling
       '@wagmi/core':
         specifier: '2'
@@ -643,7 +643,7 @@ importers:
   packages/signaling:
     dependencies:
       '@openlv/core':
-        specifier: workspace:^0.0.1-beta.3
+        specifier: workspace:*
         version: link:../core
       '@wagmi/core':
         specifier: '2'

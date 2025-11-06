@@ -43,8 +43,8 @@
     "test": "vitest"
   },
   "dependencies": {
-    "@openlv/core": "workspace:^0.0.1-beta.4",
-    "@openlv/signaling": "workspace:^0.0.1-beta.3",
+    "@openlv/core": "workspace:*",
+    "@openlv/signaling": "workspace:*",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "ts-pattern": "^5"

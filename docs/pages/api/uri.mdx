@@ -1,5 +1,32 @@
 # URI
 
+```coffeescript
+openlv://<session-id> # 16 characters, session id
+    ?h=<pubkey-hash>  # 16 bytes, checksum of public key
+    &k=<shared-key>   # 32 bytes, handshake key
+    &s=<server>       # "wss://test.mosquitto.org:8081/mqtt"
+    &p=<protocol>     # "mqtt" | "ntfy" | "gun" signaling protocol
+```
+
+You can read more about the URI format in [@openlv/core/utils/url.ts](https://github.com/v3xlabs/open-lavatory/blob/master/packages/core/src/utils/url.ts) & [utils.test.ts](https://github.com/v3xlabs/open-lavatory/blob/master/packages/core/src/utils/url.test.ts).
+
+## Example
+
+```typescript
+openlv://k7n8m9x2w5q1p3r6?h=a1b2c3d4e5f60708&k=0123456789abcdef0123456789abcdef&p=mqtt&s=wss%3A%2F%2Ftest.mosquitto.org%3A8081%2Fmqtt
+```
+
+## Getting the session URI
+
+```typescript
+import { encodeConnectionURL } from "@openlv/core";
+
+const session = await provider.getSession();
+const uri = encodeConnectionURL(session.getHandshakeParameters());
+```
+
+This will most likely be available in a nicer format in the future.
+
 :::info
-TODO: This page has not been written yet.
+TODO: This page is under construction.
 :::

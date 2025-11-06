@@ -10,7 +10,7 @@
     "lint:fix": "eslint --fix",
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test",
     "changeset": "changeset",
-    "changeset:version": "changeset version && pnpm check",
+    "changeset:version": "changeset version",
     "changeset:publish": "changeset publish"
   },
   "dependencies": {

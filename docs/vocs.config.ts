@@ -145,9 +145,10 @@ export default defineConfig({
     light: "/openlavatory.png",
   },
   logoUrl: {
-    dark: "/openlavatory_dark.png",
-    light: "/openlavatory.png",
+    dark: "/openlv_logo_dark.svg",
+    light: "/openlv_logo_light.svg",
   },
+  ogImageUrl: "/openlv_banner.png",
   basePath: process.env.DOCS_BASE_PATH || "/",
   vite: {
     plugins: [tailwindcss() as unknown as any],

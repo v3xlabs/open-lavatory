@@ -4,7 +4,7 @@ import { EventEmitter } from "eventemitter3";
 const DEFAULT_SETTINGS: ConnectorSettings = {
   session: {
     p: "mqtt",
-    s: "",
+    s: "wss://test.mosquitto.org:8081/mqtt",
   },
   autoReconnect: false,
   retainHistory: false,

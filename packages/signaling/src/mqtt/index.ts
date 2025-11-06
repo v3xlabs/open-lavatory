@@ -31,9 +31,7 @@ export const mqtt: CreateSignalLayerFn = ({
         throw new Error("MQTT: No connection to publish to");
       }
 
-      const encoded = new TextEncoder().encode(payload);
-
-      connection?.publish(topic, Buffer.from(encoded), { retain: false });
+      connection?.publish(topic, payload, { retain: false });
     },
     async subscribe(handler) {
       if (!connection) throw new SignalNoConnectionError();

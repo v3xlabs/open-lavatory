@@ -41,6 +41,7 @@
     "test": "vitest"
   },
   "dependencies": {
+    "eventemitter3": "^5.0.1",
     "tweetnacl": "^1.0.3"
   },
   "devDependencies": {

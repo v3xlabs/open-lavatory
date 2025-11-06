@@ -23,7 +23,7 @@
     "wallet": "pnpm --filter @openlv/example-wallet dev",
     "changeset": "changeset",
     "changeset:version": "changeset version",
-    "changeset:publish": "changeset publish --tag beta"
+    "changeset:publish": "changeset publish"
   },
   "dependencies": {
     "@biomejs/biome": "^2.3.1"

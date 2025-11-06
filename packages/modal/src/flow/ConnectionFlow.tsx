@@ -5,7 +5,7 @@ import QRCode from "qrcode-generator";
 import { match, P } from "ts-pattern";
 
 import { useSession } from "../hooks/useSession";
-import { UnknownState } from "./UnknownState";
+import { UnknownState } from "../components/UnknownState";
 
 interface ConnectionFlowProps {
   onClose: () => void;

@@ -6,13 +6,8 @@ export type { ModalRootProps } from "./components/ModalRoot";
 export { ModalRoot } from "./components/ModalRoot";
 export { useConnectionState } from "./hooks/useConnectionState";
 export { OpenLVModalElement } from "./openlv-modal-element";
-export type {
-  ConnectionInfo,
-  ConnectorModalInterface,
-  ModalConnectionInterface,
-} from "./types/connection";
 
-import { ConnectorStorage } from "@openlv/core";
+import type { ConnectorStorage } from "@openlv/core";
 
 import type { OpenLVProvider } from "../../provider/src";
 import OpenLVModalElementDefault from "./openlv-modal-element";

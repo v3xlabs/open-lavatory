@@ -12,6 +12,7 @@ export type WebRTCTransport = ReturnType<typeof webrtc>;
 export const webrtc = (opts: {
   onSignal?: (signal: WebRTCSignal) => void;
   onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
+  onDataChannelOpen?: () => void; // fired when the data channel is actually open
   createDataChannel?: boolean; // default true (initiator should pass true)
 }) => {
   let peerConnection: RTCPeerConnection | null = null;
@@ -68,6 +69,7 @@ export const webrtc = (opts: {
 
         dataChannel.onopen = () => {
           console.log("WebRTC data channel open");
+          opts.onDataChannelOpen?.();
         };
 
         dataChannel.onmessage = (event: MessageEvent) => {
@@ -79,6 +81,7 @@ export const webrtc = (opts: {
         dataChannel = event.channel;
         dataChannel.onopen = () => {
           console.log("WebRTC data channel open");
+          opts.onDataChannelOpen?.();
         };
         dataChannel.onmessage = (event: MessageEvent) => {
           if (messageHandler) messageHandler(event.data);

@@ -11,6 +11,7 @@
 export * from "./base.js";
 
 // Types
+export type { Session, SessionStateObject } from "./session-types.js";
 export type {
   ConnectionEvents,
   ConnectionPhase,

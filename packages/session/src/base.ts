@@ -1,7 +1,6 @@
 import {
   decodeConnectionURL,
   OPENLV_PROTOCOL_VERSION,
-  type SessionHandshakeParameters,
   type SessionLinkParameters,
 } from "@openlv/core";
 import {
@@ -13,70 +12,24 @@ import {
   initHash,
   parseEncryptionKey,
 } from "@openlv/core/encryption";
-import type {
-  CreateSignalLayerFn,
-  SignalingLayer,
-  SignalingMode,
-} from "@openlv/signaling";
-import { mqtt } from "@openlv/signaling/mqtt";
-import { ntfy } from "@openlv/signaling/ntfy";
-import { webrtc } from "@openlv/transport";
+import type { CreateSignalLayerFn, SignalingLayer } from "@openlv/signaling";
 import { EventEmitter } from "eventemitter3";
-import { match } from "ts-pattern";
 
 import type { SessionEvents } from "./events.js";
+import { createWebRTCTransportLayer } from "./transport/webrtc-layer.js";
 type WebRTCSignalT =
   import("./messages/index.js").SessionMessageTransport["payload"]["signal"];
+import { mqtt } from "@openlv/signaling/mqtt";
+import { ntfy } from "@openlv/signaling/ntfy";
+
 import type {
   SessionMessage,
   SessionMessageResponse,
 } from "./messages/index.js";
+import type { Session, SessionStatus } from "./session-types.js";
+import { maybeSendTransportProbe } from "./transport/probe.js";
 import { log } from "./utils/log.js";
 
-export type SessionStatus =
-  | "created"
-  | "ready"
-  | "signaling"
-  | "connected"
-  | "disconnected";
-export type SessionStateObject = {
-  status: SessionStatus;
-  signaling?: {
-    state: SignalingMode;
-  };
-  transport?: {
-    type: "webrtc";
-    state:
-      | "webrtc-negotiating"
-      | "webrtc-connecting"
-      | "webrtc-connected"
-      | "webrtc-failed"
-      | "webrtc-closed";
-    connected: boolean;
-  };
-};
-
-/**
- * an OpenLV Session
- *
- * https://openlv.sh/api/session
- */
-export type Session = {
-  getState(): SessionStateObject;
-  getHandshakeParameters(): SessionHandshakeParameters;
-  connect(): Promise<void>;
-  waitForLink(): Promise<void>;
-  close(): Promise<void>;
-  // Send with response
-  send(message: object, timeout?: number): Promise<unknown>;
-  emitter: EventEmitter<SessionEvents>;
-};
-
-/**
- * OpenLV Session
- *
- * https://openlv.sh/api/session
- */
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: CreateSignalLayerFn,
@@ -143,13 +96,54 @@ export const createSession = async (
     },
     isHost,
   });
+  const transportLayer = createWebRTCTransportLayer({
+    signal: {
+      send: async (msg: object) => {
+        await signal.send(msg);
+      },
+    },
+    isHost,
+    getRelyingPublicKey: () => relyingPublicKey,
+    decryptionKey,
+    onMessage,
+    messages,
+    onTransportStateChange: () => updateStatus(status),
+  });
+  let transportProbeSent = false;
+
+  const sendViaSignaling = async (sessionMessage: SessionMessage) => {
+    await signal.send(sessionMessage);
+  };
+  const sendViaBestPath = async (sessionMessage: SessionMessage) => {
+    try {
+      await transportLayer.sendViaTransport(sessionMessage);
+    } catch (err) {
+      log("transport send failed, falling back to signaling", err as Error);
+      await sendViaSignaling(sessionMessage);
+    }
+  };
+
+  // Allow transport layer to route response messages via best path
+  transportLayer.setSendViaBestPath(sendViaBestPath);
 
   const updateStatus = (newStatus: SessionStatus) => {
     status = newStatus;
+    const transportState = transportLayer.getTransportState();
+
     emitter.emit("state_change", {
       status,
       signaling: signal.getState(),
       transport: transportState,
+    });
+
+    maybeSendTransportProbe({
+      status,
+      transportConnected: !!transportState?.connected,
+      transportHelloAcked: transportLayer.isHelloAcked(),
+      sent: transportProbeSent,
+      sendViaTransport: transportLayer.sendViaTransport,
+    }).then((sent) => {
+      transportProbeSent = sent;
     });
   };
 
@@ -157,77 +151,19 @@ export const createSession = async (
     updateStatus(status);
   });
 
-  let transport = undefined as ReturnType<typeof webrtc> | undefined;
-  let transportSetup: Promise<void> | null = null;
-  let transportState: SessionStateObject["transport"] | undefined;
-
-  const ensureTransport = async () => {
-    if (!transport) {
-      transport = webrtc({
-        onSignal: (sig: WebRTCSignalT) => {
-          signal.send({
-            type: "transport",
-            messageId: crypto.randomUUID(),
-            payload: { transport: "webrtc", signal: sig },
-          });
-        },
-        onConnectionStateChange: (st) => {
-          transportState = match(st)
-            .with("connected", () => ({
-              type: "webrtc" as const,
-              state: "webrtc-connected" as const,
-              connected: true,
-            }))
-            .with("connecting", () => ({
-              type: "webrtc" as const,
-              state: "webrtc-connecting" as const,
-              connected: false,
-            }))
-            .with("failed", () => ({
-              type: "webrtc" as const,
-              state: "webrtc-failed" as const,
-              connected: false,
-            }))
-            .with("disconnected", () => ({
-              type: "webrtc" as const,
-              state: "webrtc-closed" as const,
-              connected: false,
-            }))
-            .with("closed", () => ({
-              type: "webrtc" as const,
-              state: "webrtc-closed" as const,
-              connected: false,
-            }))
-            .otherwise(() => transportState);
-          updateStatus(status);
-        },
-        createDataChannel: isHost,
-      });
-      transportSetup = Promise.resolve(transport.setup());
-    }
-
-    if (transportSetup) await transportSetup;
-
-    return transport!;
-  };
-
   return {
     connect: async () => {
       updateStatus("signaling");
       log("connecting to session, isHost:", isHost);
-      // TODO: implement
-      log("connecting to session");
+      // begin signaling setup
       await signal.setup();
-
       signal.subscribe(async (message) => {
-        log("Session: received message from signaling", message);
-
         const transportMsg =
           message as import("./messages/index.js").SessionMessageTransport;
 
         if (transportMsg.type === "transport") {
           try {
-            const t = await ensureTransport();
+            const t = await transportLayer.ensureTransport();
             const { payload } = transportMsg;
 
             if (payload.transport === "webrtc") {
@@ -270,22 +206,21 @@ export const createSession = async (
           await signal.send(responseMessage);
         }
       });
-
       signal.emitter.on("state_change", async (state) => {
-        log("signal state change", state);
-
         if (state === "xr-encrypted") {
           try {
-            const t = await ensureTransport();
+            if (transportLayer.isSupported()) {
+              const t = await transportLayer.ensureTransport();
 
-            if (isHost) {
-              const offer = await t.negotiateAsInitiator();
+              if (isHost) {
+                const offer = await t.negotiateAsInitiator();
 
-              await signal.send({
-                type: "transport",
-                messageId: crypto.randomUUID(),
-                payload: { transport: "webrtc", signal: offer },
-              });
+                await signal.send({
+                  type: "transport",
+                  messageId: crypto.randomUUID(),
+                  payload: { transport: "webrtc", signal: offer },
+                });
+              }
             }
           } catch (err) {
             log("WebRTC negotiation init error", err as Error);
@@ -299,10 +234,18 @@ export const createSession = async (
     async close() {
       log("session teardown");
       await signal?.teardown();
+      await transportLayer
+        .teardown()
+        .catch((err: unknown) => log("transport teardown error", err as Error));
+
       updateStatus("disconnected");
     },
     getState() {
-      return { status, signaling: signal.getState() };
+      return {
+        status,
+        signaling: signal.getState(),
+        transport: transportLayer.getTransportState(),
+      };
     },
     getHandshakeParameters() {
       return {
@@ -315,7 +258,7 @@ export const createSession = async (
       };
     },
     waitForLink: async () => {
-      return new Promise((resolve) => {
+      return new Promise<void>((resolve) => {
         emitter.on("state_change", (state) => {
           if (state?.status === "connected") {
             resolve();
@@ -337,8 +280,8 @@ export const createSession = async (
         payload: message,
       };
 
-      // for now use signaling
-      await signal.send(sessionMessage);
+      // Prefer transport if alive; otherwise fall back to signaling
+      await sendViaBestPath(sessionMessage);
 
       return Promise.race([
         new Promise((resolve) => {

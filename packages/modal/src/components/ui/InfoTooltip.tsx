@@ -10,18 +10,16 @@ export type InfoTooltipProps = {
 export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
   variant,
   children,
-}) => {
-  return (
-    <div className="group relative">
-      <div className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-neutral-200">
-        {match(variant)
-          .with("icon", () => <LuCircleHelp />)
-          .with("text", () => <div>Text</div>)
-          .exhaustive()}
-      </div>
-      <div className="-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md bg-neutral-100 p-2 shadow-sm group-hover:block">
-        {children}
-      </div>
+}) => (
+  <div className="group relative">
+    <div className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-neutral-200">
+      {match(variant)
+        .with("icon", () => <LuCircleHelp />)
+        .with("text", () => <div>Text</div>)
+        .exhaustive()}
     </div>
-  );
-};
+    <div className="-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md bg-neutral-100 p-2 shadow-sm group-hover:block">
+      {children}
+    </div>
+  </div>
+);

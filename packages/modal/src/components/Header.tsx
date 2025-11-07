@@ -1,7 +1,7 @@
 import { useCallback } from "preact/hooks";
+import { IoIosSettings } from "react-icons/io";
 import { LuChevronLeft } from "react-icons/lu";
 import { match } from "ts-pattern";
-import { IoIosSettings } from "react-icons/io";
 
 import { useProvider } from "../hooks/useProvider";
 import { log } from "../utils/log";
@@ -33,7 +33,7 @@ export const Header = ({
         match({ view })
           .with({ view: "settings" }, () => setView("start"))
           .with({ view: "start" }, onClose)
-          .otherwise(onClose)
+          .otherwise(onClose),
       )
       .with("connecting", closeSession)
       .with("connected", onClose)

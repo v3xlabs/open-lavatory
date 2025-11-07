@@ -30,7 +30,17 @@ export interface ModalRootProps {
 
 type ModalView = "start" | "settings";
 
-const TRANSITION_DURATION_MS = 200;
+const supportsViewTransitions = () =>
+  typeof document !== "undefined" && "startViewTransition" in document;
+
+const startViewTransition = (callback: () => void) => {
+  if (supportsViewTransitions()) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    (document as any).startViewTransition(callback);
+  } else {
+    callback();
+  }
+};
 
 const useModalState = () => {
   const [view, setView] = useState<ModalView>("start");
@@ -128,36 +138,19 @@ const useDynamicDialogHeight = () => {
 
 const useViewTransition = (currentView: ModalView) => {
   const [displayView, setDisplayView] = useState(currentView);
-  const [previousView, setPreviousView] = useState<ModalView | null>(null);
-  const previousCurrentViewRef = useRef<ModalView>(currentView);
-  const timeoutRef = useRef<number>();
+  const previousViewRef = useRef<ModalView>(currentView);
 
   useEffect(() => {
-    if (currentView === previousCurrentViewRef.current) return;
+    if (currentView === previousViewRef.current) return;
 
-    setPreviousView(previousCurrentViewRef.current);
-    setDisplayView(currentView);
-    previousCurrentViewRef.current = currentView;
-
-    if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
-    }
-
-    timeoutRef.current = window.setTimeout(() => {
-      setPreviousView(null);
-    }, TRANSITION_DURATION_MS);
-
-    return () => {
-      if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
-      }
-    };
+    startViewTransition(() => {
+      setDisplayView(currentView);
+      previousViewRef.current = currentView;
+    });
   }, [currentView]);
 
   return {
     displayView,
-    previousView,
-    isTransitioning: previousView !== null,
   };
 };
 
@@ -165,23 +158,9 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();
-  const { contentRef, height, measureHeight, setHeight } =
-    useDynamicDialogHeight();
+  const { contentRef, height, measureHeight } = useDynamicDialogHeight();
 
-  const { displayView, previousView, isTransitioning } =
-    useViewTransition(modalView);
-  const [shouldHideOverflow, setShouldHideOverflow] = useState(false);
-
-  useEffect(() => {
-    if (isTransitioning) {
-      setShouldHideOverflow(true);
-
-      setTimeout(() => {
-        console.log("overflow false");
-        setShouldHideOverflow(false);
-      }, TRANSITION_DURATION_MS);
-    }
-  }, [isTransitioning]);
+  const { displayView } = useViewTransition(modalView);
 
   const title = match(modalView)
     .with("start", () => "Connect Wallet")
@@ -196,37 +175,28 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     if (success) setCopied(true);
   }, [uri, setCopied]);
 
-  const newViewRef = useRef<HTMLDivElement | null>(null);
   const isInitialMountRef = useRef(true);
   const initialMeasureTimeoutRef = useRef<number>();
+  const previousHeightRef = useRef<number | undefined>(undefined);
+  const [shouldHideOverflow, setShouldHideOverflow] = useState(false);
+  const overflowTimeoutRef = useRef<number>();
 
   useLayoutEffect(() => {
-    if (
-      status === "disconnected" &&
-      isTransitioning &&
-      newViewRef.current &&
-      contentRef.current
-    ) {
-      const newViewHeight = newViewRef.current.getBoundingClientRect().height;
-      const totalHeight = newViewHeight;
+    if (!contentRef.current) return;
 
-      setHeight(totalHeight);
-      isInitialMountRef.current = false;
-    } else if (contentRef.current) {
-      if (isInitialMountRef.current) {
-        if (initialMeasureTimeoutRef.current) {
-          window.clearTimeout(initialMeasureTimeoutRef.current);
-        }
-
-        initialMeasureTimeoutRef.current = window.setTimeout(() => {
-          if (contentRef.current) {
-            measureHeight(undefined, true);
-            isInitialMountRef.current = false;
-          }
-        }, 0);
-      } else {
-        measureHeight();
+    if (isInitialMountRef.current) {
+      if (initialMeasureTimeoutRef.current) {
+        window.clearTimeout(initialMeasureTimeoutRef.current);
       }
+
+      initialMeasureTimeoutRef.current = window.setTimeout(() => {
+        if (contentRef.current) {
+          measureHeight(undefined, true);
+          isInitialMountRef.current = false;
+        }
+      }, 0);
+    } else {
+      measureHeight();
     }
 
     return () => {
@@ -234,14 +204,39 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         window.clearTimeout(initialMeasureTimeoutRef.current);
       }
     };
-  }, [
-    measureHeight,
-    setHeight,
-    status,
-    displayView,
-    isTransitioning,
-    contentRef,
-  ]);
+  }, [measureHeight, status, displayView]);
+
+  // Manage overflow-hidden during height transitions
+  useEffect(() => {
+    const isHeightChanging =
+      previousHeightRef.current !== undefined &&
+      height !== previousHeightRef.current &&
+      height > 0 &&
+      previousHeightRef.current > 0 &&
+      Math.abs(height - previousHeightRef.current) > 0.5;
+
+    if (isHeightChanging) {
+      setShouldHideOverflow(true);
+
+      if (overflowTimeoutRef.current) {
+        window.clearTimeout(overflowTimeoutRef.current);
+      }
+
+      // Remove overflow-hidden after CSS transition completes (200ms)
+      overflowTimeoutRef.current = window.setTimeout(() => {
+        setShouldHideOverflow(false);
+        overflowTimeoutRef.current = undefined;
+      }, 200);
+    }
+
+    previousHeightRef.current = height;
+
+    return () => {
+      if (overflowTimeoutRef.current) {
+        window.clearTimeout(overflowTimeoutRef.current);
+      }
+    };
+  }, [height]);
 
   const renderDisconnectedView = (targetView: ModalView) =>
     match(targetView)
@@ -275,7 +270,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             : undefined
         }
       >
-        <div ref={contentRef}>
+        <div ref={contentRef} style={{ viewTransitionName: "modal-content" }}>
           <Header
             setView={setView}
             title={title}
@@ -285,23 +280,8 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
           <div className="flex flex-col text-center">
             {match(status)
               .with("disconnected", () => (
-                <div className="relative w-full">
-                  <div
-                    ref={newViewRef}
-                    className={classNames(
-                      "w-full",
-                      isTransitioning &&
-                        "animate-[view-enter_0.2s_ease-out_forwards]",
-                    )}
-                  >
-                    {renderDisconnectedView(displayView)}
-                  </div>
-
-                  {previousView && previousView !== displayView && (
-                    <div className="pointer-events-none absolute inset-0 w-full animate-[view-exit_0.2s_ease-out_forwards]">
-                      {renderDisconnectedView(previousView)}
-                    </div>
-                  )}
+                <div style={{ viewTransitionName: "modal-view" }}>
+                  {renderDisconnectedView(displayView)}
                 </div>
               ))
               .with("connecting", () => (

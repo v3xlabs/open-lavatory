@@ -21,6 +21,39 @@
     }
 }
 
+/* View Transitions API styles */
+@view-transition {
+    navigation: auto;
+}
+
+/* Modal view transitions - push in/push out effect */
+::view-transition-group(modal-view) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+}
+
+::view-transition-old(modal-view) {
+    animation: view-exit 0.2s ease-out forwards;
+}
+
+::view-transition-new(modal-view) {
+    animation: view-enter 0.2s ease-out forwards;
+}
+
+/* Connection flow transitions */
+::view-transition-group(connection-flow) {
+    animation-duration: 0.2s;
+    animation-timing-function: ease-out;
+}
+
+::view-transition-old(connection-flow) {
+    animation: view-exit 0.2s ease-out forwards;
+}
+
+::view-transition-new(connection-flow) {
+    animation: view-enter 0.2s ease-out forwards;
+}
+
 @keyframes view-enter {
     from {
         opacity: 0;

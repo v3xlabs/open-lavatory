@@ -9,7 +9,7 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
 import { ConnectionFlow } from "../flow/ConnectionFlow";
 import { Disconnected } from "../flow/disconnected/Disconnected";
@@ -30,27 +30,7 @@ export interface ModalRootProps {
 
 type ModalView = "start" | "settings";
 
-const TRANSITION_DURATION_MS = 220;
-
-type TransitionDirection = "forward" | "backward";
-
-type ViewState =
-  | {
-      status: "stable";
-      view: ModalView;
-    }
-  | {
-      status: "transitioning";
-      from: ModalView;
-      to: ModalView;
-      direction: TransitionDirection;
-    };
-
-const getDirection = (from: ModalView, to: ModalView): TransitionDirection =>
-  match<[ModalView, ModalView], TransitionDirection>([from, to])
-    .with(["start", "settings"], () => "forward")
-    .with(["settings", "start"], () => "backward")
-    .otherwise(() => "forward");
+const TRANSITION_DURATION_MS = 200;
 
 const useModalState = () => {
   const [view, setView] = useState<ModalView>("start");
@@ -88,8 +68,8 @@ const useDynamicDialogHeight = () => {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [height, setHeight] = useState<number>();
 
-  const measureHeight = useCallback(() => {
-    const node = contentRef.current;
+  const measureHeight = useCallback((targetElement?: HTMLElement | null) => {
+    const node = targetElement || contentRef.current;
 
     if (!node) return;
 
@@ -137,6 +117,42 @@ const useDynamicDialogHeight = () => {
     contentRef,
     height,
     measureHeight,
+    setHeight,
+  };
+};
+
+const useViewTransition = (currentView: ModalView) => {
+  const [displayView, setDisplayView] = useState(currentView);
+  const [previousView, setPreviousView] = useState<ModalView | null>(null);
+  const previousCurrentViewRef = useRef<ModalView>(currentView);
+  const timeoutRef = useRef<number>();
+
+  useEffect(() => {
+    if (currentView === previousCurrentViewRef.current) return;
+
+    setPreviousView(previousCurrentViewRef.current);
+    setDisplayView(currentView);
+    previousCurrentViewRef.current = currentView;
+
+    if (timeoutRef.current) {
+      window.clearTimeout(timeoutRef.current);
+    }
+
+    timeoutRef.current = window.setTimeout(() => {
+      setPreviousView(null);
+    }, TRANSITION_DURATION_MS);
+
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+      }
+    };
+  }, [currentView]);
+
+  return {
+    displayView,
+    previousView,
+    isTransitioning: previousView !== null,
   };
 };
 
@@ -144,15 +160,13 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();
-  let title = "Connect Wallet";
-  const { contentRef, height, measureHeight } = useDynamicDialogHeight();
-  const [viewState, setViewState] = useState<ViewState>({
-    status: "stable",
-    view: modalView,
-  });
-  const transitionTimeoutRef = useRef<number>();
+  const { contentRef, height, measureHeight, setHeight } =
+    useDynamicDialogHeight();
 
-  title = match(modalView)
+  const { displayView, previousView, isTransitioning } =
+    useViewTransition(modalView);
+
+  const title = match(modalView)
     .with("start", () => "Connect Wallet")
     .with("settings", () => "Settings")
     .exhaustive();
@@ -165,78 +179,36 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     if (success) setCopied(true);
   }, [uri, setCopied]);
 
-  useEffect(() => {
-    setViewState((state) =>
-      match<ViewState, ViewState>(state)
-        .with({ status: "stable" }, (stable) =>
-          stable.view === modalView
-            ? stable
-            : {
-                status: "transitioning",
-                from: stable.view,
-                to: modalView,
-                direction: getDirection(stable.view, modalView),
-              },
-        )
-        .with({ status: "transitioning" }, (transitioning) =>
-          transitioning.to === modalView
-            ? transitioning
-            : {
-                status: "transitioning",
-                from: transitioning.to,
-                to: modalView,
-                direction: getDirection(transitioning.to, modalView),
-              },
-        )
-        .exhaustive(),
-    );
-  }, [modalView]);
-
-  useEffect(() => {
-    if (viewState.status !== "transitioning") {
-      if (transitionTimeoutRef.current) {
-        window.clearTimeout(transitionTimeoutRef.current);
-        transitionTimeoutRef.current = undefined;
-      }
-
-      return;
-    }
-
-    transitionTimeoutRef.current = window.setTimeout(() => {
-      setViewState({ status: "stable", view: viewState.to });
-    }, TRANSITION_DURATION_MS);
-
-    return () => {
-      if (transitionTimeoutRef.current) {
-        window.clearTimeout(transitionTimeoutRef.current);
-        transitionTimeoutRef.current = undefined;
-      }
-    };
-  }, [viewState]);
-
-  const activeView = match(viewState)
-    .with({ status: "stable" }, (stable) => stable.view)
-    .with({ status: "transitioning" }, (transitioning) => transitioning.to)
-    .exhaustive();
-
-  const exitingView = match(viewState)
-    .with({ status: "transitioning" }, (transitioning) => transitioning.from)
-    .with(P._, () => null)
-    .exhaustive();
-
-  const transitionDirection = match(viewState)
-    .with(
-      { status: "transitioning" },
-      (transitioning) => transitioning.direction,
-    )
-    .with(P._, () => "forward" as const)
-    .exhaustive();
-
-  const isTransitioning = viewState.status === "transitioning";
+  const newViewRef = useRef<HTMLDivElement | null>(null);
 
   useLayoutEffect(() => {
-    measureHeight();
-  }, [measureHeight, status, activeView]);
+    if (
+      status === "disconnected" &&
+      isTransitioning &&
+      newViewRef.current &&
+      contentRef.current
+    ) {
+      const newViewHeight = newViewRef.current.getBoundingClientRect().height;
+      const container = contentRef.current;
+      const header = container.firstElementChild as HTMLElement;
+      const footer = container.lastElementChild as HTMLElement;
+      const headerHeight = header?.getBoundingClientRect().height || 0;
+      const footerHeight = footer?.getBoundingClientRect().height || 0;
+      const padding = 24;
+      const totalHeight = newViewHeight + headerHeight + footerHeight + padding;
+
+      setHeight(totalHeight);
+    } else {
+      measureHeight();
+    }
+  }, [
+    measureHeight,
+    setHeight,
+    status,
+    displayView,
+    isTransitioning,
+    contentRef,
+  ]);
 
   const renderDisconnectedView = (targetView: ModalView) =>
     match(targetView)
@@ -244,32 +216,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         <Disconnected onSettings={() => setView("settings")} />
       ))
       .with("settings", () => <ModalSettings />)
-      .with(P._, (unknown) => <UnknownState state={unknown} />)
       .exhaustive();
-
-  const enterAnimationClass = match({ isTransitioning, transitionDirection })
-    .with(
-      { isTransitioning: true, transitionDirection: "forward" },
-      () => "animate-[modal-view-enter-forward_0.22s_ease-out_forwards]",
-    )
-    .with(
-      { isTransitioning: true, transitionDirection: "backward" },
-      () => "animate-[modal-view-enter-backward_0.22s_ease-out_forwards]",
-    )
-    .with(P._, () => undefined)
-    .exhaustive();
-
-  const exitAnimationClass = match({ isTransitioning, transitionDirection })
-    .with(
-      { isTransitioning: true, transitionDirection: "forward" },
-      () => "animate-[modal-view-exit-forward_0.22s_ease-out_forwards]",
-    )
-    .with(
-      { isTransitioning: true, transitionDirection: "backward" },
-      () => "animate-[modal-view-exit-backward_0.22s_ease-out_forwards]",
-    )
-    .with(P._, () => undefined)
-    .exhaustive();
 
   log("view", modalView);
 
@@ -282,8 +229,8 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     >
       <div
         className={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white transition-[height] duration-200 ease-in-out",
-          viewState.status === "transitioning" ? "overflow-hidden" : undefined,
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white transition-[height] duration-[200ms] ease-out",
+          isTransitioning ? "overflow-hidden" : undefined,
         )}
         role="dialog"
         aria-modal="true"
@@ -303,31 +250,29 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
           {match(status)
             .with("disconnected", () => (
-              <div className="relative">
+              <div className="relative w-full">
                 <div
-                  key={`active-${activeView}`}
+                  ref={newViewRef}
                   className={classNames(
-                    "relative w-full will-change-transform",
-                    enterAnimationClass,
+                    "w-full",
+                    isTransitioning &&
+                      "animate-[view-enter_0.2s_ease-out_forwards]",
                   )}
                 >
-                  {renderDisconnectedView(activeView)}
+                  {renderDisconnectedView(displayView)}
                 </div>
 
-                {exitingView ? (
-                  <div
-                    key={`exit-${exitingView}`}
-                    className={classNames(
-                      "pointer-events-none absolute inset-0 will-change-transform",
-                      exitAnimationClass,
-                    )}
-                  >
-                    {renderDisconnectedView(exitingView)}
+                {previousView && previousView !== displayView && (
+                  <div className="pointer-events-none absolute inset-0 w-full animate-[view-exit_0.2s_ease-out_forwards]">
+                    {renderDisconnectedView(previousView)}
                   </div>
-                ) : null}
+                )}
               </div>
             ))
-            .with(P.union("connecting", "connected"), () => (
+            .with("connecting", () => (
+              <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+            ))
+            .with("connected", () => (
               <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
             ))
             .otherwise(() => (

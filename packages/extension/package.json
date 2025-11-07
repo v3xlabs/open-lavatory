@@ -33,6 +33,7 @@
   "dependencies": {
     "@openlv/provider": "workspace:*",
     "@openlv/transport": "workspace:*",
+    "@openlv/connector": "workspace:*",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "mqtt": "^5.13.1"

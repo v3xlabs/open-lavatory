@@ -450,6 +450,9 @@ importers:
 
   packages/extension:
     dependencies:
+      '@openlv/connector':
+        specifier: workspace:*
+        version: link:../connector
       '@openlv/provider':
         specifier: workspace:*
         version: link:../provider

@@ -15,6 +15,12 @@ export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage">
 >;
 
+export type OpenLVConnector = CreateConnectorFn<
+  OpenLVProvider,
+  Record<string, unknown>,
+  Record<string, unknown>
+>;
+
 /*
  * openlv connector
  * https://openlv.sh/

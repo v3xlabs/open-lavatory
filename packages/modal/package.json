@@ -27,11 +27,14 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js",
-      "default": "./dist/index.js"
+      "import": "./dist/index.es.js",
+      "require": "./dist/index.cjs.js",
+      "default": "./dist/index.es.js"
     }
   },
-  "main": "./dist/index.js",
+  "main": "./dist/index.cjs.js",
+  "module": "./dist/index.es.js",
+  "unpkg": "./dist/index.iife.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",
@@ -62,7 +65,8 @@
     "tailwindcss": "^4",
     "ts-pattern": "^5",
     "typescript": "^5",
-    "vite": "^7"
+    "vite": "^7",
+    "vite-plugin-dts": "^4.5.4"
   },
   "packageManager": "pnpm@10.10.0",
   "publishConfig": {

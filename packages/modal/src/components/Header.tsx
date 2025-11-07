@@ -1,5 +1,4 @@
 import { useCallback } from "preact/hooks";
-import { IoIosSettings } from "react-icons/io";
 import { LuChevronLeft, LuX } from "react-icons/lu";
 import { match } from "ts-pattern";
 

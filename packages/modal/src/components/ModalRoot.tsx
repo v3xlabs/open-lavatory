@@ -30,6 +30,28 @@ export interface ModalRootProps {
 
 type ModalView = "start" | "settings";
 
+const TRANSITION_DURATION_MS = 220;
+
+type TransitionDirection = "forward" | "backward";
+
+type ViewState =
+  | {
+      status: "stable";
+      view: ModalView;
+    }
+  | {
+      status: "transitioning";
+      from: ModalView;
+      to: ModalView;
+      direction: TransitionDirection;
+    };
+
+const getDirection = (from: ModalView, to: ModalView): TransitionDirection =>
+  match<[ModalView, ModalView], TransitionDirection>([from, to])
+    .with(["start", "settings"], () => "forward")
+    .with(["settings", "start"], () => "backward")
+    .otherwise(() => "forward");
+
 const useModalState = () => {
   const [view, setView] = useState<ModalView>("start");
   const [copied, setCopied] = useState(false);
@@ -119,16 +141,21 @@ const useDynamicDialogHeight = () => {
 };
 
 export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
-  const { view, setView, copied, setCopied } = useModalState();
+  const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();
-  const title = "Connect Wallet";
+  let title = "Connect Wallet";
   const { contentRef, height, measureHeight } = useDynamicDialogHeight();
-  const {
-    contentRef: footerRef,
-    height: footerHeight,
-    measureHeight: measureFooterHeight,
-  } = useDynamicDialogHeight();
+  const [viewState, setViewState] = useState<ViewState>({
+    status: "stable",
+    view: modalView,
+  });
+  const transitionTimeoutRef = useRef<number>();
+
+  title = match(modalView)
+    .with("start", () => "Connect Wallet")
+    .with("settings", () => "Settings")
+    .exhaustive();
 
   useEscapeToClose(onClose);
 
@@ -138,11 +165,113 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     if (success) setCopied(true);
   }, [uri, setCopied]);
 
+  useEffect(() => {
+    setViewState((state) =>
+      match<ViewState, ViewState>(state)
+        .with({ status: "stable" }, (stable) =>
+          stable.view === modalView
+            ? stable
+            : {
+                status: "transitioning",
+                from: stable.view,
+                to: modalView,
+                direction: getDirection(stable.view, modalView),
+              },
+        )
+        .with({ status: "transitioning" }, (transitioning) =>
+          transitioning.to === modalView
+            ? transitioning
+            : {
+                status: "transitioning",
+                from: transitioning.to,
+                to: modalView,
+                direction: getDirection(transitioning.to, modalView),
+              },
+        )
+        .exhaustive(),
+    );
+  }, [modalView]);
+
+  useEffect(() => {
+    if (viewState.status !== "transitioning") {
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current);
+        transitionTimeoutRef.current = undefined;
+      }
+
+      return;
+    }
+
+    transitionTimeoutRef.current = window.setTimeout(() => {
+      setViewState({ status: "stable", view: viewState.to });
+    }, TRANSITION_DURATION_MS);
+
+    return () => {
+      if (transitionTimeoutRef.current) {
+        window.clearTimeout(transitionTimeoutRef.current);
+        transitionTimeoutRef.current = undefined;
+      }
+    };
+  }, [viewState]);
+
+  const activeView = match(viewState)
+    .with({ status: "stable" }, (stable) => stable.view)
+    .with({ status: "transitioning" }, (transitioning) => transitioning.to)
+    .exhaustive();
+
+  const exitingView = match(viewState)
+    .with({ status: "transitioning" }, (transitioning) => transitioning.from)
+    .with(P._, () => null)
+    .exhaustive();
+
+  const transitionDirection = match(viewState)
+    .with(
+      { status: "transitioning" },
+      (transitioning) => transitioning.direction,
+    )
+    .with(P._, () => "forward" as const)
+    .exhaustive();
+
+  const isTransitioning = viewState.status === "transitioning";
+
   useLayoutEffect(() => {
     measureHeight();
-  }, [measureHeight, status, view]);
+  }, [measureHeight, status, activeView]);
 
-  log("view", view);
+  const renderDisconnectedView = (targetView: ModalView) =>
+    match(targetView)
+      .with("start", () => (
+        <Disconnected onSettings={() => setView("settings")} />
+      ))
+      .with("settings", () => <ModalSettings />)
+      .with(P._, (unknown) => <UnknownState state={unknown} />)
+      .exhaustive();
+
+  const enterAnimationClass = match({ isTransitioning, transitionDirection })
+    .with(
+      { isTransitioning: true, transitionDirection: "forward" },
+      () => "animate-[modal-view-enter-forward_0.22s_ease-out_forwards]",
+    )
+    .with(
+      { isTransitioning: true, transitionDirection: "backward" },
+      () => "animate-[modal-view-enter-backward_0.22s_ease-out_forwards]",
+    )
+    .with(P._, () => undefined)
+    .exhaustive();
+
+  const exitAnimationClass = match({ isTransitioning, transitionDirection })
+    .with(
+      { isTransitioning: true, transitionDirection: "forward" },
+      () => "animate-[modal-view-exit-forward_0.22s_ease-out_forwards]",
+    )
+    .with(
+      { isTransitioning: true, transitionDirection: "backward" },
+      () => "animate-[modal-view-exit-backward_0.22s_ease-out_forwards]",
+    )
+    .with(P._, () => undefined)
+    .exhaustive();
+
+  log("view", modalView);
 
   return (
     <div
@@ -152,48 +281,60 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       data-openlv-modal-root
     >
       <div
-        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] overflow-hidden rounded-2xl bg-white transition-[height] duration-200 ease-in-out"
+        className={classNames(
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white transition-[height] duration-200 ease-in-out",
+          viewState.status === "transitioning" ? "overflow-hidden" : undefined,
+        )}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
         style={
-          typeof height === "number" && typeof footerHeight === "number"
-            ? { height: `${height + footerHeight}px` }
-            : undefined
+          typeof height === "number" ? { height: `${height}px` } : undefined
         }
       >
-        <div className="flex flex-col justify-between">
-          <div ref={contentRef} className="p-2 text-center">
-            <Header
-              setView={setView}
-              title={title}
-              view={view}
-              onClose={onClose}
-            />
+        <div ref={contentRef} className="flex flex-col p-3 text-center">
+          <Header
+            setView={setView}
+            title={title}
+            view={modalView}
+            onClose={onClose}
+          />
 
-            {match(status)
-              .with("disconnected", () =>
-                match(view)
-                  .with("start", () => (
-                    <Disconnected onSettings={() => setView("settings")} />
-                  ))
-                  .with("settings", () => <ModalSettings />)
-                  .otherwise(() => <UnknownState state={view} />),
-              )
-              .with(P.union("connecting", "connected"), () => (
-                <ConnectionFlow
-                  onClose={onClose}
-                  onCopy={onCopy || handleCopy}
-                />
-              ))
-              .otherwise(() => (
-                <UnknownState state={"unknown status"} />
-              ))}
-          </div>
-          <div ref={footerRef} className="absolute inset-x-0 bottom-0 p-2">
-            <Footer />
-          </div>
+          {match(status)
+            .with("disconnected", () => (
+              <div className="relative">
+                <div
+                  key={`active-${activeView}`}
+                  className={classNames(
+                    "relative w-full will-change-transform",
+                    enterAnimationClass,
+                  )}
+                >
+                  {renderDisconnectedView(activeView)}
+                </div>
+
+                {exitingView ? (
+                  <div
+                    key={`exit-${exitingView}`}
+                    className={classNames(
+                      "pointer-events-none absolute inset-0 will-change-transform",
+                      exitAnimationClass,
+                    )}
+                  >
+                    {renderDisconnectedView(exitingView)}
+                  </div>
+                ) : null}
+              </div>
+            ))
+            .with(P.union("connecting", "connected"), () => (
+              <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+            ))
+            .otherwise(() => (
+              <UnknownState state={"unknown status"} />
+            ))}
+
+          <Footer />
         </div>
 
         <div

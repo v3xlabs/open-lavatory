@@ -9,11 +9,11 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
   const { start } = useSessionStart();
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6">
+    <div className="flex flex-col items-center p-6">
       <div className="text-center">
-        <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+        {/* <h3 className="mb-2 font-semibold text-gray-900 text-lg">
           Ready to Connect
-        </h3>
+        </h3> */}
         <p className="mb-4 text-gray-500 text-sm">
           Click the button below to start a connection
         </p>

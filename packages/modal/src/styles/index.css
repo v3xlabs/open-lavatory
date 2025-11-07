@@ -20,3 +20,47 @@
         backdrop-filter: blur(2px);
     }
 }
+
+@keyframes modal-view-enter-forward {
+    0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.94);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modal-view-enter-backward {
+    0% {
+        opacity: 0;
+        transform: translateY(-12px) scale(0.94);
+    }
+    100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+@keyframes modal-view-exit-forward {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(-12px) scale(1.05);
+    }
+}
+
+@keyframes modal-view-exit-backward {
+    0% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(12px) scale(1.05);
+    }
+}

@@ -9,9 +9,13 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
   const { start } = useSessionStart();
 
   return (
-    <div className="flex flex-col items-center p-6">
+    <div className="flex flex-col items-center gap-4 p-6">
+      <div className="flex items-end -space-x-4">
+        <div className="w-48 h-48 bg-gray-300 rounded-lg"></div>
+        <div className="w-12 h-18 bg-gray-200 rounded-lg"></div>
+      </div>
       <div className="text-center">
-        <p className="mb-4 text-gray-500 text-sm">
+        <p className="text-gray-500 text-sm">
           Click the button below to start a connection
         </p>
       </div>
@@ -21,7 +25,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
           onClick={start}
           className="w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-600"
         >
-          Start Connection
+          Generate QR
         </button>
         <button
           type="button"

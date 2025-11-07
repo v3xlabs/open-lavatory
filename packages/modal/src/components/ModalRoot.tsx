@@ -81,7 +81,7 @@ const useDynamicDialogHeight = () => {
       if (nextHeight > 0) {
         setHeight((previousHeight) =>
           typeof previousHeight === "number" &&
-          Math.abs(previousHeight - nextHeight) < 0.5
+            Math.abs(previousHeight - nextHeight) < 0.5
             ? previousHeight
             : nextHeight,
         );
@@ -125,10 +125,10 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
+export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
-  const { status } = useProvider();
+  const { status, provider } = useProvider();
   const { contentRef, height, measureHeight } = useDynamicDialogHeight();
   const {
     current: displayedModalView,
@@ -218,6 +218,19 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     };
   }, [height]);
 
+  const closeSessionIfExists = () => {
+    provider?.closeSession();
+  };
+
+  const onBack = match({ view: modalView, status })
+    .with({ view: "start", status: "disconnected" }, () => undefined)
+    .with({ view: "start" }, () => closeSessionIfExists)
+    .with({ view: "settings" }, () => () => setView("start"))
+    .otherwise(() => () => {
+      closeSessionIfExists();
+      onClose();
+    });
+
   const renderDisconnectedView = (targetView: ModalView) =>
     match(targetView)
       .with("start", () => <Disconnected onSettings={openSettings} />)
@@ -280,6 +293,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             title={title}
             view={modalView}
             onClose={onClose}
+            onBack={onBack}
           />
           <div className="modal-transition__container">
             {previousStatus && (

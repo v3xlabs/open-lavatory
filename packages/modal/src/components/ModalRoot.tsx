@@ -9,12 +9,13 @@ import {
   useRef,
   useState,
 } from "preact/hooks";
-import { match } from "ts-pattern";
+import { match, P } from "ts-pattern";
 
 import { ConnectionFlow } from "../flow/ConnectionFlow";
 import { Disconnected } from "../flow/disconnected/Disconnected";
 import { copyToClipboard } from "../hooks/useClipboard";
 import { useProvider } from "../hooks/useProvider";
+import { usePunchTransition } from "../hooks/usePunchTransition";
 import { useSession } from "../hooks/useSession";
 import { log } from "../utils/log";
 import { Footer } from "./footer/Footer";
@@ -29,18 +30,6 @@ export interface ModalRootProps {
 }
 
 type ModalView = "start" | "settings";
-
-const supportsViewTransitions = () =>
-  typeof document !== "undefined" && "startViewTransition" in document;
-
-const startViewTransition = (callback: () => void) => {
-  if (supportsViewTransitions()) {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    (document as any).startViewTransition(callback);
-  } else {
-    callback();
-  }
-};
 
 const useModalState = () => {
   const [view, setView] = useState<ModalView>("start");
@@ -136,31 +125,22 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-const useViewTransition = (currentView: ModalView) => {
-  const [displayView, setDisplayView] = useState(currentView);
-  const previousViewRef = useRef<ModalView>(currentView);
-
-  useEffect(() => {
-    if (currentView === previousViewRef.current) return;
-
-    startViewTransition(() => {
-      setDisplayView(currentView);
-      previousViewRef.current = currentView;
-    });
-  }, [currentView]);
-
-  return {
-    displayView,
-  };
-};
-
 export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();
   const { contentRef, height, measureHeight } = useDynamicDialogHeight();
-
-  const { displayView } = useViewTransition(modalView);
+  const {
+    current: displayedModalView,
+    previous: previousModalView,
+    isTransitioning: isModalViewTransitioning,
+  } = usePunchTransition(modalView);
+  const {
+    current: displayedStatus,
+    previous: previousStatus,
+    isTransitioning: isStatusTransitioning,
+  } = usePunchTransition(status);
+  const openSettings = useCallback(() => setView("settings"), [setView]);
 
   const title = match(modalView)
     .with("start", () => "Connect Wallet")
@@ -204,7 +184,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         window.clearTimeout(initialMeasureTimeoutRef.current);
       }
     };
-  }, [measureHeight, status, displayView]);
+  }, [measureHeight, displayedStatus, displayedModalView]);
 
   // Manage overflow-hidden during height transitions
   useEffect(() => {
@@ -240,11 +220,35 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   const renderDisconnectedView = (targetView: ModalView) =>
     match(targetView)
-      .with("start", () => (
-        <Disconnected onSettings={() => setView("settings")} />
-      ))
+      .with("start", () => <Disconnected onSettings={openSettings} />)
       .with("settings", () => <ModalSettings />)
-      .exhaustive();
+      .otherwise(() => <UnknownState state={targetView} />);
+
+  const renderDisconnectedSection = () => (
+    <div className="modal-transition__container">
+      {previousModalView && (
+        <div className="modal-transition__layer modal-transition__layer--outgoing">
+          {renderDisconnectedView(previousModalView)}
+        </div>
+      )}
+      <div
+        className={classNames(
+          "modal-transition__layer",
+          isModalViewTransitioning && "modal-transition__layer--incoming",
+        )}
+      >
+        {renderDisconnectedView(displayedModalView)}
+      </div>
+    </div>
+  );
+
+  const renderStatusSection = (targetStatus: typeof status) =>
+    match(targetStatus)
+      .with("disconnected", () => renderDisconnectedSection())
+      .with(P.union("connecting", "connected"), () => (
+        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+      ))
+      .otherwise((state) => <UnknownState state={state || "unknown status"} />);
 
   log("view", modalView);
 
@@ -270,35 +274,26 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             : undefined
         }
       >
-        <div ref={contentRef} style={{ viewTransitionName: "modal-content" }}>
-          <Header
-            setView={setView}
-            title={title}
-            view={modalView}
-            onClose={onClose}
-          />
-          <div className="flex flex-col text-center">
-            {match(status)
-              .with("disconnected", () => (
-                <div style={{ viewTransitionName: "modal-view" }}>
-                  {renderDisconnectedView(displayView)}
+        <div ref={contentRef}>
+          <Header setView={setView} title={title} view={modalView} onClose={onClose} />
+          <div className="modal-transition__container">
+            {previousStatus && (
+              <div className="modal-transition__layer modal-transition__layer--outgoing">
+                <div className="flex flex-col text-center">
+                  {renderStatusSection(previousStatus)}
                 </div>
-              ))
-              .with("connecting", () => (
-                <ConnectionFlow
-                  onClose={onClose}
-                  onCopy={onCopy || handleCopy}
-                />
-              ))
-              .with("connected", () => (
-                <ConnectionFlow
-                  onClose={onClose}
-                  onCopy={onCopy || handleCopy}
-                />
-              ))
-              .otherwise(() => (
-                <UnknownState state={"unknown status"} />
-              ))}
+              </div>
+            )}
+            <div
+              className={classNames(
+                "modal-transition__layer",
+                isStatusTransitioning && "modal-transition__layer--incoming",
+              )}
+            >
+              <div className="flex flex-col text-center">
+                {renderStatusSection(displayedStatus)}
+              </div>
+            </div>
           </div>
           <Footer />
         </div>

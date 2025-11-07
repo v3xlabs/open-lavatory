@@ -56,7 +56,7 @@ const useEscapeToClose = (handler: () => void) => {
   }, [handler]);
 };
 
-export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
+export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { view, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();
@@ -100,10 +100,8 @@ export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
           .with("disconnected", () =>
             match(view)
               .with("start", () => <Disconnected />)
-              .with("settings", () => (
-                <ModalSettings onBack={() => setView("start")} />
-              ))
-              .otherwise(() => <UnknownState state={view} />),
+              .with("settings", () => <ModalSettings />)
+              .otherwise(() => <UnknownState state={view} />)
           )
           .with(P.union("connecting", "connected"), () => (
             <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
@@ -115,7 +113,7 @@ export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
         <div
           className={classNames(
             "absolute top-5 right-5 rounded-lg bg-blue-500 px-4 py-3 font-medium text-sm text-white transition-all",
-            copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
+            copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
           )}
         >
           📋 Connection URL copied to clipboard!

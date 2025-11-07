@@ -21,7 +21,8 @@
 
 > [!IMPORTANT]
 > You are currently viewing the **beta** version of the repository.
-> [Head to the documentation](https://openlv.sh) to learn more about openlv.
+>
+> [See the documentation](https://openlv.sh) for a live demo.
 
 ## Features
 

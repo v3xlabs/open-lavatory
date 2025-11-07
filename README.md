@@ -6,9 +6,9 @@
   <p><strong>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</strong></p>
 
   <div align="center">
-    <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-blue?style=for-the-badge" alt="Documentation: openlv.sh"></a>
-    <a href="#"><img src="https://img.shields.io/badge/Status-Proof%20of%20Concept-orange?style=for-the-badge" alt="Status: Proof of Concept"></a>
-    <a href="https://hackathon.web3privacy.info"><img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-green?style=for-the-badge" alt="Built at W3PN Hacks 2025"></a>
+    <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-blue?style=flat" alt="Documentation: openlv.sh"></a>
+    <a href="#"><img src="https://img.shields.io/badge/Status-Proof%20of%20Concept-orange?style=flat" alt="Status: Proof of Concept"></a>
+    <a href="https://hackathon.web3privacy.info"><img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-green?style=flat" alt="Built at W3PN Hacks 2025"></a>
   </div>
 </div>
 

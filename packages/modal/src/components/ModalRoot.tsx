@@ -67,25 +67,30 @@ const useEscapeToClose = (handler: () => void) => {
 const useDynamicDialogHeight = () => {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [height, setHeight] = useState<number>(0);
+  const hasMeasuredRef = useRef(false);
 
-  const measureHeight = useCallback((targetElement?: HTMLElement | null) => {
-    const node = targetElement || contentRef.current;
+  const measureHeight = useCallback(
+    (targetElement?: HTMLElement | null, useScrollHeight = false) => {
+      const node = targetElement || contentRef.current;
 
-    if (!node) return;
+      if (!node) return;
 
-    const nextHeight = node.getBoundingClientRect().height;
+      const nextHeight = useScrollHeight
+        ? node.scrollHeight
+        : node.getBoundingClientRect().height;
 
-    setHeight((previousHeight) =>
-      typeof previousHeight === "number" &&
-      Math.abs(previousHeight - nextHeight) < 0.5
-        ? previousHeight
-        : nextHeight,
-    );
-  }, []);
-
-  useLayoutEffect(() => {
-    measureHeight();
-  }, [measureHeight]);
+      if (nextHeight > 0) {
+        setHeight((previousHeight) =>
+          typeof previousHeight === "number" &&
+          Math.abs(previousHeight - nextHeight) < 0.5
+            ? previousHeight
+            : nextHeight,
+        );
+        hasMeasuredRef.current = true;
+      }
+    },
+    [],
+  );
 
   useLayoutEffect(() => {
     const node = contentRef.current;
@@ -192,6 +197,8 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   }, [uri, setCopied]);
 
   const newViewRef = useRef<HTMLDivElement | null>(null);
+  const isInitialMountRef = useRef(true);
+  const initialMeasureTimeoutRef = useRef<number>();
 
   useLayoutEffect(() => {
     if (
@@ -204,9 +211,29 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       const totalHeight = newViewHeight;
 
       setHeight(totalHeight);
-    } else {
-      measureHeight();
+      isInitialMountRef.current = false;
+    } else if (contentRef.current) {
+      if (isInitialMountRef.current) {
+        if (initialMeasureTimeoutRef.current) {
+          window.clearTimeout(initialMeasureTimeoutRef.current);
+        }
+
+        initialMeasureTimeoutRef.current = window.setTimeout(() => {
+          if (contentRef.current) {
+            measureHeight(undefined, true);
+            isInitialMountRef.current = false;
+          }
+        }, 0);
+      } else {
+        measureHeight();
+      }
     }
+
+    return () => {
+      if (initialMeasureTimeoutRef.current) {
+        window.clearTimeout(initialMeasureTimeoutRef.current);
+      }
+    };
   }, [
     measureHeight,
     setHeight,
@@ -243,7 +270,9 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
         style={
-          typeof height === "number" ? { height: `${height}px` } : undefined
+          typeof height === "number" && height > 0
+            ? { height: `${height}px` }
+            : undefined
         }
       >
         <div ref={contentRef}>

@@ -66,7 +66,7 @@ const useEscapeToClose = (handler: () => void) => {
 
 const useDynamicDialogHeight = () => {
   const contentRef = useRef<HTMLDivElement | null>(null);
-  const [height, setHeight] = useState<number>();
+  const [height, setHeight] = useState<number>(0);
 
   const measureHeight = useCallback((targetElement?: HTMLElement | null) => {
     const node = targetElement || contentRef.current;
@@ -165,6 +165,18 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   const { displayView, previousView, isTransitioning } =
     useViewTransition(modalView);
+  const [shouldHideOverflow, setShouldHideOverflow] = useState(false);
+
+  useEffect(() => {
+    if (isTransitioning) {
+      setShouldHideOverflow(true);
+
+      setTimeout(() => {
+        console.log("overflow false");
+        setShouldHideOverflow(false);
+      }, TRANSITION_DURATION_MS);
+    }
+  }, [isTransitioning]);
 
   const title = match(modalView)
     .with("start", () => "Connect Wallet")
@@ -189,13 +201,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       contentRef.current
     ) {
       const newViewHeight = newViewRef.current.getBoundingClientRect().height;
-      const container = contentRef.current;
-      const header = container.firstElementChild as HTMLElement;
-      const footer = container.lastElementChild as HTMLElement;
-      const headerHeight = header?.getBoundingClientRect().height || 0;
-      const footerHeight = footer?.getBoundingClientRect().height || 0;
-      const padding = 24;
-      const totalHeight = newViewHeight + headerHeight + footerHeight + padding;
+      const totalHeight = newViewHeight;
 
       setHeight(totalHeight);
     } else {
@@ -230,7 +236,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       <div
         className={classNames(
           "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white transition-[height] duration-[200ms] ease-out",
-          isTransitioning ? "overflow-hidden" : undefined,
+          shouldHideOverflow ? "overflow-hidden" : undefined,
         )}
         role="dialog"
         aria-modal="true"
@@ -240,45 +246,51 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
           typeof height === "number" ? { height: `${height}px` } : undefined
         }
       >
-        <div ref={contentRef} className="flex flex-col p-3 text-center">
+        <div ref={contentRef}>
           <Header
             setView={setView}
             title={title}
             view={modalView}
             onClose={onClose}
           />
-
-          {match(status)
-            .with("disconnected", () => (
-              <div className="relative w-full">
-                <div
-                  ref={newViewRef}
-                  className={classNames(
-                    "w-full",
-                    isTransitioning &&
-                      "animate-[view-enter_0.2s_ease-out_forwards]",
-                  )}
-                >
-                  {renderDisconnectedView(displayView)}
-                </div>
-
-                {previousView && previousView !== displayView && (
-                  <div className="pointer-events-none absolute inset-0 w-full animate-[view-exit_0.2s_ease-out_forwards]">
-                    {renderDisconnectedView(previousView)}
+          <div className="flex flex-col text-center">
+            {match(status)
+              .with("disconnected", () => (
+                <div className="relative w-full">
+                  <div
+                    ref={newViewRef}
+                    className={classNames(
+                      "w-full",
+                      isTransitioning &&
+                        "animate-[view-enter_0.2s_ease-out_forwards]",
+                    )}
+                  >
+                    {renderDisconnectedView(displayView)}
                   </div>
-                )}
-              </div>
-            ))
-            .with("connecting", () => (
-              <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-            ))
-            .with("connected", () => (
-              <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-            ))
-            .otherwise(() => (
-              <UnknownState state={"unknown status"} />
-            ))}
 
+                  {previousView && previousView !== displayView && (
+                    <div className="pointer-events-none absolute inset-0 w-full animate-[view-exit_0.2s_ease-out_forwards]">
+                      {renderDisconnectedView(previousView)}
+                    </div>
+                  )}
+                </div>
+              ))
+              .with("connecting", () => (
+                <ConnectionFlow
+                  onClose={onClose}
+                  onCopy={onCopy || handleCopy}
+                />
+              ))
+              .with("connected", () => (
+                <ConnectionFlow
+                  onClose={onClose}
+                  onCopy={onCopy || handleCopy}
+                />
+              ))
+              .otherwise(() => (
+                <UnknownState state={"unknown status"} />
+              ))}
+          </div>
           <Footer />
         </div>
 

@@ -3,7 +3,7 @@ import { SignalingSettings } from "./Signaling";
 import { TransportSettings } from "./Transport";
 
 export const ModalSettings = () => (
-  <div className="px-2 pb-2">
+  <div className="px-4 pb-2">
     <SignalingSettings />
     <TransportSettings />
     <ConnectionPreferences />

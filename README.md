@@ -1,16 +1,21 @@
-<div align="center">
-  <picture>
-    <source srcset="./docs/public/openlv_logo_dark.svg" media="(prefers-color-scheme: dark)">
-    <img src="./docs/public/openlv_logo_light.svg" alt="Open Lavatory" width="auto" height="60">
-  </picture>
-  <p><strong>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</strong></p>
+<p align="center">
+  <a href="https://openlv.sh">
+    <picture>
+      <source srcset="./docs/public/openlv_logo_dark.svg" media="(prefers-color-scheme: dark)">
+      <img src="./docs/public/openlv_logo_light.svg" alt="Open Lavatory" width="auto" height="60">
+    </picture>
+  </a>
+</p>
 
-  <div align="center">
+<p align="center">
+  Secure peer-to-peer connectivity between dApps and wallets
+</p>
+
+<p align="center">
     <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-blue?style=flat" alt="Documentation: openlv.sh"></a>
     <a href="#"><img src="https://img.shields.io/badge/Status-Proof%20of%20Concept-orange?style=flat" alt="Status: Proof of Concept"></a>
     <a href="https://hackathon.web3privacy.info"><img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-green?style=flat" alt="Built at W3PN Hacks 2025"></a>
-  </div>
-</div>
+</p>
 
 ---
 

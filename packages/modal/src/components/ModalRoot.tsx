@@ -267,14 +267,14 @@ export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-center justify-center bg-black/30 p-4 font-sans text-slate-800 backdrop-blur-sm"
+      className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center bg-black/30 font-sans text-slate-800 backdrop-blur-sm md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
     >
       <div
         className={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white transition-[height] duration-[200ms] ease-out",
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-t-2xl bg-white transition-[height] duration-[200ms] ease-out md:rounded-b-2xl",
           shouldHideOverflow || previousStatus ? "overflow-hidden" : undefined,
         )}
         role="dialog"

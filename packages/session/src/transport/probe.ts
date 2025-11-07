@@ -1,4 +1,5 @@
 import type { SessionMessage } from "../messages/index.js";
+import { log } from "../utils/log.js";
 
 export interface TransportProbeContext {
   status: string;
@@ -28,7 +29,7 @@ export async function maybeSendTransportProbe(
 
   try {
     await ctx.sendViaTransport(probe);
-    console.log("[openlv] Transport probe sent without fallback");
+    log("Transport probe sent without fallback");
 
     return true;
   } catch {

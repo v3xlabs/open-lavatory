@@ -13,21 +13,19 @@ import {
   parseEncryptionKey,
 } from "@openlv/core/encryption";
 import type { CreateSignalLayerFn, SignalingLayer } from "@openlv/signaling";
+import { mqtt } from "@openlv/signaling/mqtt";
+import { ntfy } from "@openlv/signaling/ntfy";
 import { EventEmitter } from "eventemitter3";
 
 import type { SessionEvents } from "./events.js";
-import { createWebRTCTransportLayer } from "./transport/webrtc-layer.js";
-type WebRTCSignalT =
-  import("./messages/index.js").SessionMessageTransport["payload"]["signal"];
-import { mqtt } from "@openlv/signaling/mqtt";
-import { ntfy } from "@openlv/signaling/ntfy";
-
 import type {
   SessionMessage,
   SessionMessageResponse,
+  WebRTCSignal,
 } from "./messages/index.js";
 import type { Session, SessionStatus } from "./session-types.js";
 import { maybeSendTransportProbe } from "./transport/probe.js";
+import { createWebRTCTransportLayer } from "./transport/webrtc-layer.js";
 import { log } from "./utils/log.js";
 
 export const createSession = async (
@@ -96,6 +94,28 @@ export const createSession = async (
     },
     isHost,
   });
+
+  const sendViaSignaling = async (sessionMessage: SessionMessage) => {
+    await signal.send(sessionMessage);
+  };
+  const sendViaBestPath = async (sessionMessage: SessionMessage) => {
+    try {
+      await transportLayer.sendViaTransport(sessionMessage);
+    } catch (transportErr) {
+      log(
+        "transport send failed, falling back to signaling",
+        transportErr as Error,
+      );
+
+      try {
+        await sendViaSignaling(sessionMessage);
+      } catch (signalingErr) {
+        log("signaling fallback also failed", signalingErr as Error);
+        throw new Error("Failed to send via both transport and signaling");
+      }
+    }
+  };
+
   const transportLayer = createWebRTCTransportLayer({
     signal: {
       send: async (msg: object) => {
@@ -109,22 +129,10 @@ export const createSession = async (
     messages,
     onTransportStateChange: () => updateStatus(status),
   });
-  let transportProbeSent = false;
 
-  const sendViaSignaling = async (sessionMessage: SessionMessage) => {
-    await signal.send(sessionMessage);
-  };
-  const sendViaBestPath = async (sessionMessage: SessionMessage) => {
-    try {
-      await transportLayer.sendViaTransport(sessionMessage);
-    } catch (err) {
-      log("transport send failed, falling back to signaling", err as Error);
-      await sendViaSignaling(sessionMessage);
-    }
-  };
-
-  // Allow transport layer to route response messages via best path
+  // Allow the transport layer to reuse the best-path logic (transport with signaling fallback)
   transportLayer.setSendViaBestPath(sendViaBestPath);
+  let transportProbeSent = false;
 
   const updateStatus = (newStatus: SessionStatus) => {
     status = newStatus;
@@ -168,7 +176,7 @@ export const createSession = async (
 
             if (payload.transport === "webrtc") {
               const response = await t.handleSignal(
-                payload.signal as WebRTCSignalT,
+                payload.signal as WebRTCSignal,
               );
 
               if (response) {

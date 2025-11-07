@@ -26,3 +26,5 @@ export type SessionMessageTransport = {
       | { op: "ice"; candidate: RTCIceCandidateInit };
   };
 };
+
+export type WebRTCSignal = SessionMessageTransport["payload"]["signal"];

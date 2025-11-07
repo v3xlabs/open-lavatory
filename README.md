@@ -24,10 +24,11 @@
 
 ## Features
 
-- Privacy-first, end-to-end encrypted
-- No single point of failure
-- User control over their connection
-- Peer-to-peer via WebRTC with arbitrary signaling layer
+- Privacy-first, end-to-end encrypted, no metrics, no tracking
+- No central dependency, rather a variety of [signaling layers](https://openlv.sh/api/signaling)
+- Peer-to-peer transport via WebRTC (or other [transport layers](https://openlv.sh/api/transport))
+- Reuse of existing infrastructure and p2p standards
+- User control over connection & configuration
 
 ## Overview
 

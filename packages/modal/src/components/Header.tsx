@@ -1,6 +1,7 @@
 import { useCallback } from "preact/hooks";
-import { LuChevronLeft, LuCog } from "react-icons/lu";
+import { LuChevronLeft } from "react-icons/lu";
 import { match } from "ts-pattern";
+import { IoIosSettings } from "react-icons/io";
 
 import { useProvider } from "../hooks/useProvider";
 import { log } from "../utils/log";
@@ -32,7 +33,7 @@ export const Header = ({
         match({ view })
           .with({ view: "settings" }, () => setView("start"))
           .with({ view: "start" }, onClose)
-          .otherwise(onClose),
+          .otherwise(onClose)
       )
       .with("connecting", closeSession)
       .with("connected", onClose)
@@ -47,7 +48,7 @@ export const Header = ({
         aria-label={view === "settings" ? "Back to QR" : "Close modal"}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
       >
-        <LuChevronLeft />
+        <LuChevronLeft className="w-6 h-6 text-gray-500" />
       </button>
       <h2 className="flex items-center justify-center gap-2 font-semibold text-gray-900 text-lg">
         {title}
@@ -63,7 +64,7 @@ export const Header = ({
         onClick={onToggleSettings}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
       >
-        <LuCog />
+        <IoIosSettings className="w-6 h-6 text-gray-500" />
       </button>
     </div>
   );

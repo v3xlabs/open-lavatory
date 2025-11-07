@@ -43,7 +43,7 @@ export default defineConfig({
     startUrls: [
       "https://openlv.sh",
       "https://swap.cow.fi",
-      "https://v3x.company",
+      "https://family.co/docs/connectkit/try-it-out",
     ],
   },
 });

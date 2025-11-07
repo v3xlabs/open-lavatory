@@ -46,7 +46,7 @@ export default defineUnlistedScript(() => {
   // EIP-6963 Provider Detail
   const providerDetail = Object.freeze({
     info: providerInfo,
-    provider: provider,
+    provider,
   });
 
   // Announce provider

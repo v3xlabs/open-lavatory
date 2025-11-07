@@ -167,5 +167,11 @@ export const createProvider = (
     ...emitter,
   });
 
-  return provider;
+  return new Proxy(provider, {
+    get(target: any, prop: string) {
+      console.log("get", target, prop);
+
+      return target[prop];
+    },
+  });
 };

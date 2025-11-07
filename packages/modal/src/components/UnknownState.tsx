@@ -7,6 +7,7 @@ export const UnknownState: FC<{ state: unknown }> = ({ state }) => {
   const { status: sessionStatus, uri } = useSession();
   const { status: providerStatus } = useProvider();
 
+  // biome-ignore lint/suspicious/noConsole: debug
   console.error("Unknown state: ", { state, sessionStatus, providerStatus });
 
   return (

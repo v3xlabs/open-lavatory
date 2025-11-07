@@ -1,6 +1,6 @@
 import { useCallback } from "preact/hooks";
 import { IoIosSettings } from "react-icons/io";
-import { LuChevronLeft } from "react-icons/lu";
+import { LuChevronLeft, LuX } from "react-icons/lu";
 import { match } from "ts-pattern";
 
 import { useProvider } from "../hooks/useProvider";
@@ -9,13 +9,11 @@ import { log } from "../utils/log";
 export const Header = ({
   title,
   view,
-  onToggleSettings,
   setView,
   onClose,
 }: {
   title: string;
   view: "start" | "uri" | "settings";
-  onToggleSettings: () => void;
   setView: (view: "start" | "settings") => void;
   onClose: () => void;
 }) => {
@@ -48,23 +46,19 @@ export const Header = ({
         aria-label={view === "settings" ? "Back to QR" : "Close modal"}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
       >
-        <LuChevronLeft className="w-6 h-6 text-gray-500" />
+        <LuChevronLeft className="h-6 w-6 text-gray-500" />
       </button>
       <h2 className="flex items-center justify-center gap-2 font-semibold text-gray-900 text-lg">
         {title}
       </h2>
       <button
         type="button"
-        aria-label={
-          view === "settings"
-            ? "Hide connection settings"
-            : "Show connection settings"
-        }
-        aria-pressed={view === "settings"}
-        onClick={onToggleSettings}
+        aria-label={"close"}
+        aria-pressed={false}
+        onClick={onClose}
         className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
       >
-        <IoIosSettings className="w-6 h-6 text-gray-500" />
+        <LuX className="h-6 w-6 text-gray-500" />
       </button>
     </div>
   );

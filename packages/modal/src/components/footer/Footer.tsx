@@ -2,7 +2,7 @@ import { OPENLV_ICON_128 } from "../../assets/logo";
 import { FooterStatus } from "./StatusIndicator";
 
 export const Footer = () => (
-  <div className="mt-2 flex items-end justify-between gap-2 px-1 text-gray-500">
+  <div className="flex items-end justify-between gap-2 px-1 text-gray-500">
     <a
       href="https://github.com/v3xlabs/open-lavatory"
       target="_blank"

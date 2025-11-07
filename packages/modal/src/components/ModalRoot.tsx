@@ -1,8 +1,14 @@
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: overlay requires click to close modal */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: escape listener handles keyboard interactions */
 
 import classNames from "classnames";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "preact/hooks";
 import { match, P } from "ts-pattern";
 
 import { ConnectionFlow } from "../flow/ConnectionFlow";
@@ -56,11 +62,73 @@ const useEscapeToClose = (handler: () => void) => {
   }, [handler]);
 };
 
+const useDynamicDialogHeight = () => {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [height, setHeight] = useState<number>();
+
+  const measureHeight = useCallback(() => {
+    const node = contentRef.current;
+
+    if (!node) return;
+
+    const nextHeight = node.getBoundingClientRect().height;
+
+    setHeight((previousHeight) =>
+      typeof previousHeight === "number" &&
+      Math.abs(previousHeight - nextHeight) < 0.5
+        ? previousHeight
+        : nextHeight,
+    );
+  }, []);
+
+  useLayoutEffect(() => {
+    measureHeight();
+  }, [measureHeight]);
+
+  useLayoutEffect(() => {
+    const node = contentRef.current;
+
+    if (!node || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      measureHeight();
+    });
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [measureHeight]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => {
+      measureHeight();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [measureHeight]);
+
+  return {
+    contentRef,
+    height,
+    measureHeight,
+  };
+};
+
 export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { view, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status } = useProvider();
   const title = "Connect Wallet";
+  const { contentRef, height, measureHeight } = useDynamicDialogHeight();
+  const {
+    contentRef: footerRef,
+    height: footerHeight,
+    measureHeight: measureFooterHeight,
+  } = useDynamicDialogHeight();
 
   useEscapeToClose(onClose);
 
@@ -69,6 +137,10 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
     if (success) setCopied(true);
   }, [uri, setCopied]);
+
+  useLayoutEffect(() => {
+    measureHeight();
+  }, [measureHeight, status, view]);
 
   log("view", view);
 
@@ -80,35 +152,49 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       data-openlv-modal-root
     >
       <div
-        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white p-2 text-center"
+        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] overflow-hidden rounded-2xl bg-white transition-[height] duration-200 ease-in-out"
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
+        style={
+          typeof height === "number" && typeof footerHeight === "number"
+            ? { height: `${height + footerHeight}px` }
+            : undefined
+        }
       >
-        <Header
-          setView={setView}
-          onToggleSettings={() =>
-            setView(view === "settings" ? "start" : "settings")
-          }
-          title={title}
-          view={view}
-          onClose={onClose}
-        />
+        <div className="flex flex-col justify-between">
+          <div ref={contentRef} className="p-2 text-center">
+            <Header
+              setView={setView}
+              title={title}
+              view={view}
+              onClose={onClose}
+            />
 
-        {match(status)
-          .with("disconnected", () =>
-            match(view)
-              .with("start", () => <Disconnected />)
-              .with("settings", () => <ModalSettings />)
-              .otherwise(() => <UnknownState state={view} />),
-          )
-          .with(P.union("connecting", "connected"), () => (
-            <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-          ))
-          .otherwise(() => (
-            <UnknownState state={"unknown status"} />
-          ))}
+            {match(status)
+              .with("disconnected", () =>
+                match(view)
+                  .with("start", () => (
+                    <Disconnected onSettings={() => setView("settings")} />
+                  ))
+                  .with("settings", () => <ModalSettings />)
+                  .otherwise(() => <UnknownState state={view} />),
+              )
+              .with(P.union("connecting", "connected"), () => (
+                <ConnectionFlow
+                  onClose={onClose}
+                  onCopy={onCopy || handleCopy}
+                />
+              ))
+              .otherwise(() => (
+                <UnknownState state={"unknown status"} />
+              ))}
+          </div>
+          <div ref={footerRef} className="absolute inset-x-0 bottom-0 p-2">
+            <Footer />
+          </div>
+        </div>
 
         <div
           className={classNames(
@@ -118,8 +204,6 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         >
           📋 Connection URL copied to clipboard!
         </div>
-
-        <Footer />
       </div>
     </div>
   );

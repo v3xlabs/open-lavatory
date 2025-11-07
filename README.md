@@ -19,18 +19,22 @@
 > [!IMPORTANT]
 > You are currently viewing the **beta** version of the repository.
 
+## Features
+
+- Privacy-first, end-to-end encrypted
+- No single point of failure
+- User control over their connection
+- Peer-to-peer via WebRTC with arbitrary signaling layer
+
 ## Overview
 
 A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
 
 Open Lavatory Protocol eliminates centralized relay servers by enabling direct peer-to-peer connections between decentralized applications (dApps) and cryptocurrency wallets. Using public signaling servers for initial handshake and WebRTC combined with asymmetric encryption, it prioritizes **privacy** and **self-sovereignty**.
 
-### Remaining work
+## Documentation
 
-- Cleanup package dependencies
-- Implement proper errors
-- Update icons
-- Update sandbox with more debugging information
+[Head to the documentation](https://openlv.sh) to learn more about openlv.
 
 ## Repository Structure
 
@@ -41,7 +45,7 @@ This repository includes the following packages:
 | [@openlv/session](./packages/session) | a session represents a connection between dApp and wallet   |
 | [@openlv/signaling](./packages/signaling) | Implementation of various signaling layers   |
 | [@openlv/transport](./packages/transport) | Implementation of various transport layers   |
-| [@openlv/provider](./packages/provider) | a session represents a connection between dApp and wallet   |
+| [@openlv/provider](./packages/provider) | EIP-1193 compatible provider    |
 | [@openlv/core](./packages/core) | shared types and utilities   |
 | [@openlv/modal](./packages/modal) | preact modal for dApp connection management   |
 | [@openlv/connector](./packages/connector) | Wagmi connector for dApp integration                |
@@ -49,94 +53,17 @@ This repository includes the following packages:
 
 | Examples                             | Description                                         |
 | ------------------------------------ | --------------------------------------------------- |
-| 🧪 [sandbox](./examples/sandbox)     | Interactive testing environment with debug features |
-| 👛 [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
-| 🌐 [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
+| [sandbox](./examples/sandbox)     | Interactive testing environment with debug features |
+| [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
+| [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
+| [docs](./docs)           | Documentation includes a running wagmi demo     |
 
 ## Specification
 
 > [!IMPORTANT]
-> This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept. Please see the [⚠️ Known Limitations](#%EF%B8%8F-known-limitations) section for more details.
+> This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept.
 
 You can find the entire specification in [spec.md](./docs/spec.md).
-
-### The Open Lavatory Protocol
-
-In short detail, the protocol works as follows:
-
-1. **🔑 Key Generation**: Peer A (dApp) chooses a protocol, server, and generates a keypair
-2. **📱 URL Sharing**: Connection details shared via QR code or copy/paste
-3. **🤝 Signaling**: Both peers connect to chosen signaling server (MQTT/Waku/Nostr)
-4. **🔐 Handshake**: Hybrid encryption scheme securely exchanges keys
-5. **🌐 WebRTC**: Asymmetric encryption negotiates direct P2P connection
-6. **💬 Communication**: Encrypted JSON-RPC over local-preferred WebRTC
-
-### Known Limitations
-
-As always there is room for improvement;
-
-The current specification implements a full symmetric-to-asymmetric encryption scheme, which could be simplified (taking signaling server race conditions into account) to be more efficient and only rely on asymmetric encryption.
-
-In a similar manner, the `h` parameter specifies a hash of the public key, which allows for double verification when initiating a handshake during the signaling phase. This too could use improvements.
-
-### Security Features
-
-- **🛡️ End-to-End Encryption**: ECDH P-256 + AES-256-GCM
-- **🚫 No Central Authority**: Direct peer-to-peer communication
-- **🔄 Fallback Mechanism**: MQTT reopens on WebRTC failure
-- **✅ Key Verification**: SHA-256 public key hashing
-
-### Browser support
-
-- ✅ **Chromium-based browsers**: Full support with & w/out TURN servers
-- ⚠️ **Firefox**: Requires TURN servers (potential centralization point)
-- ❓ **Safari**: Limited testing
-
-## Getting Started
-
-There are several ways to run this project
-
-### Option 1: Sandbox + Sandbox
-
-![Sandbox + Sandbox](/examples/dapp/public/ss_01.png)
-![Sandbox + Sandbox + Element Inspect](/examples/dapp/public/ss_02.png)
-
-To test out the openlv transport layer, you can run the sandbox and the wallet in two separate tabs. The sandbox includes debug logs, extra features and fully fledged UI.
-
-```bash
-pnpm sandbox
-```
-
-And then open [localhost:5173](http://localhost:5173) in two of your browser tabs.
-
-### Option 2: dApp + Sandbox
-
-![dApp + Sandbox](/examples/dapp/public/ss_03.png)
-![dApp + Sandbox](/examples/dapp/public/ss_wallet_1.png)
-
-To test out the wagmi connector and explore the active connection you can initiate a session from the dApp sandbox.
-
-The dApp sandbox aims to implement your average dApp, it includes basic wagmi UI, wrapper, and multi injected provider discovery.
-
-```bash
-pnpm dapp
-pnpm sandbox
-```
-
-And then open [localhost:5173](http://localhost:5173) & [localhost:5174](http://localhost:5174) in your browser.
-
-### Option 3: dApp + Wallet
-
-We have also written a sample wallet implementation that would emulate how a wallet would implement the openlv transport layer.
-
-You can run this in conjunction with the dApp or the sandbox.
-
-```bash
-pnpm wallet
-pnpm dapp
-```
-
-And then open [localhost:5173](http://localhost:5173) & [localhost:5174](http://localhost:5174) in your browser.
 
 ## Contributing
 

@@ -36,10 +36,6 @@ export const usePunchTransition = <T>(
     };
   }, [value, duration]);
 
-  useEffect(() => {
-    lastValueRef.current = value;
-  }, []);
-
   return {
     current,
     previous,

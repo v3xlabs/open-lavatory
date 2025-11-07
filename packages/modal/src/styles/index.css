@@ -21,40 +21,28 @@
     }
 }
 
-/* View Transitions API styles */
-@view-transition {
-    navigation: auto;
+.modal-transition__container {
+    position: relative;
+    display: grid;
 }
 
-/* Modal view transitions - push in/push out effect */
-::view-transition-group(modal-view) {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-out;
+.modal-transition__layer {
+    grid-area: 1 / 1;
+    width: 100%;
+    will-change: transform, opacity;
 }
 
-::view-transition-old(modal-view) {
-    animation: view-exit 0.2s ease-out forwards;
+.modal-transition__layer--outgoing {
+    z-index: 2;
+    animation: modal-transition-out 200ms ease-out forwards;
+    position: absolute;
 }
 
-::view-transition-new(modal-view) {
-    animation: view-enter 0.2s ease-out forwards;
+.modal-transition__layer--incoming {
+    animation: modal-transition-in 200ms ease-out forwards;
 }
 
-/* Connection flow transitions */
-::view-transition-group(connection-flow) {
-    animation-duration: 0.2s;
-    animation-timing-function: ease-out;
-}
-
-::view-transition-old(connection-flow) {
-    animation: view-exit 0.2s ease-out forwards;
-}
-
-::view-transition-new(connection-flow) {
-    animation: view-enter 0.2s ease-out forwards;
-}
-
-@keyframes view-enter {
+@keyframes modal-transition-in {
     from {
         opacity: 0;
         transform: scale(0.95);
@@ -65,7 +53,7 @@
     }
 }
 
-@keyframes view-exit {
+@keyframes modal-transition-out {
     from {
         opacity: 1;
         transform: scale(1);

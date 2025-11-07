@@ -262,7 +262,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       <div
         className={classNames(
           "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white transition-[height] duration-[200ms] ease-out",
-          shouldHideOverflow ? "overflow-hidden" : undefined,
+          shouldHideOverflow || previousStatus ? "overflow-hidden" : undefined,
         )}
         role="dialog"
         aria-modal="true"
@@ -275,10 +275,15 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         }
       >
         <div ref={contentRef}>
-          <Header setView={setView} title={title} view={modalView} onClose={onClose} />
+          <Header
+            setView={setView}
+            title={title}
+            view={modalView}
+            onClose={onClose}
+          />
           <div className="modal-transition__container">
             {previousStatus && (
-              <div className="modal-transition__layer modal-transition__layer--outgoing">
+              <div className="modal-transition__layer modal-transition__layer--outgoing absolute">
                 <div className="flex flex-col text-center">
                   {renderStatusSection(previousStatus)}
                 </div>

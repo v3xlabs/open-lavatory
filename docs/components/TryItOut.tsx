@@ -7,16 +7,18 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
-import type { Address } from "viem";
+import type { Address, EIP1193Provider } from "viem";
 import {
   type Connector,
   createConfig,
   http,
   useAccount,
+  useClient,
   useConnect,
+  useConnections,
+  useConnectorClient,
   useDisconnect,
   useSignMessage,
-  useWalletClient,
   WagmiProvider,
 } from "wagmi";
 import { mainnet } from "wagmi/chains";
@@ -67,8 +69,15 @@ const TestSign = () => {
 };
 
 const ConnectComponent = () => {
-  const { data: walletClient } = useWalletClient();
+  const walletClient = useClient();
+  const { data: connectorClient } = useConnectorClient();
+  const connections = useConnections();
   const [url, setUrl] = useState<string | undefined>(undefined);
+
+  console.log("connectorClient", connectorClient);
+  console.log("connections", connections);
+
+  if (!walletClient) return <div>No walletclient found</div>;
 
   return (
     <div className="space-y-1 border-[var(--vocs-color_codeInlineBorder)] border-b pb-2">
@@ -91,21 +100,34 @@ const ConnectComponent = () => {
             if (!url) return;
 
             console.log("connecting to ", url);
+            const client =
+              (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
+
             session = await connectSession(url, async (message) => {
               console.log("received message", message);
               const { method } = message as { method: string };
 
+              console.log("wc", walletClient);
+
+              console.log("method", method);
+
               if (method === "eth_accounts") {
-                const result = await walletClient?.transport.request({
+                const result = await client.request({
                   method: "eth_accounts",
-                  params: [],
+                  params: [] as never,
                 });
+
+                console.log("result from calling wallet", result);
 
                 if (result) return result;
               }
 
               if (["personal_sign"].includes(method)) {
-                return await walletClient?.transport.request(message as never);
+                const result = await client.request(message as never);
+
+                console.log("result from calling wallet", result);
+
+                return result;
               }
 
               return { result: "success" };

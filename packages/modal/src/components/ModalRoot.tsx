@@ -80,7 +80,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       data-openlv-modal-root
     >
       <div
-        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] space-y-2 rounded-2xl bg-white p-2 text-center"
+        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white p-2 text-center"
         role="dialog"
         aria-modal="true"
         aria-label={title}
@@ -101,7 +101,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             match(view)
               .with("start", () => <Disconnected />)
               .with("settings", () => <ModalSettings />)
-              .otherwise(() => <UnknownState state={view} />)
+              .otherwise(() => <UnknownState state={view} />),
           )
           .with(P.union("connecting", "connected"), () => (
             <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
@@ -113,7 +113,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         <div
           className={classNames(
             "absolute top-5 right-5 rounded-lg bg-blue-500 px-4 py-3 font-medium text-sm text-white transition-all",
-            copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0"
+            copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
           )}
         >
           📋 Connection URL copied to clipboard!

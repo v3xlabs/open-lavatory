@@ -35,7 +35,7 @@ export default defineConfig({
       target: "es2020",
       sourcemap: "inline",
       rollupOptions: {
-        external: ["crypto"],
+        external: [],
       },
     },
   }),

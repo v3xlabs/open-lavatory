@@ -15,21 +15,45 @@ export const FooterStatus = () => {
           icon: "🫲",
           text: "Disconnected",
         }))
+        .with({ status: "created" }, () => ({
+          icon: "📄",
+          text: "Created",
+        }))
         .with({ status: "signaling" }, (x) =>
           match(x.signaling)
             .with({ state: "handshake-open" }, () => ({
               icon: "👋",
               text: "Handshake Open",
             }))
+            .with({ state: "handshaking" }, () => ({
+              icon: "🤝",
+              text: "Handshaking",
+            }))
             .with({ state: "handshake-closed" }, () => ({
               icon: "🤝",
               text: "Handshake Closed",
+            }))
+            .with({ state: "xr-encrypted" }, () => ({
+              icon: "🔐",
+              text: "Encrypted",
+            }))
+            .with({ state: "connecting" }, () => ({
+              icon: "⏳",
+              text: "Connecting",
             }))
             .otherwise(() => ({
               icon: "❓",
               text: "Unknown " + x.signaling?.state,
             })),
         )
+        .with({ status: "connected" }, () => ({
+          icon: "✅",
+          text: "Connected",
+        }))
+        .with({ status: "ready" }, () => ({
+          icon: "🚀",
+          text: "Ready",
+        }))
         .otherwise((status) => ({
           icon: "❓",
           text: "Unknown " + JSON.stringify(status),

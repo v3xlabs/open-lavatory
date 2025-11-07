@@ -1,3 +1,4 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import type { EncryptionKey, SymmetricKey } from "@openlv/core/encryption";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
@@ -233,6 +234,10 @@ export const createSignalingLayer = (
         }
 
         await init.subscribe(handleReceive);
+
+        if (canEncrypt() && mode === "connecting") {
+          setMode("xr-encrypted");
+        }
       },
       async teardown() {
         log("teardown");

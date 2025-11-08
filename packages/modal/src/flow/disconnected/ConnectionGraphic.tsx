@@ -37,11 +37,10 @@ const PhoneGraphic = ({ isApple }: { isApple: boolean }) => {
 export const ConnectionGraphic = () => {
   // the only fingerprinting we ever do
   // is Apple device
-  //   const isApple =
-  //     navigator.userAgent.includes("iPhone") ||
-  //     navigator.userAgent.includes("iPad") ||
-  //     navigator.userAgent.includes("iPod");
-  const isApple = true;
+  const isApple =
+    navigator.userAgent.includes("iPhone") ||
+    navigator.userAgent.includes("iPad") ||
+    navigator.userAgent.includes("iPod");
 
   return (
     <div className="-space-x-4 flex items-end">

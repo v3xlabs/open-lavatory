@@ -5,7 +5,7 @@ import { useModalContext } from "../context";
 import { useEventEmitter } from "./useEventEmitter";
 
 export const useProvider = () => {
-  const { provider, storage } = useModalContext();
+  const { provider } = useModalContext();
 
   const [status, setStatus] = useState<ProviderStatus>(
     provider?.getState().status || "disconnected",
@@ -21,5 +21,5 @@ export const useProvider = () => {
 
   if (!provider) throw new Error("Provider not found");
 
-  return { provider, status, storage };
+  return { provider, status };
 };

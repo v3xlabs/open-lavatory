@@ -49,6 +49,7 @@
     "@openlv/provider": "workspace:*",
     "@openlv/session": "workspace:*",
     "classnames": "^2.5.1",
+    "cva": "1.0.0-beta.4",
     "eventemitter3": "^5.0.1",
     "qrcode-generator": "^1.5.0"
   },

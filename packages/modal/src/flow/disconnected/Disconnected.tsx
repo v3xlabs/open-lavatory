@@ -10,20 +10,20 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
 
   return (
     <div className="flex flex-col items-center gap-4 p-6">
-      <div className="flex items-end -space-x-4">
-        <div className="w-48 h-48 bg-gray-300 rounded-lg"></div>
-        <div className="w-12 h-18 bg-gray-200 rounded-lg"></div>
+      <div className="-space-x-4 flex items-end">
+        <div className="h-48 w-48 rounded-lg bg-gray-300"></div>
+        <div className="h-18 w-12 rounded-lg bg-gray-200"></div>
       </div>
       <div className="text-center">
         <p className="text-gray-500 text-sm">
           Click the button below to start a connection
         </p>
       </div>
-      <div className="flex items-center gap-2">
+      <div className="flex items-center">
         <button
           type="button"
           onClick={start}
-          className="w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-600"
+          className="z-10 w-full cursor-pointer rounded-lg bg-blue-500 px-6 py-3 font-semibold text-sm text-white transition hover:bg-blue-600"
         >
           Generate QR
         </button>
@@ -32,7 +32,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
           aria-label="Connection settings"
           aria-pressed={false}
           onClick={onSettings}
-          className="flex aspect-square w-fit cursor-pointer items-center justify-center gap-2 rounded-lg px-3 py-3 transition-colors hover:bg-gray-200"
+          className="-ml-1 flex aspect-square h-11 w-fit cursor-pointer items-center justify-center gap-2 rounded-r-lg py-3 pr-3 pl-4 transition-colors hover:bg-gray-200"
         >
           <IoIosSettings className="h-5 w-5 text-gray-500" />
         </button>

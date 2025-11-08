@@ -1,9 +1,5 @@
-import { useCallback } from "preact/hooks";
-import { LuChevronLeft, LuX } from "react-icons/lu";
-
-import { useProvider } from "../hooks/useProvider";
-import { log } from "../utils/log";
-import { InfoTooltip } from "./ui/InfoTooltip";
+import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
+import { Button } from "../ui/Button";
 
 export const Header = ({
   title,
@@ -18,44 +14,23 @@ export const Header = ({
   onClose: () => void;
   onBack?: () => void;
 }) => {
-  const { status, provider } = useProvider();
-  const closeSession = useCallback(async () => {
-    log("closing session");
-    await provider?.closeSession();
-  }, [provider]);
-
-  // const onBack = useCallback(() => {
-  //   log("status", status);
-
-  //   match(status)
-  //     .with("disconnected", () =>
-  //       match({ view })
-  //         .with({ view: "settings" }, () => setView("start"))
-  //         .with({ view: "start" }, onClose)
-  //         .otherwise(onClose),
-  //     )
-  //     .with("connecting", closeSession)
-  //     .with("connected", onClose)
-  //     .otherwise(onClose);
-  // }, [status, view, setView, onClose, closeSession]);
-
   return (
     <div className="flex items-center justify-between px-2 py-2">
       {onBack ? (
-        <button
-          type="button"
+        <Button
           onClick={onBack}
           aria-label={view === "settings" ? "Back to QR" : "Close modal"}
           className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-lg transition-colors hover:bg-gray-200"
         >
           <LuChevronLeft className="h-6 w-6 text-gray-500" />
-        </button>
+        </Button>
       ) : (
-        <div className="flex h-8 w-8 items-center justify-center">
-          <InfoTooltip variant="icon">
-            Something something very cool
-          </InfoTooltip>
-        </div>
+        <button
+          type="button"
+          className="flex h-8 w-8 cursor-pointer items-center justify-center rounded-md p-1.5 transition-colors hover:bg-neutral-200"
+        >
+          <LuCircleHelp className="h-5 w-5" />
+        </button>
       )}
       <h2 className="flex items-center justify-center gap-2 font-semibold text-gray-900 text-lg">
         {title}

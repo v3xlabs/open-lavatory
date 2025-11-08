@@ -29,6 +29,7 @@ export const Header = ({
         <Button
           type="button"
           href="https://openlv.sh"
+          target="_blank"
           $variant="tertiary"
           $aspect="square"
           $size="md"

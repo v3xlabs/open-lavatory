@@ -25,6 +25,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./storage": {
+      "types": "./dist/storage/index.d.ts",
+      "import": "./dist/storage/index.js",
+      "default": "./dist/storage/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -42,12 +47,15 @@
     "@openlv/session": "workspace:*",
     "@openlv/signaling": "workspace:*",
     "@openlv/transport": "workspace:*",
-    "eventemitter3": "^5.0.1"
+    "eventemitter3": "^5.0.1",
+    "ts-pattern": "^5.9.0",
+    "zod": "^4.1.12"
   },
   "devDependencies": {
     "@wagmi/core": "2",
     "globals": "^16.2.0",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^4.0.3"
   },
   "peerDependencies": {
     "@wagmi/core": "2",

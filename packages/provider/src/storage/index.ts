@@ -1,18 +1,13 @@
-import type { ConnectorSettings, ConnectorStorage } from "@openlv/core";
-import { EventEmitter } from "eventemitter3";
+import EventEmitter from "eventemitter3";
 
-const DEFAULT_SETTINGS: ConnectorSettings = {
-  session: {
-    p: "mqtt",
-    s: "wss://test.mosquitto.org:8081/mqtt",
-  },
-  autoReconnect: false,
-  retainHistory: false,
-};
+import { DEFAULT_SETTINGS } from "./default";
+import { parseProviderStorage, type ProviderStorage } from "./version";
+
+export type { ProviderStorage } from "./version";
 
 const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
 
-export type ConnectorStorageParameters = {
+export type ProviderStorageParameters = {
   // Defaults to localStorage
   storage?: Storage;
 };
@@ -38,24 +33,32 @@ const getStorage = () => {
   return window.localStorage;
 };
 
-export const createConnectorStorage = ({
+export type ProviderStorageR = {
+  emitter: EventEmitter<{
+    settings_change: (settings: ProviderStorage) => void;
+  }>;
+  getSettings: () => ProviderStorage;
+  setSettings: (update: ProviderStorage) => void;
+};
+
+export const createProviderStorage = ({
   storage,
-}: ConnectorStorageParameters): ConnectorStorage => {
+}: ProviderStorageParameters): ProviderStorageR => {
   const io = storage ?? getStorage() ?? createPassthrough();
   const initialSettings = io.getItem(DEFAULT_STORAGE_KEY);
 
-  let settings: ConnectorSettings = initialSettings
-    ? JSON.parse(initialSettings)
+  let settings: ProviderStorage = initialSettings
+    ? parseProviderStorage(initialSettings)
     : DEFAULT_SETTINGS;
 
   const emitter = new EventEmitter<{
-    settings_change: (settings: ConnectorSettings) => void;
+    settings_change: (settings: ProviderStorage) => void;
   }>();
 
   return {
     emitter,
     getSettings: () => settings,
-    setSettings: (update: ConnectorSettings) => {
+    setSettings: (update: ProviderStorage) => {
       settings = update;
       io.setItem(DEFAULT_STORAGE_KEY, JSON.stringify(update));
       emitter.emit("settings_change", update);

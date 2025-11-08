@@ -1,0 +1,85 @@
+import { describe, expect, test } from "vitest";
+
+import {
+  convertProviderStorageV0ToV1,
+  migrateStorageToLatest,
+  type ProviderStorageV0,
+  type ProviderStorageV1,
+  ProviderStorageVAny,
+} from "./version";
+
+const testCases = {
+  v0tov1: [
+    {
+      name: "basic",
+      input: {
+        autoReconnect: false,
+        retainHistory: false,
+        session: {
+          p: "mqtt",
+          s: "wss://test.mosquitto.org:8081/mqtt",
+        },
+      },
+      output: {
+        version: 1,
+        autoReconnect: false,
+        retainHistory: false,
+        signaling: {
+          p: "mqtt",
+          s: {
+            mqtt: "wss://test.mosquitto.org:8081/mqtt",
+          },
+        },
+      },
+    },
+  ] as { name: string; input: ProviderStorageV0; output: ProviderStorageV1 }[],
+  startToFinish: [
+    {
+      name: "v0->v1",
+      input: {
+        version: 0,
+        autoReconnect: false,
+        retainHistory: false,
+        session: {
+          p: "mqtt",
+          s: "wss://test.mosquitto.org:8081/mqtt",
+        },
+      },
+      output: {
+        version: 1,
+        autoReconnect: false,
+        retainHistory: false,
+        signaling: {
+          p: "mqtt",
+          s: {
+            mqtt: "wss://test.mosquitto.org:8081/mqtt",
+          },
+        },
+      },
+    },
+  ] as {
+    name: string;
+    input: ProviderStorageVAny;
+    output: ProviderStorageVAny;
+  }[],
+} as const;
+
+describe("Storage Migrations", () => {
+  for (const testCase of testCases.v0tov1) {
+    test(`v0 to v1: ${testCase.name}`, () => {
+      const result = convertProviderStorageV0ToV1(testCase.input);
+
+      expect(result).toEqual(testCase.output);
+    });
+  }
+
+  for (const testCase of testCases.startToFinish) {
+    test(`start to finish: ${testCase.name}`, () => {
+      const result = migrateStorageToLatest(
+        testCase.input as unknown as ProviderStorageVAny,
+      );
+
+      expect(result).toEqual(testCase.output);
+    });
+  }
+});

@@ -1,6 +1,7 @@
-import type { ConnectorSettings } from "@openlv/core";
+import type { ProviderStorage } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
+import { deepMerge } from "../utils/utils";
 import { useEventEmitter } from "./useEventEmitter";
 import { useProvider } from "./useProvider";
 
@@ -9,31 +10,30 @@ type DeepPartial<T> = {
 };
 
 export const useSettings = () => {
-  const { storage } = useProvider();
-  const [settings, setSettings] = useState<ConnectorSettings | undefined>(
-    storage?.getSettings(),
+  const { provider } = useProvider();
+  const [settings, setSettings] = useState<ProviderStorage | undefined>(
+    provider?.storage.getSettings(),
   );
 
-  useEventEmitter(storage?.emitter, "settings_change", (newSettings) => {
-    setSettings(newSettings);
-  });
+  useEventEmitter(
+    provider?.storage.emitter,
+    "settings_change",
+    (newSettings) => {
+      setSettings(newSettings);
+    },
+  );
 
-  const updateSettings = (update: DeepPartial<ConnectorSettings>) => {
+  const updateSettings = (update: DeepPartial<ProviderStorage>) => {
     if (!settings) return;
 
     // TODO: replace with better merge
-    const newSettings = {
-      ...settings,
-      ...update,
-      session: {
-        ...(settings?.session || {}),
-        ...(update.session || {}),
-      },
-    };
+    const newSettings: ProviderStorage = deepMerge(settings, update);
 
     setSettings(newSettings);
-    storage?.setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
   };
+
+  if (!settings) throw new Error("Settings not found");
 
   return { settings, updateSettings };
 };

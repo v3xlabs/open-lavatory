@@ -8,7 +8,7 @@
     "build": "pnpm -r --filter !@openlv/example-dapp --filter !@openlv/sandbox --filter !@openlv/example-wallet --filter !@openlv/extension build",
     "changeset": "changeset",
     "changeset:publish": "changeset publish",
-    "changeset:version": "changeset version && pnpm install",
+    "changeset:version": "changeset version && pnpm install --ignore-scripts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test"

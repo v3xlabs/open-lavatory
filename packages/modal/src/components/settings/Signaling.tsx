@@ -13,10 +13,10 @@ export const SignalingSettings = () => {
   const { settings, updateSettings } = useSettings();
 
   const setProtocol = (protocol: string) =>
-    updateSettings({ session: { p: protocol } });
+    updateSettings({ signaling: { p: protocol } });
 
   const setServer = (server: string) =>
-    updateSettings({ session: { s: server } });
+    updateSettings({ signaling: { s: { [settings.signaling.p]: server } } });
 
   return (
     <div>
@@ -34,14 +34,14 @@ export const SignalingSettings = () => {
               option.toLowerCase(),
               option,
             ])}
-            value={settings?.session.p || ""}
+            value={settings?.signaling.p || ""}
             onChange={setProtocol}
           />
         </MenuItem>
         <MenuItem label="Server">
           <Input
             id="server"
-            value={settings?.session.s || ""}
+            value={settings?.signaling.s[settings?.signaling.p || ""] || ""}
             onChange={(value) => setServer(value)}
             placeholder="Server URL"
             ariaLabel="Server URL"

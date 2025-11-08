@@ -5,19 +5,15 @@ import {
   type OpenLVProviderParameters,
 } from "@openlv/provider";
 import { createConnector } from "@wagmi/core";
+import type { Prettify } from "viem";
 
 import { openlvDetails } from "./config";
 import { log } from "./log";
 import { getTriggerModal } from "./modal";
-import {
-  type ConnectorStorageParameters,
-  createConnectorStorage,
-} from "./storage";
 
-export type OpenLVConnectorParameters = Pick<
-  ConnectorStorageParameters,
-  "storage"
-> & { config?: OpenLVProviderParameters };
+export type OpenLVConnectorParameters = Prettify<
+  Pick<OpenLVProviderParameters, "config" | "storage">
+>;
 
 /*
  * openlv connector
@@ -27,8 +23,7 @@ export const openlv = ({
   storage,
   config = {},
 }: OpenLVConnectorParameters = {}) => {
-  const provider = createProvider(config);
-  const connectorStorage = createConnectorStorage({ storage });
+  const provider = createProvider({ storage, config });
 
   const onDisconnect = async () => {
     log("onDisconnect called");
@@ -56,7 +51,7 @@ export const openlv = ({
       const modal = await getTriggerModal();
 
       log("loading modal");
-      modal?.(provider, connectorStorage);
+      modal?.(provider);
 
       const modalDismissed = new Promise((_resolve) => {
         // modal?.onClose

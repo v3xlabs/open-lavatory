@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import type { SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
@@ -12,12 +11,22 @@ import type {
   EIP1193EventMap,
   EIP1193Provider,
   EIP1193RequestFn,
+  Prettify,
 } from "viem";
 
 import type { ProviderEvents } from "./events";
+import {
+  createProviderStorage,
+  type ProviderStorageParameters,
+  type ProviderStorageR,
+} from "./storage/index";
 import { log } from "./utils/log";
 
-export type OpenLVProviderParameters = { config?: object };
+export type OpenLVProviderParameters = Prettify<
+  {
+    config?: object;
+  } & Pick<ProviderStorageParameters, "storage">
+>;
 
 export type ProviderStatus =
   | "disconnected"
@@ -39,6 +48,7 @@ export type OpenLVProvider = {
   getState: () => ProviderState;
   closeSession: () => Promise<void>;
 
+  storage: ProviderStorageR;
   // Ease of life
 
   getAccounts: () => Promise<Address[]>;
@@ -58,6 +68,7 @@ export const createProvider = (
   let status: ProviderStatus = "disconnected";
   const chainId: string = "1";
   let accounts: Address[] = [];
+  const storage = createProviderStorage({ storage: _parameters.storage });
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -152,6 +163,7 @@ export const createProvider = (
     emitter,
     getAccounts,
     getChainId: async () => Number(chainId),
+    storage,
     ...emitter,
   });
 

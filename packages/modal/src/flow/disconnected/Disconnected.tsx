@@ -3,6 +3,7 @@ import { IoIosSettings } from "react-icons/io";
 
 import { useSessionStart } from "../../hooks/useSession";
 import { Button } from "../../ui/Button";
+import { ConnectionGraphic } from "./ConnectionGraphic";
 
 export const Disconnected: FC<{ onSettings: () => void }> = ({
   onSettings,
@@ -11,10 +12,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
 
   return (
     <div className="flex flex-col items-center gap-4 p-6">
-      <div className="-space-x-4 flex items-end">
-        <div className="h-48 w-48 rounded-lg bg-gray-300"></div>
-        <div className="h-18 w-12 rounded-lg bg-gray-200"></div>
-      </div>
+      <ConnectionGraphic />
       <div className="text-center">
         <p className="text-gray-500 text-sm">
           Click the button below to start a connection

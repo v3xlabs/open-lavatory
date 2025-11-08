@@ -2,4 +2,3 @@
 /** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
 
 export * from "./base";
-export * from "./storage";

@@ -45,6 +45,7 @@ export type ProviderConfig = {
 export type ProviderBase = {
   storage: ProviderStorageR;
   createSession: (parameters?: SessionLinkParameters) => Promise<Session>;
+  closeSession: () => Promise<void>;
   getSession: () => Session | undefined;
   getAccounts: () => Promise<Address[]>;
   getState: () => ProviderState;
@@ -193,6 +194,7 @@ export const createProvider = (
     getSession: () => session,
     getAccounts,
     createSession: start,
+    closeSession,
     getState: () => ({ status, session: session?.getState() ?? undefined }),
   });
 

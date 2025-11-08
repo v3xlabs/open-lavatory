@@ -1,5 +1,15 @@
 # @openlv/session
 
+## 0.0.1-beta.6
+
+### Patch Changes
+
+- Updated dependencies [320502e]
+- Updated dependencies [a0ce2df]
+- Updated dependencies [76005db]
+  - @openlv/core@0.0.1-beta.6
+  - @openlv/signaling@0.0.1-beta.5
+
 ## 0.0.1-beta.5
 
 ### Patch Changes

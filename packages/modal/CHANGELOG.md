@@ -1,5 +1,20 @@
 # @openlv/modal
 
+## 0.0.1-beta.5
+
+### Patch Changes
+
+- 320502e: Migrate storage ownership from connector to provider
+- a0ce2df: Update styling & ui components
+- 76005db: Cleanup legacy encryption & icon files & restructure of modal connection flow.
+- 3c30a7b: Update settings UI
+- 4f3e7cb: Update icons in modal
+- Updated dependencies [320502e]
+- Updated dependencies [76005db]
+  - @openlv/provider@0.0.1-beta.5
+  - @openlv/core@0.0.1-beta.6
+  - @openlv/session@0.0.1-beta.6
+
 ## 0.0.1-beta.4
 
 ### Patch Changes

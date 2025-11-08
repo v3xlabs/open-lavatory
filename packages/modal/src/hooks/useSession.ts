@@ -22,11 +22,21 @@ export const useSession = () => {
     log("session state change: ", event);
     setStatus(event);
   });
-  useEventEmitter(provider?.emitter, "session_started", (session) => {
-    log("session started: ", session);
-    setSession(session);
-    setStatus(session.getState());
-  });
+
+  useEffect(() => {
+    const onSessionStart = (_session: Session) => {
+      log("session started: ", _session);
+
+      setSession(_session);
+      setStatus(_session.getState());
+    };
+
+    provider?.on("session_started", onSessionStart);
+
+    return () => {
+      provider?.off("session_started", onSessionStart);
+    };
+  }, [provider]);
 
   useEffect(() => {
     if (session) {
@@ -46,7 +56,17 @@ export const useSessionStart = () => {
 
   return {
     start: () => {
-      provider?.createSession(settings?.session);
+      const p = settings?.signaling?.p;
+      const s = settings?.signaling?.s[p];
+
+      if (!p || !s) {
+        throw new Error("Invalid protocol or server");
+      }
+
+      return provider?.createSession({
+        p,
+        s,
+      });
     },
   };
 };

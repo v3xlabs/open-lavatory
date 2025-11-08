@@ -53,6 +53,7 @@
     "@openlv/session": "workspace:*",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
+    "ox": "^0.9.14",
     "qrcode-generator": "^1.5.0",
     "tailwind-variants": "^3.1.1"
   },

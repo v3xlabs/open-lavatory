@@ -4,7 +4,7 @@ import {
   type OpenLVProvider,
   type OpenLVProviderParameters,
 } from "@openlv/provider";
-import { createConnector } from "@wagmi/core";
+import { createConnector, type CreateConnectorFn } from "@wagmi/core";
 import type { Prettify } from "viem";
 
 import { openlvDetails } from "./config";
@@ -33,7 +33,7 @@ export const openlv = ({
 
   const onDisconnect = async () => {
     log("onDisconnect called");
-    await provider.closeSession();
+    await provider[Symbol.asyncDispose]();
   };
 
   return createConnector<OpenLVProvider>((wagmiConfig) => {
@@ -67,7 +67,7 @@ export const openlv = ({
       const connectionCompleted = new Promise((_resolve) => {
         // modal?.onStartConnection
         // resolve();
-        provider.emitter.on("status_change", (status) => {
+        provider.on("status_change", (status) => {
           log("provider_status_change", status);
 
           if (status === "connected") {
@@ -75,7 +75,7 @@ export const openlv = ({
           }
         });
 
-        provider.emitter.on("accountsChanged", () => {
+        provider.on("accountsChanged", () => {
           log("provider_accountsChanged");
         });
       });
@@ -83,7 +83,7 @@ export const openlv = ({
       await Promise.race([modalDismissed, connectionCompleted]);
 
       const accounts = await provider.getAccounts();
-      const chainId = await provider.getChainId();
+      const chainId = 1;
 
       log("completing connect() call");
 
@@ -129,7 +129,7 @@ export const openlv = ({
 
         return chain;
       },
-      getChainId: provider.getChainId,
+      getChainId: async () => 1,
       getProvider: async () => provider,
       onAccountsChanged: () => log("onAccountsChanged"),
       onChainChanged: () => log("onChainChanged"),

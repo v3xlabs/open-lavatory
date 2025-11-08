@@ -1,5 +1,5 @@
 import { openlv } from "@openlv/connector";
-import type { OpenLVProvider } from "@openlv/provider";
+import { createProvider, type OpenLVProvider } from "@openlv/provider";
 
 declare global {
   interface Window {
@@ -7,6 +7,9 @@ declare global {
     ethereum: OpenLVProvider;
   }
 }
+
+const connector = openlv({})({ chains: [] } as any);
+const { uuid, name, icon, rdns } = connector;
 
 // eslint-disable-next-line import/no-default-export
 export default defineUnlistedScript(() => {
@@ -18,12 +21,8 @@ export default defineUnlistedScript(() => {
   //   }
 
   console.log("OpenLV EIP-6963 Provider Injected");
-
-  const connector = openlv({})({ chains: [] } as any);
-
-  console.log("connector", connector);
   // @ts-ignore
-  const provider = connector.getProvider();
+  const provider = createProvider({});
 
   // // Expose provider globally
   window.openlv = provider;
@@ -33,14 +32,6 @@ export default defineUnlistedScript(() => {
     window.ethereum = provider;
   }
 
-  // // EIP-6963 Provider Info
-  // const providerInfo = {
-  //   uuid: crypto.randomUUID(),
-  //   name: "Open Lavatory",
-  //   icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><circle fill="%23663399" cx="16" cy="16" r="16"/><text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="12" font-weight="bold">OL</text></svg>',
-  //   rdns: "io.openlv.wallet",
-  // };
-  const { uuid, name, icon, rdns } = connector;
   const providerInfo = { uuid, name, icon, rdns };
 
   // EIP-6963 Provider Detail

@@ -1,13 +1,8 @@
 import type { ProviderStorage } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
-import { deepMerge } from "../utils/utils";
 import { useEventEmitter } from "./useEventEmitter";
 import { useProvider } from "./useProvider";
-
-type DeepPartial<T> = {
-  [P in keyof T]?: T[P] extends object ? DeepPartial<T[P]> : T[P];
-};
 
 export const useSettings = () => {
   const { provider } = useProvider();
@@ -23,11 +18,38 @@ export const useSettings = () => {
     },
   );
 
-  const updateSettings = (update: DeepPartial<ProviderStorage>) => {
+  const updateSignalingProtocol = (update: string) => {
     if (!settings) return;
 
-    // TODO: replace with better merge
-    const newSettings: ProviderStorage = deepMerge(settings, update);
+    if (settings.signaling?.p === update) return;
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        p: update,
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
+  const updateSignalingServer = (server: string) => {
+    if (!settings) return;
+
+    if (settings.signaling?.s[settings.signaling?.p] === server) return;
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        s: {
+          ...settings.signaling.s,
+          [settings.signaling.p]: server,
+        },
+      },
+    };
 
     setSettings(newSettings);
     provider?.storage.setSettings(newSettings);
@@ -35,5 +57,5 @@ export const useSettings = () => {
 
   if (!settings) throw new Error("Settings not found");
 
-  return { settings, updateSettings };
+  return { settings, updateSignalingProtocol, updateSignalingServer };
 };

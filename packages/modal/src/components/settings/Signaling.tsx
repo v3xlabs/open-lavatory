@@ -10,13 +10,8 @@ type SignalingProtocol = "MQTT" | "NTFY" | "GUN";
 const protocolOptions: SignalingProtocol[] = ["MQTT", "NTFY", "GUN"];
 
 export const SignalingSettings = () => {
-  const { settings, updateSettings } = useSettings();
-
-  const setProtocol = (protocol: string) =>
-    updateSettings({ signaling: { p: protocol } });
-
-  const setServer = (server: string) =>
-    updateSettings({ signaling: { s: { [settings.signaling.p]: server } } });
+  const { settings, updateSignalingProtocol, updateSignalingServer } =
+    useSettings();
 
   return (
     <div>
@@ -35,14 +30,14 @@ export const SignalingSettings = () => {
               option,
             ])}
             value={settings?.signaling.p || ""}
-            onChange={setProtocol}
+            onChange={updateSignalingProtocol}
           />
         </MenuItem>
         <MenuItem label="Server">
           <Input
             id="server"
             value={settings?.signaling.s[settings?.signaling.p || ""] || ""}
-            onChange={(value) => setServer(value)}
+            onChange={(value) => updateSignalingServer(value)}
             placeholder="Server URL"
             ariaLabel="Server URL"
             readOnly={false}

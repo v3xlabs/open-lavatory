@@ -219,7 +219,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   }, [height]);
 
   const closeSessionIfExists = () => {
-    provider?.[Symbol.asyncDispose]();
+    // provider?.[Symbol.asyncDispose]();
   };
 
   const onBack = match({ view: modalView, status })

@@ -48,7 +48,6 @@ export type ProviderBase = {
   getSession: () => Session | undefined;
   getAccounts: () => Promise<Address[]>;
   getState: () => ProviderState;
-  [Symbol.asyncDispose]: () => Promise<void>;
 };
 
 export type OpenLVProvider = OxProvider.Provider<
@@ -195,9 +194,6 @@ export const createProvider = (
     getAccounts,
     createSession: start,
     getState: () => ({ status, session: session?.getState() ?? undefined }),
-    [Symbol.asyncDispose]: async () => {
-      await closeSession();
-    },
   });
 
   return oxProvider;

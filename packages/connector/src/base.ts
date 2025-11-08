@@ -33,7 +33,7 @@ export const openlv = ({
 
   const onDisconnect = async () => {
     log("onDisconnect called");
-    await provider[Symbol.asyncDispose]();
+    // await provider[Symbol.asyncDispose]();
   };
 
   return createConnector<OpenLVProvider>((wagmiConfig) => {

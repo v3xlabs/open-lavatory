@@ -2,8 +2,10 @@ import type { ConnectorStorage } from "@openlv/core";
 import type { OpenLVProvider } from "@openlv/provider";
 import { h, render } from "preact";
 
-import { ModalProvider, type ModalProviderProps } from "./hooks/useProvider";
+import { ModalProvider } from "./context";
 import { ensureStyles } from "./styles";
+import type { OpenLVTheme } from "./theme";
+import { simpleTheme } from "./theme/simple";
 import type { ModalConnectionInterface } from "./types/connection";
 
 export class OpenLVModalElement
@@ -13,16 +15,22 @@ export class OpenLVModalElement
   public onClose?: () => void;
   public provider: OpenLVProvider;
   public storage: ConnectorStorage;
+  public theme: OpenLVTheme;
 
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
 
-  constructor(_provider: OpenLVProvider, _storage: ConnectorStorage) {
+  constructor(
+    _provider: OpenLVProvider,
+    _storage: ConnectorStorage,
+    _theme: OpenLVTheme = simpleTheme,
+  ) {
     super();
     this.provider = _provider;
     this.storage = _storage;
+    this.theme = _theme;
     this.shadow = this.attachShadow({ mode: "open" });
-    ensureStyles(this.shadow);
+    ensureStyles(this.shadow, this.theme);
   }
 
   connectedCallback() {
@@ -54,13 +62,14 @@ export class OpenLVModalElement
   }
 
   private performRender() {
-    const props: ModalProviderProps = {
-      onClose: this.onClose ?? (() => this.remove()),
-      provider: this.provider,
-      storage: this.storage,
-    };
-
-    render(h(ModalProvider, props), this.shadow);
+    render(
+      h(ModalProvider, {
+        onClose: this.onClose ?? (() => this.remove()),
+        provider: this.provider,
+        storage: this.storage,
+      }),
+      this.shadow,
+    );
   }
 }
 

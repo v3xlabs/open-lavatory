@@ -274,7 +274,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     >
       <div
         className={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-t-2xl bg-white transition-[height] duration-[200ms] ease-out md:rounded-b-2xl",
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-t-radius bg-body-background transition-[height] duration-[200ms] ease-out md:rounded-b-radius",
           shouldHideOverflow || previousStatus ? "overflow-hidden" : undefined,
         )}
         role="dialog"

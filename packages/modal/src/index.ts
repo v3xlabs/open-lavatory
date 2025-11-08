@@ -4,13 +4,13 @@
 
 export type { ModalRootProps } from "./components/ModalRoot";
 export { ModalRoot } from "./components/ModalRoot";
+export { OpenLVModalElement } from "./element";
 export { useConnectionState } from "./hooks/useConnectionState";
-export { OpenLVModalElement } from "./openlv-modal-element";
 
 import type { ConnectorStorage } from "@openlv/core";
 
 import type { OpenLVProvider } from "../../provider/src";
-import OpenLVModalElementDefault from "./openlv-modal-element";
+import OpenLVModalElementDefault from "./element";
 import { log } from "./utils/log";
 export { OPENLV_ICON_128 } from "./assets/logo";
 

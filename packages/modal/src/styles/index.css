@@ -20,3 +20,46 @@
         backdrop-filter: blur(2px);
     }
 }
+
+.modal-transition__container {
+    position: relative;
+    display: grid;
+}
+
+.modal-transition__layer {
+    grid-area: 1 / 1;
+    width: 100%;
+    will-change: transform, opacity;
+}
+
+.modal-transition__layer--outgoing {
+    z-index: 2;
+    animation: modal-transition-out 200ms ease-out forwards;
+    position: absolute;
+}
+
+.modal-transition__layer--incoming {
+    animation: modal-transition-in 200ms ease-out forwards;
+}
+
+@keyframes modal-transition-in {
+    from {
+        opacity: 0;
+        transform: scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+@keyframes modal-transition-out {
+    from {
+        opacity: 1;
+        transform: scale(1);
+    }
+    to {
+        opacity: 0;
+        transform: scale(1.05);
+    }
+}

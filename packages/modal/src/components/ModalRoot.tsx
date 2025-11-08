@@ -1,14 +1,21 @@
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: <explanation> */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: <explanation> */
+/** biome-ignore-all lint/a11y/noStaticElementInteractions: overlay requires click to close modal */
+/** biome-ignore-all lint/a11y/useKeyWithClickEvents: escape listener handles keyboard interactions */
 
 import classNames from "classnames";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "preact/hooks";
 import { match, P } from "ts-pattern";
 
 import { ConnectionFlow } from "../flow/ConnectionFlow";
 import { Disconnected } from "../flow/disconnected/Disconnected";
 import { copyToClipboard } from "../hooks/useClipboard";
 import { useProvider } from "../hooks/useProvider";
+import { usePunchTransition } from "../hooks/usePunchTransition";
 import { useSession } from "../hooks/useSession";
 import { log } from "../utils/log";
 import { Footer } from "./footer/Footer";
@@ -56,11 +63,89 @@ const useEscapeToClose = (handler: () => void) => {
   }, [handler]);
 };
 
+const useDynamicDialogHeight = () => {
+  const contentRef = useRef<HTMLDivElement | null>(null);
+  const [height, setHeight] = useState<number>(0);
+  const hasMeasuredRef = useRef(false);
+
+  const measureHeight = useCallback(
+    (targetElement?: HTMLElement | null, useScrollHeight = false) => {
+      const node = targetElement || contentRef.current;
+
+      if (!node) return;
+
+      const nextHeight = useScrollHeight
+        ? node.scrollHeight
+        : node.getBoundingClientRect().height;
+
+      if (nextHeight > 0) {
+        setHeight((previousHeight) =>
+          typeof previousHeight === "number" &&
+          Math.abs(previousHeight - nextHeight) < 0.5
+            ? previousHeight
+            : nextHeight,
+        );
+        hasMeasuredRef.current = true;
+      }
+    },
+    [],
+  );
+
+  useLayoutEffect(() => {
+    const node = contentRef.current;
+
+    if (!node || typeof ResizeObserver === "undefined") return;
+
+    const observer = new ResizeObserver(() => {
+      measureHeight();
+    });
+
+    observer.observe(node);
+
+    return () => observer.disconnect();
+  }, [measureHeight]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const handleResize = () => {
+      measureHeight();
+    };
+
+    window.addEventListener("resize", handleResize);
+
+    return () => window.removeEventListener("resize", handleResize);
+  }, [measureHeight]);
+
+  return {
+    contentRef,
+    height,
+    measureHeight,
+    setHeight,
+  };
+};
+
 export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
-  const { view, setView, copied, setCopied } = useModalState();
+  const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
-  const { status } = useProvider();
-  const title = "Connect Wallet";
+  const { status, provider } = useProvider();
+  const { contentRef, height, measureHeight } = useDynamicDialogHeight();
+  const {
+    current: displayedModalView,
+    previous: previousModalView,
+    isTransitioning: isModalViewTransitioning,
+  } = usePunchTransition(modalView);
+  const {
+    current: displayedStatus,
+    previous: previousStatus,
+    isTransitioning: isStatusTransitioning,
+  } = usePunchTransition(status);
+  const openSettings = useCallback(() => setView("settings"), [setView]);
+
+  const title = match(modalView)
+    .with("start", () => "Connect Wallet")
+    .with("settings", () => "Settings")
+    .exhaustive();
 
   useEscapeToClose(onClose);
 
@@ -70,45 +155,166 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     if (success) setCopied(true);
   }, [uri, setCopied]);
 
-  log("view", view);
+  const isInitialMountRef = useRef(true);
+  const initialMeasureTimeoutRef = useRef<number>();
+  const previousHeightRef = useRef<number | undefined>(undefined);
+  const [shouldHideOverflow, setShouldHideOverflow] = useState(false);
+  const overflowTimeoutRef = useRef<number>();
+
+  useLayoutEffect(() => {
+    if (!contentRef.current) return;
+
+    if (isInitialMountRef.current) {
+      if (initialMeasureTimeoutRef.current) {
+        window.clearTimeout(initialMeasureTimeoutRef.current);
+      }
+
+      initialMeasureTimeoutRef.current = window.setTimeout(() => {
+        if (contentRef.current) {
+          measureHeight(undefined, true);
+          isInitialMountRef.current = false;
+        }
+      }, 0);
+    } else {
+      measureHeight();
+    }
+
+    return () => {
+      if (initialMeasureTimeoutRef.current) {
+        window.clearTimeout(initialMeasureTimeoutRef.current);
+      }
+    };
+  }, [measureHeight, displayedStatus, displayedModalView]);
+
+  // Manage overflow-hidden during height transitions
+  useEffect(() => {
+    const isHeightChanging =
+      previousHeightRef.current !== undefined &&
+      height !== previousHeightRef.current &&
+      height > 0 &&
+      previousHeightRef.current > 0 &&
+      Math.abs(height - previousHeightRef.current) > 0.5;
+
+    if (isHeightChanging) {
+      setShouldHideOverflow(true);
+
+      if (overflowTimeoutRef.current) {
+        window.clearTimeout(overflowTimeoutRef.current);
+      }
+
+      // Remove overflow-hidden after CSS transition completes (200ms)
+      overflowTimeoutRef.current = window.setTimeout(() => {
+        setShouldHideOverflow(false);
+        overflowTimeoutRef.current = undefined;
+      }, 200);
+    }
+
+    previousHeightRef.current = height;
+
+    return () => {
+      if (overflowTimeoutRef.current) {
+        window.clearTimeout(overflowTimeoutRef.current);
+      }
+    };
+  }, [height]);
+
+  const closeSessionIfExists = () => {
+    provider?.closeSession();
+  };
+
+  const onBack = match({ view: modalView, status })
+    .with({ view: "start", status: "disconnected" }, () => undefined)
+    .with({ view: "start" }, () => closeSessionIfExists)
+    .with({ view: "settings" }, () => () => setView("start"))
+    .otherwise(() => () => {
+      closeSessionIfExists();
+      onClose();
+    });
+
+  const renderDisconnectedView = (targetView: ModalView) =>
+    match(targetView)
+      .with("start", () => <Disconnected onSettings={openSettings} />)
+      .with("settings", () => <ModalSettings />)
+      .otherwise(() => <UnknownState state={targetView} />);
+
+  const renderDisconnectedSection = () => (
+    <div className="modal-transition__container">
+      {previousModalView && (
+        <div className="modal-transition__layer modal-transition__layer--outgoing">
+          {renderDisconnectedView(previousModalView)}
+        </div>
+      )}
+      <div
+        className={classNames(
+          "modal-transition__layer",
+          isModalViewTransitioning && "modal-transition__layer--incoming",
+        )}
+      >
+        {renderDisconnectedView(displayedModalView)}
+      </div>
+    </div>
+  );
+
+  const renderStatusSection = (targetStatus: typeof status) =>
+    match(targetStatus)
+      .with("disconnected", () => renderDisconnectedSection())
+      .with(P.union("connecting", "connected"), () => (
+        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+      ))
+      .otherwise((state) => <UnknownState state={state || "unknown status"} />);
+
+  log("view", modalView);
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-center justify-center bg-black/30 p-4 font-sans text-slate-800 backdrop-blur-sm"
+      className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center bg-black/30 font-sans text-slate-800 backdrop-blur-sm md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
     >
       <div
-        className="relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-2xl bg-white p-2 text-center"
+        className={classNames(
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-t-2xl bg-white transition-[height] duration-[200ms] ease-out md:rounded-b-2xl",
+          shouldHideOverflow || previousStatus ? "overflow-hidden" : undefined,
+        )}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
+        style={
+          typeof height === "number" && height > 0
+            ? { height: `${height}px` }
+            : undefined
+        }
       >
-        <Header
-          setView={setView}
-          onToggleSettings={() =>
-            setView(view === "settings" ? "start" : "settings")
-          }
-          title={title}
-          view={view}
-          onClose={onClose}
-        />
-
-        {match(status)
-          .with("disconnected", () =>
-            match(view)
-              .with("start", () => <Disconnected />)
-              .with("settings", () => <ModalSettings />)
-              .otherwise(() => <UnknownState state={view} />),
-          )
-          .with(P.union("connecting", "connected"), () => (
-            <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-          ))
-          .otherwise(() => (
-            <UnknownState state={"unknown status"} />
-          ))}
+        <div ref={contentRef}>
+          <Header
+            title={title}
+            view={modalView}
+            onClose={onClose}
+            onBack={onBack}
+          />
+          <div className="modal-transition__container">
+            {previousStatus && (
+              <div className="modal-transition__layer modal-transition__layer--outgoing absolute">
+                <div className="flex flex-col text-center">
+                  {renderStatusSection(previousStatus)}
+                </div>
+              </div>
+            )}
+            <div
+              className={classNames(
+                "modal-transition__layer",
+                isStatusTransitioning && "modal-transition__layer--incoming",
+              )}
+            >
+              <div className="flex flex-col text-center">
+                {renderStatusSection(displayedStatus)}
+              </div>
+            </div>
+          </div>
+          <Footer />
+        </div>
 
         <div
           className={classNames(
@@ -118,8 +324,6 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
         >
           📋 Connection URL copied to clipboard!
         </div>
-
-        <Footer />
       </div>
     </div>
   );

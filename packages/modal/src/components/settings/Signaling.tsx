@@ -1,9 +1,9 @@
 import { useSettings } from "../../hooks/useSettings";
-import { InfoTooltip } from "../ui/InfoTooltip";
-import { Input } from "../ui/Input";
-import { MenuGroup } from "../ui/menu/MenuGroup";
-import { MenuItem } from "../ui/menu/MenuItem";
-import { Select } from "../ui/Select";
+import { InfoTooltip } from "../../ui/InfoTooltip";
+import { Input } from "../../ui/Input";
+import { MenuGroup } from "../../ui/menu/MenuGroup";
+import { MenuItem } from "../../ui/menu/MenuItem";
+import { Select } from "../../ui/Select";
 
 type SignalingProtocol = "MQTT" | "NTFY" | "GUN";
 

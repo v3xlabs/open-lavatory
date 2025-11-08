@@ -1,8 +1,8 @@
 import { useSettings } from "../../hooks/useSettings";
-import { InfoTooltip } from "../ui/InfoTooltip";
-import { MenuGroup } from "../ui/menu/MenuGroup";
-import { MenuItem } from "../ui/menu/MenuItem";
-import { Toggle } from "../ui/Toggle";
+import { InfoTooltip } from "../../ui/InfoTooltip";
+import { MenuGroup } from "../../ui/menu/MenuGroup";
+import { MenuItem } from "../../ui/menu/MenuItem";
+import { Toggle } from "../../ui/Toggle";
 
 export const ConnectionPreferences = () => {
   const { settings, updateSettings } = useSettings();

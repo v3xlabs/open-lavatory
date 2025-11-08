@@ -1,9 +1,9 @@
 import { useState } from "preact/hooks";
 
-import { InfoTooltip } from "../ui/InfoTooltip";
-import { MenuGroup } from "../ui/menu/MenuGroup";
-import { MenuItem } from "../ui/menu/MenuItem";
-import { Select } from "../ui/Select";
+import { InfoTooltip } from "../../ui/InfoTooltip";
+import { MenuGroup } from "../../ui/menu/MenuGroup";
+import { MenuItem } from "../../ui/menu/MenuItem";
+import { Select } from "../../ui/Select";
 
 const transportOptions = ["WebRTC"];
 

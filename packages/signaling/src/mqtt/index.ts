@@ -20,7 +20,9 @@ export const mqtt: CreateSignalLayerFn = ({
   return createSignalingLayer({
     type: "mqtt",
     async setup() {
-      connection = await MQTT.connectAsync(url);
+      connection = await MQTT.connectAsync(url, {
+        reconnectOnConnackError: false,
+      });
     },
     teardown() {
       connection?.end();

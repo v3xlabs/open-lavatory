@@ -95,6 +95,7 @@ export const createSession = async (
     isHost,
   });
   let signalingSuspended = false;
+  let pendingTransportRestart = false;
 
   const attachSignalHandlers = () => {
     signal.subscribe(async (message) => {
@@ -143,7 +144,7 @@ export const createSession = async (
           payload,
         };
 
-        await signal.send(responseMessage);
+        await sendViaBestPath(responseMessage);
       }
     });
     signal.emitter.on("state_change", async (state) => {
@@ -153,13 +154,23 @@ export const createSession = async (
             const t = await transportLayer.ensureTransport();
 
             if (isHost) {
-              const offer = await t.negotiateAsInitiator();
+              const offer = await (
+                t as unknown as {
+                  negotiateAsInitiator: (options?: {
+                    iceRestart?: boolean;
+                  }) => Promise<WebRTCSignal>;
+                }
+              ).negotiateAsInitiator(
+                pendingTransportRestart ? { iceRestart: true } : undefined,
+              );
 
               await signal.send({
                 type: "transport",
                 messageId: crypto.randomUUID(),
                 payload: { transport: "webrtc", signal: offer },
               });
+
+              pendingTransportRestart = false;
             }
           }
         } catch (err) {
@@ -226,20 +237,28 @@ export const createSession = async (
     await signal.send(sessionMessage);
   };
   const sendViaBestPath = async (sessionMessage: SessionMessage) => {
-    try {
-      await transportLayer.sendViaTransport(sessionMessage);
-    } catch (transportErr) {
-      log(
-        "transport send failed, falling back to signaling",
-        transportErr as Error,
-      );
+    const canUseTransport =
+      !!transportLayer.getTransportState()?.connected &&
+      transportLayer.isHelloAcked();
 
+    if (canUseTransport) {
       try {
-        await sendViaSignaling(sessionMessage);
-      } catch (signalingErr) {
-        log("signaling fallback also failed", signalingErr as Error);
-        throw new Error("Failed to send via both transport and signaling");
+        await transportLayer.sendViaTransport(sessionMessage);
+
+        return;
+      } catch (transportErr) {
+        log(
+          "transport send failed, falling back to signaling",
+          transportErr as Error,
+        );
       }
+    }
+
+    try {
+      await sendViaSignaling(sessionMessage);
+    } catch (signalingErr) {
+      log("signaling fallback also failed", signalingErr as Error);
+      throw new Error("Failed to send via both transport and signaling");
     }
   };
 
@@ -263,6 +282,14 @@ export const createSession = async (
   const updateStatus = (newStatus: SessionStatus) => {
     status = newStatus;
     const transportState = transportLayer.getTransportState();
+
+    const transportFailed =
+      transportState?.type === "webrtc" &&
+      ["webrtc-failed", "webrtc-closed"].includes(transportState.state ?? "");
+
+    if (isHost && transportFailed && status !== "disconnected") {
+      pendingTransportRestart = true;
+    }
 
     emitter.emit("state_change", {
       status,
@@ -363,22 +390,33 @@ export const createSession = async (
       };
 
       // Prefer transport if alive; otherwise fall back to signaling
-      await sendViaBestPath(sessionMessage);
+      return await new Promise((resolve, reject) => {
+        const messageHandler = (incoming: SessionMessage) => {
+          if (incoming.messageId !== randomID || incoming.type !== "response") {
+            return;
+          }
 
-      return Promise.race([
-        new Promise((resolve) => {
-          messages.on("message", (message) => {
-            if (message.messageId === randomID && message.type === "response") {
-              resolve(message.payload);
-            }
-          });
-        }),
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(new Error("Timeout"));
-          }, timeout);
-        }),
-      ]);
+          cleanup();
+          resolve(incoming.payload);
+        };
+
+        function cleanup() {
+          messages.off("message", messageHandler);
+          clearTimeout(timer);
+        }
+
+        messages.on("message", messageHandler);
+
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error("Timeout"));
+        }, timeout);
+
+        void sendViaBestPath(sessionMessage).catch((err) => {
+          cleanup();
+          reject(err);
+        });
+      });
     },
     emitter,
   };

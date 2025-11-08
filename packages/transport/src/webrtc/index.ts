@@ -116,11 +116,12 @@ export const webrtc = (opts: {
 
   return {
     ...base,
-    async negotiateAsInitiator() {
+    async negotiateAsInitiator(options?: { iceRestart?: boolean }) {
       const peerConnection = ensurePeerConnection();
       const offer = await peerConnection.createOffer({
         offerToReceiveAudio: false,
         offerToReceiveVideo: false,
+        iceRestart: options?.iceRestart ?? false,
       });
 
       await peerConnection.setLocalDescription(offer);

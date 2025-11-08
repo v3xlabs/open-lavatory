@@ -1,8 +1,10 @@
+import type { ProviderStatus } from "@openlv/provider";
 import type { SessionStateObject } from "@openlv/session";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { match, P } from "ts-pattern";
 
 import { UnknownState } from "../components/UnknownState";
+import { useProvider } from "../hooks/useProvider";
 import { useSession } from "../hooks/useSession";
 import { HandshakeOpen } from "./HandshakeOpen";
 
@@ -36,7 +38,7 @@ const STATE_XR_ENCRYPTED = "xr-encrypted" as const;
 const STATE_DISCONNECTED = "disconnected" as const;
 const STATE_UNKNOWN = "unknown" as const;
 
-type SignalingState =
+type FlowState =
   | typeof STATE_CONNECTING
   | typeof STATE_HANDSHAKE_OPEN
   | typeof STATE_HANDSHAKE_CLOSED
@@ -44,36 +46,50 @@ type SignalingState =
   | typeof STATE_DISCONNECTED
   | typeof STATE_UNKNOWN;
 
-const getSignalingState = (
+const getFlowState = (
   sessionStatus: SessionStateObject | undefined,
-): SignalingState => {
+  providerStatus: ProviderStatus,
+): FlowState => {
   if (!sessionStatus) {
-    return STATE_UNKNOWN;
+    return match(providerStatus)
+      .with(P.union("creating", "connecting"), () => STATE_CONNECTING)
+      .with("connected", () => STATE_XR_ENCRYPTED)
+      .with("disconnected", () => STATE_DISCONNECTED)
+      .otherwise(() => STATE_UNKNOWN);
   }
 
   return match(sessionStatus)
     .with({ status: STATE_DISCONNECTED }, () => STATE_DISCONNECTED)
+    .with({ status: P.union("connected", "ready") }, () => STATE_XR_ENCRYPTED)
     .with(
-      { status: P.union("created", "signaling", "connected", "ready") },
-      (x) => {
-        const signalingState =
-          "signaling" in x ? x.signaling?.state : undefined;
-
-        return match(signalingState)
-          .with(STATE_CONNECTING, () => STATE_CONNECTING)
-          .with(STATE_HANDSHAKE_OPEN, () => STATE_HANDSHAKE_OPEN)
-          .with(STATE_HANDSHAKE_CLOSED, () => STATE_HANDSHAKE_CLOSED)
-          .with(STATE_XR_ENCRYPTED, () => STATE_XR_ENCRYPTED)
-          .with(STATE_DISCONNECTED, () => STATE_DISCONNECTED)
-          .otherwise(() => STATE_UNKNOWN);
+      {
+        status: "signaling",
+        signaling: { state: P.union("handshake-open", "handshaking") },
       },
+      () => STATE_HANDSHAKE_OPEN,
     )
+    .with(
+      {
+        status: "signaling",
+        signaling: { state: P.union("handshake-closed", "xr-encrypted") },
+      },
+      () => STATE_HANDSHAKE_CLOSED,
+    )
+    .with(
+      {
+        status: "signaling",
+        signaling: { state: P.union("connecting", "disconnected") },
+      },
+      () => STATE_CONNECTING,
+    )
+    .with({ status: "signaling" }, () => STATE_CONNECTING)
+    .with({ status: "created" }, () => STATE_CONNECTING)
     .otherwise(() => STATE_UNKNOWN);
 };
 
-const useFlowTransition = (currentState: SignalingState) => {
+const useFlowTransition = (currentState: FlowState) => {
   const [displayState, setDisplayState] = useState(currentState);
-  const previousStateRef = useRef<SignalingState>(currentState);
+  const previousStateRef = useRef<FlowState>(currentState);
 
   useEffect(() => {
     if (currentState === previousStateRef.current) return;
@@ -90,8 +106,13 @@ const useFlowTransition = (currentState: SignalingState) => {
 };
 
 export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
-  const { status: sessionStatus = { status: "created" } } = useSession();
-  const currentState = getSignalingState(sessionStatus);
+  const { status } = useSession();
+  const sessionStatus =
+    status && typeof status === "object"
+      ? (status as SessionStateObject)
+      : undefined;
+  const { status: providerStatus } = useProvider();
+  const currentState = getFlowState(sessionStatus, providerStatus);
   const { displayState } = useFlowTransition(currentState);
 
   return (
@@ -154,7 +175,9 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
           </div>
         ))
         .otherwise(() => (
-          <UnknownState state={sessionStatus} />
+          <UnknownState
+            state={{ flow: currentState, session: sessionStatus }}
+          />
         ))}
     </div>
   );

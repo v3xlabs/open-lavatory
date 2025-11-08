@@ -31,6 +31,7 @@ export type ProviderStatus =
   | "creating"
   | "connecting"
   | "connected"
+  | "transport-reconnecting"
   | "error";
 
 export type ProviderState = {
@@ -70,6 +71,11 @@ export const createProvider = (
   let status: ProviderStatus = "disconnected";
   const chainId: string = "1";
   let accounts: Address[] = [];
+  let sessionStateListener: ((state?: SessionStateObject) => void) | undefined;
+  const SESSION_STATUS_TRANSPORT_RECONNECTING =
+    "transport-reconnecting" as SessionStateObject["status"];
+  const PROVIDER_STATUS_TRANSPORT_RECONNECTING =
+    "transport-reconnecting" as ProviderStatus;
   const storage = createProviderStorage({ storage: _parameters.storage });
 
   const updateStatus = (newStatus: ProviderStatus) => {
@@ -148,14 +154,37 @@ export const createProvider = (
           throw new Error("Not implemented");
           // console.log("wallet_requestPermissions", v.params);
 
-          // return [] as ExtractReturnType<
-          //   RpcSchema,
-          //   "wallet_requestPermissions"
-          // >;
-        })
-        // TODO: if modal is enabled explicitly toggle the modal to show.
-        .with({ method: "eth_requestAccounts" }, async () => {
-          log("eth_requestAccounts");
+  const provider: OpenLVProvider = Object.assign(coreProvider, {
+    createSession: async (
+      parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
+    ) => {
+      updateStatus("creating");
+      session = await createSession(
+        parameters,
+        await dynamicSignalingLayer(parameters.p),
+        onMessage,
+      );
+      sessionStateListener = (state) => {
+        if (!state) return;
+
+        if (state.status === SESSION_STATUS_TRANSPORT_RECONNECTING) {
+          updateStatus(PROVIDER_STATUS_TRANSPORT_RECONNECTING);
+
+          return;
+        }
+
+        if (state.status === "connected") {
+          updateStatus("connected");
+
+          return;
+        }
+
+        if (state.status === "disconnected") {
+          updateStatus("disconnected");
+        }
+      };
+      session.emitter.on("state_change", sessionStateListener);
+      updateStatus("connecting");
 
           const x = await start();
 
@@ -192,6 +221,18 @@ export const createProvider = (
     storage,
     request,
     getSession: () => session,
+    closeSession: async () => {
+      if (session && sessionStateListener) {
+        session.emitter.off("state_change", sessionStateListener);
+        sessionStateListener = undefined;
+      }
+
+      await session?.close();
+      session = undefined;
+      updateStatus("disconnected");
+    },
+    getState: () => ({ status }),
+    emitter,
     getAccounts,
     createSession: start,
     closeSession,

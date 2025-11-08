@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   decodeConnectionURL,
   OPENLV_PROTOCOL_VERSION,
@@ -12,7 +13,11 @@ import {
   initHash,
   parseEncryptionKey,
 } from "@openlv/core/encryption";
-import type { CreateSignalLayerFn, SignalingLayer } from "@openlv/signaling";
+import type {
+  CreateSignalLayerFn,
+  SignalingLayer,
+  SignalingMode,
+} from "@openlv/signaling";
 import { mqtt } from "@openlv/signaling/mqtt";
 import { ntfy } from "@openlv/signaling/ntfy";
 import { EventEmitter } from "eventemitter3";
@@ -23,7 +28,11 @@ import type {
   SessionMessageResponse,
   WebRTCSignal,
 } from "./messages/index.js";
-import type { Session, SessionStatus } from "./session-types.js";
+import type {
+  Session,
+  SessionStateObject,
+  SessionStatus,
+} from "./session-types.js";
 import { maybeSendTransportProbe } from "./transport/probe.js";
 import { createWebRTCTransportLayer } from "./transport/webrtc-layer.js";
 import { log } from "./utils/log.js";
@@ -51,6 +60,7 @@ export const createSession = async (
     encryptionKey,
   );
   let status: SessionStatus = "created";
+  const STATUS_TRANSPORT_RECONNECTING: SessionStatus = "transport-reconnecting";
   const protocol = initParameters.p;
   const server = initParameters.s;
 
@@ -96,6 +106,7 @@ export const createSession = async (
   });
   let signalingSuspended = false;
   let pendingTransportRestart = false;
+  let transportReconnectInProgress = false;
 
   const attachSignalHandlers = () => {
     signal.subscribe(async (message) => {
@@ -177,7 +188,7 @@ export const createSession = async (
           log("WebRTC negotiation init error", err as Error);
         }
 
-        updateStatus("connected");
+        updateStatus("ready");
       }
     });
   };
@@ -231,35 +242,109 @@ export const createSession = async (
     }
   };
 
+  const beginTransportReconnect = async (reason?: unknown) => {
+    if (transportReconnectInProgress) return;
+
+    const reconnectLogLabel = "transport reconnect requested";
+
+    if (reason instanceof Error) {
+      log(reconnectLogLabel, reason);
+    } else if (reason) {
+      log(reconnectLogLabel, reason as Error);
+    } else {
+      log(reconnectLogLabel);
+    }
+
+    transportReconnectInProgress = true;
+
+    transportProbeSent = false;
+    pendingTransportRestart = isHost;
+
+    if (signalingSuspended) {
+      await resumeSignaling();
+    } else {
+      try {
+        await signal.setup();
+      } catch (err) {
+        log("signaling setup error during reconnect", err as Error);
+      }
+    }
+
+    await transportLayer
+      .teardown()
+      .catch((err: unknown) =>
+        log("transport teardown error during reconnect", err as Error),
+      );
+
+    updateStatus(STATUS_TRANSPORT_RECONNECTING);
+
+    if (!transportLayer.isSupported()) {
+      return;
+    }
+
+    try {
+      const t = await transportLayer.ensureTransport();
+
+      if (isHost) {
+        const offer = await (
+          t as unknown as {
+            negotiateAsInitiator: (options?: {
+              iceRestart?: boolean;
+            }) => Promise<WebRTCSignal>;
+          }
+        ).negotiateAsInitiator({ iceRestart: true });
+
+        await signal.send({
+          type: "transport",
+          messageId: crypto.randomUUID(),
+          payload: { transport: "webrtc", signal: offer },
+        });
+
+        pendingTransportRestart = false;
+      }
+    } catch (err) {
+      log("transport ensure error during reconnect", err as Error);
+    }
+  };
+
   const sendViaSignaling = async (sessionMessage: SessionMessage) => {
     if (signalingSuspended) await resumeSignaling();
 
     await signal.send(sessionMessage);
   };
   const sendViaBestPath = async (sessionMessage: SessionMessage) => {
-    const canUseTransport =
-      !!transportLayer.getTransportState()?.connected &&
-      transportLayer.isHelloAcked();
+    const transportState = transportLayer.getTransportState();
+    const transportHealthy =
+      !!transportState?.connected && transportLayer.isHelloAcked();
 
-    if (canUseTransport) {
+    if (transportHealthy) {
       try {
         await transportLayer.sendViaTransport(sessionMessage);
 
         return;
       } catch (transportErr) {
         log(
-          "transport send failed, falling back to signaling",
+          "transport send failed, scheduling reconnect",
           transportErr as Error,
         );
+        await beginTransportReconnect(transportErr);
+        throw new Error("Transport send failed");
       }
     }
 
-    try {
+    const allowDataOverSignaling =
+      status === "created" || status === "signaling";
+
+    if (allowDataOverSignaling) {
       await sendViaSignaling(sessionMessage);
-    } catch (signalingErr) {
-      log("signaling fallback also failed", signalingErr as Error);
-      throw new Error("Failed to send via both transport and signaling");
+
+      return;
     }
+
+    await beginTransportReconnect(
+      new Error("Transport not ready; signaling fallback disabled"),
+    );
+    throw new Error("Transport not ready");
   };
 
   const transportLayer = createWebRTCTransportLayer({
@@ -279,9 +364,57 @@ export const createSession = async (
   transportLayer.setSendViaBestPath(sendViaBestPath);
   let transportProbeSent = false;
 
-  const updateStatus = (newStatus: SessionStatus) => {
-    status = newStatus;
+  const resolveNextStatus = (
+    incomingStatus: SessionStatus,
+    transportHealthy: boolean,
+  ): SessionStatus => {
+    if (incomingStatus === STATUS_TRANSPORT_RECONNECTING && transportHealthy) {
+      transportReconnectInProgress = false;
+
+      return "connected";
+    }
+
+    if (transportReconnectInProgress) {
+      if (incomingStatus === "disconnected") {
+        transportReconnectInProgress = false;
+
+        return "disconnected";
+      }
+
+      if (transportHealthy) {
+        transportReconnectInProgress = false;
+
+        return "connected";
+      }
+
+      return STATUS_TRANSPORT_RECONNECTING;
+    }
+
+    if (incomingStatus === "ready" && transportHealthy) {
+      return "connected";
+    }
+
+    if (incomingStatus === "connected" && !transportHealthy) {
+      return "ready";
+    }
+
+    if (incomingStatus === STATUS_TRANSPORT_RECONNECTING) {
+      transportReconnectInProgress = true;
+
+      return STATUS_TRANSPORT_RECONNECTING;
+    }
+
+    return incomingStatus;
+  };
+
+  const updateStatus = (incomingStatus: SessionStatus) => {
     const transportState = transportLayer.getTransportState();
+    const transportHelloAcked = transportLayer.isHelloAcked();
+    const transportHealthy = !!transportState?.connected && transportHelloAcked;
+
+    const nextStatus = resolveNextStatus(incomingStatus, transportHealthy);
+
+    status = nextStatus;
 
     const transportFailed =
       transportState?.type === "webrtc" &&
@@ -291,30 +424,38 @@ export const createSession = async (
       pendingTransportRestart = true;
     }
 
+    const signalingState = signalingSuspended
+      ? ({ state: "disconnected" } as { state: SignalingMode })
+      : signal.getState();
+
+    const transportDescriptor = transportState
+      ? { ...transportState, helloAcked: transportHelloAcked }
+      : undefined;
+
     emitter.emit("state_change", {
       status,
-      signaling: signalingSuspended
-        ? { state: "disconnected" }
-        : signal.getState(),
-      transport: transportState,
+      signaling: signalingState,
+      transport: transportDescriptor,
     });
 
-    const transportHealthy =
-      !!transportState?.connected && transportLayer.isHelloAcked();
+    const shouldSuspend =
+      status === "connected" && transportHealthy && !signalingSuspended;
 
-    if (transportHealthy && !signalingSuspended) {
-      // fire and forget
-      suspendSignaling();
+    if (shouldSuspend) {
+      void suspendSignaling();
     }
 
-    if (!transportHealthy && signalingSuspended) {
-      resumeSignaling();
+    const shouldResume =
+      status !== "connected" && !transportHealthy && signalingSuspended;
+
+    if (shouldResume) {
+      void resumeSignaling();
     }
 
     maybeSendTransportProbe({
       status,
       transportConnected: !!transportState?.connected,
-      transportHelloAcked: transportLayer.isHelloAcked(),
+      transportHelloAcked,
       sent: transportProbeSent,
       sendViaTransport: transportLayer.sendViaTransport,
     }).then((sent) => {
@@ -343,12 +484,19 @@ export const createSession = async (
       updateStatus("disconnected");
     },
     getState() {
+      const currentTransport = transportLayer.getTransportState();
+
       return {
         status,
         signaling: signalingSuspended
           ? { state: "disconnected" }
           : signal.getState(),
-        transport: transportLayer.getTransportState(),
+        transport: currentTransport
+          ? {
+              ...currentTransport,
+              helloAcked: transportLayer.isHelloAcked(),
+            }
+          : undefined,
       };
     },
     getHandshakeParameters() {
@@ -362,12 +510,30 @@ export const createSession = async (
       };
     },
     waitForLink: async () => {
-      return new Promise<void>((resolve) => {
-        emitter.on("state_change", (state) => {
-          if (state?.status === "connected") {
+      const currentTransport = transportLayer.getTransportState();
+      const alreadyLinked =
+        status === "connected" &&
+        !!currentTransport?.connected &&
+        transportLayer.isHelloAcked();
+
+      if (alreadyLinked) return;
+
+      await new Promise<void>((resolve) => {
+        const handler = (state?: SessionStateObject) => {
+          const transportConnected = !!state?.transport?.connected;
+          const helloAcked = state?.transport?.helloAcked ?? false;
+
+          if (
+            state?.status === "connected" &&
+            transportConnected &&
+            helloAcked
+          ) {
+            emitter.off("state_change", handler);
             resolve();
           }
-        });
+        };
+
+        emitter.on("state_change", handler);
       });
     },
     async send(message: object, timeout: number = 5000) {
@@ -376,9 +542,14 @@ export const createSession = async (
         transportLayer.isHelloAcked();
       const signalingReady =
         !signalingSuspended && signal.getState().state === "xr-encrypted";
-      const ready = transportReady || signalingReady;
+      const allowSignalingData = status === "created" || status === "signaling";
+      const ready = transportReady || (allowSignalingData && signalingReady);
 
       if (!ready) {
+        if (status === STATUS_TRANSPORT_RECONNECTING) {
+          throw new Error("Transport reconnecting");
+        }
+
         throw new Error("Session not ready");
       }
 
@@ -442,3 +613,5 @@ export const connectSession = async (
 
   return createSession(initParameters, signaling, onMessage);
 };
+
+/* eslint-enable max-lines */

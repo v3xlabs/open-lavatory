@@ -256,9 +256,12 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   );
 
   const renderStatusSection = (targetStatus: typeof status) =>
-    match(targetStatus)
+    match<string>(targetStatus as string)
       .with("disconnected", () => renderDisconnectedSection())
       .with(P.union("creating", "connecting", "connected"), () => (
+        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+      ))
+      .with("transport-reconnecting", () => (
         <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
       ))
       .otherwise((state) => <UnknownState state={state || "unknown status"} />);

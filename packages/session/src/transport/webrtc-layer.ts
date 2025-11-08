@@ -121,53 +121,54 @@ export function createWebRTCTransportLayer(
         createDataChannel: isHost,
       });
 
-      transport.onMessage(async (raw) => {
-        try {
-          if (typeof raw !== "string") return;
+      transport.onMessage((raw: unknown) => {
+        void (async () => {
+          try {
+            if (typeof raw !== "string") return;
 
-          const msg = JSON.parse(raw) as TransportWireMessage;
+            const msg = JSON.parse(raw) as TransportWireMessage;
 
-          if (msg.t === "h") {
-            const ack: TransportWireMessage = { t: "ha" };
+            if (msg.t === "h") {
+              const ack: TransportWireMessage = { t: "ha" };
 
-            try {
-              transport?.send(JSON.stringify(ack));
-              transportHelloAcked = true;
-              onTransportStateChange();
-            } catch (err) {
-              log("transport hello-ack send error", err as Error);
+              try {
+                transport?.send(JSON.stringify(ack));
+                transportHelloAcked = true;
+                onTransportStateChange();
+              } catch (err) {
+                log("transport hello-ack send error", err as Error);
+              }
+
+              return;
             }
 
-            return;
+            if (msg.t === "ha") {
+              transportHelloAcked = true;
+              onTransportStateChange();
+
+              return;
+            }
+
+            if (msg.t === "d") {
+              await handleTransportData({
+                body: msg.b,
+                decryptionKey,
+                onMessage,
+                sendViaBestPath: async (m) => {
+                  if (!sendViaBestPath)
+                    throw new Error("sendViaBestPath not set");
+
+                  await sendViaBestPath(m);
+                },
+                messages,
+              });
+
+              return;
+            }
+          } catch (err) {
+            log("transport onMessage error", err as Error);
           }
-
-          if (msg.t === "ha") {
-            transportHelloAcked = true;
-            onTransportStateChange();
-
-            return;
-          }
-
-          if (msg.t === "d") {
-            await handleTransportData({
-              body: msg.b,
-              decryptionKey,
-              onMessage,
-              // Fallback to signaling if transport fails; set by base layer
-              sendViaBestPath: async (m) => {
-                if (!sendViaBestPath)
-                  throw new Error("sendViaBestPath not set");
-
-                await sendViaBestPath(m);
-              },
-              messages,
-            });
-
-            return;
-          }
-        } catch (err) {
-          log("transport onMessage error", err as Error);
-        }
+        })();
       });
 
       transportSetup = Promise.resolve(transport.setup());

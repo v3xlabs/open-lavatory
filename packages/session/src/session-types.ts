@@ -9,6 +9,7 @@ export type SessionStatus =
   | "ready"
   | "signaling"
   | "connected"
+  | "transport-reconnecting"
   | "disconnected";
 
 export type SessionStateObject = {
@@ -25,6 +26,7 @@ export type SessionStateObject = {
       | "webrtc-failed"
       | "webrtc-closed";
     connected: boolean;
+    helloAcked?: boolean;
   };
 };
 

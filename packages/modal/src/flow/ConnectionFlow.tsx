@@ -37,6 +37,8 @@ const STATE_HANDSHAKE_CLOSED = "handshake-closed" as const;
 const STATE_XR_ENCRYPTED = "xr-encrypted" as const;
 const STATE_DISCONNECTED = "disconnected" as const;
 const STATE_UNKNOWN = "unknown" as const;
+const TRANSPORT_RECONNECTING = "transport-reconnecting" as const;
+const STATE_TRANSPORT_RECONNECTING = TRANSPORT_RECONNECTING;
 
 type FlowState =
   | typeof STATE_CONNECTING
@@ -44,14 +46,19 @@ type FlowState =
   | typeof STATE_HANDSHAKE_CLOSED
   | typeof STATE_XR_ENCRYPTED
   | typeof STATE_DISCONNECTED
+  | typeof STATE_TRANSPORT_RECONNECTING
   | typeof STATE_UNKNOWN;
 
 const getFlowState = (
   sessionStatus: SessionStateObject | undefined,
   providerStatus: ProviderStatus,
 ): FlowState => {
+  if ((providerStatus as string) === TRANSPORT_RECONNECTING) {
+    return STATE_TRANSPORT_RECONNECTING;
+  }
+
   if (!sessionStatus) {
-    return match(providerStatus)
+    return match<string>(providerStatus as string)
       .with(P.union("creating", "connecting"), () => STATE_CONNECTING)
       .with("connected", () => STATE_XR_ENCRYPTED)
       .with("disconnected", () => STATE_DISCONNECTED)
@@ -61,6 +68,14 @@ const getFlowState = (
   return match(sessionStatus)
     .with({ status: STATE_DISCONNECTED }, () => STATE_DISCONNECTED)
     .with({ status: P.union("connected", "ready") }, () => STATE_XR_ENCRYPTED)
+    .with(
+      P.when(
+        (s) =>
+          (s as SessionStateObject | undefined)?.transport?.state ===
+          "webrtc-connecting",
+      ),
+      () => STATE_CONNECTING,
+    )
     .with(
       {
         status: "signaling",
@@ -138,6 +153,19 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
               <h3 className="mb-2 font-semibold text-gray-900 text-lg">
                 Establishing e2e encryption...
               </h3>
+            </div>
+          </div>
+        ))
+        .with(STATE_TRANSPORT_RECONNECTING, () => (
+          <div className="flex flex-col items-center gap-4 p-6">
+            <LoadingSpinner />
+            <div className="text-center">
+              <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+                Transport reconnecting
+              </h3>
+              <p className="text-gray-500 text-sm">
+                Hold tight while we restore the direct link.
+              </p>
             </div>
           </div>
         ))

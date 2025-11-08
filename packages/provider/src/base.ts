@@ -72,16 +72,43 @@ export const createProvider = (
   const chainId: string = "1";
   let accounts: Address[] = [];
   let sessionStateListener: ((state?: SessionStateObject) => void) | undefined;
-  const SESSION_STATUS_TRANSPORT_RECONNECTING =
-    "transport-reconnecting" as SessionStateObject["status"];
-  const PROVIDER_STATUS_TRANSPORT_RECONNECTING =
-    "transport-reconnecting" as ProviderStatus;
   const storage = createProviderStorage({ storage: _parameters.storage });
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
     log("updateStatus", status);
     oxEmitter.emit("status_change", newStatus);
+  };
+
+  const detachSessionStateListener = () => {
+    if (session && sessionStateListener) {
+      session.emitter.off("state_change", sessionStateListener);
+      sessionStateListener = undefined;
+    }
+  };
+
+  const attachSessionStateListener = (target: Session) => {
+    sessionStateListener = (state) => {
+      if (!state) return;
+
+      if (state.status === "transport-reconnecting") {
+        updateStatus("transport-reconnecting");
+
+        return;
+      }
+
+      if (state.status === "connected") {
+        updateStatus("connected");
+
+        return;
+      }
+
+      if (state.status === "disconnected") {
+        updateStatus("disconnected");
+      }
+    };
+
+    target.emitter.on("state_change", sessionStateListener);
   };
 
   const onMessage = async (message: object) => {
@@ -105,23 +132,27 @@ export const createProvider = (
     parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
   ) => {
     updateStatus("creating");
-    session = await createSession(
+    const createdSession = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
       onMessage,
     );
+
+    detachSessionStateListener();
+    session = createdSession;
+    attachSessionStateListener(createdSession);
     updateStatus("connecting");
 
     log("session created");
-    await session.connect();
+    await createdSession.connect();
     log("session connected");
-    const handshakeParameters = session.getHandshakeParameters();
+    const handshakeParameters = createdSession.getHandshakeParameters();
     const url = encodeConnectionURL(handshakeParameters);
 
     log("session url", url);
-    oxEmitter.emit("session_started", session);
+    oxEmitter.emit("session_started", createdSession);
 
-    await session.waitForLink();
+    await createdSession.waitForLink();
     log("session linked");
 
     accounts = await getAccounts();
@@ -130,9 +161,11 @@ export const createProvider = (
     oxEmitter.emit("connect", { chainId });
     oxEmitter.emit("accountsChanged", accounts);
 
-    return session;
+    return createdSession;
   };
   const closeSession = async () => {
+    detachSessionStateListener();
+    accounts = [];
     await session?.close();
     session = undefined;
     updateStatus("disconnected");
@@ -154,37 +187,14 @@ export const createProvider = (
           throw new Error("Not implemented");
           // console.log("wallet_requestPermissions", v.params);
 
-  const provider: OpenLVProvider = Object.assign(coreProvider, {
-    createSession: async (
-      parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
-    ) => {
-      updateStatus("creating");
-      session = await createSession(
-        parameters,
-        await dynamicSignalingLayer(parameters.p),
-        onMessage,
-      );
-      sessionStateListener = (state) => {
-        if (!state) return;
-
-        if (state.status === SESSION_STATUS_TRANSPORT_RECONNECTING) {
-          updateStatus(PROVIDER_STATUS_TRANSPORT_RECONNECTING);
-
-          return;
-        }
-
-        if (state.status === "connected") {
-          updateStatus("connected");
-
-          return;
-        }
-
-        if (state.status === "disconnected") {
-          updateStatus("disconnected");
-        }
-      };
-      session.emitter.on("state_change", sessionStateListener);
-      updateStatus("connecting");
+          // return [] as ExtractReturnType<
+          //   RpcSchema,
+          //   "wallet_requestPermissions"
+          // >;
+        })
+        // TODO: if modal is enabled explicitly toggle the modal to show.
+        .with({ method: "eth_requestAccounts" }, async () => {
+          log("eth_requestAccounts");
 
           const x = await start();
 
@@ -221,18 +231,6 @@ export const createProvider = (
     storage,
     request,
     getSession: () => session,
-    closeSession: async () => {
-      if (session && sessionStateListener) {
-        session.emitter.off("state_change", sessionStateListener);
-        sessionStateListener = undefined;
-      }
-
-      await session?.close();
-      session = undefined;
-      updateStatus("disconnected");
-    },
-    getState: () => ({ status }),
-    emitter,
     getAccounts,
     createSession: start,
     closeSession,

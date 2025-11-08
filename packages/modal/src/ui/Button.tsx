@@ -1,21 +1,18 @@
 // Button implementation that also supports being an anchor tag
-import { cva, VariantProps } from "cva";
 import {
-  AnchorHTMLAttributes,
-  ButtonHTMLAttributes,
+  type AnchorHTMLAttributes,
+  type ButtonHTMLAttributes,
   createElement,
 } from "preact";
 import type { FC } from "preact/compat";
+import type { VariantProps } from "tailwind-variants/lite";
+import { tv } from "tailwind-variants/lite";
 
-const styles = cva({
-  base: "",
+const styles = tv({
+  base: "flex items-center justify-center rounded-lg transition-colors hover:bg-gray-200",
   variants: {
     variant: {
-      primary: "",
-      secondary: "",
-      tertiary: "",
-      ghost: "",
-      link: "",
+      primary: "bg-blue-500 text-white",
     },
     size: {
       sm: "",
@@ -28,8 +25,8 @@ const styles = cva({
     },
   },
   defaultVariants: {
-    variant: "primary",
     size: "md",
+    variant: "primary",
     aspect: "auto",
   },
 });

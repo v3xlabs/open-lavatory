@@ -81,7 +81,7 @@ const useDynamicDialogHeight = () => {
       if (nextHeight > 0) {
         setHeight((previousHeight) =>
           typeof previousHeight === "number" &&
-            Math.abs(previousHeight - nextHeight) < 0.5
+          Math.abs(previousHeight - nextHeight) < 0.5
             ? previousHeight
             : nextHeight,
         );
@@ -125,7 +125,7 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
+export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status, provider } = useProvider();
@@ -289,7 +289,6 @@ export const ModalRoot = ({ onClose = () => { }, onCopy }: ModalRootProps) => {
       >
         <div ref={contentRef}>
           <Header
-            setView={setView}
             title={title}
             view={modalView}
             onClose={onClose}

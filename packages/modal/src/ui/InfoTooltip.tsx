@@ -7,14 +7,25 @@ import { match } from "ts-pattern";
 const styles = tv({
   slots: {
     root: "group relative",
-    box: "cursor-pointer rounded-md p-1.5 transition-colors hover:bg-neutral-200",
+    box: "cursor-pointer rounded-md transition-colors hover:bg-neutral-200 flex items-center justify-center",
     popover:
       "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md bg-neutral-100 p-2 shadow-sm group-hover:block",
+    icon: "",
   },
   variants: {
     size: {
-      md: "h-5 w-5",
-      lg: "h-6 w-6",
+      sm: {
+        box: "h-5 w-5 p-1",
+        icon: "h-3 w-3",
+      },
+      md: {
+        box: "h-6 w-6 p-1",
+        icon: "h-4 w-4",
+      },
+      lg: {
+        box: "h-8 w-8 p-1.5",
+        icon: "h-4 w-4",
+      },
     },
     variant: {
       icon: "",
@@ -22,7 +33,7 @@ const styles = tv({
     },
   },
   defaultVariants: {
-    size: "md",
+    size: "lg",
   },
 });
 
@@ -31,15 +42,15 @@ export type InfoTooltipProps = VariantProps<typeof styles>;
 export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
   variant = "icon",
   children,
-  size = "md",
+  size = "lg",
 }) => {
-  const { root, box, popover } = styles({ size, variant });
+  const { root, box, popover, icon } = styles({ size, variant });
 
   return (
     <div className={root()}>
-      <div className="cursor-pointer rounded-md p-1.5 transition-colors hover:bg-neutral-200">
+      <div className={box()}>
         {match(variant)
-          .with("icon", () => <LuCircleHelp className={box()} />)
+          .with("icon", () => <LuCircleHelp className={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>

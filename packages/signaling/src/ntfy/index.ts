@@ -104,9 +104,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     subscribe: (handler) => {
       events.on("message", handler);
     },
-    async [Symbol.asyncDispose]() {
-      connection?.close();
-    },
   });
 };
 

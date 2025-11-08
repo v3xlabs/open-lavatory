@@ -31,6 +31,6 @@
 
     // Common build settings
     "declaration": true,
-    "sourceMap": true
+    "sourceMap": true,
   }
 }

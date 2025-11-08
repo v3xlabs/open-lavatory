@@ -7,8 +7,6 @@ export { ModalRoot } from "./components/ModalRoot";
 export { OpenLVModalElement } from "./element";
 export { useConnectionState } from "./hooks/useConnectionState";
 
-import type { ConnectorStorage } from "@openlv/core";
-
 import type { OpenLVProvider } from "../../provider/src";
 import OpenLVModalElementDefault from "./element";
 import { log } from "./utils/log";
@@ -42,17 +40,14 @@ export const registerOpenLVModal = (tagName = "openlv-modal") => {
 // eslint-disable-next-line import/no-default-export
 export default OpenLVModalElementDefault;
 
-export const triggerOpenModal = (
-  provider: OpenLVProvider,
-  storage: ConnectorStorage,
-) => {
+export const triggerOpenModal = (provider: OpenLVProvider) => {
   const modal = document.querySelector("openlv-modal");
 
   if (modal) modal.remove();
 
   if (!modal) {
     registerOpenLVModal();
-    const x = new OpenLVModalElementDefault(provider, storage);
+    const x = new OpenLVModalElementDefault(provider);
 
     document.body.appendChild(x);
     x.showModal();

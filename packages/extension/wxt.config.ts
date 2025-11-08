@@ -27,16 +27,23 @@ export default defineConfig({
         "script-src 'self' 'wasm-unsafe-eval'; object-src 'self'",
     },
   },
-
   vite: () => ({
     define: {
       global: "globalThis",
     },
     build: {
       target: "es2020",
+      sourcemap: "inline",
       rollupOptions: {
-        external: ["crypto"],
+        external: [],
       },
     },
   }),
+  webExt: {
+    startUrls: [
+      "https://openlv.sh",
+      "https://swap.cow.fi",
+      "https://family.co/docs/connectkit/try-it-out",
+    ],
+  },
 });

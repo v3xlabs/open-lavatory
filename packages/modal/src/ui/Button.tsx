@@ -42,14 +42,14 @@ export type ButtonLinkProps = {
 } & AnchorHTMLAttributes<HTMLAnchorElement>;
 export type ButtonProps = PropsWithChildren<
   VariantProps<typeof styles> &
-  (
-    | ({
-      href: string;
-    } & ButtonLinkProps)
-    | ({
-      onClick: () => void;
-    } & ButtonButtonProps)
-  )
+    (
+      | ({
+          href: string;
+        } & ButtonLinkProps)
+      | ({
+          onClick: () => void;
+        } & ButtonButtonProps)
+    )
 >;
 
 export const Button: FC<ButtonProps> = ({

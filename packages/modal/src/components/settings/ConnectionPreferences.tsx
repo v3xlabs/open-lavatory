@@ -29,9 +29,9 @@ export const ConnectionPreferences = () => {
             updateAutoReconnect,
           ],
         ] as const
-      ).map(([label, key, value, onChange]) => (
+      ).map(([label, key, value/*, onChange*/]) => (
         <MenuItem label={label} key={key}>
-          <Toggle label={label} value={value} onChange={onChange} />
+          <Toggle label={label} value={value} onChange={() => {}} />
         </MenuItem>
       ))}
     </MenuGroup>

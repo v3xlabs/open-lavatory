@@ -1,5 +1,21 @@
 # @openlv/connector
 
+## 0.0.1-beta.5
+
+### Patch Changes
+
+- 455a951: Update connector icon
+- 320502e: Migrate storage ownership from connector to provider
+- 76005db: Cleanup legacy encryption & icon files & restructure of modal connection flow.
+- Updated dependencies [320502e]
+- Updated dependencies [a0ce2df]
+- Updated dependencies [76005db]
+- Updated dependencies [3c30a7b]
+- Updated dependencies [4f3e7cb]
+  - @openlv/provider@0.0.1-beta.5
+  - @openlv/modal@0.0.1-beta.5
+  - @openlv/core@0.0.1-beta.6
+
 ## 0.0.1-beta.4
 
 ### Patch Changes

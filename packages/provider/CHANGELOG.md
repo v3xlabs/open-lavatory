@@ -1,5 +1,17 @@
 # @openlv/provider
 
+## 0.0.1-beta.5
+
+### Patch Changes
+
+- 320502e: Migrate storage ownership from connector to provider
+- Updated dependencies [320502e]
+- Updated dependencies [a0ce2df]
+- Updated dependencies [76005db]
+  - @openlv/core@0.0.1-beta.6
+  - @openlv/signaling@0.0.1-beta.5
+  - @openlv/session@0.0.1-beta.6
+
 ## 0.0.1-beta.4
 
 ### Patch Changes

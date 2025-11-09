@@ -1,5 +1,12 @@
 # @openlv/core
 
+## 0.0.1-beta.6
+
+### Patch Changes
+
+- 320502e: Migrate storage ownership from connector to provider
+- 76005db: Cleanup legacy encryption & icon files & restructure of modal connection flow.
+
 ## 0.0.1-beta.5
 
 ### Patch Changes

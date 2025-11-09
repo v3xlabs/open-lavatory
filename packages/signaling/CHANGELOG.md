@@ -1,5 +1,14 @@
 # @openlv/signaling
 
+## 0.0.1-beta.5
+
+### Patch Changes
+
+- a0ce2df: Update MQTT to not retry by default
+- Updated dependencies [320502e]
+- Updated dependencies [76005db]
+  - @openlv/core@0.0.1-beta.6
+
 ## 0.0.1-beta.4
 
 ### Patch Changes

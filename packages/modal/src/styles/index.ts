@@ -25,9 +25,9 @@ export const ensureStyles = async (
 
     if (theme) {
       const extendedCss = buildTheme(theme);
-      const rootVars = `:root, :host {${Object.entries(extendedCss)
+      const rootVars = `:root, :host {\n${Object.entries(extendedCss)
         .map(([key, value]) => `${key}: ${value};`)
-        .join("\n")}}`;
+        .join("\n")}\n}`;
 
       style.textContent = `${rootVars}\n${cssContent}`;
     } else {

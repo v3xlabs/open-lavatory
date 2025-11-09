@@ -5,7 +5,7 @@ import { MenuItem } from "../../ui/menu/MenuItem";
 import { Toggle } from "../../ui/Toggle";
 
 export const ConnectionPreferences = () => {
-  const { settings, updateSettings } = useSettings();
+  const { settings } = useSettings();
 
   return (
     <MenuGroup
@@ -20,18 +20,18 @@ export const ConnectionPreferences = () => {
             "Retain session history",
             "retainHistory",
             settings?.retainHistory ?? false,
-            (value: boolean) => updateSettings({ retainHistory: value }),
+            // (value: boolean) => updateSettings({ retainHistory: value }),
           ],
           [
             "Auto reconnect",
             "autoReconnect",
             settings?.autoReconnect ?? false,
-            (value: boolean) => updateSettings({ autoReconnect: value }),
+            // (value: boolean) => updateSettings({ autoReconnect: value }),
           ],
         ] as const
-      ).map(([label, key, value, onChange]) => (
+      ).map(([label, key, value/*, onChange*/]) => (
         <MenuItem label={label} key={key}>
-          <Toggle label={label} value={value} onChange={onChange} />
+          <Toggle label={label} value={value} onChange={() => {}} />
         </MenuItem>
       ))}
     </MenuGroup>

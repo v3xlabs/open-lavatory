@@ -1,7 +1,4 @@
-export type SessionMessage =
-  | SessionMessageRequest
-  | SessionMessageResponse
-  | SessionMessageTransport;
+export type SessionMessage = SessionMessageRequest | SessionMessageResponse;
 
 export type SessionMessageRequest = {
   type: "request";

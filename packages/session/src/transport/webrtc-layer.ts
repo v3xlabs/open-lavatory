@@ -1,13 +1,11 @@
 import { type EncryptionKey } from "@openlv/core/encryption";
+import type { WebRTCSignal } from "@openlv/transport";
 import { ensureNodeWebRTC, webrtc } from "@openlv/transport";
 import { match } from "ts-pattern";
 
 import type { SessionMessage } from "../messages/index.js";
 import type { SessionStateObject } from "../session-types.js";
 import { log } from "../utils/log.js";
-
-export type WebRTCSignalT =
-  import("../messages/index.js").SessionMessageTransport["payload"]["signal"];
 
 export type TransportWireMessage =
   | { t: "h" } // hello
@@ -70,7 +68,7 @@ export function createWebRTCTransportLayer(
 
     if (!transport) {
       transport = webrtc({
-        onSignal: (sig: WebRTCSignalT) => {
+        onSignal: (sig: WebRTCSignal) => {
           signal.send({
             type: "transport",
             messageId: crypto.randomUUID(),
@@ -213,6 +211,33 @@ export function createWebRTCTransportLayer(
     getTransportState: () => transportState,
     isHelloAcked: () => transportHelloAcked,
     sendViaTransport,
+    /**
+     * Handle an incoming transport control payload from signaling.
+     * Session treats this as an opaque blob; WebRTC transport interprets it.
+     */
+    async handleControl(payload: {
+      transport: "webrtc";
+      signal: unknown;
+    }): Promise<{ transport: "webrtc"; signal: WebRTCSignal } | undefined> {
+      if (payload.transport !== "webrtc") return undefined;
+
+      const t = await ensureTransport();
+      const maybe = await t.handleSignal(payload.signal as WebRTCSignal);
+
+      return maybe ? { transport: "webrtc", signal: maybe } : undefined;
+    },
+    /**
+     * Initiate WebRTC negotiation as the host.
+     * Session doesn't need to know about offer/answer details.
+     */
+    async negotiateAsInitiator(options?: {
+      iceRestart?: boolean;
+    }): Promise<{ transport: "webrtc"; signal: WebRTCSignal }> {
+      const t = await ensureTransport();
+      const signal = await t.negotiateAsInitiator(options);
+
+      return { transport: "webrtc", signal };
+    },
     teardown,
   } as const;
 }

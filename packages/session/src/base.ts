@@ -26,7 +26,6 @@ import type { SessionEvents } from "./events.js";
 import type {
   SessionMessage,
   SessionMessageResponse,
-  WebRTCSignal,
 } from "./messages/index.js";
 import type {
   Session,
@@ -210,21 +209,15 @@ export const createSession = async (
     }
 
     try {
-      const t = await layer.ensureTransport();
+      await layer.ensureTransport();
 
       if (isHost) {
-        const offer = await (
-          t as unknown as {
-            negotiateAsInitiator: (options?: {
-              iceRestart?: boolean;
-            }) => Promise<WebRTCSignal>;
-          }
-        ).negotiateAsInitiator({ iceRestart: true });
+        const payload = await layer.negotiateAsInitiator({ iceRestart: true });
 
         await signal.send({
           type: "transport",
           messageId: crypto.randomUUID(),
-          payload: { transport: "webrtc", signal: offer },
+          payload,
         });
 
         pendingTransportRestart = false;
@@ -232,12 +225,6 @@ export const createSession = async (
     } catch (err) {
       log("transport ensure error during reconnect", err as Error);
     }
-  };
-
-  const sendViaSignaling = async (sessionMessage: SessionMessage) => {
-    if (signalingSuspended) await resumeSignaling();
-
-    await signal.send(sessionMessage);
   };
 
   const sendViaBestPath = async (
@@ -263,18 +250,7 @@ export const createSession = async (
       }
     }
 
-    const allowDataOverSignaling =
-      status === "created" || status === "signaling";
-
-    if (allowDataOverSignaling) {
-      await sendViaSignaling(sessionMessage);
-
-      return;
-    }
-
-    await beginTransportReconnect(
-      new Error("Transport not ready; signaling fallback disabled"),
-    );
+    await beginTransportReconnect(new Error("Transport not ready for data"));
     throw new Error("Transport not ready");
   };
 
@@ -319,28 +295,38 @@ export const createSession = async (
   };
 
   const attachSignalHandlers = () => {
-    signal.subscribe(async (message) => {
-      const transportMsg =
-        message as import("./messages/index.js").SessionMessageTransport;
-
-      if (transportMsg.type === "transport") {
+    signal.subscribe(async (message: unknown) => {
+      if (
+        typeof message === "object" &&
+        message !== null &&
+        (message as { type?: unknown }).type === "transport"
+      ) {
         try {
           const layer = requireTransportLayer();
-          const t = await layer.ensureTransport();
-          const { payload } = transportMsg;
+          const { payload } = message as { payload?: unknown };
 
-          if (payload.transport === "webrtc") {
-            const response = await t.handleSignal(
-              payload.signal as WebRTCSignal,
+          if (
+            typeof payload === "object" &&
+            payload !== null &&
+            (payload as { transport?: unknown }).transport === "webrtc" &&
+            (payload as { signal?: unknown }).signal !== undefined
+          ) {
+            const maybeReply = await layer.handleControl(
+              payload as { transport: "webrtc"; signal: unknown },
             );
 
-            if (response) {
+            if (maybeReply) {
               await signal.send({
                 type: "transport",
                 messageId: crypto.randomUUID(),
-                payload: { transport: "webrtc", signal: response },
+                payload: maybeReply,
               });
             }
+          } else {
+            log(
+              "ignoring transport message with invalid payload",
+              payload as Error,
+            );
           }
         } catch (err) {
           log("transport signaling error", err as Error);
@@ -357,23 +343,17 @@ export const createSession = async (
           const layer = requireTransportLayer();
 
           if (layer.isSupported()) {
-            const t = await layer.ensureTransport();
+            await layer.ensureTransport();
 
             if (isHost) {
-              const offer = await (
-                t as unknown as {
-                  negotiateAsInitiator: (options?: {
-                    iceRestart?: boolean;
-                  }) => Promise<WebRTCSignal>;
-                }
-              ).negotiateAsInitiator(
+              const payload = await layer.negotiateAsInitiator(
                 pendingTransportRestart ? { iceRestart: true } : undefined,
               );
 
               await signal.send({
                 type: "transport",
                 messageId: crypto.randomUUID(),
-                payload: { transport: "webrtc", signal: offer },
+                payload,
               });
 
               pendingTransportRestart = false;
@@ -557,7 +537,7 @@ export const createSession = async (
         s: server,
       };
     },
-    waitForLink: async () => {
+    waitForLink: async (timeout = 15000) => {
       const layer = transportLayer;
       const currentTransport = layer?.getTransportState();
       const alreadyLinked =
@@ -567,7 +547,12 @@ export const createSession = async (
 
       if (alreadyLinked) return;
 
-      await new Promise<void>((resolve) => {
+      await new Promise<void>((resolve, reject) => {
+        const timer = setTimeout(() => {
+          cleanup();
+          reject(new Error("Timeout waiting for transport link"));
+        }, timeout);
+
         const handler = (state?: SessionStateObject) => {
           const transportConnected = !!state?.transport?.connected;
           const helloAcked = state?.transport?.helloAcked ?? false;
@@ -577,9 +562,14 @@ export const createSession = async (
             transportConnected &&
             helloAcked
           ) {
-            emitter.off("state_change", handler);
+            cleanup();
             resolve();
           }
+        };
+
+        const cleanup = () => {
+          clearTimeout(timer);
+          emitter.off("state_change", handler);
         };
 
         emitter.on("state_change", handler);
@@ -590,16 +580,34 @@ export const createSession = async (
       const transportReady =
         !!layer?.getTransportState()?.connected &&
         (layer?.isHelloAcked() ?? false);
-      const signalingReady =
-        !signalingSuspended && signal.getState().state === "xr-encrypted";
-      const ready = transportReady || signalingReady;
 
-      if (!ready) {
+      if (!transportReady) {
         if (status === STATUS_TRANSPORT_RECONNECTING) {
           throw new Error("Transport reconnecting");
         }
 
-        throw new Error("Session not ready");
+        await new Promise<void>((resolve, reject) => {
+          const timer = setTimeout(() => {
+            cleanup();
+            reject(new Error("Session not ready: transport not established"));
+          }, timeout);
+
+          const handler = (state?: SessionStateObject) => {
+            const t = state?.transport;
+
+            if (state?.status === "connected" && t?.connected && t.helloAcked) {
+              cleanup();
+              resolve();
+            }
+          };
+
+          const cleanup = () => {
+            clearTimeout(timer);
+            emitter.off("state_change", handler);
+          };
+
+          emitter.on("state_change", handler);
+        });
       }
 
       const randomID = crypto.randomUUID();

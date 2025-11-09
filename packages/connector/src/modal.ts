@@ -1,10 +1,14 @@
-import type { OpenLVProvider } from "@openlv/provider";
+import type * as OLVP from "@openlv/modal";
 
-let modal: ((provider: OpenLVProvider) => void) | undefined;
+type TriggerOpenModal = typeof OLVP.triggerOpenModal;
 
-export const getTriggerModal = async () => {
+let modal: TriggerOpenModal | undefined;
+
+export const getTriggerModal = async (): Promise<TriggerOpenModal> => {
   if (!modal) {
-    modal = await import("@openlv/modal").then((m) => m.triggerOpenModal);
+    const m = await import("@openlv/modal");
+
+    modal = m.triggerOpenModal;
   }
 
   return modal;

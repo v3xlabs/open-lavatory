@@ -453,6 +453,9 @@ importers:
       '@openlv/connector':
         specifier: workspace:*
         version: link:../connector
+      '@openlv/modal':
+        specifier: workspace:*
+        version: link:../modal
       '@openlv/provider':
         specifier: workspace:*
         version: link:../provider

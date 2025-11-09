@@ -1,4 +1,5 @@
 import { openlv } from "@openlv/connector";
+import { triggerOpenModal } from "@openlv/modal";
 import { createProvider, type OpenLVProvider } from "@openlv/provider";
 
 declare global {
@@ -22,7 +23,19 @@ export default defineUnlistedScript(() => {
 
   console.log("OpenLV EIP-6963 Provider Injected");
   // @ts-ignore
-  const provider = createProvider({});
+  const provider = createProvider({
+    openModal: async (provider) => {
+      console.log("openModal", provider);
+      triggerOpenModal(provider, () => {
+        console.log("injected received modal close");
+
+        if (provider.getState().status !== "connected") {
+          // cleanup
+          provider.closeSession();
+        }
+      });
+    },
+  });
 
   // // Expose provider globally
   window.openlv = provider;

@@ -267,7 +267,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center bg-black/30 font-sans text-slate-800 backdrop-blur-sm md:items-center lg:p-4"
+      className="fixed inset-0 z-[99999999999999999] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center bg-black/30 font-sans text-slate-800 backdrop-blur-sm md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root

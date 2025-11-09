@@ -9,6 +9,7 @@ export { useConnectionState } from "./hooks/useConnectionState";
 
 import type { OpenLVProvider } from "../../provider/src";
 import OpenLVModalElementDefault from "./element";
+import { simpleTheme } from "./theme/simple";
 import { log } from "./utils/log";
 export { OPENLV_ICON_128 } from "./assets/logo";
 
@@ -40,20 +41,25 @@ export const registerOpenLVModal = (tagName = "openlv-modal") => {
 // eslint-disable-next-line import/no-default-export
 export default OpenLVModalElementDefault;
 
-export const triggerOpenModal = (provider: OpenLVProvider) => {
+export const triggerOpenModal = (
+  provider: OpenLVProvider,
+  onClose: () => void,
+) => {
   const modal = document.querySelector("openlv-modal");
 
   if (modal) modal.remove();
 
   if (!modal) {
     registerOpenLVModal();
-    const x = new OpenLVModalElementDefault(provider);
+    const x = new OpenLVModalElementDefault(provider, simpleTheme, () => {
+      log("modal closed");
+      x.remove();
+      onClose();
+    });
 
     document.body.appendChild(x);
     x.showModal();
-    x.onClose = () => {
-      log("modal closed");
-      x.remove();
-    };
   }
 };
+
+export type TriggerOpenModal = typeof triggerOpenModal;

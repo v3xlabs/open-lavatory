@@ -29,7 +29,16 @@ export const openlv = ({
   storage,
   config = {},
 }: OpenLVConnectorParameters = {}) => {
-  const provider = createProvider({ storage, config });
+  const provider = createProvider({
+    storage,
+    config,
+    openModal: async (provider) => {
+      const modal = await getTriggerModal();
+
+      log("loading modal");
+      modal?.(provider, () => {});
+    },
+  });
 
   const onDisconnect = async () => {
     log("onDisconnect called");
@@ -54,10 +63,12 @@ export const openlv = ({
     ) => {
       log("connect");
 
-      const modal = await getTriggerModal();
-
+      // const modal = await getTriggerModal();
       log("loading modal");
-      modal?.(provider);
+      await provider.request({ method: "eth_requestAccounts" });
+
+      log("request completed");
+      // modal?.(provider);
 
       const modalDismissed = new Promise((_resolve) => {
         // modal?.onClose

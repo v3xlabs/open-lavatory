@@ -5,7 +5,7 @@ import {
   type SessionStateObject,
 } from "@openlv/session";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
-import { Provider as OxProvider } from "ox";
+import { Provider as OxProvider, Provider } from "ox";
 import type { EventMap } from "ox/Provider";
 import type { ExtractReturnType } from "ox/RpcSchema";
 import { match } from "ts-pattern";
@@ -23,6 +23,7 @@ import { log } from "./utils/log.js";
 export type OpenLVProviderParameters = Prettify<
   {
     config?: object;
+    openModal?: (provider: OpenLVProvider) => Promise<void>;
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
@@ -75,6 +76,8 @@ export const createProvider = (
   const chainId: string = "1";
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: _parameters.storage });
+  const { openModal } = _parameters;
+  let self: OpenLVProvider | undefined;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -160,15 +163,32 @@ export const createProvider = (
           //   "wallet_requestPermissions"
           // >;
         })
+        .with({ method: "wallet_revokePermissions" }, async () => {
+          await closeSession();
+
+          return;
+        })
         // TODO: if modal is enabled explicitly toggle the modal to show.
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
-          const x = await start();
+          if (openModal && self) {
+            await openModal(self);
 
-          log("x", x);
+            // todo await modal dismiss or race connection completed
+            await new Promise((resolve) => {
+              self?.on("connect", resolve);
+              self?.on("disconnect", resolve);
+            });
 
-          return await getAccounts();
+            return await getAccounts();
+          } else {
+            const x = await start();
+
+            log("x", x);
+
+            return await getAccounts();
+          }
         })
         .with({ method: "eth_accounts" }, async () => {
           log("eth_accounts");
@@ -204,6 +224,8 @@ export const createProvider = (
     closeSession,
     getState: () => ({ status, session: session?.getState() ?? undefined }),
   });
+
+  self = oxProvider as OpenLVProvider;
 
   return oxProvider;
 };

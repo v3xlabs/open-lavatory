@@ -55,7 +55,27 @@ export const useSettings = () => {
     provider?.storage.setSettings(newSettings);
   };
 
+  const updateRetainHistory = (retainHistory: boolean) => {
+    if (!settings) return;
+
+    setSettings({ ...settings, retainHistory });
+    provider?.storage.setSettings({ ...settings, retainHistory });
+  };
+
+  const updateAutoReconnect = (autoReconnect: boolean) => {
+    if (!settings) return;
+
+    setSettings({ ...settings, autoReconnect });
+    provider?.storage.setSettings({ ...settings, autoReconnect });
+  };
+
   if (!settings) throw new Error("Settings not found");
 
-  return { settings, updateSignalingProtocol, updateSignalingServer };
+  return {
+    settings,
+    updateSignalingProtocol,
+    updateSignalingServer,
+    updateRetainHistory,
+    updateAutoReconnect,
+  };
 };

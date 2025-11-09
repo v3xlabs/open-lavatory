@@ -23,6 +23,14 @@ export const useSession = () => {
     setStatus(event);
   });
 
+  useEventEmitter(provider, "status_change", () => {
+    const session = provider?.getSession();
+
+    if (session) {
+      setSession(session);
+    }
+  });
+
   useEffect(() => {
     const onSessionStart = (_session: Session) => {
       log("session started: ", _session);

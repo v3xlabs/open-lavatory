@@ -26,13 +26,16 @@ export type OpenLVProviderParameters = Prettify<
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
+export const PROVIDER_STATUS = {
+  STANDBY: "standby",
+  CREATING: "creating",
+  CONNECTING: "connecting",
+  CONNECTED: "connected",
+  ERROR: "error",
+} as const;
+
 export type ProviderStatus =
-  | "disconnected"
-  | "creating"
-  | "connecting"
-  | "connected"
-  | "transport-reconnecting"
-  | "error";
+  (typeof PROVIDER_STATUS)[keyof typeof PROVIDER_STATUS];
 
 export type ProviderState = {
   status: ProviderStatus;
@@ -68,47 +71,15 @@ export const createProvider = (
 ): OpenLVProvider => {
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
-  let status: ProviderStatus = "disconnected";
+  let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   const chainId: string = "1";
   let accounts: Address[] = [];
-  let sessionStateListener: ((state?: SessionStateObject) => void) | undefined;
   const storage = createProviderStorage({ storage: _parameters.storage });
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
     log("updateStatus", status);
     oxEmitter.emit("status_change", newStatus);
-  };
-
-  const detachSessionStateListener = () => {
-    if (session && sessionStateListener) {
-      session.emitter.off("state_change", sessionStateListener);
-      sessionStateListener = undefined;
-    }
-  };
-
-  const attachSessionStateListener = (target: Session) => {
-    sessionStateListener = (state) => {
-      if (!state) return;
-
-      if (state.status === "transport-reconnecting") {
-        updateStatus("transport-reconnecting");
-
-        return;
-      }
-
-      if (state.status === "connected") {
-        updateStatus("connected");
-
-        return;
-      }
-
-      if (state.status === "disconnected") {
-        updateStatus("disconnected");
-      }
-    };
-
-    target.emitter.on("state_change", sessionStateListener);
   };
 
   const onMessage = async (message: object) => {
@@ -131,44 +102,38 @@ export const createProvider = (
   const start = async (
     parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
   ) => {
-    updateStatus("creating");
-    const createdSession = await createSession(
+    updateStatus(PROVIDER_STATUS.CREATING);
+    session = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
       onMessage,
     );
-
-    detachSessionStateListener();
-    session = createdSession;
-    attachSessionStateListener(createdSession);
-    updateStatus("connecting");
+    updateStatus(PROVIDER_STATUS.CONNECTING);
 
     log("session created");
-    await createdSession.connect();
+    await session.connect();
     log("session connected");
-    const handshakeParameters = createdSession.getHandshakeParameters();
+    const handshakeParameters = session.getHandshakeParameters();
     const url = encodeConnectionURL(handshakeParameters);
 
     log("session url", url);
-    oxEmitter.emit("session_started", createdSession);
+    oxEmitter.emit("session_started", session);
 
-    await createdSession.waitForLink();
+    await session.waitForLink();
     log("session linked");
 
     accounts = await getAccounts();
 
-    updateStatus("connected");
+    updateStatus(PROVIDER_STATUS.CONNECTED);
     oxEmitter.emit("connect", { chainId });
     oxEmitter.emit("accountsChanged", accounts);
 
-    return createdSession;
+    return session;
   };
   const closeSession = async () => {
-    detachSessionStateListener();
-    accounts = [];
     await session?.close();
     session = undefined;
-    updateStatus("disconnected");
+    updateStatus(PROVIDER_STATUS.STANDBY);
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (

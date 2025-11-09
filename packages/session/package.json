@@ -51,6 +51,7 @@
     "ts-pattern": "^5"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "^4.0.8",
     "typescript": "^5",
     "vitest": "^4"
   },

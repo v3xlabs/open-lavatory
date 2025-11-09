@@ -1,6 +1,6 @@
 export const log = (...x: Parameters<typeof console.log>) =>
   console.log(
-    "[session]",
+    // "%c[transport]%c",
     // "color: orange; font-weight: bold",
     // "color: inherit; font-weight: normal",
     ...x,

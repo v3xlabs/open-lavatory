@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: overlay requires click to close modal */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: escape listener handles keyboard interactions */
 
+import { PROVIDER_STATUS } from "@openlv/provider";
 import classNames from "classnames";
 import {
   useCallback,
@@ -223,7 +224,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   };
 
   const onBack = match({ view: modalView, status })
-    .with({ view: "start", status: "disconnected" }, () => undefined)
+    .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => undefined)
     .with({ view: "start" }, () => closeSessionIfExists)
     .with({ view: "settings" }, () => () => setView("start"))
     .otherwise(() => () => {
@@ -256,14 +257,14 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   );
 
   const renderStatusSection = (targetStatus: typeof status) =>
-    match<string>(targetStatus as string)
-      .with("disconnected", () => renderDisconnectedSection())
-      .with(P.union("creating", "connecting", "connected"), () => (
-        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-      ))
-      .with("transport-reconnecting", () => (
-        <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
-      ))
+    match(targetStatus)
+      .with(PROVIDER_STATUS.STANDBY, () => renderDisconnectedSection())
+      .with(
+        P.union(PROVIDER_STATUS.CONNECTING, PROVIDER_STATUS.CONNECTED),
+        () => (
+          <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+        ),
+      )
       .otherwise((state) => <UnknownState state={state || "unknown status"} />);
 
   log("view", modalView);

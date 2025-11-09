@@ -51,6 +51,7 @@
     "@openlv/core": "workspace:*",
     "@openlv/provider": "workspace:*",
     "@openlv/session": "workspace:*",
+    "@openlv/signaling": "workspace:*",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
     "ox": "^0.9.14",

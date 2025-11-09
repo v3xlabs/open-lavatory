@@ -11,17 +11,3 @@ export type SessionMessageResponse = {
   messageId: string;
   payload: object;
 };
-
-export type SessionMessageTransport = {
-  type: "transport";
-  messageId: string;
-  payload: {
-    transport: "webrtc";
-    signal:
-      | { op: "offer"; sdp: RTCSessionDescriptionInit }
-      | { op: "answer"; sdp: RTCSessionDescriptionInit }
-      | { op: "ice"; candidate: RTCIceCandidateInit };
-  };
-};
-
-export type WebRTCSignal = SessionMessageTransport["payload"]["signal"];

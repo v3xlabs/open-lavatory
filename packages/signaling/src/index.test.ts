@@ -60,14 +60,14 @@ describe("Signaling layers", () => {
       await Promise.all([signalA.setup(), signalB.setup()]);
 
       const messageReceivedA = new Promise<void>((resolve) => {
-        signalA.subscribe((message) => {
+        signalA.on("message", (message) => {
           log("messageReceivedA", message);
           expect(message).toEqual({ data: "test2" });
           resolve();
         });
       });
       const messageReceivedB = new Promise<void>((resolve) => {
-        signalB.subscribe((message) => {
+        signalB.on("message", (message) => {
           log("messageReceivedB", message);
           expect(message).toEqual({ data: "test1" });
           resolve();

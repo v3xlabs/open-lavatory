@@ -1,202 +1,175 @@
+/* eslint-disable sonarjs/no-duplicate-string */
 import { match } from "ts-pattern";
 
-import { createTransportLayerBase } from "../base.js";
-import { ensureNodeWebRTC } from "./wrtc-shim.js";
+import { createTransportBase, TransportMessage } from "../base.js";
+import { log } from "../utils/log.js";
 
-export type WebRTCSignal =
-  | { op: "offer"; sdp: RTCSessionDescriptionInit }
-  | { op: "answer"; sdp: RTCSessionDescriptionInit }
-  | { op: "ice"; candidate: RTCIceCandidateInit };
+type WebRTCConfig = {
+  iceServers?: RTCConfiguration["iceServers"];
+  isHost: boolean;
+};
 
-export type WebRTCTransport = ReturnType<typeof webrtc>;
-
-export const webrtc = (opts: {
-  onSignal?: (signal: WebRTCSignal) => void;
-  onConnectionStateChange?: (state: RTCPeerConnectionState) => void;
-  onDataChannelOpen?: () => void; // fired when the data channel is actually open
-  createDataChannel?: boolean; // default true (initiator should pass true)
-}) => {
-  let peerConnection: RTCPeerConnection | null = null;
-  let dataChannel: RTCDataChannel | null = null;
-  let messageHandler: ((data: unknown) => void) | null = null;
-  const signalHandlers = new Set<(s: WebRTCSignal) => void>();
-  const pendingRemoteCandidates: RTCIceCandidateInit[] = [];
-
-  if (opts?.onSignal) signalHandlers.add(opts.onSignal);
-
-  const iceServers: RTCIceServer[] = [
+// TODO: decide wether we want defaults, and if so what defaults
+const defaultConfig: WebRTCConfig = {
+  iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun.l.google.com:5349" },
-    { urls: "stun:stun1.l.google.com:3478" },
-    { urls: "stun:stun1.l.google.com:5349" },
-  ];
+    { urls: "stun:stun1.l.google.com:19302" },
+    { urls: "stun:stun.services.mozilla.com:3478" },
+    {
+      urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443"],
+      username: "openrelayproject",
+      credential: "openrelayproject",
+    },
+  ],
+  isHost: true,
+};
 
-  const base = createTransportLayerBase({
-    type: "webrtc",
-    async setup() {
-      await ensureNodeWebRTC();
-      peerConnection = new RTCPeerConnection({
-        iceServers,
-        iceCandidatePoolSize: 10,
-      });
+export const webrtc = (config: WebRTCConfig = defaultConfig) => {
+  const ident = Math.random().toString(36).substring(2, 4) + "#";
 
-      peerConnection.onconnectionstatechange = () => {
-        const state = peerConnection?.connectionState;
+  return createTransportBase(({ emitter, isHost }) => {
+    const rtcConfig: RTCConfiguration = { iceServers: config.iceServers };
+    let connection: RTCPeerConnection | undefined;
+    let channel: RTCDataChannel | undefined;
 
-        // Notify caller and log.
-        if (state) opts.onConnectionStateChange?.(state);
+    const onConnectionStateChange = () => {
+      log(ident, "onConnectionStateChange", connection?.connectionState);
 
-        console.log("WebRTC connection state:", state);
-      };
+      const state = connection?.connectionState;
 
-      peerConnection.onicecandidate = (iceEvent) => {
-        const candidate = iceEvent.candidate?.toJSON();
+      match(state)
+        .with("disconnected", () => {
+          // TODO: implement
+        })
+        .with("failed", () => {})
+        .otherwise(() => {
+          log(ident, "onConnectionStateChangeUnknown", state);
+        });
+    };
+    const onIceCandidate = (c: RTCPeerConnectionIceEvent) => {
+      if (channel?.readyState === "open") return;
 
-        if (candidate) {
-          const signal: WebRTCSignal = { op: "ice", candidate };
+      log(ident, "onIceCandidate", c.candidate);
+      emitter.emit("candidate", JSON.stringify(c.candidate?.toJSON()));
+    };
+    const onDataChannel = (e: RTCDataChannelEvent) => {
+      // eslint-disable-next-line prefer-destructuring
+      channel = e.channel;
+      hookChannel(channel);
+      log(ident, "onDataChannel", channel);
+    };
+    const onDataChannelOpen = () => {
+      log(ident, "onDataChannelOpen");
+      emitter.emit("connected");
+    };
+    const onDataChannelMessage = (e: MessageEvent<string>) => {
+      log(ident, "onDataChannelMessage", e.data);
+      emitter.emit("message", e.data);
+    };
+    const onNegotiationNeeded = async () => {
+      log(ident, "onNegotiationNeeded");
 
-          signalHandlers.forEach((h) => h(signal));
+      if (isHost && connection) {
+        await connection.setLocalDescription();
+
+        if (connection.localDescription)
+          emitter.emit("offer", JSON.stringify(connection.localDescription));
+      }
+    };
+
+    const hookChannel = (channel: RTCDataChannel) => {
+      channel.onopen = onDataChannelOpen;
+      channel.onmessage = onDataChannelMessage;
+    };
+
+    const handle = async (message: TransportMessage) => {
+      console.log(ident, "webrtc handle", message);
+
+      if (!connection) throw new Error("Connection not found");
+
+      match(message)
+        .with({ type: "offer" }, async ({ payload }) => {
+          console.log("offer", payload);
+          // TODO: add zon schema?
+          const offer = JSON.parse(payload) as RTCSessionDescriptionInit;
+
+          await connection!.setRemoteDescription(
+            new RTCSessionDescription(offer),
+          );
+          console.log(
+            ident,
+            "setRemoteDescriptionran",
+            connection!.remoteDescription,
+          );
+
+          const answer = await connection!.createAnswer();
+
+          await connection!.setLocalDescription(answer);
+          emitter.emit("answer", JSON.stringify(answer));
+        })
+        .with({ type: "answer" }, async ({ payload }) => {
+          if (!connection) throw new Error("Connection not found");
+
+          console.log(ident, "answer", payload);
+          const answer = JSON.parse(payload) as RTCSessionDescriptionInit;
+
+          await connection.setRemoteDescription(
+            new RTCSessionDescription(answer),
+          );
+        })
+        .with({ type: "candidate" }, async ({ payload }) => {
+          if (!connection) throw new Error("Connection not found");
+
+          if (!payload) return;
+
+          console.log(ident, "candidate", payload);
+          const candidate = JSON.parse(payload) as RTCIceCandidateInit;
+
+          await connection.addIceCandidate(new RTCIceCandidate(candidate));
+        })
+        .otherwise(() => {
+          // biome-ignore lint/suspicious/noConsole: <x>
+          console.warn("invalid message", message);
+        });
+    };
+
+    const send = async (message: string) => {
+      if (!channel) throw new Error("Channel not found");
+
+      channel.send(message);
+    };
+
+    return {
+      type: "webrtc",
+      async setup() {
+        log("webrtc setup");
+
+        connection = new RTCPeerConnection(rtcConfig);
+        connection.onconnectionstatechange = onConnectionStateChange;
+        connection.onicecandidate = onIceCandidate;
+        connection.ondatachannel = onDataChannel;
+        connection.onnegotiationneeded = onNegotiationNeeded;
+
+        if (isHost) {
+          channel = connection.createDataChannel("openlv-data");
+          hookChannel(channel);
         }
-      };
+      },
+      teardown() {
+        log("webrtc teardown");
 
-      // Create a data channel only if requested (typically only by initiator)
-      if (opts?.createDataChannel !== false) {
-        dataChannel = peerConnection.createDataChannel("openlv-data");
+        if (channel) {
+          channel.close();
+          channel = undefined;
+        }
 
-        dataChannel.onopen = () => {
-          console.log("WebRTC data channel open");
-          opts.onDataChannelOpen?.();
-        };
-
-        dataChannel.onmessage = (event: MessageEvent) => {
-          if (messageHandler) messageHandler(event.data);
-        };
-      }
-
-      peerConnection.ondatachannel = (event: RTCDataChannelEvent) => {
-        dataChannel = event.channel;
-        dataChannel.onopen = () => {
-          console.log("WebRTC data channel open");
-          opts.onDataChannelOpen?.();
-        };
-        dataChannel.onmessage = (event: MessageEvent) => {
-          if (messageHandler) messageHandler(event.data);
-        };
-      };
-    },
-    async teardown() {
-      try {
-        if (dataChannel && dataChannel.readyState !== "closed")
-          dataChannel.close();
-      } catch {
-        console.error("Error closing WebRTC data channel");
-      }
-
-      dataChannel = null;
-
-      try {
-        peerConnection?.close();
-      } catch {
-        console.error("Error closing WebRTC peer connection");
-      }
-
-      peerConnection = null;
-    },
+        if (connection) {
+          connection.close();
+          connection = undefined;
+        }
+      },
+      handle,
+      send,
+    };
   });
-
-  const ensurePeerConnection = () => {
-    if (!peerConnection) throw new Error("WebRTC transport not set up yet");
-
-    return peerConnection;
-  };
-
-  const ensureDataChannel = () => {
-    if (!dataChannel) throw new Error("WebRTC data channel not ready");
-
-    return dataChannel;
-  };
-
-  return {
-    ...base,
-    async negotiateAsInitiator(options?: { iceRestart?: boolean }) {
-      const peerConnection = ensurePeerConnection();
-      const offer = await peerConnection.createOffer({
-        offerToReceiveAudio: false,
-        offerToReceiveVideo: false,
-        iceRestart: options?.iceRestart ?? false,
-      });
-
-      await peerConnection.setLocalDescription(offer);
-
-      return { op: "offer", sdp: offer } as const;
-    },
-    async handleSignal(signal: WebRTCSignal) {
-      const peerConnection = ensurePeerConnection();
-
-      const flushPendingRemoteCandidates = async () => {
-        while (pendingRemoteCandidates.length) {
-          const candidate = pendingRemoteCandidates.shift()!;
-
-          try {
-            await peerConnection.addIceCandidate(
-              new RTCIceCandidate(candidate),
-            );
-          } catch (err) {
-            console.warn("Failed to add queued ICE candidate", err);
-          }
-        }
-      };
-
-      return match(signal)
-        .with({ op: "offer" }, async ({ sdp }) => {
-          await peerConnection.setRemoteDescription(sdp);
-          const answer = await peerConnection.createAnswer();
-
-          await peerConnection.setLocalDescription(answer);
-          await flushPendingRemoteCandidates();
-
-          return { op: "answer", sdp: answer } as const;
-        })
-        .with({ op: "answer" }, async ({ sdp }) => {
-          await peerConnection.setRemoteDescription(sdp);
-          await flushPendingRemoteCandidates();
-
-          return undefined;
-        })
-        .with({ op: "ice" }, async ({ candidate }) => {
-          // If remote description is not yet set, queue the candidate
-          if (!peerConnection.remoteDescription) {
-            pendingRemoteCandidates.push(candidate);
-          } else {
-            try {
-              await peerConnection.addIceCandidate(
-                new RTCIceCandidate(candidate),
-              );
-            } catch (err) {
-              console.warn("Failed to add ICE candidate", err);
-            }
-          }
-
-          return undefined;
-        })
-        .exhaustive();
-    },
-    onSignal(handler: (signal: WebRTCSignal) => void) {
-      signalHandlers.add(handler);
-    },
-    onMessage(handler: (data: unknown) => void) {
-      messageHandler = handler;
-    },
-    send(text: string) {
-      const channel = ensureDataChannel();
-
-      channel.send(text);
-    },
-    getState() {
-      return {
-        connected:
-          !!peerConnection && peerConnection.connectionState === "connected",
-      };
-    },
-  };
 };

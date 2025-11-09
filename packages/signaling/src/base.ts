@@ -1,10 +1,11 @@
-/* eslint-disable sonarjs/no-duplicate-string */
+import { combine, combineIntoEmitter, make } from "@openlv/core";
 import type { EncryptionKey, SymmetricKey } from "@openlv/core/encryption";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 import type { MaybePromise } from "viem";
 
-import type { SignalingEvents } from "./events.js";
+import type { SignalEventMap, SignalState } from "./layer.js";
+import { SIGNAL_STATE } from "./layer.js";
 import type { SignalMessage } from "./messages/index.js";
 import { log } from "./utils/log.js";
 
@@ -23,7 +24,7 @@ export type SignalingBaseLayer = {
 
 export type CreateSignalLayerFn = (
   properties: SignalBaseProperties,
-) => MaybePromise<SignalingLayer>;
+) => MaybePromise<SignalingLayerFn>;
 
 export type SignalingProperties = {
   isHost: boolean;
@@ -39,39 +40,27 @@ export type SignalingProperties = {
   canEncrypt: () => boolean;
 };
 
-export type SignalingLayer = (properties: SignalingProperties) => Promise<{
+export type SignalingContext = {
   type: string;
   // waitForConnection: () => Promise<void>;
   // reconnect: () => void;
 
   // Sending only works once keys are exchanged
   send: (message: object) => MaybePromise<void>;
-  subscribe: (handler: (message: object) => void) => MaybePromise<void>;
   setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
 
   getState: () => {
-    state: SignalingMode;
+    state: SignalState;
   };
-  emitter: EventEmitter<SignalingEvents>;
-}>;
+};
+export type SignalingLayer = EventEmitter<SignalEventMap> & SignalingContext;
+export type SignalingLayerFn = (
+  properties: SignalingProperties,
+) => Promise<SignalingLayer>;
 
 export const XR_PREFIX = "x";
 export const XR_H_PREFIX = "h";
-
-export type SignalingMode =
-  // We hold the pubKey that matches the `h`, and are awaiting a relying party
-  | "handshake-open"
-  //
-  | "handshaking"
-  //
-  | "handshake-closed"
-  //
-  | "xr-encrypted"
-  // Connecting
-  | "connecting"
-  // Disconnected, or not setup yet
-  | "disconnected";
 
 /**
  * Base Signaling Layer implementation
@@ -80,9 +69,7 @@ export type SignalingMode =
  */
 export const createSignalingLayer = (
   init: SignalingBaseLayer,
-): SignalingLayer => {
-  const emitter = new EventEmitter<SignalingEvents>();
-
+): SignalingLayerFn => {
   return async ({
     canEncrypt,
     encrypt,
@@ -92,14 +79,13 @@ export const createSignalingLayer = (
     publicKey,
     isHost,
   }: SignalingProperties) => {
-    // shared signaling layer logic goes here
-    const handshakeKey = k ? k : undefined;
-    let mode: SignalingMode = "disconnected";
-    const subscribeHandler = new EventEmitter<{ message: object }>();
-    const setMode = (_mode: SignalingMode) => {
-      mode = _mode;
-      emitter.emit("state_change", _mode);
+    const emitter = new EventEmitter<SignalEventMap>();
+    let state: SignalState = SIGNAL_STATE.STANDBY;
+    const setState = (_state: SignalState) => {
+      state = _state;
+      emitter.emit("state_change", _state);
     };
+    const handshakeKey = k ? k : undefined;
 
     const send = async (
       method: "handshake" | "encrypted",
@@ -151,7 +137,7 @@ export const createSignalingLayer = (
             .with({ type: "flash" }, async () => {
               if (!isHost) return;
 
-              setMode("handshaking");
+              setState(SIGNAL_STATE.HANDSHAKE);
               await send("handshake", "c", {
                 type: "pubkey",
                 payload: {
@@ -164,7 +150,7 @@ export const createSignalingLayer = (
               if (isHost) return;
 
               await rpDiscovered(payload.publicKey);
-              setMode("handshake-closed");
+              setState(SIGNAL_STATE.HANDSHAKE_PARTIAL);
 
               return await send("encrypted", "h", {
                 type: "pubkey",
@@ -187,7 +173,7 @@ export const createSignalingLayer = (
               if (!isHost) return;
 
               await rpDiscovered(payload.publicKey);
-              setMode("xr-encrypted");
+              setState(SIGNAL_STATE.HANDSHAKE_PARTIAL);
 
               return await send("encrypted", "c", {
                 type: "ack",
@@ -196,12 +182,20 @@ export const createSignalingLayer = (
               });
             })
             .with({ type: "ack" }, async () => {
+              if (state !== SIGNAL_STATE.HANDSHAKE_PARTIAL) return;
+
+              setState(SIGNAL_STATE.ENCRYPTED);
+
               if (isHost) return;
 
-              setMode("xr-encrypted");
+              return await send("encrypted", "h", {
+                type: "ack",
+                payload: undefined,
+                timestamp: Date.now(),
+              });
             })
             .with({ type: "data" }, async () =>
-              subscribeHandler.emit("message", msg.payload),
+              emitter.emit("message", msg.payload as object),
             )
             .otherwise(() => {
               log("Received invalid message X", msg);
@@ -212,38 +206,35 @@ export const createSignalingLayer = (
         });
     };
 
-    return {
+    return combine(emitter, {
       type: init.type,
       async setup() {
-        setMode("connecting");
+        setState(SIGNAL_STATE.CONNECTING);
         await init.setup();
 
         if (!canEncrypt()) {
           if (!isHost) {
-            setMode("handshaking");
+            setState(SIGNAL_STATE.READY);
             await send("handshake", "h", {
               type: "flash",
               payload: {},
               timestamp: Date.now(),
             });
+            setState(SIGNAL_STATE.HANDSHAKE);
           }
 
           if (isHost) {
-            setMode("handshake-open");
+            setState(SIGNAL_STATE.READY);
           }
         }
 
         await init.subscribe(handleReceive);
-
-        if (canEncrypt() && mode === "connecting") {
-          setMode("xr-encrypted");
-        }
       },
       async teardown() {
         log("teardown");
         await init.teardown?.();
       },
-      send(message) {
+      send(message: object) {
         if (!canEncrypt()) {
           return Promise.reject(
             new Error("Cannot encrypt message before keys are exchanged"),
@@ -258,18 +249,9 @@ export const createSignalingLayer = (
           timestamp: Date.now(),
         });
       },
-      /**
-       * Base Signaling Layer Subscriber Handler
-       *
-       * This handler is responsible for decryption of Handshake & XR Encrypted Messages
-       */
-      subscribe(handler) {
-        subscribeHandler.on("message", handler);
-      },
       getState() {
-        return { state: mode };
+        return { state: state };
       },
-      emitter,
-    };
+    });
   };
 };

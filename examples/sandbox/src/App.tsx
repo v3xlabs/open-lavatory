@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { useEventEmitter } from './effect';
 
-const provider = createProvider({});
+const provider = createProvider({ foo: 'bar' });
 
 const SessionConnect = () => {
     const [url, setUrl] = useState<string | undefined>(undefined);
@@ -40,23 +40,16 @@ const SessionConnect = () => {
 
 const App = () => {
     const [status, setStatus] = useState<ProviderStatus | undefined>(provider.getState().status);
-    const [sessionStatus, setSessionStatus] = useState<SessionStateObject | undefined>(
-        provider.getState().session
-    );
+    const [sessionStatus, setSessionStatus] = useState<SessionStateObject | undefined>();
 
-    useEventEmitter(provider, 'status_change', (state: ProviderStatus) => {
-        console.log('status_change', state, provider.getState());
+    useEventEmitter(provider.emitter, 'status_change', (state) => {
+        console.log('status_change', state);
         setStatus(state);
-        setSessionStatus(provider.getState().session);
     });
-    useEventEmitter(
-        provider,
-        'session_started',
-        (session: { getState: () => SessionStateObject }) => {
-            console.log('sandbox: session_started', session.getState());
-            setSessionStatus(session.getState());
-        }
-    );
+    useEventEmitter(provider.getSession()?.emitter, 'state_change', (state) => {
+        console.log('session_status_change', state);
+        setSessionStatus(state);
+    });
 
     const canStartSession = status === 'disconnected';
     const connectionParameters = provider.getSession()?.getHandshakeParameters();

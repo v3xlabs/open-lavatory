@@ -7,3 +7,4 @@
 
 export * from "./base.js";
 export * from "./webrtc/index.js";
+export * from "./webrtc/wrtc-shim.js";

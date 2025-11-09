@@ -1,6 +1,7 @@
 import { match } from "ts-pattern";
 
 import { createTransportLayerBase } from "../base.js";
+import { ensureNodeWebRTC } from "./wrtc-shim.js";
 
 export type WebRTCSignal =
   | { op: "offer"; sdp: RTCSessionDescriptionInit }
@@ -33,6 +34,7 @@ export const webrtc = (opts: {
   const base = createTransportLayerBase({
     type: "webrtc",
     async setup() {
+      await ensureNodeWebRTC();
       peerConnection = new RTCPeerConnection({
         iceServers,
         iceCandidatePoolSize: 10,

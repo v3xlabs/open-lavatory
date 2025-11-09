@@ -23,7 +23,7 @@ importers:
         version: 5.5.0(eslint@9.37.0(jiti@2.6.1))
       '@wagmi/core':
         specifier: '2'
-        version: 2.21.2(@tanstack/query-core@5.90.2)(@types/react@19.2.2)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(viem@2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
+        version: 2.21.2(@tanstack/query-core@5.90.2)(@types/react@19.2.2)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.5.0(react@19.2.0))(viem@2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
       eslint:
         specifier: ^9
         version: 9.37.0(jiti@2.6.1)
@@ -708,7 +708,7 @@ importers:
     dependencies:
       '@wagmi/core':
         specifier: '2'
-        version: 2.21.2(@tanstack/query-core@5.90.2)(@types/react@19.2.2)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.5.0(react@19.2.0))(viem@2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
+        version: 2.21.2(@tanstack/query-core@5.90.2)(@types/react@19.2.2)(react@19.2.0)(typescript@5.9.3)(use-sync-external-store@1.4.0(react@19.2.0))(viem@2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.1
@@ -725,6 +725,9 @@ importers:
         specifier: '2'
         version: 2.17.5(@tanstack/query-core@5.90.2)(@tanstack/react-query@5.90.2(react@19.2.0))(@types/react@19.2.2)(bufferutil@4.0.9)(react@19.2.0)(typescript@5.9.3)(utf-8-validate@5.0.10)(viem@2.37.12(bufferutil@4.0.9)(typescript@5.9.3)(utf-8-validate@5.0.10)(zod@4.1.12))(zod@4.1.12)
     devDependencies:
+      '@roamhq/wrtc':
+        specifier: ^0.9.0
+        version: 0.9.1
       typescript:
         specifier: ^5
         version: 5.9.3
@@ -2803,6 +2806,34 @@ packages:
   '@reown/appkit@1.7.8':
     resolution: {integrity: sha512-51kTleozhA618T1UvMghkhKfaPcc9JlKwLJ5uV+riHyvSoWPKPRIa5A6M1Wano5puNyW0s3fwywhyqTHSilkaA==}
 
+  '@roamhq/wrtc-darwin-arm64@0.9.1':
+    resolution: {integrity: sha512-+g0+nLeZrsAeuzD663y9wbkRns8s/u5nMt/swiUa0G0mQaIRc7zSe77gRGd3E4lMgQ2VyUMV607SCM1OjVdmyg==}
+    cpu: [arm64]
+    os: [darwin]
+
+  '@roamhq/wrtc-darwin-x64@0.9.1':
+    resolution: {integrity: sha512-W24zSe9s6c9Tu1owP8RHg7xqW/JRMl6TRAf8pLWGgXuIeI79jVx1A9MvKTlwLM4AAZmWY0rMHYOzJg6aTb+qkQ==}
+    cpu: [x64]
+    os: [darwin]
+
+  '@roamhq/wrtc-linux-arm64@0.9.1':
+    resolution: {integrity: sha512-PeXkYGNcojjXvpHbI+R/YIUUkTWVrFaS5iQD55iGYbGBcBzU23wzpK0x/TvCQ0Ok4gimK985tgHKimbsVrs2Yw==}
+    cpu: [arm64]
+    os: [linux]
+
+  '@roamhq/wrtc-linux-x64@0.9.1':
+    resolution: {integrity: sha512-LuhzPdMM3i8vs/ifdj1F1pjpX2OhJSCWdh03UQXjRHoX+Fi1oJXiZRwKoVKu1BbsKCYfJ8m9jZB1ZU4Lhi8yHw==}
+    cpu: [x64]
+    os: [linux]
+
+  '@roamhq/wrtc-win32-x64@0.9.1':
+    resolution: {integrity: sha512-xyxqCpHxp71MY/3LaFTj3WDvOnu8GaDht1M0LAIGamwkQUg45X/zkzbfeIS7g8f/ZvItAjFa6cUkSUuhK3/rGg==}
+    cpu: [x64]
+    os: [win32]
+
+  '@roamhq/wrtc@0.9.1':
+    resolution: {integrity: sha512-WQH9DaN3kGv9+wxeRtxkSykmVQWl44VTX9XsMLmR5jtcsGxin+72U9uGlDjME0gwNNBHDKY3CgUGYI8ZYg8Jdw==}
+
   '@rolldown/pluginutils@1.0.0-beta.27':
     resolution: {integrity: sha512-+d0F4MKMCbeVUJwG96uQ4SgAznZNSq93I3V+9NHA4OpvqG8mRCpGdKmK8l/dl02h2CCDHwW2FqilnTyDcAnqjA==}
 
@@ -4039,6 +4070,7 @@ packages:
 
   '@walletconnect/ethereum-provider@2.21.1':
     resolution: {integrity: sha512-SSlIG6QEVxClgl1s0LMk4xr2wg4eT3Zn/Hb81IocyqNSGfXpjtawWxKxiC5/9Z95f1INyBD6MctJbL/R1oBwIw==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/events@1.0.1':
     resolution: {integrity: sha512-NPTqaoi0oPBVNuLv7qPaJazmGHs5JGyO8eEAk5VGKmJzDR7AHzD4k6ilox5kxk1iwiOnFopBOOMLs86Oa76HpQ==}
@@ -4083,9 +4115,11 @@ packages:
 
   '@walletconnect/sign-client@2.21.0':
     resolution: {integrity: sha512-z7h+PeLa5Au2R591d/8ZlziE0stJvdzP9jNFzFolf2RG/OiXulgFKum8PrIyXy+Rg2q95U9nRVUF9fWcn78yBA==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/sign-client@2.21.1':
     resolution: {integrity: sha512-QaXzmPsMnKGV6tc4UcdnQVNOz4zyXgarvdIQibJ4L3EmLat73r5ZVl4c0cCOcoaV7rgM9Wbphgu5E/7jNcd3Zg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/time@1.0.2':
     resolution: {integrity: sha512-uzdd9woDcJ1AaBZRhqy5rNC9laqWGErfc4dxA9a87mPdKOgWMD85mcFo9dIYIts/Jwocfwn07EC6EzclKubk/g==}
@@ -4098,9 +4132,11 @@ packages:
 
   '@walletconnect/universal-provider@2.21.0':
     resolution: {integrity: sha512-mtUQvewt+X0VBQay/xOJBvxsB3Xsm1lTwFjZ6WUwSOTR1X+FNb71hSApnV5kbsdDIpYPXeQUbGt2se1n5E5UBg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/universal-provider@2.21.1':
     resolution: {integrity: sha512-Wjx9G8gUHVMnYfxtasC9poGm8QMiPCpXpbbLFT+iPoQskDDly8BwueWnqKs4Mx2SdIAWAwuXeZ5ojk5qQOxJJg==}
+    deprecated: 'Reliability and performance improvements. See: https://github.com/WalletConnect/walletconnect-monorepo/releases'
 
   '@walletconnect/utils@2.21.0':
     resolution: {integrity: sha512-zfHLiUoBrQ8rP57HTPXW7rQMnYxYI4gT9yTACxVW6LhIFROTF6/ytm5SKNoIvi4a5nX5dfXG4D9XwQUCu8Ilig==}
@@ -5226,6 +5262,11 @@ packages:
 
   domelementtype@2.3.0:
     resolution: {integrity: sha512-OLETBj6w0OsagBwdXnPdN0cnMfF9opN69co+7ZrbfPGrdpPVNBUj02spi6B1N7wChLQiPn4CSH/zJvXw56gmHw==}
+
+  domexception@4.0.0:
+    resolution: {integrity: sha512-A2is4PLG+eeSfoTMA95/s4pvAoSo2mKtiM5jlHkAVewmiO8ISFTFKZjH7UAM1Atli/OT/7JHOrJRJiMKUZKYBw==}
+    engines: {node: '>=12'}
+    deprecated: Use your platform's native DOMException instead
 
   domhandler@5.0.3:
     resolution: {integrity: sha512-cgwlv/1iFQiFnU96XXgROh8xTeetsnJiDsTc7TYCLFd9+/WNkIqPTxiM/8pSd8VIrhXGTf1Ny1q1hquVqDJB5w==}
@@ -9248,6 +9289,10 @@ packages:
   webidl-conversions@3.0.1:
     resolution: {integrity: sha512-2JAn3z8AR6rjK8Sm8orRC0h/bcl/DqL7tRPdGZ4I1CjdF+EaMLmYxBHyXuKL849eucPFhvBoxMsflfOb8kxaeQ==}
 
+  webidl-conversions@7.0.0:
+    resolution: {integrity: sha512-VwddBukDzu71offAQR975unBIGqfKZpM+8ZX6ySk8nYhVoo5CYaZyzt3YBvYtRtO+aoGlqxPg/B87NGVZ/fu6g==}
+    engines: {node: '>=12'}
+
   webpack-virtual-modules@0.6.2:
     resolution: {integrity: sha512-66/V2i5hQanC51vBQKPH4aI8NMAcBW59FVBs+rC7eGHupMyfn34q7rZIE+ETlJ+XTevqfUhVVBgSUNSW2flEUQ==}
 
@@ -12551,6 +12596,30 @@ snapshots:
       - uploadthing
       - utf-8-validate
       - zod
+
+  '@roamhq/wrtc-darwin-arm64@0.9.1':
+    optional: true
+
+  '@roamhq/wrtc-darwin-x64@0.9.1':
+    optional: true
+
+  '@roamhq/wrtc-linux-arm64@0.9.1':
+    optional: true
+
+  '@roamhq/wrtc-linux-x64@0.9.1':
+    optional: true
+
+  '@roamhq/wrtc-win32-x64@0.9.1':
+    optional: true
+
+  '@roamhq/wrtc@0.9.1':
+    optionalDependencies:
+      '@roamhq/wrtc-darwin-arm64': 0.9.1
+      '@roamhq/wrtc-darwin-x64': 0.9.1
+      '@roamhq/wrtc-linux-arm64': 0.9.1
+      '@roamhq/wrtc-linux-x64': 0.9.1
+      '@roamhq/wrtc-win32-x64': 0.9.1
+      domexception: 4.0.0
 
   '@rolldown/pluginutils@1.0.0-beta.27': {}
 
@@ -16277,6 +16346,11 @@ snapshots:
       entities: 4.5.0
 
   domelementtype@2.3.0: {}
+
+  domexception@4.0.0:
+    dependencies:
+      webidl-conversions: 7.0.0
+    optional: true
 
   domhandler@5.0.3:
     dependencies:
@@ -21461,6 +21535,9 @@ snapshots:
   webextension-polyfill@0.12.0: {}
 
   webidl-conversions@3.0.1: {}
+
+  webidl-conversions@7.0.0:
+    optional: true
 
   webpack-virtual-modules@0.6.2: {}
 

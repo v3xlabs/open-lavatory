@@ -1,12 +1,10 @@
 import { type EncryptionKey } from "@openlv/core/encryption";
-import { webrtc } from "@openlv/transport";
-import type { EventEmitter } from "eventemitter3";
+import { ensureNodeWebRTC, webrtc } from "@openlv/transport";
 import { match } from "ts-pattern";
 
 import type { SessionMessage } from "../messages/index.js";
 import type { SessionStateObject } from "../session-types.js";
 import { log } from "../utils/log.js";
-import { handleTransportData } from "./data.js";
 
 export type WebRTCSignalT =
   import("../messages/index.js").SessionMessageTransport["payload"]["signal"];
@@ -22,9 +20,7 @@ export type CreateWebRTCTransportLayerParams = {
   };
   isHost: boolean;
   getRelyingPublicKey: () => EncryptionKey | undefined;
-  decryptionKey: import("@openlv/core/encryption").DecryptionKey | undefined;
-  onMessage: (message: object) => Promise<object>;
-  messages: EventEmitter<{ message: SessionMessage }>;
+  onData: (ciphertext: string) => Promise<void>;
   onTransportStateChange: () => void;
 };
 
@@ -35,26 +31,42 @@ export function createWebRTCTransportLayer(
     signal,
     isHost,
     getRelyingPublicKey,
-    decryptionKey,
-    onMessage,
-    messages,
+    onData,
     onTransportStateChange,
   } = params;
 
   let transport = undefined as ReturnType<typeof webrtc> | undefined;
   let transportSetup: Promise<void> | null = null;
   let transportState: SessionStateObject["transport"] | undefined;
-  const transportSupported =
+  const hasWebRTCPrimitives = () =>
     typeof globalThis !== "undefined" &&
     typeof (globalThis as unknown as { RTCPeerConnection?: unknown })
       .RTCPeerConnection !== "undefined";
+  let transportSupportStatus: "unknown" | "supported" | "unsupported" =
+    hasWebRTCPrimitives() ? "supported" : "unknown";
   let transportHelloAcked = false;
-  let sendViaBestPath: ((msg: SessionMessage) => Promise<void>) | null = null;
+
+  const ensureTransportSupport = async () => {
+    if (transportSupportStatus === "supported") return;
+
+    try {
+      await ensureNodeWebRTC();
+    } catch (err) {
+      transportSupportStatus = "unsupported";
+      throw err;
+    }
+
+    transportSupportStatus = hasWebRTCPrimitives()
+      ? "supported"
+      : "unsupported";
+
+    if (transportSupportStatus !== "supported") {
+      throw new Error("WebRTC not supported in this runtime");
+    }
+  };
 
   const ensureTransport = async () => {
-    if (!transportSupported) {
-      return Promise.reject(new Error("WebRTC not supported in this runtime"));
-    }
+    await ensureTransportSupport();
 
     if (!transport) {
       transport = webrtc({
@@ -150,18 +162,7 @@ export function createWebRTCTransportLayer(
             }
 
             if (msg.t === "d") {
-              await handleTransportData({
-                body: msg.b,
-                decryptionKey,
-                onMessage,
-                sendViaBestPath: async (m) => {
-                  if (!sendViaBestPath)
-                    throw new Error("sendViaBestPath not set");
-
-                  await sendViaBestPath(m);
-                },
-                messages,
-              });
+              await onData(msg.b);
 
               return;
             }
@@ -208,13 +209,10 @@ export function createWebRTCTransportLayer(
 
   return {
     ensureTransport,
-    isSupported: () => transportSupported,
+    isSupported: () => transportSupportStatus !== "unsupported",
     getTransportState: () => transportState,
     isHelloAcked: () => transportHelloAcked,
     sendViaTransport,
-    setSendViaBestPath: (fn: (m: SessionMessage) => Promise<void>) => {
-      sendViaBestPath = fn;
-    },
     teardown,
   } as const;
 }

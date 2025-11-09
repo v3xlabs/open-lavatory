@@ -18,10 +18,15 @@ export class OpenLVModalElement
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
 
-  constructor(_provider: OpenLVProvider, _theme: OpenLVTheme = simpleTheme) {
+  constructor(
+    _provider: OpenLVProvider,
+    _theme: OpenLVTheme = simpleTheme,
+    _onClose: () => void = () => {},
+  ) {
     super();
     this.provider = _provider;
     this.theme = _theme;
+    this.onClose = _onClose;
     this.shadow = this.attachShadow({ mode: "open" });
     ensureStyles(this.shadow, this.theme);
   }

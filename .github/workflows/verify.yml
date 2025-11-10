@@ -47,8 +47,8 @@ jobs:
           uses: ./.github/actions/setup-workspace
           with:
             build-packages: true
-        - name: Install Test Dependencies
-          run: pnpm -r test:install
+        # - name: Install Test Dependencies
+        #   run: pnpm -r test:install
         - name: Run tests
           uses: nick-fields/retry@v3
           with:

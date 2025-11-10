@@ -44,6 +44,8 @@ jobs:
           uses: ./.github/actions/setup-workspace
           with:
             build-packages: true
+        - name: Install Playwright Browsers
+          run: pnpm exec playwright install --with-deps chromium
         - name: Run tests
           uses: nick-fields/retry@v3
           with:

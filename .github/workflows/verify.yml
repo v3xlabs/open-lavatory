@@ -34,6 +34,9 @@ jobs:
     tests:
         name: Tests
         runs-on: ubuntu-latest
+        container:
+          image: mcr.microsoft.com/playwright:v1.56.1-noble
+          options: --user 1001
         timeout-minutes: 5
         permissions:
             contents: read
@@ -44,13 +47,14 @@ jobs:
           uses: ./.github/actions/setup-workspace
           with:
             build-packages: true
+        # - name: Install Test Dependencies
+        #   run: pnpm -r test:install
         - name: Run tests
           uses: nick-fields/retry@v3
           with:
             timeout_minutes: 10
             max_attempts: 3
             command: pnpm test
-
 
 # - name: Build extension (basic compile check)
 #   run: pnpm build:extension

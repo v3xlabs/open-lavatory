@@ -61,6 +61,8 @@ export default [
       'prefer-arrow-callback': 'warn',
       'max-lines': ['error', 500],
 
+      '@typescript-eslint/no-namespace': 'off',
+
       // Import rules
       'import/no-duplicates': 'error',
       'unused-imports/no-unused-imports': 'error',

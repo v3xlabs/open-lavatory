@@ -25,6 +25,11 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
+    },
+    "./webrtc": {
+      "types": "./dist/webrtc/index.d.ts",
+      "import": "./dist/webrtc/index.js",
+      "default": "./dist/webrtc/index.js"
     }
   },
   "main": "./dist/index.js",
@@ -35,14 +40,18 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "test:install": "playwright install --with-deps"
   },
   "dependencies": {
+    "@openlv/core": "workspace:*",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "ts-pattern": "^5"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "^4.0.8",
+    "playwright": "^1.56.1",
     "typescript": "^5",
     "vitest": "^4"
   },

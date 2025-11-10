@@ -1,3 +1,6 @@
+import { PROVIDER_STATUS } from "@openlv/provider";
+import { SESSION_STATE } from "@openlv/session";
+import { SIGNAL_STATE } from "@openlv/signaling";
 import { match, P } from "ts-pattern";
 
 import { useProvider } from "../../hooks/useProvider";
@@ -8,32 +11,64 @@ export const FooterStatus = () => {
   const { status: providerStatus } = useProvider();
 
   const data = match(providerStatus)
-    .with("disconnected", () => undefined)
-    .with(P.union("connected", "connecting", "error"), () =>
-      match(sessionStatus)
-        .with({ status: "disconnected" }, () => ({
-          icon: "🫲",
-          text: "Disconnected",
-        }))
-        .with({ status: "signaling" }, (x) =>
-          match(x.signaling)
-            .with({ state: "handshake-open" }, () => ({
-              icon: "👋",
-              text: "Handshake Open",
-            }))
-            .with({ state: "handshake-closed" }, () => ({
-              icon: "🤝",
-              text: "Handshake Closed",
-            }))
-            .otherwise(() => ({
-              icon: "❓",
-              text: "Unknown " + x.signaling?.state,
-            })),
-        )
-        .otherwise((status) => ({
-          icon: "❓",
-          text: "Unknown " + JSON.stringify(status),
-        })),
+    .with(PROVIDER_STATUS.STANDBY, () => undefined)
+    .with(
+      P.union(
+        PROVIDER_STATUS.CREATING,
+        PROVIDER_STATUS.CONNECTING,
+        PROVIDER_STATUS.CONNECTED,
+        PROVIDER_STATUS.ERROR,
+      ),
+      () =>
+        match({ status: sessionStatus?.status })
+          // .with({ status: "disconnected" }, () => ({
+          //   icon: "🫲",
+          //   text: "Disconnected",
+          // }))
+          .with({ status: SESSION_STATE.CREATED }, () => undefined)
+          .with({ status: SESSION_STATE.CONNECTED }, () => ({
+            icon: "✅",
+            text: "Connected Successfully!",
+          }))
+          .with({ status: SESSION_STATE.SIGNALING }, () =>
+            match({ status: sessionStatus?.signaling?.state })
+              .with({ status: SIGNAL_STATE.STANDBY }, () => ({
+                icon: "🫥",
+                text: "Connecting",
+              }))
+              .with({ status: SIGNAL_STATE.CONNECTING }, () => ({
+                icon: "↗️",
+                text: "Connecting",
+              }))
+              .with({ status: SIGNAL_STATE.READY }, () => ({
+                icon: "👋",
+                text: "Ready",
+              }))
+              .with({ status: SIGNAL_STATE.HANDSHAKE }, () => ({
+                icon: "🤝",
+                text: "Handshake Closed",
+              }))
+              .with({ status: SIGNAL_STATE.HANDSHAKE_PARTIAL }, () => ({
+                icon: "🤝",
+                text: "Handshake Partial",
+              }))
+              .with({ status: SIGNAL_STATE.ENCRYPTED }, () => ({
+                icon: "🔒",
+                text: "Encrypted",
+              }))
+              .with({ status: SIGNAL_STATE.ERROR }, () => ({
+                icon: "❌",
+                text: "Signal Error",
+              }))
+              .otherwise(() => ({
+                icon: "❓",
+                text: "Unknown " + sessionStatus?.signaling?.state,
+              })),
+          )
+          .otherwise((status) => ({
+            icon: "❓",
+            text: "Unknown " + JSON.stringify(status),
+          })),
     )
     .otherwise(() => ({
       icon: "❓",

@@ -48,7 +48,7 @@ describe("Session", () => {
     console.log(sessionB.getState());
     await sessionB.connect();
 
-    await new Promise((resolve) => setTimeout(resolve, 3000));
+    await Promise.all([sessionA.waitForLink(), sessionB.waitForLink()]);
 
     //
     console.log("A", sessionA.getState());

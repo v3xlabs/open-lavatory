@@ -5,8 +5,8 @@ import {
   migrateStorageToLatest,
   type ProviderStorageV0,
   type ProviderStorageV1,
-  ProviderStorageVAny,
-} from "./version";
+  type ProviderStorageVAny,
+} from "./version.js";
 
 const testCases = {
   v0tov1: [

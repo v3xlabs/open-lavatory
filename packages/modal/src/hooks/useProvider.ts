@@ -1,4 +1,4 @@
-import type { ProviderStatus } from "@openlv/provider";
+import { PROVIDER_STATUS, type ProviderStatus } from "@openlv/provider";
 import { useEffect, useState } from "preact/hooks";
 
 import { useModalContext } from "../context";
@@ -7,7 +7,7 @@ export const useProvider = () => {
   const { provider } = useModalContext();
 
   const [status, setStatus] = useState<ProviderStatus>(
-    provider?.getState().status || "disconnected",
+    provider?.getState().status || PROVIDER_STATUS.ERROR,
   );
 
   useEffect(() => {

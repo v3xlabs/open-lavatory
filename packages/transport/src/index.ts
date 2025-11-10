@@ -1,3 +1,6 @@
+/** biome-ignore-all lint/performance/noBarrelFile: package entrypoint */
+/** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
+
 /**
  * Open Lavatory Protocol - Decentralized Wallet Connection Library
  *
@@ -6,3 +9,4 @@
  */
 
 export * from "./base.js";
+export * from "./layer.js";

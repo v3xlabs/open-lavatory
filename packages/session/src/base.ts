@@ -13,32 +13,38 @@ import {
   initHash,
   parseEncryptionKey,
 } from "@openlv/core/encryption";
-import type {
-  CreateSignalLayerFn,
-  SignalingLayer,
-  SignalingMode,
+import {
+  type CreateSignalLayerFn,
+  SIGNAL_STATE,
+  type SignalingLayer,
+  type SignalState,
 } from "@openlv/signaling";
-import { mqtt } from "@openlv/signaling/mqtt";
-import { ntfy } from "@openlv/signaling/ntfy";
+import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
+import {
+  TRANSPORT_STATE,
+  type TransportLayer,
+  type TransportMessage,
+} from "@openlv/transport";
+import { webrtc } from "@openlv/transport/webrtc";
 import { EventEmitter } from "eventemitter3";
 
 import type { SessionEvents } from "./events.js";
-import type {
-  SessionMessage,
-  SessionMessageResponse,
-} from "./messages/index.js";
+import type { SessionMessage } from "./messages/index.js";
 import { log } from "./utils/log.js";
 
-export type SessionStatus =
-  | "created"
-  | "ready"
-  | "signaling"
-  | "connected"
-  | "disconnected";
+export const SESSION_STATE = {
+  CREATED: "created",
+  SIGNALING: "signaling",
+  READY: "ready",
+  CONNECTED: "connected",
+  DISCONNECTED: "disconnected",
+} as const;
+export type SessionState = (typeof SESSION_STATE)[keyof typeof SESSION_STATE];
+
 export type SessionStateObject = {
-  status: SessionStatus;
+  status: SessionState;
   signaling?: {
-    state: SignalingMode;
+    state: SignalState;
   };
 };
 
@@ -56,6 +62,10 @@ export type Session = {
   // Send with response
   send(message: object, timeout?: number): Promise<unknown>;
   emitter: EventEmitter<SessionEvents>;
+  _internal: {
+    signal: SignalingLayer;
+    transport: TransportLayer;
+  };
 };
 
 /**
@@ -74,8 +84,10 @@ export const createSession = async (
     "sessionId" in initParameters
       ? initParameters.sessionId
       : generateSessionId();
-  const { encryptionKey, decryptionKey } =
-    await initEncryptionKeys(initParameters);
+  const {
+    encryptionKey,
+    decryptionKey: { decrypt },
+  } = await initEncryptionKeys(initParameters);
   let relyingPublicKey: EncryptionKey | undefined;
   const handshakeKey =
     "k" in initParameters
@@ -85,11 +97,16 @@ export const createSession = async (
     "h" in initParameters ? initParameters.h : undefined,
     encryptionKey,
   );
-  let status: SessionStatus = "created";
+  let status: SessionState = SESSION_STATE.CREATED;
   const protocol = initParameters.p;
   const server = initParameters.s;
 
-  const signaling: SignalingLayer = await signalLayer({
+  const updateStatus = (newStatus: SessionState) => {
+    status = newStatus;
+    emitter.emit("state_change", { status, signaling: signal.getState() });
+  };
+
+  const signaling = await signalLayer({
     topic: sessionId,
     url: server,
   });
@@ -107,17 +124,7 @@ export const createSession = async (
 
       return await relyingPublicKey.encrypt(message);
     },
-    async decrypt(message) {
-      if (!decryptionKey) {
-        throw new Error("Decryption key not found");
-      }
-
-      const response = await decryptionKey.decrypt(message);
-
-      log("decrypted message", response);
-
-      return response;
-    },
+    decrypt,
     publicKey: encryptionKey,
     k: handshakeKey,
     async rpDiscovered(rpKey) {
@@ -130,66 +137,116 @@ export const createSession = async (
     isHost,
   });
 
-  const updateStatus = (newStatus: SessionStatus) => {
-    status = newStatus;
-    emitter.emit("state_change", { status, signaling: signal.getState() });
-  };
+  const transport = webrtc({ isHost })({
+    encrypt(message) {
+      if (!relyingPublicKey) {
+        throw new Error("Relying party public key not found");
+      }
 
-  signal?.emitter.on("state_change", () => {
-    updateStatus(status);
+      return relyingPublicKey?.encrypt(message);
+    },
+    decrypt,
+    isHost,
+    onmessage: async (message: object) => {
+      console.log("Session: received message from transport", message);
+
+      // @ts-ignore
+      if (message["type"] === "request") {
+        // @ts-ignore
+        const data = await onMessage(message["payload"] as object);
+        const response: SessionMessage = {
+          type: "response",
+          // @ts-ignore
+          messageId: message["messageId"] as string,
+          payload: data,
+        };
+
+        await transport.send(response);
+      }
+
+      // @ts-ignore
+      if (message["type"] === "response") {
+        messages.emit("message", message);
+      }
+    },
+    async subsend(message) {
+      console.log("Session: sending trans msg to signal", message);
+      const sessionMessage: SessionMessage = {
+        type: "request",
+        messageId: crypto.randomUUID(),
+        payload: message,
+      };
+
+      await signal.send(sessionMessage);
+    },
   });
 
+  transport.emitter.on("state_change", (state) => {
+    log("transport state change", state);
+
+    if (state === TRANSPORT_STATE.CONNECTED) {
+      updateStatus(SESSION_STATE.CONNECTED);
+    }
+  });
+
+  const startTransport = async () => {
+    await transport.setup();
+  };
+
   // let transport: TransportLayer | undefined;
+  const onSignalMessage = async (message: object) => {
+    log("Session: received message from signaling", message);
+
+    const sessionMsg = message as SessionMessage;
+
+    if (sessionMsg.type === "response") {
+      log("Session: received data message", sessionMsg.payload);
+      messages.emit("message", sessionMsg);
+    }
+
+    if (sessionMsg.type === "request") {
+      log("Session: received request message", sessionMsg.payload);
+
+      transport.handle(sessionMsg.payload as TransportMessage);
+    }
+  };
 
   return {
     connect: async () => {
-      updateStatus("signaling");
+      updateStatus(SESSION_STATE.SIGNALING);
       log("connecting to session, isHost:", isHost);
       // TODO: implement
       log("connecting to session");
-      await signal.setup();
 
-      signal.subscribe(async (message) => {
-        log("Session: received message from signaling", message);
+      signal.on("message", onSignalMessage);
 
-        const sessionMsg = message as SessionMessage;
-
-        if (sessionMsg.type === "response") {
-          log("Session: received data message", sessionMsg.payload);
-          messages.emit("message", sessionMsg);
-        }
-
-        if (sessionMsg.type === "request") {
-          log("Session: received request message", sessionMsg.payload);
-
-          const payload = await onMessage(sessionMsg.payload);
-
-          const responseMessage: SessionMessageResponse = {
-            type: "response",
-            messageId: sessionMsg.messageId,
-            payload,
-          };
-
-          await signal.send(responseMessage);
-        }
-      });
-
-      signal.emitter.on("state_change", (state) => {
+      signal.on("state_change", (state) => {
         log("signal state change", state);
 
-        if (state === "xr-encrypted") {
+        if (state === SIGNAL_STATE.READY) {
+          updateStatus(SESSION_STATE.READY);
+        }
+
+        if (state === SIGNAL_STATE.ENCRYPTED) {
           // for now cuz we just use signaling call this a full connection
-          updateStatus("connected");
+          // updateStatus("connected");
+          startTransport();
         }
       });
+
+      await signal.setup();
     },
     async close() {
       log("session teardown");
       await signal?.teardown();
-      updateStatus("disconnected");
+      updateStatus(SESSION_STATE.DISCONNECTED);
     },
     getState() {
-      return { status, signaling: signal.getState() };
+      return {
+        status,
+        signaling: signal.getState(),
+        // transport: transport.getState(),
+      };
     },
     getHandshakeParameters() {
       return {
@@ -204,14 +261,15 @@ export const createSession = async (
     waitForLink: async () => {
       return new Promise((resolve) => {
         emitter.on("state_change", (state) => {
-          if (state?.status === "connected") {
+          if (state?.status === SESSION_STATE.CONNECTED) {
             resolve();
           }
         });
       });
     },
     async send(message: object, timeout: number = 5000) {
-      const ready = signal.getState().state === "xr-encrypted";
+      const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
+      // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;
 
       if (!ready) {
         throw new Error("Session not ready");
@@ -225,7 +283,8 @@ export const createSession = async (
       };
 
       // for now use signaling
-      await signal.send(sessionMessage);
+      // await signal.send(sessionMessage);
+      await transport.send(sessionMessage);
 
       return Promise.race([
         new Promise((resolve) => {
@@ -242,6 +301,10 @@ export const createSession = async (
         }),
       ]);
     },
+    _internal: {
+      signal,
+      transport,
+    },
     emitter,
   };
 };
@@ -255,10 +318,7 @@ export const connectSession = async (
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 
-  const signaling = {
-    mqtt: mqtt,
-    ntfy: ntfy,
-  }[initParameters.p];
+  const signaling = await dynamicSignalingLayer(initParameters.p);
 
   if (!signaling) {
     throw new Error(`Invalid signaling protocol: ${initParameters.p}`);

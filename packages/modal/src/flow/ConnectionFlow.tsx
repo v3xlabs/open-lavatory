@@ -1,6 +1,7 @@
-import type { SessionStateObject } from "@openlv/session";
+import { SESSION_STATE, SessionStateObject } from "@openlv/session";
+import { SIGNAL_STATE } from "@openlv/signaling";
 import { useEffect, useRef, useState } from "preact/hooks";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
 import { UnknownState } from "../components/UnknownState";
 import { useSession } from "../hooks/useSession";
@@ -29,51 +30,20 @@ const LoadingSpinner = () => (
   </div>
 );
 
-const STATE_CONNECTING = "connecting" as const;
-const STATE_HANDSHAKE_OPEN = "handshake-open" as const;
-const STATE_HANDSHAKE_CLOSED = "handshake-closed" as const;
-const STATE_XR_ENCRYPTED = "xr-encrypted" as const;
-const STATE_DISCONNECTED = "disconnected" as const;
-const STATE_UNKNOWN = "unknown" as const;
+const FLOW = {
+  CONNECTING: "connecting",
+  READY: "ready",
+  CONFIRMING: "confirming",
+  CONNECTED: "connected",
+  DISCONNECTED: "disconnected",
+  ERROR: "error",
+} as const;
 
-type SignalingState =
-  | typeof STATE_CONNECTING
-  | typeof STATE_HANDSHAKE_OPEN
-  | typeof STATE_HANDSHAKE_CLOSED
-  | typeof STATE_XR_ENCRYPTED
-  | typeof STATE_DISCONNECTED
-  | typeof STATE_UNKNOWN;
+type FlowState = (typeof FLOW)[keyof typeof FLOW];
 
-const getSignalingState = (
-  sessionStatus: SessionStateObject | undefined,
-): SignalingState => {
-  if (!sessionStatus) {
-    return STATE_UNKNOWN;
-  }
-
-  return match(sessionStatus)
-    .with({ status: STATE_DISCONNECTED }, () => STATE_DISCONNECTED)
-    .with(
-      { status: P.union("created", "signaling", "connected", "ready") },
-      (x) => {
-        const signalingState =
-          "signaling" in x ? x.signaling?.state : undefined;
-
-        return match(signalingState)
-          .with(STATE_CONNECTING, () => STATE_CONNECTING)
-          .with(STATE_HANDSHAKE_OPEN, () => STATE_HANDSHAKE_OPEN)
-          .with(STATE_HANDSHAKE_CLOSED, () => STATE_HANDSHAKE_CLOSED)
-          .with(STATE_XR_ENCRYPTED, () => STATE_XR_ENCRYPTED)
-          .with(STATE_DISCONNECTED, () => STATE_DISCONNECTED)
-          .otherwise(() => STATE_UNKNOWN);
-      },
-    )
-    .otherwise(() => STATE_UNKNOWN);
-};
-
-const useFlowTransition = (currentState: SignalingState) => {
+const useFlowTransition = (currentState: FlowState) => {
   const [displayState, setDisplayState] = useState(currentState);
-  const previousStateRef = useRef<SignalingState>(currentState);
+  const previousStateRef = useRef<FlowState>(currentState);
 
   useEffect(() => {
     if (currentState === previousStateRef.current) return;
@@ -89,15 +59,33 @@ const useFlowTransition = (currentState: SignalingState) => {
   };
 };
 
+const reduceState = (state: SessionStateObject | undefined): FlowState =>
+  match(state)
+    .with({ status: SESSION_STATE.CREATED }, () => FLOW.CONNECTING)
+    .with({ status: SESSION_STATE.READY }, () => FLOW.CONNECTING)
+    .with({ status: SESSION_STATE.SIGNALING }, () =>
+      match(state?.signaling)
+        .with({ state: SIGNAL_STATE.STANDBY }, () => FLOW.CONNECTING)
+        .with({ state: SIGNAL_STATE.CONNECTING }, () => FLOW.CONNECTING)
+        .with({ state: SIGNAL_STATE.READY }, () => FLOW.READY)
+        .with({ state: SIGNAL_STATE.HANDSHAKE }, () => FLOW.CONFIRMING)
+        .with({ state: SIGNAL_STATE.HANDSHAKE_PARTIAL }, () => FLOW.CONFIRMING)
+        .with({ state: SIGNAL_STATE.ENCRYPTED }, () => FLOW.CONNECTED)
+        .otherwise(() => FLOW.CONNECTING),
+    )
+    .with({ status: SESSION_STATE.READY }, () => FLOW.READY)
+    .with({ status: SESSION_STATE.CONNECTED }, () => FLOW.CONNECTED)
+    .with({ status: SESSION_STATE.DISCONNECTED }, () => FLOW.DISCONNECTED)
+    .otherwise(() => FLOW.ERROR);
+
 export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
-  const { status: sessionStatus = { status: "created" } } = useSession();
-  const currentState = getSignalingState(sessionStatus);
-  const { displayState } = useFlowTransition(currentState);
+  const { status: sessionStatus } = useSession();
+  const { displayState } = useFlowTransition(reduceState(sessionStatus));
 
   return (
     <div style={{ viewTransitionName: "connection-flow" }} className="w-full">
       {match(displayState)
-        .with(STATE_CONNECTING, () => (
+        .with(FLOW.CONNECTING, () => (
           <div className="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
             <div className="text-center">
@@ -110,8 +98,8 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             </div>
           </div>
         ))
-        .with(STATE_HANDSHAKE_OPEN, () => <HandshakeOpen onCopy={onCopy} />)
-        .with(STATE_HANDSHAKE_CLOSED, () => (
+        .with(FLOW.READY, () => <HandshakeOpen onCopy={onCopy} />)
+        .with(FLOW.CONFIRMING, () => (
           <div className="flex flex-col items-center gap-4 p-6">
             <div className="text-center">
               <h3 className="mb-2 font-semibold text-gray-900 text-lg">
@@ -120,7 +108,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             </div>
           </div>
         ))
-        .with(STATE_XR_ENCRYPTED, () => (
+        .with(FLOW.CONNECTED, () => (
           <div className="flex flex-col items-center gap-4 p-6">
             <div className="text-center">
               <div className="mb-4 text-4xl">✅</div>
@@ -133,7 +121,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             </div>
           </div>
         ))
-        .with(STATE_DISCONNECTED, () => (
+        .with(FLOW.DISCONNECTED, () => (
           <div className="flex flex-col items-center gap-4 p-6">
             <div className="text-center">
               <div className="mb-4 text-4xl">🔌</div>

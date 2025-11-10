@@ -1,9 +1,9 @@
-import EventEmitter from "eventemitter3";
+import { EventEmitter } from "eventemitter3";
 
-import { DEFAULT_SETTINGS } from "./default";
-import { parseProviderStorage, type ProviderStorage } from "./version";
+import { DEFAULT_SETTINGS } from "./default.js";
+import { parseProviderStorage, type ProviderStorage } from "./version.js";
 
-export type { ProviderStorage } from "./version";
+export type { ProviderStorage } from "./version.js";
 
 const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
 

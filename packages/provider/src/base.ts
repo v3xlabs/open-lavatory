@@ -1,4 +1,4 @@
-import { encodeConnectionURL, SessionLinkParameters } from "@openlv/core";
+import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
   type Session,
@@ -11,14 +11,14 @@ import type { ExtractReturnType } from "ox/RpcSchema";
 import { match } from "ts-pattern";
 import type { Address, Prettify } from "viem";
 
-import type { ProviderEvents } from "./events";
-import type { RpcSchema } from "./rpc";
+import type { ProviderEvents } from "./events.js";
+import type { RpcSchema } from "./rpc.js";
 import {
   createProviderStorage,
   type ProviderStorageParameters,
   type ProviderStorageR,
-} from "./storage/index";
-import { log } from "./utils/log";
+} from "./storage/index.js";
+import { log } from "./utils/log.js";
 
 export type OpenLVProviderParameters = Prettify<
   {
@@ -26,12 +26,16 @@ export type OpenLVProviderParameters = Prettify<
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
+export const PROVIDER_STATUS = {
+  STANDBY: "standby",
+  CREATING: "creating",
+  CONNECTING: "connecting",
+  CONNECTED: "connected",
+  ERROR: "error",
+} as const;
+
 export type ProviderStatus =
-  | "disconnected"
-  | "creating"
-  | "connecting"
-  | "connected"
-  | "error";
+  (typeof PROVIDER_STATUS)[keyof typeof PROVIDER_STATUS];
 
 export type ProviderState = {
   status: ProviderStatus;
@@ -67,7 +71,7 @@ export const createProvider = (
 ): OpenLVProvider => {
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
-  let status: ProviderStatus = "disconnected";
+  let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   const chainId: string = "1";
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: _parameters.storage });
@@ -96,15 +100,18 @@ export const createProvider = (
   };
 
   const start = async (
-    parameters: SessionLinkParameters = { p: "ntfy", s: "https://ntfy.sh/" },
+    parameters: SessionLinkParameters = {
+      p: "mqtt",
+      s: "wss://mqtt-dashboard.com:8884/mqtt",
+    },
   ) => {
-    updateStatus("creating");
+    updateStatus(PROVIDER_STATUS.CREATING);
     session = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
       onMessage,
     );
-    updateStatus("connecting");
+    updateStatus(PROVIDER_STATUS.CONNECTING);
 
     log("session created");
     await session.connect();
@@ -120,7 +127,7 @@ export const createProvider = (
 
     accounts = await getAccounts();
 
-    updateStatus("connected");
+    updateStatus(PROVIDER_STATUS.CONNECTED);
     oxEmitter.emit("connect", { chainId });
     oxEmitter.emit("accountsChanged", accounts);
 
@@ -129,7 +136,7 @@ export const createProvider = (
   const closeSession = async () => {
     await session?.close();
     session = undefined;
-    updateStatus("disconnected");
+    updateStatus(PROVIDER_STATUS.STANDBY);
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (

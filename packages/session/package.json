@@ -40,16 +40,20 @@
   ],
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test": "vitest",
+    "test:install": "playwright install --with-deps"
   },
   "dependencies": {
     "@openlv/core": "workspace:*",
     "@openlv/signaling": "workspace:*",
+    "@openlv/transport": "workspace:*",
     "eventemitter3": "^5.0.1",
     "globals": "^16.2.0",
     "ts-pattern": "^5"
   },
   "devDependencies": {
+    "@vitest/browser-playwright": "^4.0.8",
+    "playwright": "^1.56.1",
     "typescript": "^5",
     "vitest": "^4"
   },

@@ -7,9 +7,9 @@ import {
 import { createConnector, type CreateConnectorFn } from "@wagmi/core";
 import type { Prettify } from "viem";
 
-import { openlvDetails } from "./config";
-import { log } from "./log";
-import { getTriggerModal } from "./modal";
+import { openlvDetails } from "./config.js";
+import { log } from "./log.js";
+import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage">

@@ -1,4 +1,4 @@
-import type { ProviderStorage } from "./version";
+import type { ProviderStorage } from "./version.js";
 
 export const DEFAULT_SETTINGS: ProviderStorage = {
   version: 1,

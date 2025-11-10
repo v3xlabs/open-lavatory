@@ -1,4 +1,4 @@
-import { combine, combineIntoEmitter, make } from "@openlv/core";
+import { combine } from "@openlv/core";
 import type { EncryptionKey, SymmetricKey } from "@openlv/core/encryption";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";

@@ -1,5 +1,5 @@
 import { decodeConnectionURL, encodeConnectionURL } from '@openlv/core';
-import { createProvider, type ProviderStatus } from '@openlv/provider';
+import { createProvider, OpenLVProvider, type ProviderStatus } from '@openlv/provider';
 import type { SessionStateObject } from '@openlv/session';
 import { QRCodeSVG } from 'qrcode.react';
 import { useState } from 'react';

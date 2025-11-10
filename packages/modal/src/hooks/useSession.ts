@@ -33,8 +33,6 @@ export const useSession = () => {
 
   useEffect(() => {
     const onSessionStart = (_session: Session) => {
-      log("session started: ", _session);
-
       setSession(_session);
       setStatus(_session.getState());
     };

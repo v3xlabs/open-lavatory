@@ -1,6 +1,6 @@
 import type { Session } from "@openlv/session";
 
-import type { ProviderStatus } from "./base";
+import type { ProviderStatus } from "./base.js";
 
 export type EventMessage = { foo: "bar" };
 

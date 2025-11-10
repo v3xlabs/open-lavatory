@@ -67,7 +67,6 @@ export class BaseError extends Error {
       ...(errorConfig.version ? [`Version: ${errorConfig.version}`] : []),
     ].join("\n");
 
-    // @ts-expect-error - cause is not supported in the constructor
     super(message, args.cause ? { cause: args.cause } : undefined);
 
     this.details = details;

@@ -2,12 +2,12 @@
   "compilerOptions": {
     // Language and Environment
     "target": "ES2020",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2020", "ES2022", "DOM", "DOM.Iterable"],
     "useDefineForClassFields": true,
 
     // Modules
-    "module": "ESNext",
-    "moduleResolution": "bundler",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     "resolveJsonModule": true,
     "isolatedModules": true,
 
@@ -22,9 +22,10 @@
     "noImplicitReturns": true,
 
     // Interop Constraints
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": false,
+    "allowSyntheticDefaultImports": false,
     "forceConsistentCasingInFileNames": true,
+    "verbatimModuleSyntax": true,
 
     // Completeness
     "skipLibCheck": true,

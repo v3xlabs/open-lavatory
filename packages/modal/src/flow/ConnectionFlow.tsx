@@ -73,6 +73,7 @@ const reduceState = (state: SessionStateObject | undefined): FlowState =>
         .with({ state: SIGNAL_STATE.ENCRYPTED }, () => FLOW.CONNECTED)
         .otherwise(() => FLOW.CONNECTING),
     )
+    .with({ status: SESSION_STATE.READY }, () => FLOW.READY)
     .with({ status: SESSION_STATE.CONNECTED }, () => FLOW.CONNECTED)
     .with({ status: SESSION_STATE.DISCONNECTED }, () => FLOW.DISCONNECTED)
     .otherwise(() => FLOW.ERROR);

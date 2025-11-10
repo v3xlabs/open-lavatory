@@ -16,13 +16,13 @@ import {
 import {
   type CreateSignalLayerFn,
   SIGNAL_STATE,
-  SignalingLayer,
+  type SignalingLayer,
   type SignalState,
 } from "@openlv/signaling";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
 import {
   TRANSPORT_STATE,
-  TransportLayer,
+  type TransportLayer,
   type TransportMessage,
 } from "@openlv/transport";
 import { webrtc } from "@openlv/transport/webrtc";
@@ -34,8 +34,8 @@ import { log } from "./utils/log.js";
 
 export const SESSION_STATE = {
   CREATED: "created",
-  READY: "ready",
   SIGNALING: "signaling",
+  READY: "ready",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
 } as const;
@@ -217,12 +217,15 @@ export const createSession = async (
       log("connecting to session, isHost:", isHost);
       // TODO: implement
       log("connecting to session");
-      await signal.setup();
 
       signal.on("message", onSignalMessage);
 
       signal.on("state_change", (state) => {
         log("signal state change", state);
+
+        if (state === SIGNAL_STATE.READY) {
+          updateStatus(SESSION_STATE.READY);
+        }
 
         if (state === SIGNAL_STATE.ENCRYPTED) {
           // for now cuz we just use signaling call this a full connection
@@ -230,6 +233,8 @@ export const createSession = async (
           startTransport();
         }
       });
+
+      await signal.setup();
     },
     async close() {
       log("session teardown");

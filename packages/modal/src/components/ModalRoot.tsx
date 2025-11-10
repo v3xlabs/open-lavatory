@@ -260,7 +260,11 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     match(targetStatus)
       .with(PROVIDER_STATUS.STANDBY, () => renderDisconnectedSection())
       .with(
-        P.union(PROVIDER_STATUS.CONNECTING, PROVIDER_STATUS.CONNECTED),
+        P.union(
+          PROVIDER_STATUS.CREATING,
+          PROVIDER_STATUS.CONNECTING,
+          PROVIDER_STATUS.CONNECTED,
+        ),
         () => (
           <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
         ),

@@ -1,7 +1,7 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { match } from "ts-pattern";
 
-import { createTransportBase, TransportMessage } from "../base.js";
+import { createTransportBase, type TransportMessage } from "../base.js";
 import { log } from "../utils/log.js";
 
 type WebRTCConfig = {

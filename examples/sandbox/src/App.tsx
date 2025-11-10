@@ -6,7 +6,7 @@ import { useState } from 'react';
 
 import { useEventEmitter } from './effect';
 
-const provider = createProvider({ foo: 'bar' });
+const provider = createProvider({});
 
 const SessionConnect = () => {
     const [url, setUrl] = useState<string | undefined>(undefined);
@@ -42,16 +42,26 @@ const App = () => {
     const [status, setStatus] = useState<ProviderStatus | undefined>(provider.getState().status);
     const [sessionStatus, setSessionStatus] = useState<SessionStateObject | undefined>();
 
-    useEventEmitter(provider.emitter, 'status_change', (state) => {
+    useEventEmitter(provider, 'status_change', (state: ProviderStatus) => {
         console.log('status_change', state);
         setStatus(state);
     });
-    useEventEmitter(provider.getSession()?.emitter, 'state_change', (state) => {
-        console.log('session_status_change', state);
-        setSessionStatus(state);
-    });
+    useEventEmitter(
+        provider,
+        'session_started',
+        (session: {
+            emitter: {
+                on: (event: 'state_change', cb: (state: SessionStateObject) => void) => void;
+            };
+        }) => {
+            session.emitter.on('state_change', (state: SessionStateObject) => {
+                console.log('session_status_change', state);
+                setSessionStatus(state);
+            });
+        }
+    );
 
-    const canStartSession = status === 'disconnected';
+    const canStartSession = status === 'standby';
     const connectionParameters = provider.getSession()?.getHandshakeParameters();
     const connectionUrl = connectionParameters
         ? encodeConnectionURL(connectionParameters)

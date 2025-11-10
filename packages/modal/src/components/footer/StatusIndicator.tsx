@@ -25,7 +25,11 @@ export const FooterStatus = () => {
           //   icon: "🫲",
           //   text: "Disconnected",
           // }))
-          .with({ status: SESSION_STATE.CREATED }, () => ({}))
+          .with({ status: SESSION_STATE.CREATED }, () => undefined)
+          .with({ status: SESSION_STATE.CONNECTED }, () => ({
+            icon: "✅",
+            text: "Connected Successfully!",
+          }))
           .with({ status: SESSION_STATE.SIGNALING }, () =>
             match({ status: sessionStatus?.signaling?.state })
               .with({ status: SIGNAL_STATE.STANDBY }, () => ({

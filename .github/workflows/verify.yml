@@ -34,6 +34,9 @@ jobs:
     tests:
         name: Tests
         runs-on: ubuntu-latest
+        container:
+          image: mcr.microsoft.com/playwright:v1.56.1-noble
+          options: --user 1001
         timeout-minutes: 5
         permissions:
             contents: read

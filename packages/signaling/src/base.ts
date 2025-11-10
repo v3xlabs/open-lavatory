@@ -1,4 +1,4 @@
-import { combine } from "@openlv/core";
+import { make } from "@openlv/core";
 import type { EncryptionKey, SymmetricKey } from "@openlv/core/encryption";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
@@ -206,7 +206,7 @@ export const createSignalingLayer = (
         });
     };
 
-    return combine(emitter, {
+    return make(emitter, {
       type: init.type,
       async setup() {
         setState(SIGNAL_STATE.CONNECTING);

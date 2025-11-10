@@ -41,7 +41,7 @@
   "scripts": {
     "build": "tsc",
     "test": "vitest",
-    "test:install": "pnpx playwright install --with-deps"
+    "test:install": "playwright install --with-deps"
   },
   "dependencies": {
     "@openlv/core": "workspace:*",

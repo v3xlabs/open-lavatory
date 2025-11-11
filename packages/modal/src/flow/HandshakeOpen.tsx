@@ -31,20 +31,21 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   const secondaryBg = "var(--lv-button-secondary-background)";
   const qrBg = "var(--lv-qr-background)";
   const qrColor = "var(--lv-qr-color)";
+
   return (
     <div className="flex flex-col items-center gap-4 px-2">
       <div
         className="w-full space-y-4 rounded-md p-4"
         style={{
-          background: secondaryBg,
+          background: "var(--lv-body-background)",
           border: `1px solid ${secondaryBg}`,
         }}
       >
         {uri && (
           <div
-            className="relative mx-auto flex w-fit items-center justify-center rounded-lg p-4"
+            className="relative mx-auto flex w-fit items-center justify-center rounded-lg p-2"
             style={{
-              background: "var(--lv-body-background)",
+              background: qrBg,
               border: `2px solid ${secondaryBg}`,
             }}
           >
@@ -56,7 +57,6 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
               style={{
                 background: qrBg,
                 color: qrColor,
-                border: `1px solid ${secondaryBg}`,
               }}
             />
           </div>

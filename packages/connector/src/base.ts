@@ -62,22 +62,17 @@ export const openlv = ({
       log("connect");
 
       const modal = await getTriggerModal();
+
       const modalDismissed = new Promise<void>((resolve) => {
         modal?.(provider, theme as never, () => resolve());
       });
 
-      await provider.request({ method: "eth_requestAccounts" });
-
-      log("request completed");
-
-      const connectionCompleted = new Promise((_resolve) => {
-        // modal?.onStartConnection
-        // resolve();
+      const connectionCompleted = new Promise<void>((resolve) => {
         provider.on("status_change", (status) => {
           log("provider_status_change", status);
 
           if (status === "connected") {
-            _resolve({});
+            resolve();
           }
         });
 
@@ -86,9 +81,12 @@ export const openlv = ({
         });
       });
 
-  await Promise.race([modalDismissed, connectionCompleted]);
+      await Promise.race([modalDismissed, connectionCompleted]);
 
-  const accounts = await provider.getAccounts();
+      const accounts = provider.getSession()
+        ? await provider.getAccounts()
+        : [];
+
       const chainId = 1;
 
       log("completing connect() call");

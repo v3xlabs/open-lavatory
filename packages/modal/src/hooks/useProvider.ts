@@ -1,6 +1,7 @@
-import { PROVIDER_STATUS, type ProviderStatus } from "@openlv/provider";
+import type { ProviderStatus } from "@openlv/provider";
 import { useEffect, useState } from "preact/hooks";
 
+import { PROVIDER_STATUS } from "../constants/providerStatus.js";
 import { useModalContext } from "../context.js";
 
 export const useProvider = () => {

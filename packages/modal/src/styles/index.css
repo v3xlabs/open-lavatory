@@ -1,7 +1,7 @@
 @import "tailwindcss";
-@source "../**/*.{ts,tsx}";
 
-@theme {
+:root,
+:host {
     --color-body-background: var(--lv-body-background);
     --radius-radius: var(--lv-border-radius);
 }
@@ -49,6 +49,10 @@
 
 .modal-transition__layer--incoming {
     animation: modal-transition-in 200ms ease-out forwards;
+}
+
+[data-openlv-mode="dark"] img[data-openlv-brand-logo] {
+    filter: invert(1) brightness(1.1);
 }
 
 @keyframes modal-transition-in {

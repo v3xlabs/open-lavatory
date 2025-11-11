@@ -32,6 +32,7 @@ const LoadingSpinner = () => (
 
 const FLOW = {
   CONNECTING: "connecting",
+  CREATING: "creating",
   READY: "ready",
   CONFIRMING: "confirming",
   CONNECTED: "connected",
@@ -84,6 +85,17 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
   return (
     <div style={{ viewTransitionName: "connection-flow" }} className="w-full">
       {match(displayState)
+        .with(FLOW.CREATING, () => (
+          <div className="flex flex-col items-center gap-4 p-6">
+            <LoadingSpinner />
+            <div className="text-center">
+              <h3 className="mb-2 font-semibold text-gray-900 text-lg">
+                Preparing connection
+              </h3>
+              <p className="text-gray-500 text-sm">Generating keys…</p>
+            </div>
+          </div>
+        ))
         .with(FLOW.CONNECTING, () => (
           <div className="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />

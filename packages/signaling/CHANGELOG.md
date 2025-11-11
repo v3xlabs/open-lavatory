@@ -1,5 +1,13 @@
 # @openlv/signaling
 
+## 0.0.1-beta.6
+
+### Patch Changes
+
+- 4078665: Introduce webrtc transport, rework session & provider
+- Updated dependencies [4078665]
+  - @openlv/core@0.0.1-beta.7
+
 ## 0.0.1-beta.5
 
 ### Patch Changes

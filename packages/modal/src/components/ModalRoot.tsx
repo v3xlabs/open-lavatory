@@ -1,6 +1,7 @@
 /** biome-ignore-all lint/a11y/noStaticElementInteractions: overlay requires click to close modal */
 /** biome-ignore-all lint/a11y/useKeyWithClickEvents: escape listener handles keyboard interactions */
 
+import { PROVIDER_STATUS } from "@openlv/provider";
 import classNames from "classnames";
 import {
   useCallback,
@@ -11,7 +12,6 @@ import {
 } from "preact/hooks";
 import { match, P } from "ts-pattern";
 
-import { PROVIDER_STATUS } from "../constants/providerStatus.js";
 import { ConnectionFlow } from "../flow/ConnectionFlow.js";
 import { Disconnected } from "../flow/disconnected/Disconnected.js";
 import { copyToClipboard } from "../hooks/useClipboard.js";
@@ -287,7 +287,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[99999999999999999] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center font-sans md:items-center lg:p-4"
+      className="fixed inset-0 z-[99999999999999] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center font-sans md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root

@@ -1,4 +1,5 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable */
+import type { ThemeConfig } from "@openlv/modal";
 import {
   createProvider,
   type OpenLVProvider,
@@ -13,7 +14,9 @@ import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage">
->;
+> & {
+  theme?: ThemeConfig;
+};
 
 export type OpenLVConnector = CreateConnectorFn<
   OpenLVProvider,
@@ -28,16 +31,11 @@ export type OpenLVConnector = CreateConnectorFn<
 export const openlv = ({
   storage,
   config = {},
+  theme,
 }: OpenLVConnectorParameters = {}) => {
   const provider = createProvider({
     storage,
     config,
-    openModal: async (provider) => {
-      const modal = await getTriggerModal();
-
-      log("loading modal");
-      modal?.(provider, () => {});
-    },
   });
 
   const onDisconnect = async () => {
@@ -63,17 +61,14 @@ export const openlv = ({
     ) => {
       log("connect");
 
-      // const modal = await getTriggerModal();
-      log("loading modal");
+      const modal = await getTriggerModal();
+      const modalDismissed = new Promise<void>((resolve) => {
+        modal?.(provider, theme as never, () => resolve());
+      });
+
       await provider.request({ method: "eth_requestAccounts" });
 
       log("request completed");
-      // modal?.(provider);
-
-      const modalDismissed = new Promise((_resolve) => {
-        // modal?.onClose
-        // resolve();
-      });
 
       const connectionCompleted = new Promise((_resolve) => {
         // modal?.onStartConnection
@@ -91,9 +86,9 @@ export const openlv = ({
         });
       });
 
-      await Promise.race([modalDismissed, connectionCompleted]);
+  await Promise.race([modalDismissed, connectionCompleted]);
 
-      const accounts = await provider.getAccounts();
+  const accounts = await provider.getAccounts();
       const chainId = 1;
 
       log("completing connect() call");
@@ -112,7 +107,6 @@ export const openlv = ({
 
     return {
       ...openlvDetails,
-      foo: "bar",
       connect,
       async disconnect() {
         log("disconnect");
@@ -131,7 +125,6 @@ export const openlv = ({
       async switchChain({ chainId }) {
         log("switchChain", chainId);
 
-        // eslint-disable-next-line no-restricted-syntax
         const chain = chains.find((chain) => chain.id === chainId);
 
         if (!chain) throw new Error(`Chain ${chainId} not found`);

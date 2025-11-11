@@ -28,16 +28,36 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
     return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
   }, []);
 
+  const secondaryBg = "var(--lv-button-secondary-background)";
+  const qrBg = "var(--lv-qr-background)";
+  const qrColor = "var(--lv-qr-color)";
   return (
     <div className="flex flex-col items-center gap-4 px-2">
-      <div className="w-full space-y-4 rounded-md border border-neutral-200 bg-neutral-100 p-4">
+      <div
+        className="w-full space-y-4 rounded-md p-4"
+        style={{
+          background: secondaryBg,
+          border: `1px solid ${secondaryBg}`,
+        }}
+      >
         {uri && (
-          <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-4">
+          <div
+            className="relative mx-auto flex w-fit items-center justify-center rounded-lg p-4"
+            style={{
+              background: "var(--lv-body-background)",
+              border: `2px solid ${secondaryBg}`,
+            }}
+          >
             <button
-              className="h-[200px] w-[200px] cursor-pointer"
+              className="h-[200px] w-[200px] cursor-pointer rounded"
               onClick={handleCopy}
               title="Click to copy connection URL"
               dangerouslySetInnerHTML={{ __html: generateQRCode(uri) }}
+              style={{
+                background: qrBg,
+                color: qrColor,
+                border: `1px solid ${secondaryBg}`,
+              }}
             />
           </div>
         )}
@@ -46,14 +66,22 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="w-full cursor-pointer rounded-lg border border-gray-300 bg-gray-200 px-4 py-2 text-gray-700 text-sm transition hover:bg-gray-300"
+            className="w-full cursor-pointer rounded-lg px-4 py-2 text-sm transition"
+            style={{
+              background: secondaryBg,
+              color: "var(--lv-text-primary)",
+              border: `1px solid ${secondaryBg}`,
+            }}
           >
             Copy Connection URL
           </button>
         </div>
       </div>
-      <div className="w-full">
-        <span>Scan the link above using your mobile wallet.</span>
+      <div
+        className="w-full text-sm"
+        style={{ color: "var(--lv-text-secondary)" }}
+      >
+        <span>Scan the code above using your mobile wallet.</span>
         <br />
         <span>Or copy the link and paste it into your wallet.</span>
       </div>

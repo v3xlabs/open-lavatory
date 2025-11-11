@@ -7,9 +7,9 @@ import { match } from "ts-pattern";
 const styles = tv({
   slots: {
     root: "group relative",
-    box: "cursor-pointer rounded-md transition-colors hover:bg-neutral-200 flex items-center justify-center",
+    box: "cursor-pointer rounded-md transition-colors flex items-center justify-center",
     popover:
-      "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md bg-neutral-100 p-2 shadow-sm group-hover:block",
+      "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md shadow-sm group-hover:block",
     icon: "",
   },
   variants: {
@@ -48,13 +48,29 @@ export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
 
   return (
     <div className={root()}>
-      <div className={box()}>
+      <div
+        className={box()}
+        style={{
+          color: "var(--lv-text-muted)",
+          backgroundColor: "transparent",
+        }}
+      >
         {match(variant)
           .with("icon", () => <LuCircleHelp className={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>
-      <div className={popover()}>{children}</div>
+      <div
+        className={popover()}
+        style={{
+          backgroundColor: "var(--lv-body-background)",
+          color: "var(--lv-text-primary)",
+          padding: "6px 8px",
+          border: "1px solid var(--lv-button-secondary-background)",
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 };

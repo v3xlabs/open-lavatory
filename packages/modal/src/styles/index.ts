@@ -1,13 +1,17 @@
 import "./index.css";
 
-import { buildTheme, type OpenLVTheme } from "../theme/index.js";
-// Import CSS as a string using Vite's ?inline query
+import {
+  buildTheme,
+  DEFAULT_THEME_CONFIG,
+  resolveTheme,
+  type ThemeConfig,
+} from "../theme";
 // @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";
 
 export const ensureStyles = async (
   shadowRoot?: ShadowRoot,
-  theme?: OpenLVTheme,
+  theme?: ThemeConfig,
 ) => {
   // If we have a shadow root, inject styles directly into it
   if (shadowRoot) {
@@ -23,16 +27,13 @@ export const ensureStyles = async (
 
     style.setAttribute("data-openlv-modal", "true");
 
-    if (theme) {
-      const extendedCss = buildTheme(theme);
-      const rootVars = `:root, :host {\n${Object.entries(extendedCss)
-        .map(([key, value]) => `${key}: ${value};`)
-        .join("\n")}\n}`;
+    const { tokens } = resolveTheme(theme ?? DEFAULT_THEME_CONFIG);
+    const vars = buildTheme(tokens);
+    const rootVars = `:root, :host {\n${Object.entries(vars)
+      .map(([key, value]) => `${key}: ${value};`)
+      .join("\n")}\n}`;
 
-      style.textContent = `${rootVars}\n${cssContent}`;
-    } else {
-      style.textContent = cssContent;
-    }
+    style.textContent = `${rootVars}\n${cssContent}`;
 
     shadowRoot.appendChild(style);
   }

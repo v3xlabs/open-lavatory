@@ -23,7 +23,10 @@ export const Header = ({
           $aspect="square"
           $size="md"
         >
-          <LuChevronLeft className="h-6 w-6 text-gray-500" />
+          <LuChevronLeft
+            className="h-6 w-6"
+            style={{ color: "var(--lv-text-muted)" }}
+          />
         </Button>
       ) : (
         <Button
@@ -37,7 +40,10 @@ export const Header = ({
           <LuCircleHelp className="h-5 w-5" />
         </Button>
       )}
-      <h2 className="flex items-center justify-center gap-2 font-semibold text-gray-900 text-lg">
+      <h2
+        className="flex items-center justify-center gap-2 font-semibold text-lg"
+        style={{ color: "var(--lv-text-primary)" }}
+      >
         {title}
       </h2>
       <Button
@@ -49,7 +55,7 @@ export const Header = ({
         $aspect="square"
         $size="md"
       >
-        <LuX className="h-6 w-6 text-gray-500" />
+        <LuX className="h-6 w-6" style={{ color: "var(--lv-text-muted)" }} />
       </Button>
     </div>
   );

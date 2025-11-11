@@ -8,8 +8,13 @@ export type SelectProps = {
 };
 
 export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
+  const borderColor = "var(--lv-button-secondary-background)";
+
   return (
-    <div className="flex divide-x rounded-md border border-gray-300">
+    <div
+      className="flex overflow-hidden rounded-md border"
+      style={{ borderColor }}
+    >
       {options.map(([slug, label]) => (
         <button
           key={slug}
@@ -17,11 +22,21 @@ export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
           onClick={() => onChange(slug)}
           aria-pressed={slug === value}
           className={classNames(
-            "px-4 py-2 font-semibold text-xs transition first:rounded-l-md last:rounded-r-md",
-            slug === value
-              ? "border-blue-500 bg-blue-50 text-blue-600"
-              : "cursor-pointer border-gray-300 text-gray-600 hover:border-gray-400",
+            "px-4 py-2 font-semibold text-xs transition border-l first:border-l-0",
+            slug !== value && "cursor-pointer",
           )}
+          style={
+            slug === value
+              ? {
+                  backgroundColor: "var(--lv-button-secondary-background)",
+                  color: "var(--lv-text-primary)",
+                  borderColor,
+                }
+              : {
+                  color: "var(--lv-text-secondary)",
+                  borderColor,
+                }
+          }
         >
           {label}
         </button>

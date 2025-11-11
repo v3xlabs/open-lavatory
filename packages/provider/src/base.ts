@@ -5,7 +5,7 @@ import {
   type SessionStateObject,
 } from "@openlv/session";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
-import { Provider as OxProvider, Provider } from "ox";
+import { Provider as OxProvider } from "ox";
 import type { EventMap } from "ox/Provider";
 import type { ExtractReturnType } from "ox/RpcSchema";
 import { match } from "ts-pattern";
@@ -77,7 +77,6 @@ export const createProvider = (
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: _parameters.storage });
   const { openModal } = _parameters;
-  let self: OpenLVProvider | undefined;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -172,23 +171,28 @@ export const createProvider = (
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
-          if (openModal && self) {
-            await openModal(self);
+          let provider: OpenLVProvider | undefined;
 
-            // todo await modal dismiss or race connection completed
+          if (oxProvider) {
+            provider = oxProvider as OpenLVProvider;
+          }
+
+          if (openModal && provider) {
+            await openModal(provider);
+
             await new Promise((resolve) => {
-              self?.on("connect", resolve);
-              self?.on("disconnect", resolve);
+              provider?.on("connect", resolve);
+              provider?.on("disconnect", resolve);
             });
 
             return await getAccounts();
-          } else {
-            const x = await start();
-
-            log("x", x);
-
-            return await getAccounts();
           }
+
+          const x = await start();
+
+          log("x", x);
+
+          return await getAccounts();
         })
         .with({ method: "eth_accounts" }, async () => {
           log("eth_accounts");
@@ -225,7 +229,5 @@ export const createProvider = (
     getState: () => ({ status, session: session?.getState() ?? undefined }),
   });
 
-  self = oxProvider as OpenLVProvider;
-
-  return oxProvider;
+  return oxProvider as OpenLVProvider;
 };

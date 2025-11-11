@@ -1,4 +1,4 @@
-import type { ThemeTokensMap } from "./types";
+import type { ThemeTokensMap } from "./types.js";
 
 // Predefined theme token variants for light/dark/system
 export const openlvThemeTokens: ThemeTokensMap = {
@@ -15,14 +15,14 @@ export const openlvThemeTokens: ThemeTokensMap = {
       input: { background: "#FFFFFF", border: "#E2E8F0", text: "#0F172A" },
       button: {
         primary: {
-          background: "#0F172A",
+          background: "#FF6A00",
           color: "#FFFFFF",
           padding: "8px 16px",
-          hoverBackground: "#1E293B",
-          activeBackground: "#0B1220",
+          hoverBackground: "#FF7D1F",
+          activeBackground: "#E76200",
           disabledBackground: "#CBD5E1",
           disabledColor: "#475569",
-          border: "#0F172A",
+          border: "#FF6A00",
         },
         secondary: {
           background: "#E2E8F0",

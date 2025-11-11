@@ -1,4 +1,3 @@
-/* eslint-disable */
 import type { ThemeConfig } from "@openlv/modal";
 import {
   createProvider,

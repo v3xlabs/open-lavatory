@@ -1,16 +1,9 @@
 import { match } from "ts-pattern";
 
-import { PROVIDER_STATUS } from "../../constants/providerStatus.js";
-import { useProvider } from "../../hooks/useProvider.js";
 import { useSession } from "../../hooks/useSession.js";
 
 export const FooterStatus = () => {
   const { status: sessionStatus } = useSession();
-  const { status: providerStatus } = useProvider();
-
-  if ((providerStatus as unknown as string) === PROVIDER_STATUS.DISCONNECTED)
-    return <></>;
-
   const sessionState = sessionStatus?.status;
   const signalState = sessionStatus?.signaling?.state as string | undefined;
 

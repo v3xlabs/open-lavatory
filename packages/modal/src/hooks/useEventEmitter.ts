@@ -1,4 +1,4 @@
-import type EventEmitter from "eventemitter3";
+import type { EventEmitter } from "eventemitter3";
 import { useEffect } from "preact/hooks";
 
 export const useEventEmitter = <

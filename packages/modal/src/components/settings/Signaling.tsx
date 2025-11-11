@@ -1,9 +1,9 @@
-import { useSettings } from "../../hooks/useSettings";
-import { InfoTooltip } from "../../ui/InfoTooltip";
-import { Input } from "../../ui/Input";
-import { MenuGroup } from "../../ui/menu/MenuGroup";
-import { MenuItem } from "../../ui/menu/MenuItem";
-import { Select } from "../../ui/Select";
+import { useSettings } from "../../hooks/useSettings.js";
+import { InfoTooltip } from "../../ui/InfoTooltip.js";
+import { Input } from "../../ui/Input.js";
+import { MenuGroup } from "../../ui/menu/MenuGroup.js";
+import { MenuItem } from "../../ui/menu/MenuItem.js";
+import { Select } from "../../ui/Select.js";
 
 type SignalingProtocol = "MQTT" | "NTFY" | "GUN";
 

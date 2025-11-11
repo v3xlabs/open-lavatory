@@ -1,11 +1,11 @@
-import { SESSION_STATE, SessionStateObject } from "@openlv/session";
+import { SESSION_STATE, type SessionStateObject } from "@openlv/session";
 import { SIGNAL_STATE } from "@openlv/signaling";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { match } from "ts-pattern";
 
-import { UnknownState } from "../components/UnknownState";
-import { useSession } from "../hooks/useSession";
-import { HandshakeOpen } from "./HandshakeOpen";
+import { UnknownState } from "../components/UnknownState.js";
+import { useSession } from "../hooks/useSession.js";
+import { HandshakeOpen } from "./HandshakeOpen.js";
 
 const supportsViewTransitions = () =>
   typeof document !== "undefined" && "startViewTransition" in document;
@@ -62,7 +62,6 @@ const useFlowTransition = (currentState: FlowState) => {
 const reduceState = (state: SessionStateObject | undefined): FlowState =>
   match(state)
     .with({ status: SESSION_STATE.CREATED }, () => FLOW.CONNECTING)
-    .with({ status: SESSION_STATE.READY }, () => FLOW.CONNECTING)
     .with({ status: SESSION_STATE.SIGNALING }, () =>
       match(state?.signaling)
         .with({ state: SIGNAL_STATE.STANDBY }, () => FLOW.CONNECTING)

@@ -1,8 +1,8 @@
 import type { ProviderStorage } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
-import { useEventEmitter } from "./useEventEmitter";
-import { useProvider } from "./useProvider";
+import { useEventEmitter } from "./useEventEmitter.js";
+import { useProvider } from "./useProvider.js";
 
 export const useSettings = () => {
   const { provider } = useProvider();

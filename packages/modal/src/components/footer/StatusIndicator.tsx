@@ -3,8 +3,8 @@ import { SESSION_STATE } from "@openlv/session";
 import { SIGNAL_STATE } from "@openlv/signaling";
 import { match, P } from "ts-pattern";
 
-import { useProvider } from "../../hooks/useProvider";
-import { useSession } from "../../hooks/useSession";
+import { useProvider } from "../../hooks/useProvider.js";
+import { useSession } from "../../hooks/useSession.js";
 
 export const FooterStatus = () => {
   const { status: sessionStatus } = useSession();

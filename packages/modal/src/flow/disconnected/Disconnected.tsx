@@ -1,9 +1,9 @@
 import type { FC } from "preact/compat";
 import { IoIosSettings } from "react-icons/io";
 
-import { useSessionStart } from "../../hooks/useSession";
-import { Button } from "../../ui/Button";
-import { ConnectionGraphic } from "./ConnectionGraphic";
+import { useSessionStart } from "../../hooks/useSession.js";
+import { Button } from "../../ui/Button.js";
+import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
 export const Disconnected: FC<{ onSettings: () => void }> = ({
   onSettings,

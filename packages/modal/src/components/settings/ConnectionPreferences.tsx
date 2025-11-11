@@ -1,8 +1,8 @@
-import { useSettings } from "../../hooks/useSettings";
-import { InfoTooltip } from "../../ui/InfoTooltip";
-import { MenuGroup } from "../../ui/menu/MenuGroup";
-import { MenuItem } from "../../ui/menu/MenuItem";
-import { Toggle } from "../../ui/Toggle";
+import { useSettings } from "../../hooks/useSettings.js";
+import { InfoTooltip } from "../../ui/InfoTooltip.js";
+import { MenuGroup } from "../../ui/menu/MenuGroup.js";
+import { MenuItem } from "../../ui/menu/MenuItem.js";
+import { Toggle } from "../../ui/Toggle.js";
 
 export const ConnectionPreferences = () => {
   const { settings, updateRetainHistory, updateAutoReconnect } = useSettings();

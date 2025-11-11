@@ -12,17 +12,17 @@ import {
 } from "preact/hooks";
 import { match, P } from "ts-pattern";
 
-import { ConnectionFlow } from "../flow/ConnectionFlow";
-import { Disconnected } from "../flow/disconnected/Disconnected";
-import { copyToClipboard } from "../hooks/useClipboard";
-import { useProvider } from "../hooks/useProvider";
-import { usePunchTransition } from "../hooks/usePunchTransition";
-import { useSession } from "../hooks/useSession";
-import { log } from "../utils/log";
-import { Footer } from "./footer/Footer";
-import { Header } from "./Header";
-import { ModalSettings } from "./settings";
-import { UnknownState } from "./UnknownState";
+import { ConnectionFlow } from "../flow/ConnectionFlow.js";
+import { Disconnected } from "../flow/disconnected/Disconnected.js";
+import { copyToClipboard } from "../hooks/useClipboard.js";
+import { useProvider } from "../hooks/useProvider.js";
+import { usePunchTransition } from "../hooks/usePunchTransition.js";
+import { useSession } from "../hooks/useSession.js";
+import { log } from "../utils/log.js";
+import { Footer } from "./footer/Footer.js";
+import { Header } from "./Header.js";
+import { ModalSettings } from "./settings/index.js";
+import { UnknownState } from "./UnknownState.js";
 
 export interface ModalRootProps {
   onClose?: () => void;

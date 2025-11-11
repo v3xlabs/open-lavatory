@@ -1,5 +1,5 @@
-import { OPENLV_ICON_128 } from "../../assets/logo";
-import { FooterStatus } from "./StatusIndicator";
+import { OPENLV_ICON_128 } from "../../assets/logo.js";
+import { FooterStatus } from "./StatusIndicator.js";
 
 export const Footer = () => (
   <>

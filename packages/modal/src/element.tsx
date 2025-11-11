@@ -1,11 +1,11 @@
 import type { OpenLVProvider } from "@openlv/provider";
 import { h, render } from "preact";
 
-import { ModalProvider } from "./context";
-import { ensureStyles } from "./styles";
-import type { OpenLVTheme } from "./theme";
-import { simpleTheme } from "./theme/simple";
-import type { ModalConnectionInterface } from "./types/connection";
+import { ModalProvider } from "./context.js";
+import { ensureStyles } from "./styles/index.js";
+import type { OpenLVTheme } from "./theme/index.js";
+import { simpleTheme } from "./theme/simple.js";
+import type { ModalConnectionInterface } from "./types/connection.js";
 
 export class OpenLVModalElement
   extends HTMLElement

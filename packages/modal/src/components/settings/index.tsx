@@ -1,6 +1,6 @@
-import { ConnectionPreferences } from "./ConnectionPreferences";
-import { SignalingSettings } from "./Signaling";
-import { TransportSettings } from "./Transport";
+import { ConnectionPreferences } from "./ConnectionPreferences.js";
+import { SignalingSettings } from "./Signaling.js";
+import { TransportSettings } from "./Transport.js";
 
 export const ModalSettings = () => (
   <div className="px-4 pb-2">

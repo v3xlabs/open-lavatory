@@ -1,7 +1,7 @@
 import type { FC } from "preact/compat";
 
-import { useProvider } from "../hooks/useProvider";
-import { useSession } from "../hooks/useSession";
+import { useProvider } from "../hooks/useProvider.js";
+import { useSession } from "../hooks/useSession.js";
 
 export const UnknownState: FC<{ state: unknown }> = ({ state }) => {
   const { status: sessionStatus, uri } = useSession();

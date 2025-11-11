@@ -3,8 +3,8 @@ import type { Session, SessionStateObject } from "@openlv/session";
 import { useEffect, useState } from "preact/hooks";
 
 import { log } from "../utils/log.js";
-import { useEventEmitter } from "./useEventEmitter";
-import { useProvider } from "./useProvider";
+import { useEventEmitter } from "./useEventEmitter.js";
+import { useProvider } from "./useProvider.js";
 import { useSettings } from "./useSettings.js";
 
 export const useSession = () => {
@@ -23,13 +23,21 @@ export const useSession = () => {
     setStatus(event);
   });
 
-  useEventEmitter(provider, "status_change", () => {
-    const session = provider?.getSession();
+  useEffect(() => {
+    const onStatusChange = () => {
+      const session = provider?.getSession();
 
-    if (session) {
-      setSession(session);
-    }
-  });
+      if (session) {
+        setSession(session);
+      }
+    };
+
+    provider?.on("status_change", onStatusChange);
+
+    return () => {
+      provider?.off("status_change", onStatusChange);
+    };
+  }, [provider]);
 
   useEffect(() => {
     const onSessionStart = (_session: Session) => {

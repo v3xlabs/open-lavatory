@@ -3,9 +3,9 @@ import { createContext } from "preact";
 import type { FC } from "preact/compat";
 import { useContext } from "preact/hooks";
 
-import { ModalRoot } from "./components/ModalRoot";
-import { ThemeProvider } from "./theme";
-import { simpleTheme } from "./theme/simple";
+import { ModalRoot } from "./components/ModalRoot.js";
+import { ThemeProvider } from "./theme/index.js";
+import { simpleTheme } from "./theme/simple.js";
 
 export type ProviderContextO = {
   provider: OpenLVProvider | undefined;

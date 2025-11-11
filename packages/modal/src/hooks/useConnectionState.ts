@@ -1,6 +1,6 @@
 import { useCallback, useState } from "preact/hooks";
 
-import type { ConnectionInfo, ConnectionState } from "../types/connection";
+import type { ConnectionInfo, ConnectionState } from "../types/connection.js";
 
 export const useConnectionState = (initialState: ConnectionState = "idle") => {
   const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({

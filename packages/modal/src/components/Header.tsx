@@ -1,6 +1,6 @@
 import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
 
-import { Button } from "../ui/Button";
+import { Button } from "../ui/Button.js";
 
 export const Header = ({
   title,

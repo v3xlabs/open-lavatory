@@ -67,10 +67,8 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
     .with({ status: SESSION_STATE.CREATED }, () => FLOW.CREATING)
     .with(
       { status: SESSION_STATE.SIGNALING, signaling: P.select() },
-      (signaling) => {
-        console.log("Matched SIGNALING, signaling object:", signaling);
-
-        return match(signaling)
+      (signaling) =>
+        match(signaling)
           .with({ state: SIGNAL_STATE.STANDBY }, () => FLOW.CONNECTING)
           .with({ state: SIGNAL_STATE.CONNECTING }, () => FLOW.CONNECTING)
           .with({ state: SIGNAL_STATE.READY }, () => FLOW.READY)
@@ -80,32 +78,17 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
             () => FLOW.CONFIRMING,
           )
           .with({ state: SIGNAL_STATE.ENCRYPTED }, () => FLOW.CONNECTED)
-          .otherwise(() => {
-            console.log(
-              "signaling.state fell through to otherwise:",
-              signaling,
-            );
-
-            return FLOW.CONNECTING;
-          });
-      },
+          .otherwise(() => FLOW.CONNECTING),
     )
     .with({ status: SESSION_STATE.READY }, () => FLOW.READY)
     .with({ status: SESSION_STATE.CONNECTED }, () => FLOW.CONNECTED)
     .with({ status: SESSION_STATE.DISCONNECTED }, () => FLOW.DISCONNECTED)
-    .otherwise(() => {
-      console.log("Main match fell through to otherwise");
-
-      return FLOW.ERROR;
-    });
+    .otherwise(() => FLOW.ERROR);
 };
 
 export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
   const { status: sessionStatus } = useSession();
   const { displayState } = useFlowTransition(reduceState(sessionStatus));
-
-  console.log("displayState in ConnectionFlow:", displayState);
-  console.log("FLOW constants:", FLOW);
 
   return (
     <div style={{ viewTransitionName: "connection-flow" }} className="w-full">

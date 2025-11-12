@@ -2,15 +2,15 @@
 /** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
 /** biome-ignore-all lint/suspicious/noConsole: temp */
 
-export type { ModalRootProps } from "./components/ModalRoot";
-export { ModalRoot } from "./components/ModalRoot";
-export { OpenLVModalElement } from "./element";
-export { useConnectionState } from "./hooks/useConnectionState";
+export type { ModalRootProps } from "./components/ModalRoot.js";
+export { ModalRoot } from "./components/ModalRoot.js";
+export { OpenLVModalElement } from "./element.js";
+export { useConnectionState } from "./hooks/useConnectionState.js";
 
-import type { OpenLVProvider } from "../../provider/src";
-import OpenLVModalElementDefault from "./element";
-import { log } from "./utils/log";
-export { OPENLV_ICON_128 } from "./assets/logo";
+import type { OpenLVProvider } from "../../provider/src/index.js";
+import OpenLVModalElementDefault from "./element.js";
+import { log } from "./utils/log.js";
+export { OPENLV_ICON_128 } from "./assets/logo.js";
 
 export const registerOpenLVModal = (tagName = "openlv-modal") => {
   if (typeof window === "undefined") {

@@ -1,6 +1,6 @@
 import type { FC } from "preact/compat";
 
-import { Select } from "./Select";
+import { Select } from "./Select.js";
 
 export type ToggleProps = {
   label: string;

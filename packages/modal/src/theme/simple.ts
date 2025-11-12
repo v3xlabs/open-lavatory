@@ -1,4 +1,4 @@
-import type { OpenLVTheme } from ".";
+import type { OpenLVTheme } from "./index.js";
 
 export const simpleTheme: OpenLVTheme = {
   font: {

@@ -1,6 +1,6 @@
-import { FC, PropsWithChildren } from "preact/compat";
+import type { FC, PropsWithChildren } from "preact/compat";
 
-import { simpleTheme } from "./simple";
+import { simpleTheme } from "./simple.js";
 
 export type OpenLVTheme = Partial<{
   font: {
@@ -42,7 +42,7 @@ const add = (
  * Converts the theme to css variables prefixed with --lv-
  * including nested keys using - notation
  */
-export const buildTheme = (theme: OpenLVTheme, prefix: boolean = true) => {
+export const buildTheme = (theme: OpenLVTheme) => {
   const map = new Map<string, string>();
 
   add(map, "", theme);

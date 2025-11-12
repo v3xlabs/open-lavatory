@@ -1,8 +1,8 @@
 import type { FC } from "preact/compat";
 import { useCallback } from "preact/hooks";
-import QRCode from "qrcode-generator";
+import * as QRCode from "qrcode-generator";
 
-import { useSession } from "../hooks/useSession";
+import { useSession } from "../hooks/useSession.js";
 
 export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   onCopy,

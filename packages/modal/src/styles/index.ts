@@ -1,6 +1,6 @@
 import "./index.css";
 
-import { buildTheme, type OpenLVTheme } from "../theme";
+import { buildTheme, type OpenLVTheme } from "../theme/index.js";
 // Import CSS as a string using Vite's ?inline query
 // @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";

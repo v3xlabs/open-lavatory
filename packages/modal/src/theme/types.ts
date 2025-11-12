@@ -1,4 +1,4 @@
-export type ThemeIdentifier = "openlv" | "retro";
+export type ThemeIdentifier = "openlv";
 export type ThemeMode = "light" | "dark" | "system";
 
 export type OpenLVTheme = Partial<{
@@ -71,20 +71,38 @@ export type OpenLVTheme = Partial<{
   };
 }>;
 
-export type ThemeTokensMap = Partial<{
+export type ThemeTokensMap = {
+  common?: OpenLVTheme;
   light: OpenLVTheme;
   dark: OpenLVTheme;
-  system: OpenLVTheme;
-}>;
+};
 
-export type ThemeConfig =
-  | {
-      theme: "openlv";
-      mode: ThemeMode;
-      tokens?: OpenLVTheme | ThemeTokensMap;
-    }
-  | {
-      theme: "retro";
-      mode?: undefined;
-      tokens?: OpenLVTheme;
-    };
+type HasLight<T extends ThemeTokensMap> = T extends { light: OpenLVTheme }
+  ? true
+  : false;
+
+type HasDark<T extends ThemeTokensMap> = T extends { dark: OpenLVTheme }
+  ? true
+  : false;
+
+export type ModesForTokens<T extends ThemeTokensMap> =
+  HasLight<T> extends true
+    ? HasDark<T> extends true
+      ? ThemeMode
+      : "light"
+    : HasDark<T> extends true
+      ? "dark"
+      : never;
+
+export type ThemeConfig<T extends ThemeTokensMap = ThemeTokensMap> = {
+  theme: ThemeIdentifier;
+  /**
+   * Optional override tokens for the selected theme.
+   * If omitted, defaults will be looked up by `theme`.
+   */
+  tokens?: T;
+  /**
+   * Active mode. Must be compatible with the provided/derived tokens.
+   */
+  mode: ModesForTokens<T>;
+};

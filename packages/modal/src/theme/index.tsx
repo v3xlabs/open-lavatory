@@ -77,24 +77,17 @@ export type {
   ThemeTokensMap,
 };
 
-export type ThemeProviderProps = PropsWithChildren<ThemeConfig>;
+export type ThemeProviderProps<T extends ThemeTokensMap = ThemeTokensMap> =
+  PropsWithChildren<ThemeConfig<T>>;
 
-export const DEFAULT_THEME_CONFIG: ThemeConfig = {
+export const DEFAULT_THEME_CONFIG: ThemeConfig<typeof openlvThemeTokens> = {
   theme: "openlv",
-  mode: "light",
-} as const;
-
-const hasVariantKeys = (value: unknown): value is ThemeTokensMap => {
-  if (!value || typeof value !== "object") {
-    return false;
-  }
-
-  return "light" in value || "dark" in value || "system" in value;
+  tokens: openlvThemeTokens,
+  mode: "system",
 };
 
-const defaultTokens: Record<ThemeIdentifier, OpenLVTheme | ThemeTokensMap> = {
+const defaultTokens: Record<string, ThemeTokensMap> = {
   openlv: openlvThemeTokens,
-  retro: retroTheme,
 };
 
 const getDefaultTokens = (theme: ThemeIdentifier) => defaultTokens[theme];
@@ -132,32 +125,19 @@ const resolveFromVariantMap = (
   return undefined;
 };
 
-export const resolveTheme = (
-  config: ThemeConfig,
-): { tokens: OpenLVTheme; mode?: ThemeMode } => {
-  const { theme, tokens: customTokens } = config;
-  const defaultThemeTokens = getDefaultTokens(theme);
+export const resolveTheme = <T extends ThemeTokensMap>(
+  config: ThemeConfig<T>,
+): { tokens: OpenLVTheme; mode: ThemeMode } => {
+  const { theme, tokens } = config;
+  const baseTokens = (tokens ?? getDefaultTokens(theme)) as ThemeTokensMap;
 
-  return match(theme)
-    .with("openlv", () => {
-      const requestedMode = config.mode ?? "light";
-      const candidate = customTokens ?? defaultThemeTokens;
+  const resolved = resolveFromVariantMap(config.mode, baseTokens);
 
-      if (hasVariantKeys(candidate)) {
-        const resolved = resolveFromVariantMap(requestedMode, candidate);
+  if (!resolved) {
+    throw new Error("Invalid theme configuration: mode does not match tokens");
+  }
 
-        if (resolved) {
-          return resolved;
-        }
-      }
-
-      return { tokens: candidate as OpenLVTheme, mode: requestedMode };
-    })
-    .with("retro", () => ({
-      tokens: (customTokens ?? defaultThemeTokens) as OpenLVTheme,
-      mode: undefined,
-    }))
-    .exhaustive();
+  return resolved;
 };
 
 export const ThemeProvider: FC<ThemeProviderProps> = ({

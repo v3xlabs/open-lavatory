@@ -1,5 +1,11 @@
 # @openlv/core
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- 4078665: Introduce webrtc transport, rework session & provider
+
 ## 0.0.1-beta.6
 
 ### Patch Changes

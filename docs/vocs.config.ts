@@ -148,7 +148,7 @@ export default defineConfig({
     dark: "/openlv_logo_dark.svg",
     light: "/openlv_logo_light.svg",
   },
-  ogImageUrl: "/openlv_banner.png",
+  ogImageUrl: "https://openlv.sh/openlv_banner.png",
   basePath: process.env.DOCS_BASE_PATH || "/",
   vite: {
     plugins: [tailwindcss() as unknown as any],

@@ -5,7 +5,8 @@
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
-    "declarationDir": "dist"
+    "declarationDir": "dist",
+    "module": "NodeNext",
   },
   "include": ["src"]
 }

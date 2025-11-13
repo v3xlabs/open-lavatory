@@ -16,7 +16,12 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   }, [uri, onCopy]);
 
   const generateQRCode = useCallback((uri: string) => {
-    const qr = QRCode(0, "M");
+    // qrcode-generator ships a callable export; depending on bundler interop
+    // it may be exposed as the module default. Normalize here to be safe.
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const QR: any = (QRCode as any).default ?? QRCode;
+
+    const qr = QR(0, "M");
 
     qr.addData(uri);
     qr.make();

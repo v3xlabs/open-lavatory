@@ -20,15 +20,9 @@ export {
 } from "./theme/index.js";
 
 import type { OpenLVProvider } from "@openlv/provider";
-import OpenLVModalElementDefault from "./element.js";
-import { DEFAULT_THEME_CONFIG } from "./theme/index.js";
-import { openlvThemeTokens } from "./theme/openlv.js";
-import { log } from "./utils/log.js";
-export { OPENLV_ICON_128 } from "./assets/logo.js";
 
 import OpenLVModalElementDefault from "./element.js";
-import type { ThemeConfig } from "./theme/index.js";
-import { DEFAULT_THEME_CONFIG } from "./theme/index.js";
+import { DEFAULT_THEME_CONFIG, type ThemeConfig } from "./theme/index.js";
 import { openlvThemeTokens } from "./theme/openlv.js";
 import { log } from "./utils/log.js";
 export { OPENLV_ICON_128 } from "./assets/logo.js";

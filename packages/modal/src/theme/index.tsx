@@ -1,9 +1,6 @@
 import type { FC, PropsWithChildren } from "preact/compat";
-import { match } from "ts-pattern";
 
-import { simpleTheme } from "./simple.js";
 import { openlvThemeTokens } from "./openlv.js";
-import { retroTheme } from "./retro.js";
 import type {
   OpenLVTheme,
   ThemeConfig,

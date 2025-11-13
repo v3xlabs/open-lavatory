@@ -8,7 +8,7 @@ export type ToggleProps = {
   onChange: (value: boolean) => void;
 };
 
-export const Toggle: FC<ToggleProps> = ({ label, value, onChange }) => {
+export const Toggle: FC<ToggleProps> = ({ value, onChange }) => {
   return (
     <Select
       options={[

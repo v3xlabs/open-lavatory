@@ -5,7 +5,7 @@ import {
   DEFAULT_THEME_CONFIG,
   resolveTheme,
   type ThemeConfig,
-} from "../theme";
+} from "../theme/index.js";
 // @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";
 

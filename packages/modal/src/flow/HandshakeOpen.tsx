@@ -18,7 +18,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   const generateQRCode = useCallback((uri: string) => {
     // qrcode-generator ships a callable export as default, but its types are wrong
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const QR: any = (QRCode as any).default ?? QRCode;
+    const QR: any = (QRCode as any).default;
 
     const qr = QR(0, "M");
 

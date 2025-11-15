@@ -3,8 +3,7 @@ import { h, render } from "preact";
 
 import { ModalProvider } from "./context.js";
 import { ensureStyles } from "./styles/index.js";
-import type { OpenLVTheme } from "./theme/index.js";
-import { simpleTheme } from "./theme/simple.js";
+import { DEFAULT_THEME_CONFIG, type ThemeConfig } from "./theme/index.js";
 import type { ModalConnectionInterface } from "./types/connection.js";
 
 export class OpenLVModalElement
@@ -13,15 +12,20 @@ export class OpenLVModalElement
 {
   public onClose?: () => void;
   public provider: OpenLVProvider;
-  public theme: OpenLVTheme;
+  public theme: ThemeConfig;
 
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
 
-  constructor(_provider: OpenLVProvider, _theme: OpenLVTheme = simpleTheme) {
+  constructor(
+    _provider: OpenLVProvider,
+    _theme: ThemeConfig = DEFAULT_THEME_CONFIG,
+    _onClose: () => void = () => {},
+  ) {
     super();
     this.provider = _provider;
     this.theme = _theme;
+    this.onClose = _onClose;
     this.shadow = this.attachShadow({ mode: "open" });
     ensureStyles(this.shadow, this.theme);
   }
@@ -59,6 +63,7 @@ export class OpenLVModalElement
       h(ModalProvider, {
         onClose: this.onClose ?? (() => this.remove()),
         provider: this.provider,
+        theme: this.theme,
       }),
       this.shadow,
     );

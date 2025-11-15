@@ -10,10 +10,10 @@ import { log } from "./utils/log.js";
 const hKey = "test";
 
 const layers: [CreateSignalLayerFn, SignalBaseProperties][] = [
-  [
-    mqtt,
-    { topic: "mytesttopic1111", url: "wss://test.mosquitto.org:8081/mqtt" },
-  ],
+  // [
+  //  mqtt,
+  //   { topic: "mytesttopic1111", url: "wss://test.mosquitto.org:8081/mqtt" },
+  // ],
   [
     mqtt,
     { topic: "mytesttopic1111", url: "wss://mqtt-dashboard.com:8884/mqtt" },

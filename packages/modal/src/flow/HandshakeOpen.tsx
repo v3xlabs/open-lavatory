@@ -20,7 +20,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const QR: any = (QRCode as any).default;
 
-    const qr = QR(0, "M");
+    const qr = QR(0, "M") as QRCode;
 
     qr.addData(uri);
     qr.make();
@@ -34,7 +34,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
         {uri && (
           <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border-2 border-gray-200 bg-gray-50 p-4">
             <button
-              className="flex h-[200px] w-[200px] cursor-pointer items-center justify-center"
+              className="h-[200px] w-[200px] cursor-pointer items-center justify-center"
               onClick={handleCopy}
               title="Click to copy connection URL"
               dangerouslySetInnerHTML={{ __html: generateQRCode(uri) }}

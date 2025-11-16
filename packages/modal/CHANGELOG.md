@@ -1,5 +1,11 @@
 # @openlv/modal
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- 69acf6e: Update imports
+
 ## 0.0.1-beta.6
 
 ### Patch Changes

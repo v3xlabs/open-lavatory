@@ -1,3 +1,5 @@
+import "react-native-url-polyfill/auto";
+import "fast-text-encoding";
 import "react-native-get-random-values";
 
 import * as React from "react";
@@ -30,9 +32,7 @@ export const OpenLVProvider = ({
       if (!g.__openlvRnPolyfillsInstalled) {
         g.__openlvRnPolyfillsInstalled = true;
 
-        Promise.resolve(installOpenLVReactNativePolyfills()).catch((e) => {
-          setError(e);
-        });
+        installOpenLVReactNativePolyfills();
       }
     } catch (e) {
       setError(e);
@@ -49,6 +49,7 @@ export const OpenLVProvider = ({
         await ensureWebCryptoSubtle({ timeoutMs: cryptoTimeoutMs });
 
         const g = getGlobal();
+
         g.__openlvRnCryptoReady = true;
       } catch (e) {
         if (!cancelled) setError(e);

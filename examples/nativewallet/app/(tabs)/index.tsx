@@ -76,8 +76,10 @@ export default function HomeScreen() {
       );
 
       nextSession.emitter.on('state_change', (state) => {
-        setStatus(state.status);
-        appendLog(`state => ${state.status}`);
+        if (typeof state !== "undefined") {
+          appendLog(`session state => ${state.status}`);
+          setStatus(`session: ${state.status}`);
+        }
       });
 
       setSession(nextSession);
@@ -101,7 +103,6 @@ export default function HomeScreen() {
       appendLog('Closing session…');
       await session.close();
       setSession(null);
-      setSessionUrl(null);
       setStatus('idle');
       appendLog('Closed.');
     } catch (e) {

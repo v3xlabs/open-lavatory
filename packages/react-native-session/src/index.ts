@@ -1,14 +1,4 @@
-import "react-native-get-random-values";
-
-import {
-  connectSession as connectSessionBase,
-  createSession as createSessionBase,
-} from "@openlv/session";
-
-import {
-  ensureWebCryptoSubtle,
-  installOpenLVReactNativePolyfills,
-} from "./polyfills.js";
+import { assertOpenLVReady } from "./assert.js";
 
 export {
   ensureWebCryptoSubtle,
@@ -26,25 +16,35 @@ export type {
   SessionState,
   SessionStateObject,
 } from "@openlv/session";
-export { SESSION_STATE } from "@openlv/session";
 
-export const createSession: typeof createSessionBase = async (
-  initParameters,
-  signalLayer,
-  onMessage,
-) => {
-  await installOpenLVReactNativePolyfills();
-  await ensureWebCryptoSubtle();
+export const SESSION_STATE = {
+  CREATED: "created",
+  SIGNALING: "signaling",
+  READY: "ready",
+  CONNECTED: "connected",
+  DISCONNECTED: "disconnected",
+} as const;
 
-  return createSessionBase(initParameters, signalLayer, onMessage);
+type SessionModule = typeof import("@openlv/session");
+
+export const createSession = async (
+  ...args: Parameters<SessionModule["createSession"]>
+): Promise<ReturnType<SessionModule["createSession"]>> => {
+  assertOpenLVReady({ requireCryptoReady: true });
+  const mod = (await import("@openlv/session")) as SessionModule;
+
+  return mod.createSession(...args) as ReturnType<
+    SessionModule["createSession"]
+  >;
 };
 
-export const connectSession: typeof connectSessionBase = async (
-  connectionUrl,
-  onMessage,
-) => {
-  await installOpenLVReactNativePolyfills();
-  await ensureWebCryptoSubtle();
+export const connectSession = async (
+  ...args: Parameters<SessionModule["connectSession"]>
+): Promise<ReturnType<SessionModule["connectSession"]>> => {
+  assertOpenLVReady({ requireCryptoReady: true });
+  const mod = (await import("@openlv/session")) as SessionModule;
 
-  return connectSessionBase(connectionUrl, onMessage);
+  return mod.connectSession(...args) as ReturnType<
+    SessionModule["connectSession"]
+  >;
 };

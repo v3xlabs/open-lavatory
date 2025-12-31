@@ -1,9 +1,8 @@
+import { decode as base64Decode, encode as base64Encode } from "base-64";
 import * as React from "react";
+import PolyfillCrypto from "react-native-webview-crypto";
 
 import { installWebRTCPolyfills } from "./webrtc.js";
-
-// eslint-disable-next-line no-restricted-syntax
-declare const require: undefined | ((id: string) => unknown);
 
 export type EnsureWebCryptoSubtleOptions = {
   timeoutMs?: number;
@@ -11,6 +10,8 @@ export type EnsureWebCryptoSubtleOptions = {
 };
 
 const getGlobal = () => globalThis as unknown as Record<string, unknown>;
+
+const CRYPTO_GRV_BACKUP_KEY = "__openlvRnGetRandomValues";
 
 const getCrypto = () => {
   const g = getGlobal();
@@ -20,6 +21,44 @@ const getCrypto = () => {
   return (g.crypto ?? maybeWindow?.crypto) as
     | undefined
     | Record<string, unknown>;
+};
+
+const restoreUnifiedCrypto = () => {
+  const g = getGlobal();
+
+  const maybeWindow = g.window as undefined | Record<string, unknown>;
+  const windowCrypto = maybeWindow?.crypto as
+    | undefined
+    | Record<string, unknown>;
+
+  const globalCrypto = g.crypto as undefined | Record<string, unknown>;
+
+  // Ensure `globalThis.crypto` exists (many libs only look here).
+  if (!globalCrypto) {
+    g.crypto = {};
+  }
+
+  const targetCrypto = g.crypto as Record<string, unknown>;
+
+  // Restore getRandomValues if a previous value was captured before
+  // another polyfill replaced globalThis.crypto.
+  const backupGetRandomValues = g[CRYPTO_GRV_BACKUP_KEY];
+
+  if (
+    typeof targetCrypto.getRandomValues !== "function" &&
+    typeof backupGetRandomValues === "function"
+  ) {
+    targetCrypto.getRandomValues = backupGetRandomValues;
+  }
+
+  // If WebCrypto landed on window.crypto, copy `subtle` onto global crypto.
+  if (
+    typeof targetCrypto.subtle === "undefined" &&
+    windowCrypto &&
+    typeof windowCrypto.subtle !== "undefined"
+  ) {
+    targetCrypto.subtle = windowCrypto.subtle;
+  }
 };
 
 const hasWebCryptoSubtle = (): boolean => {
@@ -38,70 +77,18 @@ const ensureAtobBtoa = () => {
   const g = getGlobal();
 
   if (typeof g.btoa === "undefined") {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-    g.btoa = (input: string) => {
-      const str = String(input);
-      let output = "";
-
-      for (
-        let block = 0, charCode: number, idx = 0, map = chars;
-        str.charAt(idx | 0) || ((map = "="), idx % 1);
-        output += map.charAt(63 & (block >> (8 - (idx % 1) * 8)))
-      ) {
-        charCode = str.charCodeAt((idx += 3 / 4));
-
-        if (charCode > 0xff) {
-          throw new Error(
-            "@openlv/react-native-session: btoa() only supports Latin1 strings.",
-          );
-        }
-
-        block = (block << 8) | charCode;
-      }
-
-      return output;
-    };
+    g.btoa = (input: string) => base64Encode(input);
   }
 
   if (typeof g.atob === "undefined") {
-    const chars =
-      "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/=";
-
-    g.atob = (input: string) => {
-      const str = String(input).replace(/=+$/, "");
-
-      if (str.length % 4 === 1) {
-        throw new Error("@openlv/react-native-session: Invalid base64 string.");
-      }
-
-      let output = "";
-
-      for (
-        let bc = 0, bs = 0, buffer: number, idx = 0;
-        (buffer = str.charCodeAt(idx++));
-        // biome-ignore lint/suspicious/noAssignInExpressions: intentional
-        ~buffer && ((bs = bc % 4 ? bs * 64 + buffer : buffer), bc++ % 4)
-          ? (output += String.fromCharCode(255 & (bs >> ((-2 * bc) & 6))))
-          : 0
-      ) {
-        buffer = chars.indexOf(String.fromCharCode(buffer));
-      }
-
-      return output;
-    };
+    g.atob = (input: string) => base64Decode(input);
   }
 };
 
 const ensureCryptoRandomUUID = () => {
   const g = getGlobal();
 
-  if (!g.crypto) {
-    throw new Error(
-      "@openlv/react-native-session: globalThis.crypto is missing. Install WebCrypto polyfills (react-native-webview-crypto) and randomness polyfills (react-native-get-random-values).",
-    );
-  }
+  restoreUnifiedCrypto();
 
   const crypto = g.crypto as Record<string, unknown>;
 
@@ -122,7 +109,8 @@ const ensureCryptoRandomUUID = () => {
     bytes[6] = (bytes[6] & 0x0f) | 0x40;
     bytes[8] = (bytes[8] & 0x3f) | 0x80;
 
-    const hex = Array.from(bytes, (b) => b.toString(16).padStart(2, "0"));
+    const toHex = (b: number) => b.toString(16).padStart(2, "0");
+    const hex = Array.from(bytes, toHex);
 
     return (
       hex.slice(0, 4).join("") +
@@ -158,6 +146,19 @@ const ensureMinimumGlobalsForSession = () => {
 
   ensureAtobBtoa();
 
+  // Capture getRandomValues once, so we can restore it later if another
+  // polyfill overwrites `globalThis.crypto`.
+  restoreUnifiedCrypto();
+  const capturedCrypto = g.crypto as undefined | Record<string, unknown>;
+
+  if (
+    typeof g[CRYPTO_GRV_BACKUP_KEY] !== "function" &&
+    capturedCrypto &&
+    typeof capturedCrypto.getRandomValues === "function"
+  ) {
+    g[CRYPTO_GRV_BACKUP_KEY] = capturedCrypto.getRandomValues;
+  }
+
   if (!hasGetRandomValues()) {
     throw new Error(
       "@openlv/react-native-session: crypto.getRandomValues is missing. Wrap your app with <OpenLVProvider> from '@openlv/react-native-session/provider'.",
@@ -173,14 +174,22 @@ export const ensureWebCryptoSubtle = async (
   const timeoutMs = options.timeoutMs ?? 15_000;
   const pollIntervalMs = options.pollIntervalMs ?? 25;
 
-  if (hasWebCryptoSubtle()) return;
+  if (hasWebCryptoSubtle()) {
+    restoreUnifiedCrypto();
+
+    return;
+  }
 
   const start = Date.now();
 
   while (Date.now() - start < timeoutMs) {
     await new Promise((r) => setTimeout(r, pollIntervalMs));
 
-    if (hasWebCryptoSubtle()) return;
+    if (hasWebCryptoSubtle()) {
+      restoreUnifiedCrypto();
+
+      return;
+    }
   }
 
   throw new Error(
@@ -188,7 +197,7 @@ export const ensureWebCryptoSubtle = async (
   );
 };
 
-export const installOpenLVReactNativePolyfills = async (): Promise<void> => {
+export const installOpenLVReactNativePolyfills = (): void => {
   installWebRTCPolyfills();
   ensureMinimumGlobalsForSession();
 };
@@ -196,31 +205,6 @@ export const installOpenLVReactNativePolyfills = async (): Promise<void> => {
 export const OpenLVCryptoPolyfill = (
   props: Record<string, unknown> = {},
 ): React.ReactElement => {
-  if (typeof require !== "function") {
-    throw new Error(
-      "@openlv/react-native-session: OpenLVCryptoPolyfill requires Metro/CJS require().",
-    );
-  }
-
-  let mod: unknown;
-
-  try {
-    mod = require("react-native-webview-crypto");
-  } catch {
-    throw new Error(
-      "@openlv/react-native-session: Missing peer dependency 'react-native-webview-crypto'. Install it (and 'react-native-webview') in your React Native app.",
-    );
-  }
-
-  const PolyfillCrypto =
-    (mod as { default?: unknown }).default ?? (mod as unknown);
-
-  if (typeof PolyfillCrypto !== "function") {
-    throw new Error(
-      "@openlv/react-native-session: react-native-webview-crypto has an unexpected export shape.",
-    );
-  }
-
   return React.createElement(
     PolyfillCrypto as React.ComponentType<Record<string, unknown>>,
     props,

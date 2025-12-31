@@ -42,15 +42,18 @@
     "build": "tsc"
   },
   "dependencies": {
-    "@openlv/session": "workspace:*"
+    "@openlv/session": "workspace:*",
+    "base-64": "^1.0.0",
+    "fast-text-encoding": "^1.0.6",
+    "react-native-get-random-values": "^1.11.0",
+    "react-native-url-polyfill": "^2.0.0",
+    "react-native-webview": "^13.15.0",
+    "react-native-webview-crypto": "^0.0.27",
+    "react-native-webrtc": "^124.0.6"
   },
   "peerDependencies": {
     "react": ">=18",
-    "react-native": ">=0.70",
-    "react-native-get-random-values": "*",
-    "react-native-webrtc": "*",
-    "react-native-webview": "*",
-    "react-native-webview-crypto": "*"
+    "react-native": ">=0.70"
   },
   "devDependencies": {
     "typescript": "^5"

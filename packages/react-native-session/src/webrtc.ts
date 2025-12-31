@@ -2,9 +2,9 @@ export type InstallWebRTCPolyfillsOptions = {
   force?: boolean;
 };
 
-declare const require: undefined | ((id: string) => unknown);
+import * as RNWebRTC from "react-native-webrtc";
 
-type RNWebRTCModule = {
+type RNWebRTCExports = {
   registerGlobals?: () => void;
   RTCPeerConnection?: unknown;
   RTCSessionDescription?: unknown;
@@ -13,16 +13,6 @@ type RNWebRTCModule = {
 };
 
 const getGlobal = () => globalThis as unknown as Record<string, unknown>;
-
-const tryLoadReactNativeWebRTC = (): RNWebRTCModule | undefined => {
-  if (typeof require !== "function") return undefined;
-
-  try {
-    return require("react-native-webrtc") as RNWebRTCModule;
-  } catch {
-    return undefined;
-  }
-};
 
 export const installWebRTCPolyfills = (
   options: InstallWebRTCPolyfillsOptions = {},
@@ -33,39 +23,42 @@ export const installWebRTCPolyfills = (
     return false;
   }
 
-  const mod = tryLoadReactNativeWebRTC();
+  const exports = RNWebRTC as unknown as RNWebRTCExports;
 
-  if (!mod) {
-    throw new Error(
-      "@openlv/react-native-session: Missing peer dependency 'react-native-webrtc'. Install it in your React Native app before calling installWebRTCPolyfills().",
-    );
-  }
+  if (typeof exports.registerGlobals === "function") {
+    exports.registerGlobals();
 
-  if (typeof mod.registerGlobals === "function") {
-    mod.registerGlobals();
     return true;
   }
 
-  if (typeof g.RTCPeerConnection === "undefined" && mod.RTCPeerConnection) {
-    g.RTCPeerConnection = mod.RTCPeerConnection;
+  if (
+    typeof g.RTCPeerConnection === "undefined" &&
+    typeof exports.RTCPeerConnection !== "undefined"
+  ) {
+    g.RTCPeerConnection = exports.RTCPeerConnection;
   }
 
   if (
     typeof g.RTCSessionDescription === "undefined" &&
-    mod.RTCSessionDescription
+    typeof exports.RTCSessionDescription !== "undefined"
   ) {
-    g.RTCSessionDescription = mod.RTCSessionDescription;
+    g.RTCSessionDescription = exports.RTCSessionDescription;
   }
 
-  if (typeof g.RTCIceCandidate === "undefined" && mod.RTCIceCandidate) {
-    g.RTCIceCandidate = mod.RTCIceCandidate;
+  if (
+    typeof g.RTCIceCandidate === "undefined" &&
+    typeof exports.RTCIceCandidate !== "undefined"
+  ) {
+    g.RTCIceCandidate = exports.RTCIceCandidate;
   }
 
-  if (mod.mediaDevices) {
+  if (typeof exports.mediaDevices !== "undefined") {
     const nav = (g.navigator ?? {}) as Record<string, unknown>;
+
     if (typeof nav.mediaDevices === "undefined") {
-      nav.mediaDevices = mod.mediaDevices;
+      nav.mediaDevices = exports.mediaDevices;
     }
+
     g.navigator = nav;
   }
 

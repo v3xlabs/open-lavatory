@@ -15,7 +15,7 @@ import {
   type Session,
 } from '@openlv/react-native-session';
 
-const DUMMY_ADDRESS = '0x0000000000000000000000000000000000000001';
+const DUMMY_ADDRESS = '0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7';
 const DUMMY_SIGNATURE = (`0x${'11'.repeat(65)}`) as const;
 
 const Button = ({

@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "nativewallet",
-    "slug": "nativewallet",
+    "name": "OpenLV",
+    "slug": "openlv-nativewallet",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
@@ -21,10 +21,6 @@
       "package": "sh.openlv.nativewallet",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
-    },
-    "web": {
-      "output": "static",
-      "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
       "expo-router",

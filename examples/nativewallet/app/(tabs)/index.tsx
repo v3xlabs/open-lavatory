@@ -5,6 +5,8 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
 import { ThemedView } from '@/components/themed-view';
+import { Colors } from '@/constants/theme';
+import { useThemeColor } from '@/hooks/use-theme-color';
 
 import {
   connectSession,
@@ -18,10 +20,18 @@ const Button = ({
   title,
   onPress,
   disabled,
+  variant = 'primary',
+  backgroundColor,
+  borderColor,
+  textColor,
 }: {
   title: string;
   onPress: () => void;
   disabled?: boolean;
+  variant?: 'primary' | 'secondary';
+  backgroundColor: string;
+  borderColor: string;
+  textColor: string;
 }) => {
   return (
     <Pressable
@@ -29,11 +39,13 @@ const Button = ({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
+        variant === 'secondary' ? styles.buttonSecondary : null,
+        { backgroundColor, borderColor },
         disabled ? styles.buttonDisabled : null,
         pressed && !disabled ? styles.buttonPressed : null,
       ]}
     >
-      <ThemedText style={styles.buttonText}>{title}</ThemedText>
+      <ThemedText style={[styles.buttonText, { color: textColor }]}>{title}</ThemedText>
     </Pressable>
   );
 };
@@ -43,6 +55,13 @@ export default function HomeScreen() {
   const [status, setStatus] = React.useState<string>('idle');
   const [logLines, setLogLines] = React.useState<string[]>([]);
   const [session, setSession] = React.useState<Session | null>(null);
+
+  const textColor = useThemeColor({}, 'text');
+  const backgroundColor = useThemeColor({}, 'background');
+  const surfaceColor = useThemeColor({}, 'surface');
+  const borderColor = useThemeColor({}, 'border');
+  const mutedTextColor = useThemeColor({}, 'mutedText');
+  const tintColor = useThemeColor({}, 'tint');
 
   const appendLog = React.useCallback((line: string) => {
     setLogLines((prev) => [line, ...prev].slice(0, 50));
@@ -76,7 +95,7 @@ export default function HomeScreen() {
       );
 
       nextSession.emitter.on('state_change', (state) => {
-        if (typeof state !== "undefined") {
+        if (typeof state !== 'undefined') {
           appendLog(`session state => ${state.status}`);
           setStatus(`session: ${state.status}`);
         }
@@ -113,71 +132,94 @@ export default function HomeScreen() {
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: '#A1CEDC', dark: '#1D3D47' }}
+      headerBackgroundColor={{ light: Colors.light.background, dark: Colors.dark.background }}
       headerImage={
         <Image
           source={require('@/assets/images/partial-react-logo.png')}
           style={styles.reactLogo}
         />
       }>
-      <ThemedView>
-        <ThemedText type="title">openlv</ThemedText>
-        <ThemedText type="subtitle" style={{ marginBottom: 16 }}>
+      <ThemedView style={styles.page}>
+        <ThemedText type="title" style={styles.title}>
+          openlv
+        </ThemedText>
+        <ThemedText style={[styles.tagline, { color: mutedTextColor }]}>
           Secure peer-to-peer JSON-RPC connectivity between dApps and wallets because the defacto way to connect your wallet should be private, transparent, and permissionless
         </ThemedText>
 
-        <ThemedText type="subtitle" style={{ marginBottom: 8 }}>
-          Session test (WebRTC + WebCrypto)
-        </ThemedText>
+        <ThemedView
+          lightColor={Colors.light.surface}
+          darkColor={Colors.dark.surface}
+          style={[styles.card, { borderColor }]}
+        >
+          <ThemedText type="subtitle" style={styles.cardTitle}>
+            Session test
+          </ThemedText>
 
-        <ThemedText style={{ marginBottom: 6 }}>
-          Paste an `openlv://...` URL (from the web “Try it out” page)
-        </ThemedText>
-
-        <TextInput
-          value={connectionUrl}
-          onChangeText={setConnectionUrl}
-          autoCapitalize="none"
-          autoCorrect={false}
-          style={styles.input}
-          placeholder="openlv://..."
-        />
-
-        <View style={styles.row}>
-          <Button
-            title={session ? 'Session running' : 'Connect'}
-            onPress={() => {
-              void startSession();
-            }}
-            disabled={!!session}
+          <TextInput
+            value={connectionUrl}
+            onChangeText={setConnectionUrl}
+            autoCapitalize="none"
+            autoCorrect={false}
+            style={[
+              styles.input,
+              {
+                backgroundColor: surfaceColor,
+                borderColor,
+                color: textColor,
+              },
+            ]}
+            placeholder="openlv://..."
+            placeholderTextColor={mutedTextColor}
+            selectionColor={tintColor}
+            cursorColor={tintColor}
           />
-          <Button
-            title="Close"
-            onPress={() => {
-              void closeSession();
-            }}
-            disabled={!session}
-          />
-        </View>
 
-        <ThemedText style={{ marginTop: 10 }}>
-          Status: {status}
-        </ThemedText>
+          <View style={styles.row}>
+            <Button
+              title={session ? 'Session running' : 'Connect'}
+              onPress={() => {
+                void startSession();
+              }}
+              disabled={!!session}
+              variant="primary"
+              backgroundColor={tintColor}
+              borderColor={tintColor}
+              textColor={backgroundColor}
+            />
+            <Button
+              title="Close"
+              onPress={() => {
+                void closeSession();
+              }}
+              disabled={!session}
+              variant="secondary"
+              backgroundColor={surfaceColor}
+              borderColor={borderColor}
+              textColor={textColor}
+            />
+          </View>
 
-        <ThemedText style={{ marginTop: 10, marginBottom: 6 }}>
-          Log
-        </ThemedText>
-        <View style={styles.logBox}>
-          {logLines.length === 0 ? (
-            <ThemedText style={styles.logLine}>No logs yet.</ThemedText>
-          ) : (
-            logLines.map((l, i) => (
-              <ThemedText key={`${i}-${l}`} style={styles.logLine}>
-                {l}
-              </ThemedText>
-            ))
-          )}
-        </View>
+          <ThemedText style={[styles.status, { color: mutedTextColor }]}>
+            Status: <ThemedText type="defaultSemiBold">{status}</ThemedText>
+          </ThemedText>
+
+          <ThemedText type="defaultSemiBold" style={styles.logTitle}>
+            Log
+          </ThemedText>
+          <View style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}
+          >
+            {logLines.length === 0 ? (
+              <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>No logs yet.</ThemedText>
+            ) : (
+              logLines.map((l, i) => (
+                <ThemedText key={`${i}-${l}`} style={styles.logLine}>
+                  {l}
+                </ThemedText>
+              ))
+            )}
+          </View>
+        </ThemedView>
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -191,9 +233,34 @@ const styles = StyleSheet.create({
     left: 0,
     position: 'absolute',
   },
+  page: {
+    flex: 1,
+    gap: 14,
+  },
+  title: {
+    letterSpacing: 0.2,
+  },
+  tagline: {
+    marginTop: -6,
+  },
+  card: {
+    borderWidth: 1,
+    borderRadius: 16,
+    padding: 16,
+    gap: 10,
+  },
+  cardTitle: {
+    marginBottom: 2,
+  },
+  cardSubtitle: {
+    marginTop: -8,
+    marginBottom: 6,
+  },
+  helper: {
+    marginBottom: 2,
+  },
   input: {
     borderWidth: 1,
-    borderColor: '#999',
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 10,
@@ -204,10 +271,15 @@ const styles = StyleSheet.create({
     marginTop: 10,
   },
   button: {
-    backgroundColor: '#1D3D47',
     paddingHorizontal: 14,
     paddingVertical: 10,
     borderRadius: 8,
+    borderWidth: 1,
+    flex: 1,
+    alignItems: 'center',
+  },
+  buttonSecondary: {
+    backgroundColor: 'transparent',
   },
   buttonPressed: {
     opacity: 0.85,
@@ -216,11 +288,16 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    color: '#fff',
+    fontWeight: '600',
+  },
+  status: {
+    marginTop: 4,
+  },
+  logTitle: {
+    marginTop: 6,
   },
   logBox: {
     borderWidth: 1,
-    borderColor: '#999',
     borderRadius: 8,
     padding: 10,
     gap: 6,

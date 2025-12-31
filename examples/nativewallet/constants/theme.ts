@@ -5,25 +5,31 @@
 
 import { Platform } from 'react-native';
 
-const tintColorLight = '#0a7ea4';
-const tintColorDark = '#fff';
+// Brand tokens (openlv): dark-first UI with a warm accent.
+const tintColor = '#FF7A2F';
 
 export const Colors = {
   light: {
     text: '#11181C',
     background: '#fff',
-    tint: tintColorLight,
+    surface: '#F6F7F8',
+    border: '#D0D5DA',
+    mutedText: '#4B5563',
+    tint: tintColor,
     icon: '#687076',
     tabIconDefault: '#687076',
-    tabIconSelected: tintColorLight,
+    tabIconSelected: tintColor,
   },
   dark: {
     text: '#ECEDEE',
-    background: '#151718',
-    tint: tintColorDark,
+    background: '#0B0C0F',
+    surface: '#13151A',
+    border: '#2A2F3A',
+    mutedText: '#9BA1A6',
+    tint: tintColor,
     icon: '#9BA1A6',
     tabIconDefault: '#9BA1A6',
-    tabIconSelected: tintColorDark,
+    tabIconSelected: tintColor,
   },
 };
 

@@ -16,7 +16,9 @@
     "name": "Open-Lavatory",
     "url": "https://github.com/v3xlabs/open-lavatory"
   },
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/provider.js"
+  ],
   "type": "module",
   "exports": {
     ".": {
@@ -39,7 +41,8 @@
   "types": "./dist/index.d.ts",
   "files": ["dist", "README.md"],
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "typecheck": "tsc -p tsconfig.type-tests.json"
   },
   "dependencies": {
     "@openlv/session": "workspace:*",

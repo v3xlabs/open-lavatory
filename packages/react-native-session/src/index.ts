@@ -29,22 +29,18 @@ type SessionModule = typeof import("@openlv/session");
 
 export const createSession = async (
   ...args: Parameters<SessionModule["createSession"]>
-): Promise<ReturnType<SessionModule["createSession"]>> => {
+): Promise<Awaited<ReturnType<SessionModule["createSession"]>>> => {
   assertOpenLVReady({ requireCryptoReady: true });
   const mod = (await import("@openlv/session")) as SessionModule;
 
-  return mod.createSession(...args) as ReturnType<
-    SessionModule["createSession"]
-  >;
+  return mod.createSession(...args);
 };
 
 export const connectSession = async (
   ...args: Parameters<SessionModule["connectSession"]>
-): Promise<ReturnType<SessionModule["connectSession"]>> => {
+): Promise<Awaited<ReturnType<SessionModule["connectSession"]>>> => {
   assertOpenLVReady({ requireCryptoReady: true });
   const mod = (await import("@openlv/session")) as SessionModule;
 
-  return mod.connectSession(...args) as ReturnType<
-    SessionModule["connectSession"]
-  >;
+  return mod.connectSession(...args);
 };

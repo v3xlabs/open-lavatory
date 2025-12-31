@@ -1,0 +1,63 @@
+{
+  "name": "@openlv/react-native-session",
+  "version": "0.0.1-beta.0",
+  "keywords": ["open-lavatory", "react-native"],
+  "homepage": "https://github.com/v3xlabs/open-lavatory",
+  "bugs": {
+    "url": "https://github.com/v3xlabs/open-lavatory/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/v3xlabs/open-lavatory.git",
+    "directory": "packages/react-native-session"
+  },
+  "license": "LGPL-3.0-only",
+  "author": {
+    "name": "Open-Lavatory",
+    "url": "https://github.com/v3xlabs/open-lavatory"
+  },
+  "sideEffects": false,
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "default": "./dist/index.js"
+    },
+    "./provider": {
+      "types": "./dist/provider.d.ts",
+      "import": "./dist/provider.js",
+      "default": "./dist/provider.js"
+    },
+    "./webrtc": {
+      "types": "./dist/webrtc.d.ts",
+      "import": "./dist/webrtc.js",
+      "default": "./dist/webrtc.js"
+    }
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc"
+  },
+  "dependencies": {
+    "@openlv/session": "workspace:*"
+  },
+  "peerDependencies": {
+    "react": ">=18",
+    "react-native": ">=0.70",
+    "react-native-get-random-values": "*",
+    "react-native-webrtc": "*",
+    "react-native-webview": "*",
+    "react-native-webview-crypto": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5"
+  },
+  "packageManager": "pnpm@10.10.0",
+  "publishConfig": {
+    "access": "public",
+    "tag": "beta"
+  }
+}

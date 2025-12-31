@@ -1,6 +1,8 @@
 import { Image } from 'expo-image';
 import * as React from 'react';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import type { BarcodeScanningResult } from 'expo-camera';
+import { Modal, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import ParallaxScrollView from '@/components/parallax-scroll-view';
 import { ThemedText } from '@/components/themed-text';
@@ -55,6 +57,11 @@ export default function HomeScreen() {
   const [status, setStatus] = React.useState<string>('idle');
   const [logLines, setLogLines] = React.useState<string[]>([]);
   const [session, setSession] = React.useState<Session | null>(null);
+  const [scannerOpen, setScannerOpen] = React.useState(false);
+  const [scanned, setScanned] = React.useState(false);
+  const [cameraPermissionGranted, setCameraPermissionGranted] = React.useState(false);
+  const [cameraError, setCameraError] = React.useState<string | null>(null);
+  const [cameraModule, setCameraModule] = React.useState<null | typeof import('expo-camera')>(null);
 
   const textColor = useThemeColor({}, 'text');
   const backgroundColor = useThemeColor({}, 'background');
@@ -130,6 +137,52 @@ export default function HomeScreen() {
     }
   }, [appendLog, session]);
 
+  const openScanner = React.useCallback(async () => {
+    setScanned(false);
+    setCameraError(null);
+
+    if (Platform.OS === 'web') {
+      appendLog('QR scanner is not available on web.');
+      return;
+    }
+
+    setScannerOpen(true);
+
+    try {
+      const mod = (await import('expo-camera')) as typeof import('expo-camera');
+      setCameraModule(mod);
+
+      const res = await mod.Camera.requestCameraPermissionsAsync();
+      if (!res.granted) {
+        setCameraPermissionGranted(false);
+        appendLog('Camera permission denied.');
+        setCameraError('Camera permission denied.');
+        return;
+      }
+
+      setCameraPermissionGranted(true);
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      setCameraPermissionGranted(false);
+      setCameraError(msg);
+      appendLog(`Camera unavailable: ${msg}`);
+    }
+  }, [appendLog]);
+
+  const onScanned = React.useCallback(
+    (result: BarcodeScanningResult) => {
+      if (scanned) return;
+      setScanned(true);
+      const data = String(result.data ?? '').trim();
+      if (data.length === 0) return;
+
+      setConnectionUrl(data);
+      appendLog(`Scanned: ${data}`);
+      setScannerOpen(false);
+    },
+    [appendLog, scanned],
+  );
+
   return (
     <ParallaxScrollView
       headerBackgroundColor={{ light: Colors.light.background, dark: Colors.dark.background }}
@@ -156,24 +209,42 @@ export default function HomeScreen() {
             Session test
           </ThemedText>
 
-          <TextInput
-            value={connectionUrl}
-            onChangeText={setConnectionUrl}
-            autoCapitalize="none"
-            autoCorrect={false}
-            style={[
-              styles.input,
-              {
-                backgroundColor: surfaceColor,
-                borderColor,
-                color: textColor,
-              },
-            ]}
-            placeholder="openlv://..."
-            placeholderTextColor={mutedTextColor}
-            selectionColor={tintColor}
-            cursorColor={tintColor}
-          />
+          <View style={styles.inputRow}>
+            <TextInput
+              value={connectionUrl}
+              onChangeText={setConnectionUrl}
+              autoCapitalize="none"
+              autoCorrect={false}
+              style={[
+                styles.input,
+                styles.inputFlex,
+                {
+                  backgroundColor: surfaceColor,
+                  borderColor,
+                  color: textColor,
+                },
+              ]}
+              placeholder="openlv://..."
+              placeholderTextColor={mutedTextColor}
+              selectionColor={tintColor}
+              cursorColor={tintColor}
+            />
+
+            <Pressable
+              accessibilityRole="button"
+              accessibilityLabel="Scan QR code"
+              onPress={() => {
+                void openScanner();
+              }}
+              style={({ pressed }) => [
+                styles.qrButton,
+                { borderColor, backgroundColor: surfaceColor },
+                pressed ? styles.buttonPressed : null,
+              ]}
+            >
+              <Ionicons name="qr-code-outline" size={20} color={tintColor} />
+            </Pressable>
+          </View>
 
           <View style={styles.row}>
             <Button
@@ -220,6 +291,71 @@ export default function HomeScreen() {
             )}
           </View>
         </ThemedView>
+
+        <Modal
+          visible={scannerOpen}
+          animationType="slide"
+          presentationStyle="fullScreen"
+          onRequestClose={() => {
+            setScannerOpen(false);
+          }}
+        >
+          <ThemedView style={[styles.scannerScreen, { backgroundColor }]}
+          >
+            <View style={[styles.scannerTopBar, { borderColor }]}>
+              <ThemedText type="defaultSemiBold">Scan QR</ThemedText>
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel="Close scanner"
+                onPress={() => {
+                  setScannerOpen(false);
+                }}
+                style={({ pressed }) => [
+                  styles.scannerClose,
+                  { borderColor, backgroundColor: surfaceColor },
+                  pressed ? styles.buttonPressed : null,
+                ]}
+              >
+                <Ionicons name="close" size={18} color={textColor} />
+              </Pressable>
+            </View>
+
+            <View style={[styles.scannerFrame, { borderColor }]}>
+              {cameraError ? (
+                <View style={styles.scannerMessage}>
+                  <ThemedText type="defaultSemiBold">Scanner unavailable</ThemedText>
+                  <ThemedText style={[styles.scannerMessageBody, { color: mutedTextColor }]}>
+                    {cameraError}
+                  </ThemedText>
+                  <ThemedText style={[styles.scannerMessageBody, { color: mutedTextColor }]}>
+                    If you’re using a custom dev client, rebuild it after installing expo-camera.
+                  </ThemedText>
+                </View>
+              ) : !cameraModule || !cameraPermissionGranted ? (
+                <View style={styles.scannerMessage}>
+                  <ThemedText style={[styles.scannerMessageBody, { color: mutedTextColor }]}>
+                    Requesting camera…
+                  </ThemedText>
+                </View>
+              ) : (
+                (() => {
+                  const CameraViewComponent = cameraModule.CameraView;
+                  return (
+                    <CameraViewComponent
+                      style={styles.camera}
+                      onBarcodeScanned={onScanned}
+                      barcodeScannerSettings={{ barcodeTypes: ['qr'] }}
+                    />
+                  );
+                })()
+              )}
+            </View>
+
+            <ThemedText style={[styles.scannerHint, { color: mutedTextColor }]}>
+              Point the camera at an openlv QR code.
+            </ThemedText>
+          </ThemedView>
+        </Modal>
       </ThemedView>
     </ParallaxScrollView>
   );
@@ -265,6 +401,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 10,
   },
+  inputRow: {
+    flexDirection: 'row',
+    gap: 10,
+    alignItems: 'stretch',
+  },
+  inputFlex: {
+    flex: 1,
+  },
+  qrButton: {
+    width: 44,
+    borderRadius: 8,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   row: {
     flexDirection: 'row',
     gap: 10,
@@ -304,5 +455,47 @@ const styles = StyleSheet.create({
   },
   logLine: {
     fontSize: 12,
+  },
+  scannerScreen: {
+    flex: 1,
+    padding: 16,
+    gap: 12,
+  },
+  scannerTopBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+  },
+  scannerClose: {
+    width: 40,
+    height: 40,
+    borderRadius: 10,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scannerFrame: {
+    flex: 1,
+    borderRadius: 16,
+    overflow: 'hidden',
+    borderWidth: 1,
+  },
+  camera: {
+    flex: 1,
+  },
+  scannerHint: {
+    textAlign: 'center',
+  },
+  scannerMessage: {
+    flex: 1,
+    padding: 16,
+    gap: 10,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scannerMessageBody: {
+    textAlign: 'center',
   },
 });

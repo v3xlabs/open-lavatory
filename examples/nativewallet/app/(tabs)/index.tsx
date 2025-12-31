@@ -15,7 +15,7 @@ import {
   type Session,
 } from '@openlv/react-native-session';
 
-const DUMMY_ADDRESS = '0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7';
+const DUMMY_ADDRESS = '0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7'.toLowerCase();
 const DUMMY_SIGNATURE = (`0x${'11'.repeat(65)}`) as const;
 
 const Button = ({
@@ -90,14 +90,14 @@ export default function HomeScreen() {
           const req = message as { method?: string; params?: unknown };
 
           if (req.method === 'eth_accounts' || req.method === 'eth_requestAccounts') {
-            return { result: [DUMMY_ADDRESS] };
+            return [DUMMY_ADDRESS];
           }
 
           if (req.method === 'personal_sign') {
-            return { result: DUMMY_SIGNATURE };
+            return DUMMY_SIGNATURE;
           }
 
-          return { result: 'ok' };
+          return 'ok';
         },
       );
 

@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { OpenLVProvider } from '@openlv/react-native-session';
+import { OpenLVProvider } from '@openlv/react-native';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 

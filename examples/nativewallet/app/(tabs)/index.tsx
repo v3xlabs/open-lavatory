@@ -13,7 +13,7 @@ import { useThemeColor } from '@/hooks/use-theme-color';
 import {
   connectSession,
   type Session,
-} from '@openlv/react-native-session';
+} from '@openlv/react-native';
 
 const DUMMY_ADDRESS = '0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7'.toLowerCase();
 const DUMMY_SIGNATURE = (`0x${'11'.repeat(65)}`) as const;

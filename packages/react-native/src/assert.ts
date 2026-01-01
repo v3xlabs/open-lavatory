@@ -11,13 +11,13 @@ export const assertOpenLVReady = (
 
   if (!g.__openlvRnProviderMounted) {
     throw new Error(
-      "@openlv/react-native-session: OpenLVProvider is not mounted. Wrap your app with <OpenLVProvider> from '@openlv/react-native-session/provider'.",
+      "@openlv/react-native: OpenLVProvider is not mounted. Wrap your app with <OpenLVProvider> from '@openlv/react-native/provider'.",
     );
   }
 
   if (typeof g.RTCPeerConnection === "undefined") {
     throw new Error(
-      "@openlv/react-native-session: WebRTC globals are missing (RTCPeerConnection). Ensure react-native-webrtc is available and OpenLVProvider has mounted.",
+      "@openlv/react-native: WebRTC globals are missing (RTCPeerConnection). Ensure react-native-webrtc is available and OpenLVProvider has mounted.",
     );
   }
 
@@ -28,13 +28,13 @@ export const assertOpenLVReady = (
 
   if (!crypto || typeof crypto.getRandomValues !== "function") {
     throw new Error(
-      "@openlv/react-native-session: crypto.getRandomValues is missing. Ensure OpenLVProvider is mounted (it loads react-native-get-random-values).",
+      "@openlv/react-native: crypto.getRandomValues is missing. Ensure OpenLVProvider is mounted (it loads react-native-get-random-values).",
     );
   }
 
   if (options.requireCryptoReady && typeof crypto.subtle === "undefined") {
     throw new Error(
-      "@openlv/react-native-session: WebCrypto is not ready (crypto.subtle missing). Ensure OpenLVProvider has mounted; the WebView crypto bridge may still be initializing.",
+      "@openlv/react-native: WebCrypto is not ready (crypto.subtle missing). Ensure OpenLVProvider has mounted; the WebView crypto bridge may still be initializing.",
     );
   }
 };

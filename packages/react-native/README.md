@@ -1,4 +1,4 @@
-# @openlv/react-native-session
+# @openlv/react-native
 
 A lightweight React Native shim around `@openlv/session`.
 
@@ -21,7 +21,7 @@ This package expects you to install the native dependency in your React Native a
 Wrap your app once:
 
 ```tsx
-import { OpenLVProvider } from "@openlv/react-native-session/provider";
+import { OpenLVProvider } from "@openlv/react-native/provider";
 
 export function App() {
   return (
@@ -35,17 +35,12 @@ export function App() {
 Then use it like `@openlv/session` (no extra polyfill calls):
 
 ```ts
-import { connectSession } from "@openlv/react-native-session";
+import { connectSession } from "@openlv/react-native";
 
 const session = await connectSession("openlv://...", async (msg) => {
   // ...handle requests...
-  return { result: "ok" };
+  return "ok";
 });
 
 await session.connect();
 ```
-
-## Notes
-
-- `react-native-webview-crypto` requires rendering a component (the provider handles this).
-- If native dependencies are missing, the provider will throw a clear error at startup.

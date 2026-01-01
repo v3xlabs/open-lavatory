@@ -96,7 +96,7 @@ const ensureCryptoRandomUUID = () => {
 
   if (typeof crypto.getRandomValues !== "function") {
     throw new Error(
-      "@openlv/react-native-session: crypto.getRandomValues is missing. Wrap your app with <OpenLVProvider> from '@openlv/react-native-session/provider'.",
+      "@openlv/react-native: crypto.getRandomValues is missing. Wrap your app with <OpenLVProvider> from '@openlv/react-native/provider'.",
     );
   }
 
@@ -131,7 +131,7 @@ const ensureMinimumGlobalsForSession = () => {
 
   if (typeof g.URL === "undefined") {
     throw new Error(
-      "@openlv/react-native-session: global URL is missing. Install a URL polyfill (e.g. 'react-native-url-polyfill') or use an environment that provides URL.",
+      "@openlv/react-native: global URL is missing. Install a URL polyfill (e.g. 'react-native-url-polyfill') or use an environment that provides URL.",
     );
   }
 
@@ -140,7 +140,7 @@ const ensureMinimumGlobalsForSession = () => {
     typeof g.TextDecoder === "undefined"
   ) {
     throw new Error(
-      "@openlv/react-native-session: TextEncoder/TextDecoder are missing. Use Hermes/modern RN, or add a polyfill (e.g. 'fast-text-encoding').",
+      "@openlv/react-native: TextEncoder/TextDecoder are missing. Use Hermes/modern RN, or add a polyfill (e.g. 'fast-text-encoding').",
     );
   }
 
@@ -161,7 +161,7 @@ const ensureMinimumGlobalsForSession = () => {
 
   if (!hasGetRandomValues()) {
     throw new Error(
-      "@openlv/react-native-session: crypto.getRandomValues is missing. Wrap your app with <OpenLVProvider> from '@openlv/react-native-session/provider'.",
+      "@openlv/react-native: crypto.getRandomValues is missing. Wrap your app with <OpenLVProvider> from '@openlv/react-native/provider'.",
     );
   }
 
@@ -193,7 +193,7 @@ export const ensureWebCryptoSubtle = async (
   }
 
   throw new Error(
-    "@openlv/react-native-session: WebCrypto is not ready (crypto.subtle missing). Wrap your app with <OpenLVProvider> from '@openlv/react-native-session/provider' (or render <OpenLVCryptoPolyfill /> manually) and ensure 'react-native-webview' + 'react-native-webview-crypto' are installed.",
+    "@openlv/react-native: WebCrypto is not ready (crypto.subtle missing). Wrap your app with <OpenLVProvider> from '@openlv/react-native/provider' (or render <OpenLVCryptoPolyfill /> manually) and ensure 'react-native-webview' + 'react-native-webview-crypto' are installed.",
   );
 };
 

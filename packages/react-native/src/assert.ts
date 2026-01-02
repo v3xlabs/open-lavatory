@@ -11,7 +11,7 @@ export const assertOpenLVReady = (
 
   if (!g.__openlvRnProviderMounted) {
     throw new Error(
-      "@openlv/react-native: OpenLVProvider is not mounted. Wrap your app with <OpenLVProvider> from '@openlv/react-native/provider'.",
+      "@openlv/react-native: OpenLVProvider is not mounted. Wrap your OpenLV-related code with <OpenLVProvider> from '@openlv/react-native/provider'.",
     );
   }
 

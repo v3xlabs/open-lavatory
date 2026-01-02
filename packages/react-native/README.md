@@ -18,7 +18,7 @@ This package expects you to install the native dependency in your React Native a
 
 ## Usage
 
-Wrap your app once:
+Include the provider around the parts of your app that use OpenLV:
 
 ```tsx
 import { OpenLVProvider } from "@openlv/react-native/provider";

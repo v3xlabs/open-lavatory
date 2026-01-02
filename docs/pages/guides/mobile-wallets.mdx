@@ -14,3 +14,57 @@ This is something we are working to address, however due to how phones operate w
 
 A potential approach to circumvent this is to use the signaling layer as a mailbox / push service, however this is yet to be explored.
 Your input would be greatly appreciated.
+
+## Implementing a Mobile Wallet with React Native
+
+You can use the `@openlv/react-native` package to implement a mobile wallet in your React Native application. This package works similarly to `@openlv/session` but includes all compatibility layers needed for React Native.
+
+Below is a simple example of setting up a mobile wallet using `@openlv/react-native` in an Expo application:
+
+```tsx
+import React from "react";
+import { OpenLVProvider } from "@openlv/react-native/provider";
+import { connectSession } from "@openlv/react-native";
+import { View, Text, Button } from "react-native";
+
+export default function App() {
+  const [session, setSession] = React.useState<any>(null);
+
+  const startSession = async () => {
+    const newSession = await connectSession("openlv://...", async (msg) => {
+      // Handle incoming requests from dApps
+      return "ok";
+    });
+    await newSession.connect();
+    setSession(newSession);
+  };
+
+  return (
+    <OpenLVProvider>
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>OpenLV Mobile Wallet</Text>
+        <Button title="Start Session" onPress={startSession} />
+        {session && <Text>Session Connected!</Text>}
+      </View>
+    </OpenLVProvider>
+  );
+}
+```
+
+This example demonstrates how to:
+
+- Set up a basic mobile wallet
+- Connect to dApps using the OpenLV protocol
+- Handle incoming requests from dApps via the `connectSession` function
+
+The `OpenLVProvider` wraps the application and provides the necessary context for OpenLV functionality.
+
+## Side Effects of Using the Provider
+
+The `OpenLVProvider` installs several polyfills to ensure compatibility with React Native environments:
+
+- `react-native-webrtc`
+- `react-native-webview-crypto`
+- `react-native-get-random-values`
+
+These polyfills override certain global objects (e.g., `window.crypto`), but they are installed only once and cleaned up when the provider is unmounted. They should not interfere with other WebRTC or WebCrypto polyfills in your app.

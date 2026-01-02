@@ -90,14 +90,14 @@ export default function HomeScreen() {
           const req = message as { method?: string; params?: unknown };
 
           if (req.method === 'eth_accounts' || req.method === 'eth_requestAccounts') {
-            return [DUMMY_ADDRESS];
+            return [DUMMY_ADDRESS]
           }
 
           if (req.method === 'personal_sign') {
             return DUMMY_SIGNATURE;
           }
 
-          return 'ok';
+          return "Unsupported method";
         },
       );
 

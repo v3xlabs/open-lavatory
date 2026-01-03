@@ -3,4 +3,3 @@ packages:
   - examples/*
   - tests
   - docs
-nodeLinker: hoisted

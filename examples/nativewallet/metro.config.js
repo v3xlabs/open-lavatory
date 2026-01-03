@@ -15,7 +15,6 @@ config.resolver.unstable_enableSymlinks = true;
 config.resolver.extraNodeModules = {
   ...(config.resolver.extraNodeModules ?? {}),
   react: path.join(workspaceRoot, 'node_modules/react'),
-  'react-dom': path.join(workspaceRoot, 'node_modules/react-dom'),
   'react-native': path.join(workspaceRoot, 'node_modules/react-native'),
 };
 

@@ -1,7 +1,10 @@
 {
   "name": "@openlv/react-native",
   "version": "0.0.1-beta.0",
-  "keywords": ["open-lavatory", "react-native"],
+  "keywords": [
+    "open-lavatory",
+    "react-native"
+  ],
   "homepage": "https://github.com/v3xlabs/open-lavatory",
   "bugs": {
     "url": "https://github.com/v3xlabs/open-lavatory/issues"
@@ -39,7 +42,10 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
-  "files": ["dist", "README.md"],
+  "files": [
+    "dist",
+    "README.md"
+  ],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc -p tsconfig.type-tests.json"
@@ -50,15 +56,16 @@
     "fast-text-encoding": "^1.0.6",
     "react-native-get-random-values": "^1.11.0",
     "react-native-url-polyfill": "^2.0.0",
+    "react-native-webrtc": "^124.0.6",
     "react-native-webview": "^13.15.0",
-    "react-native-webview-crypto": "^0.0.27",
-    "react-native-webrtc": "^124.0.6"
+    "react-native-webview-crypto": "^0.0.27"
   },
   "peerDependencies": {
     "react": ">=18",
     "react-native": ">=0.70"
   },
   "devDependencies": {
+    "@types/react": "19.1.4",
     "typescript": "^5"
   },
   "packageManager": "pnpm@10.10.0",

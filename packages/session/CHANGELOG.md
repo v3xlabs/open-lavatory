@@ -1,5 +1,11 @@
 # @openlv/session
 
+## 0.0.1-beta.8
+
+### Patch Changes
+
+- 592d1c2: Update transport type to allow for string or object
+
 ## 0.0.1-beta.7
 
 ### Patch Changes

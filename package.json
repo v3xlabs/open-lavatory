@@ -5,7 +5,7 @@
   "license": "LGPL-3.0-only",
   "type": "module",
   "scripts": {
-    "build": "pnpm -r --filter !@openlv/example-dapp --filter !@openlv/sandbox --filter !@openlv/example-wallet --filter !@openlv/extension --filter !docs build",
+    "build": "pnpm -r --filter !@openlv/example-react-dapp --filter !@openlv/sandbox --filter !@openlv/example-react-wallet --filter !@openlv/extension --filter !docs build",
     "changeset": "changeset",
     "changeset:publish": "changeset publish",
     "changeset:version": "changeset version && pnpm install --ignore-scripts",

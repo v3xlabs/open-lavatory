@@ -1,5 +1,5 @@
 {
-  "name": "nativewallet",
+  "name": "@openlv/example-react-native",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {

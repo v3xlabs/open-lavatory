@@ -15,10 +15,6 @@ export default defineConfig({
   },
   sidebar: [
     {
-      text: "Getting Started",
-      link: "/getting-started",
-    },
-    {
       text: "How it works",
       link: "/how",
     },
@@ -34,8 +30,8 @@ export default defineConfig({
       text: "Guides",
       items: [
         {
-          text: "Introduction",
-          link: "/guides/intro",
+          text: "Getting Started",
+          link: "/getting-started",
         },
         {
           text: "Configuration",
@@ -45,10 +41,6 @@ export default defineConfig({
           text: "Theming",
           link: "/guides/theme",
         },
-        {
-          text: "Mobile Wallets",
-          link: "/guides/mobile-wallets",
-        },
       ],
     },
     {
@@ -57,6 +49,10 @@ export default defineConfig({
         {
           text: "Introduction",
           link: "/wallets",
+        },
+        {
+          text: "Mobile Wallets",
+          link: "/wallets/react-native",
         },
         {
           text: "Migrating from WalletConnect",

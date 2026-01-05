@@ -3,3 +3,27 @@
 :::info
 TODO: This page has not been written yet.
 :::
+
+## Creating a session
+
+```typescript
+import { createSession } from "@openlv/session";
+
+const session = await createSession({
+  sessionId: "mytestsession111",
+  p: "ntfy",
+  s: "https://ntfy.sh/",
+});
+
+await session.connect();
+```
+
+## Connecting to a session
+
+```typescript
+import { connectSession } from "@openlv/session";
+
+const session = await connectSession("openlv://...");
+
+await session.connect();
+```

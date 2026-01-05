@@ -1,0 +1,96 @@
+# Mobile Wallets
+
+Open Lavatory is implemented to be as platform agnostic as possible.
+To use openlv in react-native you can use the `@openlv/react-native` package.
+This package is a lightweight shim around `@openlv/session` packing a provider and the necessary polyfills.
+
+## Installation
+
+:::code-group
+
+```bash [npm]
+npm install @openlv/react-native
+```
+
+```bash [pnpm]
+pnpm install @openlv/react-native
+```
+
+```bash [yarn]
+yarn install @openlv/react-native
+```
+
+```bash [bun]
+bun install @openlv/react-native
+```
+
+:::
+
+## Implementation
+
+Below is a simple example of using `@openlv/react-native` in a react-native app
+
+```tsx [App.tsx]
+import React from "react";
+import { OpenLVProvider } from "@openlv/react-native/provider";  // [!code ++]
+import { connectSession } from "@openlv/react-native";  // [!code ++]
+import { View, Text, Button } from "react-native";
+
+export default function App() {
+  const [session, setSession] = React.useState<any>(null);
+
+  const startSession = async () => {
+    const newSession = await connectSession("openlv://...", async (msg) => {  // [!code ++]
+      // Handle incoming requests from dApps  // [!code ++]
+      return "ok"; // [!code ++]
+    }); // [!code ++]
+    await newSession.connect(); // [!code ++]
+    setSession(newSession); // [!code ++]
+  };
+
+  return (
+    <OpenLVProvider> // [!code ++]
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>OpenLV Mobile Wallet</Text>
+        <Button title="Start Session" onPress={startSession} />
+        {session && <Text>Session Connected!</Text>}
+      </View>
+    </OpenLVProvider> // [!code ++]
+  );
+}
+```
+
+This example demonstrates how to:
+
+- Set up a basic mobile wallet
+- Connect to dApps using the OpenLV protocol
+- Handle incoming requests from dApps via the `connectSession` function
+
+The `OpenLVProvider` wraps the application and provides the necessary context for OpenLV functionality.
+
+### Provider side effects
+
+The `OpenLVProvider` comes bundled with several polyfills to ensure compatibility:
+
+- `react-native-webrtc`
+- `react-native-webview-crypto`
+- `react-native-get-random-values`
+
+These polyfills override certain global objects (e.g., `window.crypto`), and are installed only once and cleaned up when the provider is unmounted.
+
+## Mobile Platform Considerations
+
+:::note
+
+Due to the nature of how the openlv protocol works, a persistent connection is required for transport.
+Thus, it is required to keep the wallet open in order to interact with a dApp.
+
+:::
+
+### Future Considerations
+
+As a result of the above, the mobile wallet paired with mobile-dapp experience is not ideal.
+This is something we are working to address, however due to how phones operate would this would require services such as [APN](https://developer.apple.com/documentation/usernotifications), [FCM](https://firebase.google.com/docs/cloud-messaging/android/client).
+
+A potential approach to circumvent this is to use the signaling layer as a mailbox / push service, however this is yet to be explored.
+Your input would be greatly appreciated.

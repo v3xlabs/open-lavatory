@@ -76,7 +76,7 @@ export type Session = {
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: CreateSignalLayerFn,
-  onMessage: (message: object) => Promise<object>,
+  onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
   const messages = new EventEmitter<{ message: SessionMessage }>();
@@ -314,7 +314,7 @@ export const createSession = async (
  */
 export const connectSession = async (
   connectionUrl: string,
-  onMessage: (message: object) => Promise<object>,
+  onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 

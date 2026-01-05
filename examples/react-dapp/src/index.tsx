@@ -5,8 +5,8 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { WagmiProvider } from 'wagmi';
 
-import { config } from '../lib/wagmi';
-import { App } from './App';
+import { config } from '../lib/wagmi.ts';
+import { App } from './App.tsx';
 
 const queryClient = new QueryClient();
 

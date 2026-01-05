@@ -18,7 +18,7 @@
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
       },
-      "package": "sh.openlv.nativewallet",
+      "package": "sh.openlv.example.nativewallet",
       "edgeToEdgeEnabled": true,
       "predictiveBackGestureEnabled": false
     },

@@ -10,7 +10,7 @@ import {
 } from 'wagmi';
 import { arbitrum, base, mainnet, optimism, polygon, sepolia } from 'wagmi/chains';
 
-import { ConnectorCard } from './components/ConnectorCard';
+import { ConnectorCard } from './components/ConnectorCard.tsx';
 
 interface WalletInfo {
     address: string;

@@ -46,23 +46,25 @@ Open Lavatory Protocol eliminates centralized relay servers by enabling direct p
 
 This repository includes the following packages:
 
-| Package                              | Description                                         |
-| ------------------------------------ | --------------------------------------------------- |
-| [@openlv/session](./packages/session) | a session represents a connection between dApp and wallet   |
-| [@openlv/signaling](./packages/signaling) | Implementation of various signaling layers   |
-| [@openlv/transport](./packages/transport) | Implementation of various transport layers   |
-| [@openlv/provider](./packages/provider) | EIP-1193 compatible provider    |
-| [@openlv/core](./packages/core) | shared types and utilities   |
-| [@openlv/modal](./packages/modal) | preact modal for dApp connection management   |
-| [@openlv/connector](./packages/connector) | Wagmi connector for dApp integration                |
-| [WIP] [extension](./packages/extension) | Browser extension for improved dApp support              |
+| Package                                         | Description                                               |
+| ----------------------------------------------- | --------------------------------------------------------- |
+| [@openlv/session](./packages/session)           | a session represents a connection between dApp and wallet |
+| [@openlv/signaling](./packages/signaling)       | Implementation of various signaling layers                |
+| [@openlv/transport](./packages/transport)       | Implementation of various transport layers                |
+| [@openlv/provider](./packages/provider)         | EIP-1193 compatible provider                              |
+| [@openlv/core](./packages/core)                 | shared types and utilities                                |
+| [@openlv/modal](./packages/modal)               | preact modal for dApp connection management               |
+| [@openlv/connector](./packages/connector)       | Wagmi connector for dApp integration                      |
+| [@openlv/react-native](./packages/react-native) | react-native compatibility                                |
+| [WIP] [extension](./packages/extension)         | Browser extension for improved dApp support               |
 
-| Examples                             | Description                                         |
-| ------------------------------------ | --------------------------------------------------- |
-| [sandbox](./examples/sandbox)     | Interactive testing environment with debug features |
-| [wallet](./examples/wallet)       | Sample wallet implementation for testing            |
-| [dapp](./examples/dapp)           | Wagmi-based dApp sandbox for end-to-end testing     |
-| [docs](./docs)           | Documentation includes a running wagmi demo     |
+| Examples                                | Description                                               |
+| --------------------------------------- | --------------------------------------------------------- |
+| [sandbox](./examples/sandbox)           | Interactive testing environment with debug features       |
+| [wallet](./examples/react-wallet)       | Sample wallet implementation for testing                  |
+| [dapp](./examples/react-dapp)           | Wagmi-based dApp sandbox for end-to-end testing           |
+| [react-native](./examples/react-native) | React Native wallet implementation for end-to-end testing |
+| [docs](./docs)                          | Documentation includes a running wagmi demo               |
 
 ## Specification
 

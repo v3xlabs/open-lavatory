@@ -9,9 +9,8 @@ export default defineConfig({
     preact(),
     tailwindcss(),
     dts({
-      insertTypesEntry: true,
       outDir: "dist",
-      rollupTypes: true,
+      entryRoot: "src",
     }),
   ],
   build: {

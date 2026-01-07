@@ -61,7 +61,7 @@
   "devDependencies": {
     "@preact/preset-vite": "^2.10.2",
     "@tailwindcss/vite": "^4.1.16",
-    "preact": "^10.24.3",
+    "preact": "^10.27.3",
     "preact-custom-element": "^4.4.3",
     "react-icons": "^5.5.0",
     "tailwindcss": "^4",

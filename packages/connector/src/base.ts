@@ -5,7 +5,7 @@ import {
   type OpenLVProviderParameters,
 } from "@openlv/provider";
 import { createConnector, type CreateConnectorFn } from "@wagmi/core";
-import type { Prettify } from "viem";
+import { type Prettify, UserRejectedRequestError } from "viem";
 
 import { openlvDetails } from "./config.js";
 import { log } from "./log.js";
@@ -82,9 +82,11 @@ export const openlv = ({
 
       await Promise.race([modalDismissed, connectionCompleted]);
 
-      const accounts = provider.getSession()
-        ? await provider.getAccounts()
-        : [];
+      if (!provider.getSession()) {
+        return Promise.reject(new UserRejectedRequestError(new Error("User closed modal")));
+      }
+
+      const accounts = await provider.getAccounts();
 
       const chainId = 1;
 

@@ -150,6 +150,13 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   useEscapeToClose(onClose);
 
+  // Auto-dismiss modal when connection is established
+  useEffect(() => {
+    if (status === PROVIDER_STATUS.CONNECTED) {
+      onClose();
+    }
+  }, [status, onClose]);
+
   const handleCopy = useCallback(async () => {
     const success = uri && (await copyToClipboard(uri));
 

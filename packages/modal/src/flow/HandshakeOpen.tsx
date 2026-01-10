@@ -30,6 +30,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   }, []);
 
   const secondaryBg = "var(--lv-button-secondary-background)";
+  const secondaryBorder = "var(--lv-button-secondary-border)";
   const qrBg = "var(--lv-qr-background)";
   const qrColor = "var(--lv-qr-color)";
 
@@ -39,15 +40,15 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
         className="w-full space-y-4 rounded-md p-4"
         style={{
           background: "var(--lv-body-background)",
-          border: `1px solid ${secondaryBg}`,
+          border: `1px solid ${secondaryBorder}`,
         }}
       >
         {uri && (
           <div
-            className="relative mx-auto flex w-fit items-center justify-center rounded-lg p-2"
+            className="relative mx-auto flex w-fit items-center justify-center rounded-lg p-4"
             style={{
               background: qrBg,
-              border: `2px solid ${secondaryBg}`,
+              border: `2px solid ${secondaryBorder}`,
             }}
           >
             <button
@@ -71,7 +72,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
             style={{
               background: secondaryBg,
               color: "var(--lv-text-primary)",
-              border: `1px solid ${secondaryBg}`,
+              border: `1px solid ${secondaryBorder}`,
             }}
           >
             Copy Connection URL

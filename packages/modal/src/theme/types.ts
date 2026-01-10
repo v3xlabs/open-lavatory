@@ -1,4 +1,4 @@
-export type ThemeIdentifier = "openlv";
+export type ThemeIdentifier = "openlv" | "simple";
 export type ThemeMode = "light" | "dark" | "system";
 
 export type OpenLVTheme = Partial<{

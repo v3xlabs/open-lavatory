@@ -1,6 +1,7 @@
 import type { FC, PropsWithChildren } from "preact/compat";
 
 import { openlvThemeTokens } from "./openlv.js";
+import { simpleThemeTokens } from "./simple.js";
 import type {
   OpenLVTheme,
   ThemeConfig,
@@ -66,6 +67,8 @@ export const buildTheme = (tokens: OpenLVTheme) => {
   return Object.fromEntries(map.entries());
 };
 
+export { openlvThemeTokens, simpleThemeTokens };
+
 export type {
   OpenLVTheme,
   ThemeConfig,
@@ -85,6 +88,7 @@ export const DEFAULT_THEME_CONFIG: ThemeConfig<typeof openlvThemeTokens> = {
 
 const defaultTokens: Record<string, ThemeTokensMap> = {
   openlv: openlvThemeTokens,
+  simple: simpleThemeTokens,
 };
 
 const getDefaultTokens = (theme: ThemeIdentifier) => defaultTokens[theme];

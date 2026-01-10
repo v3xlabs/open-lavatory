@@ -25,14 +25,16 @@ import { mainnet } from "wagmi/chains";
 
 const queryClient = new QueryClient();
 
-const modalTheme: NonNullable<Parameters<typeof openlv>[0]>["theme"] = {
-  theme: "openlv",
-  mode: "system",
-};
-
 const config = createConfig({
   chains: [mainnet],
-  connectors: [openlv({ theme: modalTheme })],
+  connectors: [
+    openlv({
+      theme: {
+        theme: "simple",
+        mode: "light",
+      },
+    }),
+  ],
   transports: {
     [mainnet.id]: http(),
   },

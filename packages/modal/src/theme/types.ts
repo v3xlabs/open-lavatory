@@ -76,9 +76,9 @@ export type OpenLVTheme = Partial<{
 
 export type ThemeTokensMap = {
   common?: OpenLVTheme;
-  light: OpenLVTheme;
-  dark: OpenLVTheme;
-};
+  light?: OpenLVTheme;
+  dark?: OpenLVTheme;
+} & ({ light: OpenLVTheme } | { dark: OpenLVTheme });
 
 type HasLight<T extends ThemeTokensMap> = T extends { light: OpenLVTheme }
   ? true

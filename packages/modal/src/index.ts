@@ -9,6 +9,7 @@ export { useConnectionState } from "./hooks/useConnectionState.js";
 export type {
   OpenLVTheme,
   ThemeConfig,
+  ThemeConfigInput,
   ThemeIdentifier,
   ThemeMode,
   ThemeTokensMap,

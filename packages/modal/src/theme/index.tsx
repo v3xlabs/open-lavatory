@@ -3,12 +3,32 @@ import type { FC, PropsWithChildren } from "preact/compat";
 import { openlvThemeTokens } from "./openlv.js";
 import { simpleThemeTokens } from "./simple.js";
 import type {
+  ModesForTokens,
   OpenLVTheme,
   ThemeConfig,
   ThemeIdentifier,
   ThemeMode,
   ThemeTokensMap,
 } from "./types.js";
+
+/**
+ * Maps theme identifiers to their token types using typeof.
+ */
+type ThemeTokensFor = {
+  openlv: typeof openlvThemeTokens;
+  simple: typeof simpleThemeTokens;
+};
+
+/**
+ * Type-safe theme configuration that infers allowed modes from the theme identifier.
+ */
+export type ThemeConfigInput = {
+  [K in ThemeIdentifier]: {
+    theme: K;
+    tokens?: ThemeTokensFor[K];
+    mode: ModesForTokens<ThemeTokensFor[K]>;
+  };
+}[ThemeIdentifier];
 
 const buildThemeVariables = (
   map: Map<string, string>,

@@ -66,5 +66,4 @@ export const simpleThemeTokens = {
       body: "#1E293B",
     },
   },
-  dark: {},
 } satisfies ThemeTokensMap;

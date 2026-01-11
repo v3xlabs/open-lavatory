@@ -1,4 +1,4 @@
-import type { ThemeConfig } from "@openlv/modal";
+import type { ThemeConfigInput } from "@openlv/modal";
 import {
   createProvider,
   type OpenLVProvider,
@@ -14,7 +14,7 @@ import { getTriggerModal } from "./modal.js";
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage">
 > & {
-  theme?: ThemeConfig;
+  theme?: ThemeConfigInput;
 };
 
 export type OpenLVConnector = CreateConnectorFn<
@@ -83,7 +83,9 @@ export const openlv = ({
       await Promise.race([modalDismissed, connectionCompleted]);
 
       if (!provider.getSession()) {
-        return Promise.reject(new UserRejectedRequestError(new Error("User closed modal")));
+        return Promise.reject(
+          new UserRejectedRequestError(new Error("User closed modal")),
+        );
       }
 
       const accounts = await provider.getAccounts();

@@ -3,6 +3,7 @@ import { useCallback } from "preact/hooks";
 import * as QRCode from "qrcode-generator";
 
 import { useSession } from "../hooks/useSession.js";
+import { Button } from "../ui/Button.js";
 
 export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   onCopy,
@@ -29,17 +30,17 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
     return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
   }, []);
 
-  const secondaryBg = "var(--lv-button-secondary-background)";
   const secondaryBorder = "var(--lv-button-secondary-border)";
   const qrBg = "var(--lv-qr-background)";
   const qrColor = "var(--lv-qr-color)";
+  const secondaryBg = "var(--lv-button-secondary-background)";
 
   return (
     <div className="flex flex-col items-center gap-4 px-2">
       <div
         className="w-full space-y-4 rounded-md p-4"
         style={{
-          background: "var(--lv-body-background)",
+          background: "var(--lv-card-background)",
           border: `1px solid ${secondaryBorder}`,
         }}
       >
@@ -48,7 +49,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
             className="relative mx-auto flex w-fit items-center justify-center rounded-lg p-4"
             style={{
               background: qrBg,
-              border: `2px solid ${secondaryBorder}`,
+              border: `1px solid ${secondaryBorder}`,
             }}
           >
             <button

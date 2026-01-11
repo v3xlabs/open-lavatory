@@ -294,7 +294,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   return (
     <div
-      className="fixed inset-0 z-[99999999999999] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center font-sans md:items-center lg:p-4"
+      className="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center font-sans md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
@@ -302,7 +302,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     >
       <div
         className={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-[200ms] ease-out",
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-200 ease-out",
           shouldHideOverflow || previousStatus ? "overflow-hidden" : undefined,
         )}
         role="dialog"

@@ -8,11 +8,10 @@ export default defineConfig({
   plugins: [
     preact(),
     tailwindcss(),
-    // dts({
-    //   insertTypesEntry: true,
-    //   outDir: "dist",
-    //   rollupTypes: true,
-    // }),
+    dts({
+      outDir: "dist",
+      entryRoot: "src",
+    }),
   ],
   build: {
     lib: {

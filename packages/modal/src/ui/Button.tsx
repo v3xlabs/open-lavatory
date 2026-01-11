@@ -5,17 +5,19 @@ import {
   type ButtonHTMLAttributes,
   createElement,
 } from "preact";
-import type { FC, PropsWithChildren } from "preact/compat";
-import type { VariantProps } from "tailwind-variants/lite";
-import { tv } from "tailwind-variants/lite";
+import type { PropsWithChildren } from "preact/compat";
+import { tv, type VariantProps } from "tailwind-variants/lite";
 
 const styles = tv({
-  base: "flex items-center justify-center rounded-lg transition-colors cursor-pointer active:scale-95 transition-transform",
+  base: "lv-button flex items-center justify-center rounded-lg transition-colors cursor-pointer active:scale-95 transition-transform",
   variants: {
     $variant: {
-      primary: "bg-blue-500 font-semibold text-sm text-white hover:bg-blue-600",
-      secondary: "border border-gray-300 text-gray-500 hover:bg-gray-200",
-      tertiary: "text-gray-500 hover:text-gray-700 hover:bg-gray-200",
+      primary:
+        "font-semibold text-sm bg-[var(--lv-button-primary-background)] text-[var(--lv-button-primary-color)] border-[var(--lv-button-primary-border)] hover:bg-[var(--lv-button-primary-hoverBackground,var(--lv-button-primary-background))] active:bg-[var(--lv-button-primary-activeBackground,var(--lv-button-primary-hoverBackground,var(--lv-button-primary-background)))] disabled:bg-[var(--lv-button-primary-disabledBackground,var(--lv-button-primary-background))] disabled:text-[var(--lv-button-primary-disabledColor,var(--lv-button-primary-color))]",
+      secondary:
+        "border bg-[var(--lv-button-secondary-background)] text-[var(--lv-button-secondary-color)] border-[var(--lv-button-secondary-border,var(--lv-button-secondary-background))] hover:bg-[var(--lv-button-secondary-hoverBackground,var(--lv-button-secondary-background))] active:bg-[var(--lv-button-secondary-activeBackground,var(--lv-button-secondary-hoverBackground,var(--lv-button-secondary-background)))] disabled:bg-[var(--lv-button-secondary-disabledBackground,var(--lv-button-secondary-background))] disabled:text-[var(--lv-button-secondary-disabledColor,var(--lv-button-secondary-color))]",
+      tertiary:
+        "bg-transparent text-[var(--lv-text-muted)] hover:bg-[var(--lv-control-button-tertiary-hoverBackground,transparent)] active:bg-[var(--lv-control-button-tertiary-activeBackground,var(--lv-control-button-tertiary-hoverBackground,transparent))] disabled:text-[var(--lv-control-button-tertiary-disabledColor,var(--lv-text-muted))]",
     },
     $size: {
       sm: "h-6",
@@ -52,24 +54,29 @@ export type ButtonProps = PropsWithChildren<
     )
 >;
 
-export const Button: FC<ButtonProps> = ({
-  href,
-  onClick,
-  children,
-  className,
-  $variant,
-  $size,
-  $aspect,
-  ...props
-}) => {
-  return createElement(
-    href ? "a" : "button",
-    {
-      href: href ?? undefined,
+export function Button(rawProps: ButtonProps) {
+  const { children, className, $variant, $size, $aspect, ...props } = rawProps;
+  const { href, onClick } = rawProps as {
+    href?: string;
+    onClick?: () => void;
+  };
+
+  if (href) {
+    const anchorProps = {
+      href,
       onClick,
       className: classNames(styles({ $variant, $size, $aspect }), className),
       ...props,
-    },
-    children,
-  );
-};
+    } as unknown as Record<string, unknown>;
+
+    return createElement("a", anchorProps, children);
+  }
+
+  const buttonProps = {
+    onClick,
+    className: classNames(styles({ $variant, $size, $aspect }), className),
+    ...props,
+  } as unknown as Record<string, unknown>;
+
+  return createElement("button", buttonProps, children);
+}

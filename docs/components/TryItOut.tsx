@@ -27,7 +27,14 @@ const queryClient = new QueryClient();
 
 const config = createConfig({
   chains: [mainnet],
-  connectors: [openlv()],
+  connectors: [
+    openlv({
+      theme: {
+        theme: "simple",
+        mode: "light",
+      },
+    }),
+  ],
   transports: {
     [mainnet.id]: http(),
   },
@@ -261,8 +268,11 @@ const Connectors = () => {
                 Open this page in <span className="font-bold">a new tab</span>
               </li>
               <li>
-                Click <ConnectorPreview connector={openLvConnector} /> on one
-                and{" "}
+                Click
+                {openLvConnector && (
+                  <ConnectorPreview connector={openLvConnector} />
+                )}{" "}
+                on one and{" "}
                 {firstNonOpenLvConnector ? (
                   <ConnectorPreview connector={firstNonOpenLvConnector} />
                 ) : (

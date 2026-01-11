@@ -62,6 +62,9 @@ export type OpenLVTheme = Partial<{
     background: string;
     color: string;
   };
+  card: {
+    background: string;
+  };
   text: {
     primary?: string;
     secondary?: string;

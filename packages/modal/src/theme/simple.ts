@@ -5,7 +5,7 @@ export const simpleThemeTokens = {
     font: { family: "sans-serif" },
     body: {
       color: "#1E293B",
-      background: "#F5F5F5",
+      background: "#FFFFFF",
     },
     border: {
       radius: "16px",
@@ -41,7 +41,7 @@ export const simpleThemeTokens = {
           activeBackground: "#D1D5DB",
           disabledBackground: "#F9FAFB",
           disabledColor: "#9CA3AF",
-          border: "#D1D5DB",
+          border: "#D1D5DC",
         },
         tertiary: {
           color: "#6B7280",
@@ -54,6 +54,9 @@ export const simpleThemeTokens = {
     qr: {
       background: "#F9FAFB",
       color: "#111827",
+    },
+    card: {
+      background: "#F5F5F5",
     },
     text: {
       primary: "#111827",

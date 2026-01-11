@@ -42,6 +42,7 @@ export const openlvThemeTokens = {
       },
     },
     qr: { background: "#FFFFFF", color: "#0F172A" },
+    card: { background: "#F5F5F5" },
     text: { primary: "#0F172A", secondary: "#475569", muted: "#94A3B8" },
   },
   dark: {
@@ -84,6 +85,7 @@ export const openlvThemeTokens = {
       },
     },
     qr: { background: "#FFFFFF", color: "#0D0E12" },
+    card: { background: "#1E2127" },
     text: { primary: "#F3F4F6", secondary: "#C8CCD2", muted: "#9AA0A9" },
   },
 } satisfies ThemeTokensMap;

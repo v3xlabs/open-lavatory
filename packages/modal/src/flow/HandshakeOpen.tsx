@@ -3,7 +3,6 @@ import { useCallback } from "preact/hooks";
 import * as QRCode from "qrcode-generator";
 
 import { useSession } from "../hooks/useSession.js";
-import { Button } from "../ui/Button.js";
 
 export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   onCopy,

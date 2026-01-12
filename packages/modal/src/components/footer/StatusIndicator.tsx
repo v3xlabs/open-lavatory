@@ -50,18 +50,8 @@ export const FooterStatus = () => {
   const { icon, text } = status;
 
   return (
-    <div
-      className="group relative flex items-center gap-2 rounded-md px-2 py-2"
-      style={{ backgroundColor: "transparent" }}
-    >
-      <div
-        className="pointer-events-none absolute bottom-full left-1/2 z-10 hidden -translate-x-1/2 whitespace-nowrap rounded-md px-2 py-1 text-xs shadow-sm group-hover:block"
-        style={{
-          backgroundColor: "var(--lv-body-background)",
-          color: "var(--lv-text-primary)",
-          border: "1px solid var(--lv-button-secondary-background)",
-        }}
-      >
+    <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-[var(--lv-button-secondary-background)]">
+      <div className="pointer-events-none whitespace-nowrap rounded-md text-xs opacity-0 group-hover:opacity-100">
         {text}
       </div>
       <div>{icon}</div>

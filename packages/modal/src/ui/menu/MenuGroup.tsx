@@ -7,7 +7,7 @@ export type MenuGroupProps = PropsWithChildren<{
 
 export const MenuGroup: FC<MenuGroupProps> = ({ title, right, children }) => (
   <div>
-    <div className="flex items-end justify-between px-2 py-1">
+    <div className="flex items-end justify-between pl-2 py-1">
       <div
         className="font-medium text-sm"
         style={{ color: "var(--lv-text-primary)" }}

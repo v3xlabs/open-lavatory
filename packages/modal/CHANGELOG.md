@@ -1,5 +1,14 @@
 # @openlv/modal
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- 69acf6e: Update imports
+- Updated dependencies [592d1c2]
+  - @openlv/session@0.0.1-beta.8
+  - @openlv/provider@0.0.1-beta.7
+
 ## 0.0.1-beta.6
 
 ### Patch Changes

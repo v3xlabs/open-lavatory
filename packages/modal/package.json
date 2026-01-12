@@ -1,6 +1,6 @@
 {
   "name": "@openlv/modal",
-  "version": "0.0.1-beta.6",
+  "version": "0.0.1-beta.7",
   "description": "Preact-based modal custom element for Open Lavatory",
   "keywords": [
     "open-lavatory",

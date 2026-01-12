@@ -7,14 +7,16 @@ import { openlv } from '@openlv/connector' // [!code ++]
 
 export const wagmiConfig = createConfig({
   chains: [mainnet],
-  connectors: [openlv({
-    signaling: [
+  connectors: [
+    openlv({
+      signaling: [
         { // [!code ++]
             type: 'mqtt', // [!code ++]
             url: 'wss://test.mosquitto.org:8081/mqtt', // [!code ++]
         } // [!code ++]
-    ]
-  })],
+      ],
+    })
+  ],
   transports: {
     [mainnet.id]: http(),
   },

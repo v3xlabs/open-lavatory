@@ -13,16 +13,10 @@
 
 <p align="center">
     <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-blue?style=flat" alt="Documentation: openlv.sh"></a>
-    <a href="#"><img src="https://img.shields.io/badge/Status-Proof%20of%20Concept-orange?style=flat" alt="Status: Proof of Concept"></a>
-    <a href="https://hackathon.web3privacy.info"><img src="https://img.shields.io/badge/Built%20at-W3PN%20Hacks%202025-green?style=flat" alt="Built at W3PN Hacks 2025"></a>
+    <a href="#"><img src="https://img.shields.io/badge/Status-In%20Development-orange?style=flat" alt="Status: In Development"></a>
 </p>
 
 ---
-
-> [!IMPORTANT]
-> You are currently viewing the **beta** version of the repository.
->
-> [See the documentation](https://openlv.sh) for a live demo.
 
 ## Features
 
@@ -64,6 +58,8 @@ This repository includes the following packages:
 | [wallet](./examples/react-wallet)       | Sample wallet implementation for testing                  |
 | [dapp](./examples/react-dapp)           | Wagmi-based dApp sandbox for end-to-end testing           |
 | [react-native](./examples/react-native) | React Native wallet implementation for end-to-end testing |
+| [Safe{Wallet} Web Implementation]()     | Safe{Wallet} Web App open-lavatory implementation         |
+| [Safe{Wallet} Mobile Implementation]()  | Safe{Wallet} Mobile App open-lavatory implementation      |
 | [docs](./docs)                          | Documentation includes a running wagmi demo               |
 
 ## Specification

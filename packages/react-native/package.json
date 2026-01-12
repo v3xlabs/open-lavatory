@@ -58,7 +58,7 @@
     "react-native-url-polyfill": "^2.0.0",
     "react-native-webrtc": "^124.0.6",
     "react-native-webview": "^13.15.0",
-    "react-native-webview-crypto": "^0.0.27"
+    "react-native-webview-crypto": "^0.0.28"
   },
   "peerDependencies": {
     "react": ">=18",

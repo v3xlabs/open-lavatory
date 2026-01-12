@@ -26,12 +26,6 @@
 - Reuse of existing infrastructure and p2p standards
 - User control over connection & configuration
 
-## Overview
-
-A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
-
-Open Lavatory Protocol eliminates centralized relay servers by enabling direct peer-to-peer connections between decentralized applications (dApps) and cryptocurrency wallets. Using public signaling servers for initial handshake and WebRTC combined with asymmetric encryption, it prioritizes **privacy** and **self-sovereignty**.
-
 ## Quickstart
 
 ```bash
@@ -51,6 +45,12 @@ export const wagmiConfig = createConfig({
   },
 });
 ```
+
+## Overview
+
+A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectivity between decentralized applications (dApps) and cryptocurrency wallets.
+
+Open Lavatory Protocol eliminates centralized relay servers by enabling direct peer-to-peer connections between decentralized applications (dApps) and cryptocurrency wallets. Using public signaling servers for initial handshake and WebRTC combined with asymmetric encryption, it prioritizes **privacy** and **self-sovereignty**.
 
 ## Documentation
 

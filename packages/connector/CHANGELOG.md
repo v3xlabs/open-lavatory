@@ -1,5 +1,13 @@
 # @openlv/connector
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- Updated dependencies [69acf6e]
+  - @openlv/modal@0.0.1-beta.7
+  - @openlv/provider@0.0.1-beta.7
+
 ## 0.0.1-beta.6
 
 ### Patch Changes

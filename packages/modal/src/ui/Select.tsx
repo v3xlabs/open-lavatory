@@ -8,13 +8,8 @@ export type SelectProps = {
 };
 
 export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
-  const borderColor = "var(--lv-button-secondary-border)";
-
   return (
-    <div
-      className="flex overflow-hidden rounded-md border"
-      style={{ borderColor }}
-    >
+    <div className="flex overflow-hidden rounded-md border border-(--lv-button-secondary-border)">
       {options.map(([slug, label]) => (
         <button
           key={slug}
@@ -22,24 +17,11 @@ export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
           onClick={() => onChange(slug)}
           aria-pressed={slug === value}
           className={classNames(
-            "px-4 py-2 font-semibold text-xs transition border-l first:border-l-0",
-            slug !== value && "cursor-pointer",
-          )}
-          style={
+            "px-4 py-2 font-semibold text-xs transition border-l first:border-l-0 border-(--lv-button-secondary-border)",
             slug === value
-              ? {
-                  backgroundColor:
-                    "var(--lv-button-secondary-selectedBackground, var(--lv-button-secondary-background))",
-                  color:
-                    "var(--lv-button-secondary-selectedColor, var(--lv-text-primary))",
-                  borderColor,
-                }
-              : {
-                  backgroundColor: "transparent",
-                  color: "var(--lv-text-secondary)",
-                  borderColor,
-                }
-          }
+              ? "bg-(--lv-button-secondary-selectedBackground,var(--lv-button-secondary-background)) text-(--lv-button-secondary-selectedColor,var(--lv-text-primary))"
+              : "bg-transparent text-(--lv-text-secondary) cursor-pointer",
+          )}
         >
           {label}
         </button>

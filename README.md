@@ -79,7 +79,7 @@ This repository includes the following packages:
 | [dapp](./examples/react-dapp)           | Wagmi-based dApp sandbox for end-to-end testing           |
 | [react-native](./examples/react-native) | React Native wallet implementation for end-to-end testing |
 | [Safe{Wallet} Web Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6954)     | Safe{Wallet} Web App open-lavatory implementation         |
-| [Safe{Wallet} Mobile Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6955)  | Safe{Wallet} Mobile App open-lavatory implementation      |
+| [Safe{Wallet} Mobile Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6956)  | Safe{Wallet} Mobile App open-lavatory implementation      |
 | [docs](./docs)                          | Documentation includes a running wagmi demo               |
 
 ## Specification

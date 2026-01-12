@@ -1,7 +1,6 @@
-const labelClasses =
-  "font-semibold text-gray-700 text-xs uppercase tracking-wide";
+const labelClasses = "font-semibold text-xs uppercase tracking-wide";
 const inputClasses =
-  "h-9 w-full rounded-lg border border-gray-300 bg-white px-3 text-sm text-gray-700 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
 
 type LabelProps = {
   htmlFor?: string;
@@ -9,7 +8,11 @@ type LabelProps = {
 };
 
 export const Label = ({ htmlFor, children }: LabelProps) => (
-  <label className={labelClasses} htmlFor={htmlFor}>
+  <label
+    className={labelClasses}
+    htmlFor={htmlFor}
+    style={{ color: "var(--lv-text-secondary)" }}
+  >
     {children}
   </label>
 );
@@ -37,6 +40,11 @@ export const Input = ({
     // eslint-disable-next-line no-restricted-syntax
     id={id}
     className={inputClasses}
+    style={{
+      color: "var(--lv-text-primary)",
+      backgroundColor: "var(--lv-body-background)",
+      borderColor: "var(--lv-control-input-border)",
+    }}
     value={value}
     placeholder={placeholder}
     aria-label={ariaLabel}

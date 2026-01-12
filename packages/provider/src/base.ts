@@ -23,6 +23,7 @@ import { log } from "./utils/log.js";
 export type OpenLVProviderParameters = Prettify<
   {
     config?: object;
+    openModal?: (provider: OpenLVProvider) => Promise<void>;
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
@@ -75,6 +76,7 @@ export const createProvider = (
   const chainId: string = "1";
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: _parameters.storage });
+  const { openModal } = _parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -160,9 +162,31 @@ export const createProvider = (
           //   "wallet_requestPermissions"
           // >;
         })
+        .with({ method: "wallet_revokePermissions" }, async () => {
+          await closeSession();
+
+          return;
+        })
         // TODO: if modal is enabled explicitly toggle the modal to show.
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
+
+          let provider: OpenLVProvider | undefined;
+
+          if (oxProvider) {
+            provider = oxProvider as OpenLVProvider;
+          }
+
+          if (openModal && provider) {
+            await openModal(provider);
+
+            await new Promise((resolve) => {
+              provider?.on("connect", resolve);
+              provider?.on("disconnect", resolve);
+            });
+
+            return await getAccounts();
+          }
 
           const x = await start();
 
@@ -205,5 +229,5 @@ export const createProvider = (
     getState: () => ({ status, session: session?.getState() ?? undefined }),
   });
 
-  return oxProvider;
+  return oxProvider as OpenLVProvider;
 };

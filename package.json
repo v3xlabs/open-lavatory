@@ -14,30 +14,30 @@
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test"
   },
   "dependencies": {
-    "@biomejs/biome": "^2.3.1"
+    "@biomejs/biome": "^2.3.11"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.29.7",
-    "@eslint/js": "^9",
-    "@stylistic/eslint-plugin": "^5.5.0",
-    "@wagmi/core": "2",
-    "eslint": "^9",
-    "eslint-config-prettier": "^10.1.2",
-    "eslint-plugin-import": "^2.31.0",
-    "eslint-plugin-prettier": "^5.2.6",
-    "eslint-plugin-react": "^7.37.4",
+    "@changesets/cli": "^2.29.8",
+    "@eslint/js": "^9.39.2",
+    "@stylistic/eslint-plugin": "^5.7.0",
+    "@wagmi/core": "^2.22.1",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-prettier": "^5.5.4",
+    "eslint-plugin-react": "^7.37.5",
     "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.19",
+    "eslint-plugin-react-refresh": "^0.4.26",
     "eslint-plugin-simple-import-sort": "^12.1.1",
-    "eslint-plugin-sonarjs": "^3.0.2",
+    "eslint-plugin-sonarjs": "^3.0.5",
     "eslint-plugin-tailwindcss": "4.0.0-beta.0",
     "eslint-plugin-unicorn": "^58.0.0",
-    "eslint-plugin-unused-imports": "^4.1.4",
-    "globals": "^16.2.0",
-    "prettier": "^3.5.3",
-    "typescript-eslint": "^8.28.0",
-    "viem": "2",
-    "wagmi": "2"
+    "eslint-plugin-unused-imports": "^4.3.0",
+    "globals": "^16.5.0",
+    "prettier": "^3.7.4",
+    "typescript-eslint": "^8.53.0",
+    "viem": "^2.44.1",
+    "wagmi": "^2.19.5"
   },
   "pnpm": {
     "overrides": {

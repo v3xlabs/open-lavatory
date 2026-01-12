@@ -1,88 +1,60 @@
-import { PROVIDER_STATUS } from "@openlv/provider";
-import { SESSION_STATE } from "@openlv/session";
-import { SIGNAL_STATE } from "@openlv/signaling";
-import { match, P } from "ts-pattern";
+import { match } from "ts-pattern";
 
-import { useProvider } from "../../hooks/useProvider.js";
 import { useSession } from "../../hooks/useSession.js";
 
 export const FooterStatus = () => {
   const { status: sessionStatus } = useSession();
-  const { status: providerStatus } = useProvider();
+  const sessionState = sessionStatus?.status;
+  const signalState = sessionStatus?.signaling?.state as string | undefined;
 
-  const data = match(providerStatus)
-    .with(PROVIDER_STATUS.STANDBY, () => undefined)
+  const status = match({ sessionState, signalState })
+    .with({ sessionState: "connected" }, () => ({
+      icon: "✅",
+      text: "Connected Successfully!",
+    }))
+    .with({ sessionState: "signaling", signalState: "standby" }, () => ({
+      icon: "🫥",
+      text: "Connecting",
+    }))
+    .with({ sessionState: "signaling", signalState: "connecting" }, () => ({
+      icon: "↗️",
+      text: "Connecting",
+    }))
+    .with({ sessionState: "signaling", signalState: "ready" }, () => ({
+      icon: "👋",
+      text: "Ready",
+    }))
+    .with({ sessionState: "signaling", signalState: "handshake" }, () => ({
+      icon: "🤝",
+      text: "Handshake Closed",
+    }))
     .with(
-      P.union(
-        PROVIDER_STATUS.CREATING,
-        PROVIDER_STATUS.CONNECTING,
-        PROVIDER_STATUS.CONNECTED,
-        PROVIDER_STATUS.ERROR,
-      ),
-      () =>
-        match({ status: sessionStatus?.status })
-          // .with({ status: "disconnected" }, () => ({
-          //   icon: "🫲",
-          //   text: "Disconnected",
-          // }))
-          .with({ status: SESSION_STATE.CREATED }, () => undefined)
-          .with({ status: SESSION_STATE.CONNECTED }, () => ({
-            icon: "✅",
-            text: "Connected Successfully!",
-          }))
-          .with({ status: SESSION_STATE.SIGNALING }, () =>
-            match({ status: sessionStatus?.signaling?.state })
-              .with({ status: SIGNAL_STATE.STANDBY }, () => ({
-                icon: "🫥",
-                text: "Connecting",
-              }))
-              .with({ status: SIGNAL_STATE.CONNECTING }, () => ({
-                icon: "↗️",
-                text: "Connecting",
-              }))
-              .with({ status: SIGNAL_STATE.READY }, () => ({
-                icon: "👋",
-                text: "Ready",
-              }))
-              .with({ status: SIGNAL_STATE.HANDSHAKE }, () => ({
-                icon: "🤝",
-                text: "Handshake Closed",
-              }))
-              .with({ status: SIGNAL_STATE.HANDSHAKE_PARTIAL }, () => ({
-                icon: "🤝",
-                text: "Handshake Partial",
-              }))
-              .with({ status: SIGNAL_STATE.ENCRYPTED }, () => ({
-                icon: "🔒",
-                text: "Encrypted",
-              }))
-              .with({ status: SIGNAL_STATE.ERROR }, () => ({
-                icon: "❌",
-                text: "Signal Error",
-              }))
-              .otherwise(() => ({
-                icon: "❓",
-                text: "Unknown " + sessionStatus?.signaling?.state,
-              })),
-          )
-          .otherwise((status) => ({
-            icon: "❓",
-            text: "Unknown " + JSON.stringify(status),
-          })),
+      { sessionState: "signaling", signalState: "handshake-partial" },
+      () => ({
+        icon: "🤝",
+        text: "Handshake Partial",
+      }),
     )
-    .otherwise(() => ({
-      icon: "❓",
-      text: "Unknown provider status " + JSON.stringify(providerStatus),
-    }));
+    .with({ sessionState: "signaling", signalState: "encrypted" }, () => ({
+      icon: "🔒",
+      text: "Encrypted",
+    }))
+    .with({ sessionState: "signaling", signalState: "error" }, () => ({
+      icon: "❌",
+      text: "Signal Error",
+    }))
+    .otherwise(() => undefined);
 
-  if (!data) return <></>;
+  if (!status) return <></>;
+
+  const { icon, text } = status;
 
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-neutral-200">
-      <div className="text-gray-900 text-xs opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-        {data.text}
+    <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-[var(--lv-button-secondary-background)]">
+      <div className="pointer-events-none whitespace-nowrap rounded-md text-xs opacity-0 group-hover:opacity-100">
+        {text}
       </div>
-      <div>{data.icon}</div>
+      <div>{icon}</div>
     </div>
   );
 };

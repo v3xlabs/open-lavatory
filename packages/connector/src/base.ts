@@ -1,11 +1,11 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
+import type { ThemeConfigInput } from "@openlv/modal";
 import {
   createProvider,
   type OpenLVProvider,
   type OpenLVProviderParameters,
 } from "@openlv/provider";
 import { createConnector, type CreateConnectorFn } from "@wagmi/core";
-import type { Prettify } from "viem";
+import { type Prettify, UserRejectedRequestError } from "viem";
 
 import { openlvDetails } from "./config.js";
 import { log } from "./log.js";
@@ -13,7 +13,9 @@ import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage">
->;
+> & {
+  theme?: ThemeConfigInput;
+};
 
 export type OpenLVConnector = CreateConnectorFn<
   OpenLVProvider,
@@ -28,8 +30,12 @@ export type OpenLVConnector = CreateConnectorFn<
 export const openlv = ({
   storage,
   config = {},
+  theme,
 }: OpenLVConnectorParameters = {}) => {
-  const provider = createProvider({ storage, config });
+  const provider = createProvider({
+    storage,
+    config,
+  });
 
   const onDisconnect = async () => {
     log("onDisconnect called");
@@ -56,22 +62,16 @@ export const openlv = ({
 
       const modal = await getTriggerModal();
 
-      log("loading modal");
-      modal?.(provider);
-
-      const modalDismissed = new Promise((_resolve) => {
-        // modal?.onClose
-        // resolve();
+      const modalDismissed = new Promise<void>((resolve) => {
+        modal?.(provider, theme as never, () => resolve());
       });
 
-      const connectionCompleted = new Promise((_resolve) => {
-        // modal?.onStartConnection
-        // resolve();
+      const connectionCompleted = new Promise<void>((resolve) => {
         provider.on("status_change", (status) => {
           log("provider_status_change", status);
 
           if (status === "connected") {
-            _resolve({});
+            resolve();
           }
         });
 
@@ -82,7 +82,14 @@ export const openlv = ({
 
       await Promise.race([modalDismissed, connectionCompleted]);
 
+      if (!provider.getSession()) {
+        return Promise.reject(
+          new UserRejectedRequestError(new Error("User closed modal")),
+        );
+      }
+
       const accounts = await provider.getAccounts();
+
       const chainId = 1;
 
       log("completing connect() call");
@@ -101,7 +108,6 @@ export const openlv = ({
 
     return {
       ...openlvDetails,
-      foo: "bar",
       connect,
       async disconnect() {
         log("disconnect");
@@ -120,7 +126,6 @@ export const openlv = ({
       async switchChain({ chainId }) {
         log("switchChain", chainId);
 
-        // eslint-disable-next-line no-restricted-syntax
         const chain = chains.find((chain) => chain.id === chainId);
 
         if (!chain) throw new Error(`Chain ${chainId} not found`);

@@ -150,6 +150,13 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   useEscapeToClose(onClose);
 
+  // Auto-dismiss modal when connection is established
+  useEffect(() => {
+    if (status === PROVIDER_STATUS.CONNECTED) {
+      onClose();
+    }
+  }, [status, onClose]);
+
   const handleCopy = useCallback(async () => {
     const success = uri && (await copyToClipboard(uri));
 
@@ -273,27 +280,41 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
   log("view", modalView);
 
+  const overlayStyle: Record<string, string> = {
+    background: "var(--lv-overlay-background, rgba(0,0,0,0.3))",
+    backdropFilter: "var(--lv-overlay-backdrop-filter, blur(4px))",
+  };
+
+  const cardStyle: Record<string, string> = {
+    background: "var(--lv-body-background)",
+    color: "var(--lv-body-color, var(--lv-text-primary))",
+    borderRadius: "var(--lv-border-radius, 16px)",
+    boxShadow: "var(--lv-modal-shadow, 0px 12px 32px rgba(0,0,0,0.25))",
+  };
+
   return (
     <div
-      className="fixed inset-0 z-[10000] flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center bg-black/30 font-sans text-slate-800 backdrop-blur-sm md:items-center lg:p-4"
+      className="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center font-sans md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
+      style={overlayStyle}
     >
       <div
         className={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] rounded-t-radius bg-body-background transition-[height] duration-[200ms] ease-out md:rounded-b-radius",
+          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-200 ease-out",
           shouldHideOverflow || previousStatus ? "overflow-hidden" : undefined,
         )}
         role="dialog"
         aria-modal="true"
         aria-label={title}
         onClick={(event) => event.stopPropagation()}
-        style={
-          typeof height === "number" && height > 0
+        style={{
+          ...(typeof height === "number" && height > 0
             ? { height: `${height}px` }
-            : undefined
-        }
+            : {}),
+          ...cardStyle,
+        }}
       >
         <div ref={contentRef}>
           <Header

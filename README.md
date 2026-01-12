@@ -32,6 +32,26 @@ A secure privacy-first protocol for establishing peer-to-peer JSON-RPC connectiv
 
 Open Lavatory Protocol eliminates centralized relay servers by enabling direct peer-to-peer connections between decentralized applications (dApps) and cryptocurrency wallets. Using public signaling servers for initial handshake and WebRTC combined with asymmetric encryption, it prioritizes **privacy** and **self-sovereignty**.
 
+## Quickstart
+
+```bash
+pnpm install @openlv/connector wagmi
+```
+
+```ts
+import { openlv } from "@openlv/connector"; // Import the connector
+import { createConfig, http } from "wagmi";
+import { mainnet } from "wagmi/chains";
+
+export const wagmiConfig = createConfig({
+  chains: [mainnet],
+  connectors: [openlv()], // Add it to your connectors array
+  transports: {
+    [mainnet.id]: http(),
+  },
+});
+```
+
 ## Documentation
 
 [Head to the documentation](https://openlv.sh) to learn more about openlv.

@@ -96,7 +96,7 @@ We accept contributions via pull requests. Please ensure to push changesets for 
 ## Attribution
 
 The initial proof of concept was built in 48 hours at the [W3PN Hacks 2025](https://hackathon.web3privacy.info) hackathon in Berlin
-by [@talentlessguy](https://github.com/talentlessguy) & [@lucemans](https://github.com/lucemans) & [@nevvdev](https://github.com/nevvdev).
+by [@v1rtl](https://github.com/v1rtl) & [@lucemans](https://github.com/lucemans) & [@JustAnotherDevv](https://github.com/JustAnotherDevv).
 
 ---
 

@@ -43,7 +43,7 @@ export const Input = ({
     style={{
       color: "var(--lv-text-primary)",
       backgroundColor: "var(--lv-body-background)",
-      borderColor: "var(--lv-button-secondary-background)",
+      borderColor: "var(--lv-control-input-border)",
     }}
     value={value}
     placeholder={placeholder}

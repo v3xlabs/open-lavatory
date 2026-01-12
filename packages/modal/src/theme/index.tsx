@@ -75,6 +75,8 @@ export const buildTheme = (tokens: OpenLVTheme) => {
     "activeBackground",
     "disabledBackground",
     "disabledColor",
+    "selectedBackground",
+    "selectedColor",
   ] as const;
 
   for (const v of variants) {

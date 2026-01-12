@@ -49,6 +49,8 @@ export type OpenLVTheme = Partial<{
         disabledBackground?: string;
         disabledColor?: string;
         border?: string;
+        selectedBackground?: string;
+        selectedColor?: string;
       };
       tertiary?: {
         color: string;

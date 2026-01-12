@@ -8,7 +8,7 @@ export type SelectProps = {
 };
 
 export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
-  const borderColor = "var(--lv-button-secondary-background)";
+  const borderColor = "var(--lv-button-secondary-border)";
 
   return (
     <div
@@ -28,11 +28,14 @@ export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
           style={
             slug === value
               ? {
-                  backgroundColor: "var(--lv-button-secondary-background)",
-                  color: "var(--lv-text-primary)",
+                  backgroundColor:
+                    "var(--lv-button-secondary-selectedBackground, var(--lv-button-secondary-background))",
+                  color:
+                    "var(--lv-button-secondary-selectedColor, var(--lv-text-primary))",
                   borderColor,
                 }
               : {
+                  backgroundColor: "transparent",
                   color: "var(--lv-text-secondary)",
                   borderColor,
                 }

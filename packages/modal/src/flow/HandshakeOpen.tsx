@@ -31,7 +31,6 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   const secondaryBorder = "var(--lv-button-secondary-border)";
   const qrBg = "var(--lv-qr-background)";
   const qrColor = "var(--lv-qr-color)";
-  const secondaryBg = "var(--lv-button-secondary-background)";
 
   return (
     <div className="flex flex-col items-center gap-4 px-2">
@@ -67,9 +66,8 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="w-full cursor-pointer rounded-lg px-4 py-2 text-sm transition"
+            className="w-full cursor-pointer rounded-lg px-4 py-2 text-sm transition bg-(--lv-button-secondary-background) hover:bg-(--lv-button-secondary-hoverBackground) active:bg-(--lv-button-secondary-activeBackground)"
             style={{
-              background: secondaryBg,
               color: "var(--lv-text-primary)",
               border: `1px solid ${secondaryBorder}`,
             }}

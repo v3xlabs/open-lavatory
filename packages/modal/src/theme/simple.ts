@@ -20,7 +20,7 @@ export const simpleThemeTokens = {
     control: {
       input: {
         background: "#FFFFFF",
-        border: "#E5E7EB",
+        border: "#D1D5DC",
         text: "#111827",
       },
       button: {
@@ -37,11 +37,13 @@ export const simpleThemeTokens = {
         secondary: {
           background: "#E5E7EB",
           color: "#374151",
-          hoverBackground: "#D1D5DB",
+          hoverBackground: "#D1D5DC",
           activeBackground: "#D1D5DB",
           disabledBackground: "#F9FAFB",
           disabledColor: "#9CA3AF",
           border: "#D1D5DC",
+          selectedBackground: "#EFF6FF",
+          selectedColor: "#155dfc",
         },
         tertiary: {
           color: "#6B7280",
@@ -63,7 +65,7 @@ export const simpleThemeTokens = {
       secondary: "#374151",
       muted: "#6B7280",
       heading: "#111827",
-      body: "#1E293B",
+      body: "#6a7282",
     },
   },
 } satisfies ThemeTokensMap;

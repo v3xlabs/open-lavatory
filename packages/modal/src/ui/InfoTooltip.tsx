@@ -7,7 +7,7 @@ import { match } from "ts-pattern";
 const styles = tv({
   slots: {
     root: "group relative",
-    box: "cursor-pointer rounded-md transition-colors flex items-center justify-center",
+    box: "cursor-pointer rounded-md transition-colors flex items-center justify-center hover:[background-color:var(--lv-button-tertiary-hoverBackground)]",
     popover:
       "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md shadow-sm group-hover:block",
     icon: "",
@@ -52,7 +52,6 @@ export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
         className={box()}
         style={{
           color: "var(--lv-text-muted)",
-          backgroundColor: "transparent",
         }}
       >
         {match(variant)
@@ -66,7 +65,7 @@ export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
           backgroundColor: "var(--lv-body-background)",
           color: "var(--lv-text-primary)",
           padding: "6px 8px",
-          border: "1px solid var(--lv-button-secondary-background)",
+          border: "1px solid var(--lv-button-secondary-border)",
         }}
       >
         {children}

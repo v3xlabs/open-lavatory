@@ -9,9 +9,8 @@ type LabelProps = {
 
 export const Label = ({ htmlFor, children }: LabelProps) => (
   <label
-    className={labelClasses}
+    className={`${labelClasses} text-(--lv-text-secondary)`}
     htmlFor={htmlFor}
-    style={{ color: "var(--lv-text-secondary)" }}
   >
     {children}
   </label>
@@ -39,12 +38,7 @@ export const Input = ({
   <input
     // eslint-disable-next-line no-restricted-syntax
     id={id}
-    className={inputClasses}
-    style={{
-      color: "var(--lv-text-primary)",
-      backgroundColor: "var(--lv-body-background)",
-      borderColor: "var(--lv-control-input-border)",
-    }}
+    className={`${inputClasses} text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)`}
     value={value}
     placeholder={placeholder}
     aria-label={ariaLabel}

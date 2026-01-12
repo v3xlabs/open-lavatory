@@ -48,25 +48,14 @@ export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
 
   return (
     <div className={root()}>
-      <div
-        className={box()}
-        style={{
-          color: "var(--lv-text-muted)",
-        }}
-      >
+      <div className={`${box()} text-(--lv-text-muted)`}>
         {match(variant)
           .with("icon", () => <LuCircleHelp className={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>
       <div
-        className={popover()}
-        style={{
-          backgroundColor: "var(--lv-body-background)",
-          color: "var(--lv-text-primary)",
-          padding: "6px 8px",
-          border: "1px solid var(--lv-button-secondary-border)",
-        }}
+        className={`${popover()} bg-(--lv-body-background) text-(--lv-text-primary) px-2 py-1.5 border border-(--lv-button-secondary-border)`}
       >
         {children}
       </div>

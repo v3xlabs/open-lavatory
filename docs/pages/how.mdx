@@ -23,17 +23,12 @@ All of which have public infrastructure available for use, but also allow for se
 | Waku (not implemented) | A p2p messaging protocol |
 | Nostr (not implemented) | A p2p social layer |
 
-:::info
-Depending on configuration the signaling layer can also be configured for transportation.
-This allows for a mailbox style design where the signaling layer is used to deliver messages.
-:::
-
 ## Transport
 
-Currently the only transport protocol supported is [WebRTC](/api/transport/webrtc).
+Currently the transport protocol supported is [WebRTC](/api/transport/webrtc).
 
 | Protocol | Description |
 |----------|-------------|
 | [WebRTC](/api/transport/webrtc) | A p2p messaging protocol for sending and receiving messages between devices |
 
-Ideally at some point we support direct transport layer communication through [WebHID](), [WebUSB](), [WebSerial]() and [WebBluetooth]().
+Ideally at some point support for direct transport layer communication through [WebHID](), [WebUSB](), [WebSerial]() and [WebBluetooth]().

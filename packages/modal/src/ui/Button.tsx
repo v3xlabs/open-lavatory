@@ -9,13 +9,13 @@ import type { PropsWithChildren } from "preact/compat";
 import { tv, type VariantProps } from "tailwind-variants/lite";
 
 const styles = tv({
-  base: "lv-button flex items-center justify-center rounded-lg transition-colors cursor-pointer active:scale-95 transition-transform",
+  base: "flex items-center justify-center rounded-lg transition-all duration-100 cursor-pointer active:scale-95",
   variants: {
     $variant: {
       primary:
-        "font-semibold text-sm bg-(--lv-button-primary-background) text-(--lv-button-primary-color) border-(--lv-button-primary-border) hover:bg-(--lv-button-primary-hoverBackground,var(--lv-button-primary-background)) active:bg-(--lv-button-primary-activeBackground,var(--lv-button-primary-hoverBackground,var(--lv-button-primary-background))) disabled:bg-(--lv-button-primary-disabledBackground,var(--lv-button-primary-background)) disabled:text-(--lv-button-primary-disabledColor,var(--lv-button-primary-color))",
+        "font-semibold text-sm bg-(--lv-control-button-primary-background) text-(--lv-control-button-primary-color) border-(--lv-control-button-primary-border) hover:bg-(--lv-control-button-primary-hoverBackground,var(--lv-control-button-primary-background)) active:bg-(--lv-control-button-primary-activeBackground,var(--lv-control-button-primary-hoverBackground,var(--lv-control-button-primary-background))) disabled:bg-(--lv-control-button-primary-disabledBackground,var(--lv-control-button-primary-background)) disabled:text-(--lv-control-button-primary-disabledColor,var(--lv-control-button-primary-color))",
       secondary:
-        "border bg-(--lv-button-secondary-background) text-(--lv-button-secondary-color) border-(--lv-button-secondary-border,var(--lv-button-secondary-background)) hover:bg-(--lv-button-secondary-hoverBackground,var(--lv-button-secondary-background)) active:bg-(--lv-button-secondary-activeBackground,var(--lv-button-secondary-hoverBackground,var(--lv-button-secondary-background))) disabled:bg-(--lv-button-secondary-disabledBackground,var(--lv-button-secondary-background)) disabled:text-(--lv-button-secondary-disabledColor,var(--lv-button-secondary-color))",
+        "border bg-(--lv-control-button-secondary-background) text-(--lv-control-button-secondary-color) border-(--lv-control-button-secondary-border,var(--lv-control-button-secondary-background)) hover:bg-(--lv-control-button-secondary-hoverBackground,var(--lv-control-button-secondary-background)) active:bg-(--lv-control-button-secondary-activeBackground,var(--lv-control-button-secondary-hoverBackground,var(--lv-control-button-secondary-background))) disabled:bg-(--lv-control-button-secondary-disabledBackground,var(--lv-control-button-secondary-background)) disabled:text-(--lv-control-button-secondary-disabledColor,var(--lv-control-button-secondary-color))",
       tertiary:
         "bg-transparent text-(--lv-text-muted) hover:bg-(--lv-control-button-tertiary-hoverBackground,transparent) active:bg-(--lv-control-button-tertiary-activeBackground,var(--lv-control-button-tertiary-hoverBackground,transparent)) disabled:text-(--lv-control-button-tertiary-disabledColor,var(--lv-text-muted))",
     },

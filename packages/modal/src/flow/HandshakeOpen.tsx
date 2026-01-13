@@ -30,9 +30,9 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
 
   return (
     <div className="flex flex-col items-center gap-4 px-2">
-      <div className="w-full space-y-4 rounded-md border border-(--lv-button-secondary-border) bg-(--lv-card-background) p-4">
+      <div className="w-full space-y-4 rounded-md border border-(--lv-control-button-secondary-border) bg-(--lv-card-background) p-4">
         {uri && (
-          <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border border-(--lv-button-secondary-border) bg-(--lv-qr-background) p-4">
+          <div className="relative mx-auto flex w-fit items-center justify-center rounded-lg border border-(--lv-control-button-secondary-border) bg-(--lv-qr-background) p-4">
             <button
               className="h-[200px] w-[200px] cursor-pointer rounded bg-(--lv-qr-background) text-(--lv-qr-color)"
               onClick={handleCopy}
@@ -46,7 +46,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
           <button
             type="button"
             onClick={handleCopy}
-            className="w-full cursor-pointer rounded-lg border border-(--lv-button-secondary-border) bg-(--lv-button-secondary-background) px-4 py-2 text-sm text-(--lv-text-primary) transition hover:bg-(--lv-button-secondary-hoverBackground) active:bg-(--lv-button-secondary-activeBackground)"
+            className="w-full cursor-pointer rounded-lg border border-(--lv-control-button-secondary-border) bg-(--lv-control-button-secondary-background) px-4 py-2 text-sm text-(--lv-text-primary) transition hover:bg-(--lv-control-button-secondary-hoverBackground) active:bg-(--lv-control-button-secondary-activeBackground)"
           >
             Copy Connection URL
           </button>

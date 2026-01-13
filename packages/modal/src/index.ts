@@ -2,24 +2,15 @@
 /** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
 /** biome-ignore-all lint/suspicious/noConsole: temp */
 
-export type { ModalRootProps } from "./components/ModalRoot.js";
 export { ModalRoot } from "./components/ModalRoot.js";
-export { OpenLVModalElement } from "./element.js";
+export { OpenLVModalElement, type OpenLVModalElementProps } from "./element.js";
 export { useConnectionState } from "./hooks/useConnectionState.js";
 
-import type { OpenLVProvider } from "@openlv/provider";
-
-import OpenLVModalElementDefault from "./element.js";
-import { type AnyThemeConfig, DEFAULT_THEME_CONFIG } from "./theme/index.js";
+import OpenLVModalElementDefault, {
+  type OpenLVModalElementProps,
+} from "./element.js";
 import { log } from "./utils/log.js";
 export { OPENLV_ICON_128 } from "./assets/logo.js";
-export {
-  buildTheme,
-  DEFAULT_THEME_CONFIG,
-  openlvTheme,
-  resolveTheme,
-  simpleTheme,
-} from "./theme/index.js";
 
 export const registerOpenLVModal = (tagName = "openlv-modal") => {
   if (typeof window === "undefined") {
@@ -49,21 +40,21 @@ export const registerOpenLVModal = (tagName = "openlv-modal") => {
 // eslint-disable-next-line import/no-default-export
 export default OpenLVModalElementDefault;
 
-export const triggerOpenModal = (
-  provider: OpenLVProvider,
-  theme: AnyThemeConfig = DEFAULT_THEME_CONFIG,
-  onClose?: () => void,
-) => {
+export const triggerOpenModal = (props: OpenLVModalElementProps) => {
   const modal = document.querySelector("openlv-modal");
 
   if (modal) modal.remove();
 
   if (!modal) {
     registerOpenLVModal();
-    const x = new OpenLVModalElementDefault(provider, theme, () => {
-      log("modal closed");
-      x.remove();
-      onClose?.();
+    const x = new OpenLVModalElementDefault({
+      onClose() {
+        log("modal closed");
+        x.remove();
+        props.onClose?.();
+      },
+      provider: props.provider,
+      theme: props.theme,
     });
 
     document.body.appendChild(x);

@@ -13,7 +13,7 @@ export const MenuGroup: FC<MenuGroupProps> = ({ title, right, children }) => (
       </div>
       <div>{right}</div>
     </div>
-    <div className="flex flex-col gap-1 rounded-md border border-(--lv-button-secondary-background) bg-transparent p-2">
+    <div className="flex flex-col gap-1 rounded-md border border-(--lv-control-button-secondary-background) bg-transparent p-2">
       {children}
     </div>
   </div>

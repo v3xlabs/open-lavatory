@@ -11,7 +11,7 @@ export const UnknownState: FC<{ state: unknown }> = ({ state }) => {
   console.error("Unknown state: ", { state, sessionStatus, providerStatus });
 
   return (
-    <div className="rounded-md bg-(--lv-button-secondary-background) p-2 text-(--lv-text-muted)">
+    <div className="rounded-md bg-(--lv-control-button-secondary-background) p-2 text-(--lv-text-muted)">
       <div>Unknown state: {JSON.stringify(state)}</div>
       <div>URI: {uri}</div>
       <div>Session Status: {JSON.stringify(sessionStatus)}</div>

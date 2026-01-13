@@ -3,34 +3,29 @@ import { h, render } from "preact";
 
 import { ModalProvider } from "./context.js";
 import { ensureStyles } from "./styles/index.js";
-import {
-  type AnyThemeConfig,
-  DEFAULT_THEME_CONFIG,
-} from "./theme/index.js";
+import type { ThemeConfig } from "./theme/types.js";
 import type { ModalConnectionInterface } from "./types/connection.js";
+
+export type OpenLVModalElementProps = {
+  provider: OpenLVProvider;
+  onClose?: () => void;
+  theme?: ThemeConfig;
+};
 
 export class OpenLVModalElement
   extends HTMLElement
   implements ModalConnectionInterface
 {
-  public onClose?: () => void;
-  public provider: OpenLVProvider;
-  public theme: AnyThemeConfig;
-
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
+  private readonly parameters: OpenLVModalElementProps;
 
-  constructor(
-    _provider: OpenLVProvider,
-    _theme: AnyThemeConfig = DEFAULT_THEME_CONFIG,
-    _onClose: () => void = () => {},
-  ) {
+  constructor(parameters: OpenLVModalElementProps) {
     super();
-    this.provider = _provider;
-    this.theme = _theme;
-    this.onClose = _onClose;
+    this.parameters = parameters;
+
     this.shadow = this.attachShadow({ mode: "open" });
-    ensureStyles(this.shadow, this.theme);
+    ensureStyles(this.shadow, this.parameters.theme);
   }
 
   connectedCallback() {
@@ -62,14 +57,7 @@ export class OpenLVModalElement
   }
 
   private performRender() {
-    render(
-      h(ModalProvider, {
-        onClose: this.onClose ?? (() => this.remove()),
-        provider: this.provider,
-        theme: this.theme,
-      }),
-      this.shadow,
-    );
+    render(h(ModalProvider, this.parameters), this.shadow);
   }
 }
 

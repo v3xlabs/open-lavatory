@@ -23,6 +23,7 @@ import { Footer } from "./footer/Footer.js";
 import { Header } from "./Header.js";
 import { ModalSettings } from "./settings/index.js";
 import { UnknownState } from "./UnknownState.js";
+import { InfoScreen } from "../flow/InfoScreen.js";
 
 export interface ModalRootProps {
   onClose?: () => void;
@@ -30,7 +31,7 @@ export interface ModalRootProps {
   onCopy?: (uri: string) => void;
 }
 
-type ModalView = "start" | "settings";
+export type ModalView = "start" | "settings" | "info";
 
 const useModalState = () => {
   const [view, setView] = useState<ModalView>("start");
@@ -146,6 +147,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const title = match(modalView)
     .with("start", () => "Connect Wallet")
     .with("settings", () => "Settings")
+    .with("info", () => "What is openlv?")
     .exhaustive();
 
   useEscapeToClose(onClose);
@@ -234,6 +236,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => undefined)
     .with({ view: "start" }, () => closeSessionIfExists)
     .with({ view: "settings" }, () => () => setView("start"))
+    .with({ view: "info" }, () => () => setView("start"))
     .otherwise(() => () => {
       closeSessionIfExists();
       onClose();
@@ -243,6 +246,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     match(targetView)
       .with("start", () => <Disconnected onSettings={openSettings} />)
       .with("settings", () => <ModalSettings />)
+      .with("info", () => <InfoScreen />)
       .otherwise(() => <UnknownState state={targetView} />);
 
   const renderDisconnectedSection = () => (
@@ -322,6 +326,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             view={modalView}
             onClose={onClose}
             onBack={onBack}
+            setView={setView}
           />
           <div className="modal-transition__container">
             {previousStatus && (

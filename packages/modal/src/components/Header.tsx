@@ -1,17 +1,21 @@
+import type { Dispatch, StateUpdater } from "preact/hooks";
 import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
 
 import { Button } from "../ui/Button.js";
+import type { ModalView } from "./ModalRoot.js";
 
 export const Header = ({
   title,
   view,
   onClose,
   onBack,
+  setView,
 }: {
   title: string;
-  view: "start" | "uri" | "settings";
+  view: ModalView;
   onClose: () => void;
   onBack?: () => void;
+  setView: Dispatch<StateUpdater<ModalView>>;
 }) => {
   return (
     <div className="flex items-center justify-between px-2 py-2">
@@ -26,10 +30,19 @@ export const Header = ({
           <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted)" />
         </Button>
       ) : (
+        // <Button
+        //   type="button"
+        //   href="https://openlv.sh"
+        //   target="_blank"
+        //   $variant="tertiary"
+        //   $aspect="square"
+        //   $size="md"
+        // >
+        //   <LuCircleHelp className="h-5 w-5" />
+        // </Button>
         <Button
           type="button"
-          href="https://openlv.sh"
-          target="_blank"
+          onClick={() => setView("info")}
           $variant="tertiary"
           $aspect="square"
           $size="md"

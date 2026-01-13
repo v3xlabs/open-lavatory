@@ -19,7 +19,7 @@ export const SignalingSettings = () => {
         title="Signaling"
         right={
           <InfoTooltip variant="icon">
-            Something something very cool
+            Signaling is the handshake protocol used to establish a connection.
           </InfoTooltip>
         }
       >

@@ -3,13 +3,13 @@ import { tv } from "tailwind-variants/lite";
 
 const styles = tv({
   slots: {
-    root: "",
+    root: "flex overflow-hidden rounded-md border border-(--lv-control-button-secondary-border)",
     box: "px-4 py-2 font-semibold text-xs transition border-l first:border-l-0 border-(--lv-control-button-secondary-border)",
   },
   variants: {
     active: {
       on: {
-        box: "bg-(--lv-control-button-secondary-selectedBackground,var(--lv-control-button-secondary-background)) text-(--lv-control-button-secondary-selectedColor,var(--lv-text-primary))",
+        box: "bg-(--lv-control-button-secondary-background) text-(--lv-text-primary)",
       },
       off: {
         box: "bg-transparent text-(--lv-text-secondary) cursor-pointer",

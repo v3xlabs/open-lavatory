@@ -36,22 +36,22 @@ const config = createConfig({
       // },
       theme: {
         // Either a predefined theme like such
-        // theme: "simple",
+        theme: "simple",
         // Or a custom theme:
-        theme: {
-          dark: {
-            body: {
-              background: "orange",
-              color: "red",
-            },
-          },
-          light: {
-            body: {
-              background: "blue",
-              color: "white",
-            },
-          },
-        },
+        // theme: {
+        //   dark: {
+        //     body: {
+        //       background: "orange",
+        //       color: "red",
+        //     },
+        //   },
+        //   light: {
+        //     body: {
+        //       background: "blue",
+        //       color: "white",
+        //     },
+        //   },
+        // },
         mode: "light",
       },
     }),

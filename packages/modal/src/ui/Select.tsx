@@ -1,5 +1,26 @@
 import classNames from "classnames";
 import type { FC } from "preact/compat";
+import { tv } from "tailwind-variants/lite";
+
+const styles = tv({
+  slots: {
+    root: "",
+    box: "px-4 py-2 font-semibold text-xs transition border-l first:border-l-0 border-(--lv-button-secondary-border)",
+  },
+  variants: {
+    active: {
+      on: {
+        box: "bg-(--lv-button-secondary-selectedBackground,var(--lv-button-secondary-background)) text-(--lv-button-secondary-selectedColor,var(--lv-text-primary))",
+      },
+      off: {
+        box: "bg-transparent text-(--lv-text-secondary) cursor-pointer",
+      },
+    },
+  },
+  defaultVariants: {
+    active: "off",
+  },
+});
 
 export type SelectProps = {
   options: string[][];
@@ -8,20 +29,17 @@ export type SelectProps = {
 };
 
 export const Select: FC<SelectProps> = ({ options, value, onChange }) => {
+  const { root, box } = styles({});
+
   return (
-    <div className="flex overflow-hidden rounded-md border border-(--lv-button-secondary-border)">
+    <div className={root()}>
       {options.map(([slug, label]) => (
         <button
           key={slug}
           type="button"
           onClick={() => onChange(slug)}
           aria-pressed={slug === value}
-          className={classNames(
-            "px-4 py-2 font-semibold text-xs transition border-l first:border-l-0 border-(--lv-button-secondary-border)",
-            slug === value
-              ? "bg-(--lv-button-secondary-selectedBackground,var(--lv-button-secondary-background)) text-(--lv-button-secondary-selectedColor,var(--lv-text-primary))"
-              : "bg-transparent text-(--lv-text-secondary) cursor-pointer",
-          )}
+          className={box({ active: slug === value ? "on" : "off" })}
         >
           {label}
         </button>

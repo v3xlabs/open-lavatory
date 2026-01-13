@@ -1,6 +1,6 @@
 const labelClasses = "font-semibold text-xs uppercase tracking-wide";
 const inputClasses =
-  "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200";
+  "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)";
 
 type LabelProps = {
   htmlFor?: string;
@@ -38,7 +38,7 @@ export const Input = ({
   <input
     // eslint-disable-next-line no-restricted-syntax
     id={id}
-    className={`${inputClasses} text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)`}
+    className={inputClasses}
     value={value}
     placeholder={placeholder}
     aria-label={ariaLabel}

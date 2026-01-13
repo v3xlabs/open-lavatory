@@ -10,10 +10,7 @@ export default defineConfig({
     tailwindcss(),
     dts({
       outDir: "dist",
-      // entryRoot: "src/index.ts",
-      // tsconfigPath: "tsconfig.json",
-      root: "src",
-      insertTypesEntry: true,
+      entryRoot: "src",
     }),
   ],
   build: {

@@ -27,9 +27,7 @@ export const ensureStyles = async (
 
     style.setAttribute("data-openlv-modal", "true");
 
-    const { tokens } = resolveTheme(
-      theme ?? DEFAULT_THEME_CONFIG,
-    );
+    const { tokens } = resolveTheme(theme ?? DEFAULT_THEME_CONFIG);
     const vars = buildTheme(tokens);
     const rootVars = `:root, :host {\n${Object.entries(vars)
       .map(([key, value]) => `${key}: ${value};`)

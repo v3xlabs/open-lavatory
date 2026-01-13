@@ -126,6 +126,7 @@ export const openlv = ({
       async switchChain({ chainId }) {
         log("switchChain", chainId);
 
+        // eslint-disable-next-line no-restricted-syntax
         const chain = chains.find((chain) => chain.id === chainId);
 
         if (!chain) throw new Error(`Chain ${chainId} not found`);

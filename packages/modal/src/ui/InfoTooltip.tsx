@@ -7,9 +7,9 @@ import { match } from "ts-pattern";
 const styles = tv({
   slots: {
     root: "group relative",
-    box: "cursor-pointer rounded-md transition-colors flex items-center justify-center hover:[background-color:var(--lv-button-tertiary-hoverBackground)]",
+    box: "cursor-pointer rounded-md transition-colors flex items-center justify-center hover:[background-color:var(--lv-button-tertiary-hoverBackground)] text-(--lv-text-muted)",
     popover:
-      "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md shadow-sm group-hover:block",
+      "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md shadow-sm group-hover:block border border-(--lv-button-secondary-border) bg-(--lv-body-background) px-2 py-1.5 text-(--lv-text-primary)",
     icon: "",
   },
   variants: {
@@ -48,17 +48,13 @@ export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
 
   return (
     <div className={root()}>
-      <div className={`${box()} text-(--lv-text-muted)`}>
+      <div className={box()}>
         {match(variant)
           .with("icon", () => <LuCircleHelp className={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>
-      <div
-        className={`${popover()} bg-(--lv-body-background) text-(--lv-text-primary) px-2 py-1.5 border border-(--lv-button-secondary-border)`}
-      >
-        {children}
-      </div>
+      <div className={popover()}>{children}</div>
     </div>
   );
 };

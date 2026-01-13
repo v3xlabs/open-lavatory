@@ -81,7 +81,12 @@ export const openlv = ({
 
       await Promise.race([modalDismissed, connectionCompleted]);
 
-      if (!provider.getSession()) {
+      if (
+        !provider.getSession() ||
+        provider.getState().status !== "connected"
+      ) {
+        provider.closeSession();
+
         return Promise.reject(
           new UserRejectedRequestError(new Error("User closed modal")),
         );

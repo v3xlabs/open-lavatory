@@ -9,7 +9,7 @@ const styles = tv({
     root: "group relative",
     box: "cursor-pointer rounded-md transition-colors flex items-center justify-center hover:[background-color:var(--lv-control-button-tertiary-hoverBackground)] text-(--lv-text-muted)",
     popover:
-      "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md shadow-sm group-hover:block border border-(--lv-control-button-secondary-border) bg-(--lv-body-background) px-2 py-1.5 text-(--lv-text-primary)",
+      "-translate-x-1/2 absolute top-full left-1/2 z-10 hidden rounded-md shadow-sm group-hover:block border border-(--lv-control-button-secondary-border) bg-(--lv-body-background) px-2 py-1.5 text-(--lv-text-primary) text-sm",
     icon: "",
   },
   variants: {

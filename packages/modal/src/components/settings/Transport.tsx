@@ -14,7 +14,9 @@ export const TransportSettings = () => {
     <MenuGroup
       title="Transport"
       right={
-        <InfoTooltip variant="icon">Something something very cool</InfoTooltip>
+        <InfoTooltip variant="icon">
+          This is how the connection is maintained.
+        </InfoTooltip>
       }
     >
       <MenuItem label="Protocol">

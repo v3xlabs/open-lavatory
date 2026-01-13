@@ -234,7 +234,9 @@ export const createSession = async (
         }
       });
 
+      console.log('SETUP SIGNALLL')
       await signal.setup();
+      console.log("SETUP SIGNALLL DONE");
     },
     async close() {
       log("session teardown");

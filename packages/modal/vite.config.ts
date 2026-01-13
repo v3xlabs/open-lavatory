@@ -10,7 +10,10 @@ export default defineConfig({
     tailwindcss(),
     dts({
       outDir: "dist",
-      entryRoot: "src",
+      // entryRoot: "src/index.ts",
+      // tsconfigPath: "tsconfig.json",
+      root: "src",
+      insertTypesEntry: true,
     }),
   ],
   build: {
@@ -18,9 +21,10 @@ export default defineConfig({
       name: "OpenLVModal",
       entry: {
         index: "src/index.ts",
-        theme: "src/theme-entrypoint.ts",
+        "theme/index": "src/theme/index.tsx",
       },
       formats: ["es", "cjs"],
+      fileName: (format, entry) => `${entry}.${format}.js`,
     },
     sourcemap: true,
     target: "es2020",

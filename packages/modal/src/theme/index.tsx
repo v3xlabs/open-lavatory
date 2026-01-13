@@ -1,34 +1,15 @@
 import type { FC, PropsWithChildren } from "preact/compat";
 
-import { openlvThemeTokens } from "./openlv.js";
-import { simpleThemeTokens } from "./simple.js";
+import { openlvTheme } from "./openlv.js";
+import { simpleTheme } from "./simple.js";
 import type {
-  ModesForTokens,
+  AnyThemeConfig,
   OpenLVTheme,
   ThemeConfig,
-  ThemeIdentifier,
   ThemeMode,
   ThemeTokensMap,
+  ValidModes,
 } from "./types.js";
-
-/**
- * Maps theme identifiers to their token types using typeof.
- */
-type ThemeTokensFor = {
-  openlv: typeof openlvThemeTokens;
-  simple: typeof simpleThemeTokens;
-};
-
-/**
- * Type-safe theme configuration that infers allowed modes from the theme identifier.
- */
-export type ThemeConfigInput = {
-  [K in ThemeIdentifier]: {
-    theme: K;
-    tokens?: ThemeTokensFor[K];
-    mode: ModesForTokens<ThemeTokensFor[K]>;
-  };
-}[ThemeIdentifier];
 
 const buildThemeVariables = (
   map: Map<string, string>,
@@ -89,31 +70,24 @@ export const buildTheme = (tokens: OpenLVTheme) => {
   return Object.fromEntries(map.entries());
 };
 
-export { openlvThemeTokens, simpleThemeTokens };
+// Export theme objects for direct use
+export { openlvTheme, simpleTheme };
 
 export type {
+  AnyThemeConfig,
   OpenLVTheme,
   ThemeConfig,
-  ThemeIdentifier,
   ThemeMode,
   ThemeTokensMap,
+  ValidModes,
 };
 
-export type ThemeProviderProps<T extends ThemeTokensMap = ThemeTokensMap> =
-  PropsWithChildren<ThemeConfig<T>>;
+export type ThemeProviderProps = PropsWithChildren<AnyThemeConfig>;
 
-export const DEFAULT_THEME_CONFIG: ThemeConfig<typeof openlvThemeTokens> = {
-  theme: "openlv",
-  tokens: openlvThemeTokens,
+export const DEFAULT_THEME_CONFIG: ThemeConfig<typeof openlvTheme> = {
+  theme: openlvTheme,
   mode: "system",
 };
-
-const defaultTokens: Record<string, ThemeTokensMap> = {
-  openlv: openlvThemeTokens,
-  simple: simpleThemeTokens,
-};
-
-const getDefaultTokens = (theme: ThemeIdentifier) => defaultTokens[theme];
 
 const resolveSystemMode = (): "light" | "dark" => {
   if (typeof window !== "undefined" && window.matchMedia) {
@@ -148,13 +122,12 @@ const resolveFromVariantMap = (
   return undefined;
 };
 
-export const resolveTheme = <T extends ThemeTokensMap>(
-  config: ThemeConfig<T>,
+export const resolveTheme = (
+  config: AnyThemeConfig,
 ): { tokens: OpenLVTheme; mode: ThemeMode } => {
-  const { theme, tokens } = config;
-  const baseTokens = (tokens ?? getDefaultTokens(theme)) as ThemeTokensMap;
+  const { theme } = config;
 
-  const resolved = resolveFromVariantMap(config.mode, baseTokens);
+  const resolved = resolveFromVariantMap(config.mode, theme);
 
   if (!resolved) {
     throw new Error("Invalid theme configuration: mode does not match tokens");
@@ -175,7 +148,6 @@ export const ThemeProvider: FC<ThemeProviderProps> = ({
     <div
       style={buildTheme(selectedTokens)}
       id="root"
-      data-openlv-theme={config.theme}
       data-openlv-mode={resolvedMode}
     >
       {children}

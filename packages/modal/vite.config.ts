@@ -16,9 +16,11 @@ export default defineConfig({
   build: {
     lib: {
       name: "OpenLVModal",
-      entry: "src/index.ts",
-      formats: ["es", "cjs", "iife"],
-      fileName: (format) => `index.${format}.js`,
+      entry: {
+        index: "src/index.ts",
+        theme: "src/theme-entrypoint.ts",
+      },
+      formats: ["es", "cjs"],
     },
     sourcemap: true,
     target: "es2020",
@@ -31,10 +33,6 @@ export default defineConfig({
         "preact-custom-element",
         "qrcode-generator",
       ],
-      output: {
-        // Inline CSS into the JS bundle
-        inlineDynamicImports: true,
-      },
     },
   },
 });

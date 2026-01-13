@@ -27,14 +27,19 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.es.js",
-      "require": "./dist/index.cjs.js",
-      "default": "./dist/index.es.js"
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs",
+      "default": "./dist/index.js"
+    },
+    "./theme": {
+      "types": "./dist/theme-entrypoint.d.ts",
+      "import": "./dist/theme.js",
+      "require": "./dist/theme.cjs",
+      "default": "./dist/theme.js"
     }
   },
-  "main": "./dist/index.cjs.js",
-  "module": "./dist/index.es.js",
-  "unpkg": "./dist/index.iife.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "files": [
     "dist",

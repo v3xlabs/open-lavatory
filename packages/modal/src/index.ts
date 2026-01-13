@@ -6,27 +6,20 @@ export type { ModalRootProps } from "./components/ModalRoot.js";
 export { ModalRoot } from "./components/ModalRoot.js";
 export { OpenLVModalElement } from "./element.js";
 export { useConnectionState } from "./hooks/useConnectionState.js";
-export type {
-  OpenLVTheme,
-  ThemeConfig,
-  ThemeConfigInput,
-  ThemeIdentifier,
-  ThemeMode,
-  ThemeTokensMap,
-} from "./theme/index.js";
-export {
-  buildTheme,
-  DEFAULT_THEME_CONFIG,
-  resolveTheme,
-} from "./theme/index.js";
 
 import type { OpenLVProvider } from "@openlv/provider";
 
 import OpenLVModalElementDefault from "./element.js";
-import { DEFAULT_THEME_CONFIG, type ThemeConfig } from "./theme/index.js";
-import { openlvThemeTokens } from "./theme/openlv.js";
+import { type AnyThemeConfig, DEFAULT_THEME_CONFIG } from "./theme/index.js";
 import { log } from "./utils/log.js";
 export { OPENLV_ICON_128 } from "./assets/logo.js";
+export {
+  buildTheme,
+  DEFAULT_THEME_CONFIG,
+  openlvTheme,
+  resolveTheme,
+  simpleTheme,
+} from "./theme/index.js";
 
 export const registerOpenLVModal = (tagName = "openlv-modal") => {
   if (typeof window === "undefined") {
@@ -58,7 +51,7 @@ export default OpenLVModalElementDefault;
 
 export const triggerOpenModal = (
   provider: OpenLVProvider,
-  theme: ThemeConfig = DEFAULT_THEME_CONFIG,
+  theme: AnyThemeConfig = DEFAULT_THEME_CONFIG,
   onClose?: () => void,
 ) => {
   const modal = document.querySelector("openlv-modal");
@@ -79,5 +72,3 @@ export const triggerOpenModal = (
 };
 
 export type TriggerOpenModal = typeof triggerOpenModal;
-
-export { openlvThemeTokens };

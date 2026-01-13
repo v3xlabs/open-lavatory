@@ -1,7 +1,7 @@
 import type { ThemeTokensMap } from "./types.js";
 
 // Predefined theme token variants for light/dark/system
-export const openlvThemeTokens = {
+export const openlvTheme = {
   light: {
     font: { family: "Inter, sans-serif" },
     body: { color: "#0F172A", background: "#FFFFFF" },

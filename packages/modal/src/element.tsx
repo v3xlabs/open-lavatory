@@ -3,7 +3,10 @@ import { h, render } from "preact";
 
 import { ModalProvider } from "./context.js";
 import { ensureStyles } from "./styles/index.js";
-import { DEFAULT_THEME_CONFIG, type ThemeConfig } from "./theme/index.js";
+import {
+  type AnyThemeConfig,
+  DEFAULT_THEME_CONFIG,
+} from "./theme/index.js";
 import type { ModalConnectionInterface } from "./types/connection.js";
 
 export class OpenLVModalElement
@@ -12,14 +15,14 @@ export class OpenLVModalElement
 {
   public onClose?: () => void;
   public provider: OpenLVProvider;
-  public theme: ThemeConfig;
+  public theme: AnyThemeConfig;
 
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
 
   constructor(
     _provider: OpenLVProvider,
-    _theme: ThemeConfig = DEFAULT_THEME_CONFIG,
+    _theme: AnyThemeConfig = DEFAULT_THEME_CONFIG,
     _onClose: () => void = () => {},
   ) {
     super();

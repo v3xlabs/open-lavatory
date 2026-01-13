@@ -6,6 +6,7 @@ export type OpenLVTheme = Partial<{
   };
   body: {
     color: string;
+    /** Background color of the main modal */
     background: string;
   };
   border: {

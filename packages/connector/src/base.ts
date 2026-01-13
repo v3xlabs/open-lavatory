@@ -1,4 +1,4 @@
-import type { ThemeConfigInput } from "@openlv/modal";
+import type { AnyThemeConfig } from "@openlv/modal/theme";
 import {
   createProvider,
   type OpenLVProvider,
@@ -14,7 +14,7 @@ import { getTriggerModal } from "./modal.js";
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage">
 > & {
-  theme?: ThemeConfigInput;
+  theme?: AnyThemeConfig;
 };
 
 export type OpenLVConnector = CreateConnectorFn<

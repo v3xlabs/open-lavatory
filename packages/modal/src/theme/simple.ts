@@ -1,6 +1,6 @@
 import type { ThemeTokensMap } from "./types.js";
 
-export const simpleThemeTokens = {
+export const simpleTheme = {
   light: {
     font: { family: "sans-serif" },
     body: {

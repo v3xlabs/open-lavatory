@@ -4,7 +4,11 @@ import type { FC } from "preact/compat";
 import { useContext } from "preact/hooks";
 
 import { ModalRoot } from "./components/ModalRoot.js";
-import { DEFAULT_THEME_CONFIG, type ThemeConfig, ThemeProvider } from "./theme/index.js";
+import {
+  type AnyThemeConfig,
+  DEFAULT_THEME_CONFIG,
+  ThemeProvider,
+} from "./theme/index.js";
 
 export type ProviderContextO = {
   provider: OpenLVProvider | undefined;
@@ -16,7 +20,7 @@ export const ModalContext = createContext<ProviderContextO>({
 
 export type ModalProviderProps = {
   provider: OpenLVProvider;
-  theme?: ThemeConfig;
+  theme?: AnyThemeConfig;
   onClose?: () => void;
 };
 
@@ -25,7 +29,7 @@ export const ModalProvider: FC<ModalProviderProps> = ({
   theme,
   onClose,
 }) => {
-  const themeConfig: ThemeConfig = theme ?? DEFAULT_THEME_CONFIG;
+  const themeConfig: AnyThemeConfig = theme ?? DEFAULT_THEME_CONFIG;
 
   return (
     <ModalContext.Provider value={{ provider }}>

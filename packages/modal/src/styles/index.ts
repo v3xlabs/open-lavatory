@@ -1,17 +1,17 @@
 import "./index.css";
 
 import {
+  type AnyThemeConfig,
   buildTheme,
   DEFAULT_THEME_CONFIG,
   resolveTheme,
-  type ThemeConfig,
 } from "../theme/index.js";
 // @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";
 
 export const ensureStyles = async (
   shadowRoot?: ShadowRoot,
-  theme?: ThemeConfig,
+  theme?: AnyThemeConfig,
 ) => {
   // If we have a shadow root, inject styles directly into it
   if (shadowRoot) {
@@ -28,7 +28,7 @@ export const ensureStyles = async (
     style.setAttribute("data-openlv-modal", "true");
 
     const { tokens } = resolveTheme(
-      theme ?? (DEFAULT_THEME_CONFIG as ThemeConfig),
+      theme ?? DEFAULT_THEME_CONFIG,
     );
     const vars = buildTheme(tokens);
     const rootVars = `:root, :host {\n${Object.entries(vars)

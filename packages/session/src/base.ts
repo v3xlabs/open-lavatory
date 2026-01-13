@@ -234,9 +234,8 @@ export const createSession = async (
         }
       });
 
-      console.log('SETUP SIGNALLL')
+      // TODO: handle errors in setup nicely in modal UI
       await signal.setup();
-      console.log("SETUP SIGNALLL DONE");
     },
     async close() {
       log("session teardown");

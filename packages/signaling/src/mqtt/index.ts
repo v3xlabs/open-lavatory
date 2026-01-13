@@ -29,10 +29,8 @@ export const mqtt: CreateSignalLayerFn = ({
         },
         false,
       );
-      console.log("MQTT SETUP");
     },
     teardown() {
-      console.log("MQTT TEARDOWN");
       connection?.end(true, {});
       connection = undefined;
     },

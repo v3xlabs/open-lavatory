@@ -2,10 +2,19 @@ import type { ThemeTokensMap } from "./types.js";
 
 // Predefined theme token variants for light/dark/system
 export const openlvTheme = {
-  light: {
+  common: {
     font: { family: "Inter, sans-serif" },
-    body: { color: "#0F172A", background: "#FFFFFF" },
     border: { radius: "16px" },
+    control: {
+      button: {
+        primary: {
+          padding: "8px 16px",
+        },
+      },
+    },
+  },
+  light: {
+    body: { color: "#0F172A", background: "#FFFFFF" },
     overlay: {
       background: "rgba(0, 0, 0, 0.10)",
       backdrop: { filter: "blur(6px)" },
@@ -17,7 +26,6 @@ export const openlvTheme = {
         primary: {
           background: "#FF6A00",
           color: "#FFFFFF",
-          padding: "8px 16px",
           hoverBackground: "#FF7D1F",
           activeBackground: "#E76200",
           disabledBackground: "#CBD5E1",
@@ -46,9 +54,8 @@ export const openlvTheme = {
     text: { primary: "#0F172A", secondary: "#475569", muted: "#94A3B8" },
   },
   dark: {
-    font: { family: "Inter, sans-serif" },
     body: { color: "#F3F4F6", background: "#16181D" },
-    border: { radius: "16px", color: "#2F343C", width: "1px" },
+    border: { color: "#2F343C", width: "1px" },
     overlay: {
       background: "rgba(0,0,0,0.55)",
       backdrop: { filter: "blur(8px)" },
@@ -60,7 +67,6 @@ export const openlvTheme = {
         primary: {
           background: "#FF6A00",
           color: "#0D0E12",
-          padding: "8px 16px",
           hoverBackground: "#FF7D1F",
           activeBackground: "#E76200",
           disabledBackground: "#2A2F36",

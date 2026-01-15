@@ -2,6 +2,12 @@
 
 import type { ThemeConfig, ThemeTokensMap } from "./types.js";
 
+export type {
+  PredefinedThemeName,
+  ThemeConfig,
+  ThemeTokensMap,
+} from "./types.js";
+
 const importOrPassthrough = async (
   theme: ThemeConfig["theme"],
 ): Promise<ThemeTokensMap> => {
@@ -45,19 +51,50 @@ export const flattenToCssVars = <T extends Record<string, unknown>>(
   return out;
 };
 
+const resolveMode = (mode: ThemeConfig["mode"]): "light" | "dark" => {
+  if (mode === "system") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
+  }
+
+  return mode;
+};
+
+const deepMerge = (
+  base: Record<string, unknown>,
+  overlay: Record<string, unknown>,
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = { ...base };
+
+  for (const key of Object.keys(overlay)) {
+    const baseValue = base[key];
+    const overlayValue = overlay[key];
+
+    result[key] =
+      isPlainObject(baseValue) && isPlainObject(overlayValue)
+        ? deepMerge(baseValue, overlayValue)
+        : overlayValue;
+  }
+
+  return result;
+};
+
 // Converts the theme into css variables
 // --lv-
 export const buildTheme = async (config: ThemeConfig) => {
   const theme = await importOrPassthrough(config.theme);
 
-  console.log("theme", theme);
-  const variant = theme[config.mode];
-
-  console.log("variant", variant);
+  const resolvedMode = resolveMode(config.mode);
+  const variant = theme[resolvedMode];
 
   if (!variant) return "";
 
-  const flattened = flattenToCssVars(variant);
+  const mergedVariant = theme.common
+    ? deepMerge(theme.common, variant)
+    : variant;
+
+  const flattened = flattenToCssVars(mergedVariant);
 
   return Object.entries(flattened)
     .map(([key, value]) => `${key}: ${value};`)

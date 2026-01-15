@@ -36,7 +36,7 @@ const config = createConfig({
       // },
       theme: {
         // Either a predefined theme like such
-        theme: "simple",
+        // theme: "simple",
         // Or a custom theme:
         // theme: {
         //   dark: {
@@ -52,6 +52,15 @@ const config = createConfig({
         //     },
         //   },
         // },
+        theme: {
+          common: {
+            body: {
+              background: "#ff0000",
+              color: "#333333",
+            },
+          },
+          light: {},
+        },
         mode: "light",
       },
     }),
@@ -261,7 +270,7 @@ const Connectors = () => {
                   className={classNames(
                     "font-bold text-sm",
                     connector.type === "openLv" &&
-                    "text-[var(--vocs-color_codeInlineText)]",
+                      "text-[var(--vocs-color_codeInlineText)]",
                   )}
                 >
                   {connector.name}

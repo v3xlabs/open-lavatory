@@ -1,6 +1,8 @@
 export type ThemeMode = "light" | "dark" | "system";
 
-export type OpenLVTheme = Partial<{
+type DeepPartial<T> = { [K in keyof T]?: DeepPartial<T[K]> };
+
+type OpenLVThemeShape = {
   font: {
     family: string;
   };
@@ -74,7 +76,10 @@ export type OpenLVTheme = Partial<{
     heading?: string;
     body?: string;
   };
-}>;
+};
+
+// Theme with all properties deeply optional
+export type OpenLVTheme = DeepPartial<OpenLVThemeShape>;
 
 export type ThemeTokensMap = {
   common?: OpenLVTheme;

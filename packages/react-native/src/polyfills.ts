@@ -96,7 +96,7 @@ const ensureCryptoRandomUUID = () => {
 
   if (typeof crypto.getRandomValues !== "function") {
     throw new Error(
-      "@openlv/react-native: crypto.getRandomValues is missing. Wrap relevant parts of your code with <OpenLVProvider> from '@openlv/react-native/provider'.",
+      "@openlv/react-native: crypto.getRandomValues is missing. Add <OpenLVGlobals /> from '@openlv/react-native' somewhere in your app.",
     );
   }
 
@@ -161,7 +161,7 @@ const ensureMinimumGlobalsForSession = () => {
 
   if (!hasGetRandomValues()) {
     throw new Error(
-      "@openlv/react-native: crypto.getRandomValues is missing. Wrap relevant parts of your code with <OpenLVProvider> from '@openlv/react-native/provider'.",
+      "@openlv/react-native: crypto.getRandomValues is missing. Add <OpenLVGlobals /> from '@openlv/react-native' somewhere in your app.",
     );
   }
 
@@ -193,7 +193,7 @@ export const ensureWebCryptoSubtle = async (
   }
 
   throw new Error(
-    "@openlv/react-native: WebCrypto is not ready (crypto.subtle missing). Wrap relevant parts of your code with <OpenLVProvider> from '@openlv/react-native/provider' (or render <OpenLVCryptoPolyfill /> manually) and ensure 'react-native-webview' + 'react-native-webview-crypto' are installed.",
+    "@openlv/react-native: WebCrypto is not ready (crypto.subtle missing). Add <OpenLVGlobals /> from '@openlv/react-native' somewhere in your app (or render <OpenLVCryptoPolyfill /> manually) and ensure 'react-native-webview' + 'react-native-webview-crypto' are installed.",
   );
 };
 

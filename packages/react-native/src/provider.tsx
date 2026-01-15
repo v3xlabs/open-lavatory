@@ -10,24 +10,22 @@ import {
   OpenLVCryptoPolyfill,
 } from "./polyfills.js";
 
-export type OpenLVProviderProps = {
-  children: React.ReactNode;
+export type OpenLVGlobalsProps = {
   cryptoTimeoutMs?: number;
 };
 
 const getGlobal = () => globalThis as unknown as Record<string, unknown>;
 
-export const OpenLVProvider = ({
-  children,
+export const OpenLVGlobals = ({
   cryptoTimeoutMs,
-}: OpenLVProviderProps): React.ReactElement => {
+}: OpenLVGlobalsProps = {}): React.ReactElement => {
   const [error, setError] = React.useState<unknown>(undefined);
 
   React.useEffect(() => {
     try {
       const g = getGlobal();
 
-      g.__openlvRnProviderMounted = true;
+      g.__openlvRnGlobalsMounted = true;
 
       if (!g.__openlvRnPolyfillsInstalled) {
         g.__openlvRnPolyfillsInstalled = true;
@@ -64,13 +62,8 @@ export const OpenLVProvider = ({
   if (error) {
     const message = error instanceof Error ? error.message : String(error);
 
-    throw new Error(`OpenLVProvider initialization failed: ${message}`);
+    throw new Error(`OpenLVGlobals initialization failed: ${message}`);
   }
 
-  return (
-    <>
-      <OpenLVCryptoPolyfill />
-      {children}
-    </>
-  );
+  return <OpenLVCryptoPolyfill />;
 };

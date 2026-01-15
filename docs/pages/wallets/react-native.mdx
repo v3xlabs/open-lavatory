@@ -32,7 +32,7 @@ Below is a simple example of using `@openlv/react-native` in a react-native app
 
 ```tsx [App.tsx]
 import React from "react";
-import { OpenLVProvider } from "@openlv/react-native/provider";  // [!code ++]
+import { OpenLVGlobals } from "@openlv/react-native";  // [!code ++]
 import { connectSession } from "@openlv/react-native";  // [!code ++]
 import { View, Text, Button } from "react-native";
 
@@ -49,13 +49,14 @@ export default function App() {
   };
 
   return (
-    <OpenLVProvider> {/* // [!code ++] */}
+    <>
+      <OpenLVGlobals /> {/* // [!code ++] */}
       <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
         <Text>OpenLV Mobile Wallet</Text>
         <Button title="Start Session" onPress={startSession} />
         {session && <Text>Session Connected!</Text>}
       </View>
-    </OpenLVProvider> // [!code ++]
+    </>
   );
 }
 ```
@@ -66,17 +67,16 @@ This example demonstrates how to:
 - Connect to dApps using the OpenLV protocol
 - Handle incoming requests from dApps via the `connectSession` function
 
-The `OpenLVProvider` wraps the application and provides the necessary context for OpenLV functionality.
+The `OpenLVGlobals` component sets up global polyfills and provides the necessary environment for OpenLV functionality.
 
-### Provider side effects
+### Global Setup
 
-The `OpenLVProvider` comes bundled with several polyfills to ensure compatibility:
-
+The `OpenLVGlobals` component comes bundled with several polyfills to ensure compatibility:
 - `react-native-webrtc`
 - `react-native-webview-crypto`
 - `react-native-get-random-values`
 
-These polyfills override certain global objects (e.g., `window.crypto`), and are installed only once and cleaned up when the provider is unmounted.
+These polyfills override certain global objects (e.g., `window.crypto`), and are installed only once and cleaned up when the runtime is unmounted.
 
 ## Mobile Platform Considerations
 

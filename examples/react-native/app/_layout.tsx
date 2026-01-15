@@ -3,7 +3,7 @@ import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import 'react-native-reanimated';
 
-import { OpenLVProvider } from '@openlv/react-native';
+import { OpenLVGlobals } from '@openlv/react-native';
 
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
@@ -16,12 +16,11 @@ export default function RootLayout() {
 
   return (
     <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <OpenLVProvider>
-        <Stack>
-          <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        </Stack>
-        <StatusBar style="auto" />
-      </OpenLVProvider>
+      <OpenLVGlobals />
+      <Stack>
+        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      </Stack>
+      <StatusBar style="auto" />
     </ThemeProvider>
   );
 }

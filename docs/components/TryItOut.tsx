@@ -36,7 +36,7 @@ const config = createConfig({
       // },
       theme: {
         // Either a predefined theme like such
-        // theme: "simple",
+        theme: "simple",
         // Or a custom theme:
         // theme: {
         //   dark: {
@@ -52,15 +52,6 @@ const config = createConfig({
         //     },
         //   },
         // },
-        theme: {
-          common: {
-            body: {
-              background: "#ff0000",
-              color: "#333333",
-            },
-          },
-          light: {},
-        },
         mode: "light",
       },
     }),

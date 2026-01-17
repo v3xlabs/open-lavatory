@@ -148,10 +148,20 @@ export const createProvider = (
 
     return (
       match(request)
-        .with({ method: "eth_chainId" }, () => {
+        .with({ method: "eth_chainId" }, async () => {
           log("eth_chainId");
 
-          return "0x1";
+          if (session) {
+            log("sending eth_chainId to session");
+            const result = await session.send(request);
+
+            log("eth_chainId result from session", result);
+
+            return result;
+          }
+
+          // Fallback to mainnet if no session
+          return "0x9039213021";
         })
         .with({ method: "wallet_requestPermissions" }, () => {
           throw new Error("Not implemented");

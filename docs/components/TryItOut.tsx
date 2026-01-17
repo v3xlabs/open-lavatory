@@ -8,7 +8,12 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
-import type { Address, EIP1193Provider } from "viem";
+import {
+  type Address,
+  createPublicClient,
+  type EIP1193Provider,
+  http as viemHttp,
+} from "viem";
 import {
   type Connector,
   createConfig,
@@ -22,12 +27,19 @@ import {
   useSignMessage,
   WagmiProvider,
 } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import {
+  arbitrum,
+  base,
+  mainnet,
+  optimism,
+  polygon,
+  sepolia,
+} from "wagmi/chains";
 
 const queryClient = new QueryClient();
 
 const config = createConfig({
-  chains: [mainnet],
+  chains: [mainnet, sepolia, arbitrum, optimism, polygon, base],
   connectors: [
     openlv({
       // theme: {
@@ -58,6 +70,11 @@ const config = createConfig({
   ],
   transports: {
     [mainnet.id]: http(),
+    [sepolia.id]: http(),
+    [arbitrum.id]: http(),
+    [optimism.id]: http(),
+    [polygon.id]: http(),
+    [base.id]: http(),
   },
 });
 
@@ -70,7 +87,80 @@ const trimAddress = (address: Address | undefined | null) => {
 let session: Session | undefined = undefined;
 
 const TestSign = () => {
-  const { signMessage, data: signedData } = useSignMessage();
+  const { signMessage, data: signedData, error, isPending } = useSignMessage();
+  const { address, connector } = useAccount();
+
+  const [verificationResult, setVerificationResult] = useState<boolean | null>(
+    null,
+  );
+  const [verificationError, setVerificationError] = useState<string | null>(
+    null,
+  );
+  const [isVerifying, setIsVerifying] = useState(false);
+
+  const verifySignature = async (signature: string) => {
+    if (!signature || !address || !connector) return;
+
+    setIsVerifying(true);
+    setVerificationError(null);
+
+    try {
+      const provider = (await connector.getProvider()) as EIP1193Provider;
+      const chainIdHex = await provider.request({
+        method: "eth_chainId",
+        params: [] as never,
+      });
+      const chainId = parseInt(chainIdHex as string, 16);
+
+      console.log("Remote wallet chainId:", chainId);
+
+      const chainConfig = config.chains.find((c) => c.id === chainId);
+
+      if (!chainConfig) {
+        throw new Error(`Chain ${chainId} not configured`);
+      }
+
+      const publicClient = createPublicClient({
+        chain: chainConfig,
+        transport: viemHttp(),
+      });
+
+      console.log("Verifying signature with:", {
+        address,
+        message: "Hello, world!",
+        signature: signature as `0x${string}`,
+        chainId: publicClient.chain?.id,
+      });
+
+      const valid = await publicClient.verifyMessage({
+        address,
+        message: "Hello, world!",
+        signature: signature as `0x${string}`,
+      });
+
+      console.log("Verification result:", valid);
+      setVerificationResult(valid);
+    } catch (error) {
+      console.error("Verification failed:", error);
+
+      setVerificationError(
+        error instanceof Error ? error.message : String(error),
+      );
+      setVerificationResult(false);
+    } finally {
+      setIsVerifying(false);
+    }
+  };
+
+  if (
+    signedData &&
+    typeof signedData === "string" &&
+    signedData.startsWith("0x") &&
+    !isVerifying &&
+    verificationResult === null
+  ) {
+    verifySignature(signedData);
+  }
 
   return (
     <div className="space-y-2">
@@ -81,15 +171,46 @@ const TestSign = () => {
         <button
           onClick={() => {
             signMessage({ message: "Hello, world!" });
+            setVerificationResult(null);
+            setVerificationError(null);
           }}
           className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
         >
           Sign Message
         </button>
       </div>
+      {isPending && (
+        <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+          ⏳ Waiting for signature... (Check your wallet)
+        </div>
+      )}
+      {error && (
+        <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+          Signature request cancelled or failed
+        </div>
+      )}
       {signedData && (
-        <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
-          Signed Data: {JSON.stringify(signedData)}
+        <div className="space-y-2">
+          {isVerifying ? (
+            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+              Verifying signature...
+            </div>
+          ) : verificationResult !== null ? (
+            <div
+              className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
+                verificationResult
+                  ? "text-green-500"
+                  : "text-[var(--vocs-color_text)]"
+              }`}
+            >
+              {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
+            </div>
+          ) : null}
+          {verificationError && (
+            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+              Error: {verificationError}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -145,9 +266,18 @@ const ConnectComponent = () => {
                   params: [] as never,
                 });
 
+                if (result) return result;
+              }
+
+              if (method === "eth_chainId") {
+                const result = await client.request({
+                  method: "eth_chainId",
+                  params: [] as never,
+                });
+
                 console.log("result from calling wallet", result);
 
-                if (result) return result;
+                return result;
               }
 
               if (["personal_sign"].includes(method)) {

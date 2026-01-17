@@ -160,8 +160,7 @@ export const createProvider = (
             return result;
           }
 
-          // Fallback to mainnet if no session
-          return "0x9039213021";
+          return "0x1";
         })
         .with({ method: "wallet_requestPermissions" }, () => {
           throw new Error("Not implemented");

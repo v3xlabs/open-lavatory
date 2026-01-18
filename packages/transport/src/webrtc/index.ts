@@ -15,20 +15,16 @@ const defaultConfig: WebRTCConfig = {
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
     { urls: "stun:stun.services.mozilla.com:3478" },
-    {
-      urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443"],
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
   ],
   isHost: true,
 };
 
-export const webrtc = (config: WebRTCConfig = defaultConfig) => {
+export const webrtc = (config: Partial<WebRTCConfig> = {}) => {
   const ident = Math.random().toString(36).substring(2, 4) + "#";
+  const mergedConfig: WebRTCConfig = { ...defaultConfig, ...config };
 
   return createTransportBase(({ emitter, isHost }) => {
-    const rtcConfig: RTCConfiguration = { iceServers: config.iceServers };
+    const rtcConfig: RTCConfiguration = { iceServers: mergedConfig.iceServers };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
 

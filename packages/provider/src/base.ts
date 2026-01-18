@@ -148,8 +148,17 @@ export const createProvider = (
 
     return (
       match(request)
-        .with({ method: "eth_chainId" }, () => {
+        .with({ method: "eth_chainId" }, async () => {
           log("eth_chainId");
+
+          if (session) {
+            log("sending eth_chainId to session");
+            const result = await session.send(request);
+
+            log("eth_chainId result from session", result);
+
+            return result;
+          }
 
           return "0x1";
         })

@@ -97,12 +97,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
           <div className="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
             <div className="text-center">
-              <h3 className="mb-2 font-semibold text-[var(--lv-text-primary)] text-lg">
+              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 Preparing connection
               </h3>
-              <p className="text-[var(--lv-text-muted)] text-sm">
-                Generating keys…
-              </p>
+              <p className="text-(--lv-text-muted) text-sm">Generating keys…</p>
             </div>
           </div>
         ))
@@ -110,10 +108,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
           <div className="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
             <div className="text-center">
-              <h3 className="mb-2 font-semibold text-[var(--lv-text-primary)] text-lg">
+              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 Connecting
               </h3>
-              <p className="text-[var(--lv-text-muted)] text-sm">
+              <p className="text-(--lv-text-muted) text-sm">
                 Waiting for network connection...
               </p>
             </div>
@@ -123,7 +121,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
         .with(FLOW.CONFIRMING, () => (
           <div className="flex flex-col items-center gap-4 p-6">
             <div className="text-center">
-              <h3 className="mb-2 font-semibold text-[var(--lv-text-primary)] text-lg">
+              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 Establishing e2e encryption...
               </h3>
             </div>
@@ -133,10 +131,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
           <div className="flex flex-col items-center gap-4 p-6">
             <div className="text-center">
               <div className="mb-4 text-4xl">✅</div>
-              <h3 className="mb-2 font-semibold text-[var(--lv-text-primary)] text-lg">
+              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 Connected Successfully!
               </h3>
-              <p className="text-[var(--lv-text-muted)] text-sm">
+              <p className="text-(--lv-text-muted) text-sm">
                 Your wallet is now connected and ready to use.
               </p>
             </div>
@@ -146,17 +144,17 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
           <div className="flex flex-col items-center gap-4 p-6">
             <div className="text-center">
               <div className="mb-4 text-4xl">🔌</div>
-              <h3 className="mb-2 font-semibold text-[var(--lv-text-primary)] text-lg">
+              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 Disconnected
               </h3>
-              <p className="mb-4 text-[var(--lv-text-muted)] text-sm">
+              <p className="mb-4 text-(--lv-text-muted) text-sm">
                 The connection has been closed.
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-lg bg-[var(--lv-button-secondary-background)] px-4 py-2 font-semibold text-[var(--lv-text-primary)] text-sm transition hover:bg-[var(--lv-button-primary-background-hover)]"
+              className="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
             >
               Close
             </button>

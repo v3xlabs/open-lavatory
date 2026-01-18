@@ -1,184 +1,102 @@
-import type { FC, PropsWithChildren } from "preact/compat";
+// import type { FC, PropsWithChildren } from "preact/compat";
 
-import { openlvThemeTokens } from "./openlv.js";
-import { simpleThemeTokens } from "./simple.js";
-import type {
-  ModesForTokens,
-  OpenLVTheme,
+import type { ThemeConfig, ThemeTokensMap } from "./types.js";
+
+export type {
+  PredefinedThemeName,
   ThemeConfig,
-  ThemeIdentifier,
-  ThemeMode,
   ThemeTokensMap,
 } from "./types.js";
 
-/**
- * Maps theme identifiers to their token types using typeof.
- */
-type ThemeTokensFor = {
-  openlv: typeof openlvThemeTokens;
-  simple: typeof simpleThemeTokens;
-};
-
-/**
- * Type-safe theme configuration that infers allowed modes from the theme identifier.
- */
-export type ThemeConfigInput = {
-  [K in ThemeIdentifier]: {
-    theme: K;
-    tokens?: ThemeTokensFor[K];
-    mode: ModesForTokens<ThemeTokensFor[K]>;
-  };
-}[ThemeIdentifier];
-
-const buildThemeVariables = (
-  map: Map<string, string>,
-  path: string[],
-  object: Record<string, string | object>,
-) => {
-  for (const [key, value] of Object.entries(object)) {
-    if (value && typeof value === "object") {
-      buildThemeVariables(
-        map,
-        [...path, key],
-        value as Record<string, string | object>,
-      );
-    } else if (typeof value === "string") {
-      map.set(`--lv-${[...path, key].join("-")}`, value);
-    }
-  }
-};
-
-/**
- * Converts the theme to css variables prefixed with --lv-
- * including nested keys using - notation
- */
-export const buildTheme = (tokens: OpenLVTheme) => {
-  const map = new Map<string, string>();
-
-  if (tokens) {
-    buildThemeVariables(map, [], tokens);
-  }
-
-  // Provide alias variables between control.button.* and button.* to maintain compatibility
-  const alias = (from: string, to: string) => {
-    const val = map.get(from);
-
-    if (val !== undefined && !map.has(to)) map.set(to, val);
-  };
-
-  const variants = ["primary", "secondary", "tertiary"] as const;
-  const props = [
-    "background",
-    "color",
-    "border",
-    "hoverBackground",
-    "activeBackground",
-    "disabledBackground",
-    "disabledColor",
-    "selectedBackground",
-    "selectedColor",
-  ] as const;
-
-  for (const v of variants) {
-    for (const p of props) {
-      alias(`--lv-control-button-${v}-${p}`, `--lv-button-${v}-${p}`);
-      alias(`--lv-button-${v}-${p}`, `--lv-control-button-${v}-${p}`);
+const importOrPassthrough = async (
+  theme: ThemeConfig["theme"],
+): Promise<ThemeTokensMap> => {
+  if (typeof theme === "string") {
+    if (theme === "simple") {
+      return await import("./simple.js").then((m) => m.simpleTheme);
+    } else if (theme === "openlv") {
+      return await import("./openlv.js").then((m) => m.openlvTheme);
+    } else {
+      throw new Error(`Unknown theme: ${theme}`);
     }
   }
 
-  return Object.fromEntries(map.entries());
+  return theme;
 };
 
-export { openlvThemeTokens, simpleThemeTokens };
+type Primitive = string | number | boolean | null | undefined;
+type Leaf = Primitive; // extend if you want to allow Date, bigint, etc.
 
-export type {
-  OpenLVTheme,
-  ThemeConfig,
-  ThemeIdentifier,
-  ThemeMode,
-  ThemeTokensMap,
-};
+type FlatCssVars = Record<`--${string}`, Leaf>;
 
-export type ThemeProviderProps<T extends ThemeTokensMap = ThemeTokensMap> =
-  PropsWithChildren<ThemeConfig<T>>;
+function isPlainObject(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
+}
 
-export const DEFAULT_THEME_CONFIG: ThemeConfig<typeof openlvThemeTokens> = {
-  theme: "openlv",
-  tokens: openlvThemeTokens,
-  mode: "system",
-};
+export const flattenToCssVars = <T extends Record<string, unknown>>(
+  obj: T,
+  prefix: readonly string[] = [],
+  out: FlatCssVars = {},
+): FlatCssVars => {
+  for (const [key, value] of Object.entries(obj)) {
+    const path = [...prefix, key];
 
-const defaultTokens: Record<string, ThemeTokensMap> = {
-  openlv: openlvThemeTokens,
-  simple: simpleThemeTokens,
-};
-
-const getDefaultTokens = (theme: ThemeIdentifier) => defaultTokens[theme];
-
-const resolveSystemMode = (): "light" | "dark" => {
-  if (typeof window !== "undefined" && window.matchMedia) {
-    if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
-      return "dark";
+    if (isPlainObject(value)) {
+      flattenToCssVars(value, path, out);
+    } else {
+      out[`--lv-${path.join("-")}` as `--${string}`] = value as Leaf;
     }
   }
 
-  return "light";
+  return out;
 };
 
-const resolveFromVariantMap = (
-  requestedMode: ThemeMode,
-  candidate: ThemeTokensMap,
-) => {
-  const preferences: ThemeMode[] =
-    requestedMode === "system"
-      ? [resolveSystemMode(), "light", "dark"]
-      : [requestedMode, "light", "dark"];
-
-  for (const preference of preferences) {
-    const tokensForMode = candidate[preference as keyof ThemeTokensMap];
-
-    if (tokensForMode) {
-      return {
-        tokens: tokensForMode,
-        mode: preference,
-      };
-    }
+const resolveMode = (mode: ThemeConfig["mode"]): "light" | "dark" => {
+  if (mode === "system") {
+    return window.matchMedia("(prefers-color-scheme: dark)").matches
+      ? "dark"
+      : "light";
   }
 
-  return undefined;
+  return mode;
 };
 
-export const resolveTheme = <T extends ThemeTokensMap>(
-  config: ThemeConfig<T>,
-): { tokens: OpenLVTheme; mode: ThemeMode } => {
-  const { theme, tokens } = config;
-  const baseTokens = (tokens ?? getDefaultTokens(theme)) as ThemeTokensMap;
+const deepMerge = (
+  base: Record<string, unknown>,
+  overlay: Record<string, unknown>,
+): Record<string, unknown> => {
+  const result: Record<string, unknown> = { ...base };
 
-  const resolved = resolveFromVariantMap(config.mode, baseTokens);
+  for (const key of Object.keys(overlay)) {
+    const baseValue = base[key];
+    const overlayValue = overlay[key];
 
-  if (!resolved) {
-    throw new Error("Invalid theme configuration: mode does not match tokens");
+    result[key] =
+      isPlainObject(baseValue) && isPlainObject(overlayValue)
+        ? deepMerge(baseValue, overlayValue)
+        : overlayValue;
   }
 
-  return resolved;
+  return result;
 };
 
-export const ThemeProvider: FC<ThemeProviderProps> = ({
-  children,
-  ...config
-}) => {
-  const { tokens: selectedTokens, mode: resolvedMode } = resolveTheme(
-    config as ThemeConfig,
-  );
+// Converts the theme into css variables
+// --lv-
+export const buildTheme = async (config: ThemeConfig) => {
+  const theme = await importOrPassthrough(config.theme);
 
-  return (
-    <div
-      style={buildTheme(selectedTokens)}
-      id="root"
-      data-openlv-theme={config.theme}
-      data-openlv-mode={resolvedMode}
-    >
-      {children}
-    </div>
-  );
+  const resolvedMode = resolveMode(config.mode);
+  const variant = theme[resolvedMode];
+
+  if (!variant) return "";
+
+  const mergedVariant = theme.common
+    ? deepMerge(theme.common, variant)
+    : variant;
+
+  const flattened = flattenToCssVars(mergedVariant);
+
+  return Object.entries(flattened)
+    .map(([key, value]) => `${key}: ${value};`)
+    .join("\n");
 };

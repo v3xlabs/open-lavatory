@@ -1,4 +1,4 @@
-import type { ThemeConfigInput } from "@openlv/modal";
+import type { OpenLVModalElementProps } from "@openlv/modal";
 import {
   createProvider,
   type OpenLVProvider,
@@ -12,10 +12,9 @@ import { log } from "./log.js";
 import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
-  Pick<OpenLVProviderParameters, "config" | "storage">
-> & {
-  theme?: ThemeConfigInput;
-};
+  Pick<OpenLVProviderParameters, "config" | "storage"> &
+  Pick<OpenLVModalElementProps, "theme">
+>;
 
 export type OpenLVConnector = CreateConnectorFn<
   OpenLVProvider,
@@ -63,7 +62,7 @@ export const openlv = ({
       const modal = await getTriggerModal();
 
       const modalDismissed = new Promise<void>((resolve) => {
-        modal?.(provider, theme as never, () => resolve());
+        modal?.({ theme, provider, onClose: () => resolve() });
       });
 
       const connectionCompleted = new Promise<void>((resolve) => {
@@ -82,7 +81,12 @@ export const openlv = ({
 
       await Promise.race([modalDismissed, connectionCompleted]);
 
-      if (!provider.getSession()) {
+      if (
+        !provider.getSession() ||
+        provider.getState().status !== "connected"
+      ) {
+        provider.closeSession();
+
         return Promise.reject(
           new UserRejectedRequestError(new Error("User closed modal")),
         );
@@ -97,9 +101,9 @@ export const openlv = ({
       return {
         accounts: (withCapabilities
           ? accounts.map((account) => ({
-              address: account,
-              capabilities: {},
-            }))
+            address: account,
+            capabilities: {},
+          }))
           : accounts) as never,
         chainId,
         provider,
@@ -126,6 +130,7 @@ export const openlv = ({
       async switchChain({ chainId }) {
         log("switchChain", chainId);
 
+        // eslint-disable-next-line no-restricted-syntax
         const chain = chains.find((chain) => chain.id === chainId);
 
         if (!chain) throw new Error(`Chain ${chainId} not found`);

@@ -2,6 +2,7 @@
 import "../styles.css";
 
 import { openlv } from "@openlv/connector";
+// import { simpleTheme } from "@openlv/modal/theme";
 import { connectSession, type Session } from "@openlv/session";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
@@ -29,8 +30,28 @@ const config = createConfig({
   chains: [mainnet],
   connectors: [
     openlv({
+      // theme: {
+      //   theme: simpleTheme,
+      //   mode: "light",
+      // },
       theme: {
+        // Either a predefined theme like such
         theme: "simple",
+        // Or a custom theme:
+        // theme: {
+        //   dark: {
+        //     body: {
+        //       background: "orange",
+        //       color: "red",
+        //     },
+        //   },
+        //   light: {
+        //     body: {
+        //       background: "blue",
+        //       color: "white",
+        //     },
+        //   },
+        // },
         mode: "light",
       },
     }),

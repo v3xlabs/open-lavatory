@@ -234,6 +234,7 @@ export const createSession = async (
         }
       });
 
+      // TODO: handle errors in setup nicely in modal UI
       await signal.setup();
     },
     async close() {

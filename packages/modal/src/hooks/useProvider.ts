@@ -17,6 +17,12 @@ export const useProvider = () => {
 
     provider?.on("status_change", onStatusChange);
 
+    const currentStatus = provider?.getState().status;
+
+    if (currentStatus) {
+      setStatus(currentStatus);
+    }
+
     return () => {
       provider?.off("status_change", onStatusChange);
     };

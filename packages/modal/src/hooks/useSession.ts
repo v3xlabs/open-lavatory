@@ -34,6 +34,12 @@ export const useSession = () => {
 
     provider?.on("status_change", onStatusChange);
 
+    const currentSession = provider?.getSession();
+
+    if (currentSession) {
+      setSession(currentSession);
+    }
+
     return () => {
       provider?.off("status_change", onStatusChange);
     };

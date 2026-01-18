@@ -18,16 +18,17 @@ This package expects you to install the native dependency in your React Native a
 
 ## Usage
 
-Include the provider around the parts of your app that use OpenLV:
+Include the runtime component somewhere in your app:
 
 ```tsx
-import { OpenLVProvider } from "@openlv/react-native/provider";
+import { OpenLVGlobals } from "@openlv/react-native";
 
 export function App() {
   return (
-    <OpenLVProvider>
-      {/* your app */}
-    </OpenLVProvider>
+    <>
+      <OpenLVGlobals />
+      {/* the parts of your app that use OpenLV */}
+    </>
   );
 }
 ```

@@ -6,7 +6,7 @@ export {
   installOpenLVReactNativePolyfills,
   OpenLVCryptoPolyfill,
 } from "./polyfills.js";
-export { OpenLVProvider, type OpenLVProviderProps } from "./provider.js";
+export { OpenLVGlobals, type OpenLVGlobalsProps } from "./provider.js";
 export {
   installWebRTCPolyfills,
   type InstallWebRTCPolyfillsOptions,

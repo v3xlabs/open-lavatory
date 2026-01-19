@@ -4,28 +4,28 @@ import { match } from "ts-pattern";
 import { createTransportBase, type TransportMessage } from "../base.js";
 import { log } from "../utils/log.js";
 
-type WebRTCConfig = {
+export type WebRTCConfig = {
   iceServers?: RTCConfiguration["iceServers"];
+};
+
+type WebRTCConfigInternal = WebRTCConfig & {
   isHost: boolean;
 };
 
 // TODO: decide wether we want defaults, and if so what defaults
-const defaultConfig: WebRTCConfig = {
-  iceServers: [
-    { urls: "stun:stun.l.google.com:19302" },
-    { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun.services.mozilla.com:3478" },
-  ],
-  isHost: true,
-};
+const defaultIceServers: RTCConfiguration["iceServers"] = [
+  { urls: "stun:stun.l.google.com:19302" },
+  { urls: "stun:stun1.l.google.com:19302" },
+  { urls: "stun:stun.services.mozilla.com:3478" },
+];
 
-export const webrtc = (config: WebRTCConfig = defaultConfig) => {
-  const { iceServers = defaultConfig.iceServers } = config;
+export const webrtc = (config: WebRTCConfigInternal) => {
   const ident = Math.random().toString(36).substring(2, 4) + "#";
-  const mergedConfig: WebRTCConfig = { ...defaultConfig, ...config };
 
   return createTransportBase(({ emitter, isHost }) => {
-    const rtcConfig: RTCConfiguration = { iceServers };
+    const rtcConfig: RTCConfiguration = {
+      iceServers: config.iceServers ?? defaultIceServers,
+    };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
 

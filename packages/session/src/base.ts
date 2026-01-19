@@ -24,6 +24,7 @@ import {
   TRANSPORT_STATE,
   type TransportLayer,
   type TransportMessage,
+  type TransportOptions,
 } from "@openlv/transport";
 import { webrtc } from "@openlv/transport/webrtc";
 import { EventEmitter } from "eventemitter3";
@@ -78,6 +79,7 @@ export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: CreateSignalLayerFn,
   onMessage: (message: object) => Promise<object | string>,
+  transportOptions?: TransportOptions,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
   const messages = new EventEmitter<{ message: SessionMessage }>();
@@ -139,7 +141,7 @@ export const createSession = async (
     isHost,
   });
 
-  const transport = webrtc({ isHost })({
+  const transport = webrtc({ isHost, ...transportOptions?.config })({
     encrypt(message) {
       if (!relyingPublicKey) {
         throw new Error("Relying party public key not found");
@@ -329,6 +331,7 @@ export const createSession = async (
 export const connectSession = async (
   connectionUrl: string,
   onMessage: (message: object) => Promise<object | string>,
+  transportOptions?: TransportOptions,
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 
@@ -338,5 +341,5 @@ export const connectSession = async (
     throw new Error(`Invalid signaling protocol: ${initParameters.p}`);
   }
 
-  return createSession(initParameters, signaling, onMessage);
+  return createSession(initParameters, signaling, onMessage, transportOptions);
 };

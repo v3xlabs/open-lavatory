@@ -5,6 +5,7 @@ import {
   type SessionStateObject,
 } from "@openlv/session";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
+import type { TransportOptions } from "@openlv/transport";
 import { Provider as OxProvider } from "ox";
 import type { EventMap } from "ox/Provider";
 import type { ExtractReturnType } from "ox/RpcSchema";
@@ -24,6 +25,7 @@ export type OpenLVProviderParameters = Prettify<
   {
     config?: object;
     openModal?: (provider: OpenLVProvider) => Promise<void>;
+    transportOptions?: TransportOptions;
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
@@ -49,7 +51,11 @@ export type ProviderConfig = {
 
 export type ProviderBase = {
   storage: ProviderStorageR;
-  createSession: (parameters?: SessionLinkParameters) => Promise<Session>;
+  transportOptions?: TransportOptions;
+  createSession: (
+    parameters?: SessionLinkParameters,
+    transportOptions?: TransportOptions,
+  ) => Promise<Session>;
   closeSession: () => Promise<void>;
   getSession: () => Session | undefined;
   getAccounts: () => Promise<Address[]>;
@@ -75,7 +81,7 @@ export const createProvider = (
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: _parameters.storage });
-  const { openModal } = _parameters;
+  const { openModal, transportOptions: defaultTransportOptions } = _parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -105,12 +111,14 @@ export const createProvider = (
       p: "mqtt",
       s: "wss://mqtt-dashboard.com:8884/mqtt",
     },
+    transportOptions?: TransportOptions,
   ) => {
     updateStatus(PROVIDER_STATUS.CREATING);
     session = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
       onMessage,
+      transportOptions ?? defaultTransportOptions,
     );
     updateStatus(PROVIDER_STATUS.CONNECTING);
 
@@ -201,10 +209,6 @@ export const createProvider = (
             return await getAccounts();
           }
 
-          const x = await start();
-
-          log("x", x);
-
           return await getAccounts();
         })
         .with({ method: "eth_accounts" }, async () => {
@@ -234,6 +238,7 @@ export const createProvider = (
   >({
     ...oxEmitter,
     storage,
+    transportOptions: defaultTransportOptions,
     request,
     getSession: () => session,
     getAccounts,

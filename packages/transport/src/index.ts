@@ -10,3 +10,4 @@
 
 export * from "./base.js";
 export * from "./layer.js";
+export * from "./options.js";

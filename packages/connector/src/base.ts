@@ -12,9 +12,10 @@ import { log } from "./log.js";
 import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
-  Pick<OpenLVProviderParameters, "config" | "storage"> &
-    Pick<OpenLVModalElementProps, "theme">
->;
+  Pick<OpenLVProviderParameters, "config" | "storage" | "transportOptions">
+> & {
+  theme?: ThemeConfigInput;
+};
 
 export type OpenLVConnector = CreateConnectorFn<
   OpenLVProvider,
@@ -30,10 +31,12 @@ export const openlv = ({
   storage,
   config = {},
   theme,
+  transportOptions,
 }: OpenLVConnectorParameters = {}) => {
   const provider = createProvider({
     storage,
     config,
+    transportOptions,
   });
 
   const onDisconnect = async () => {

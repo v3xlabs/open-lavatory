@@ -1,13 +1,14 @@
 import "./index.css";
 
 import { buildTheme } from "../theme/index.js";
-import type { ThemeConfig } from "../theme/types.js";
+import type { ThemeConfig, UserThemePreference } from "../theme/types.js";
 // @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";
 
 export const ensureStyles = async (
   shadowRoot?: ShadowRoot,
   theme?: ThemeConfig,
+  userTheme: UserThemePreference = "system",
 ) => {
   // If we have a shadow root, inject styles directly into it
   if (shadowRoot) {
@@ -29,7 +30,7 @@ export const ensureStyles = async (
 
     if (theme) {
       console.log("building theme");
-      const themeStr = await buildTheme(theme);
+      const themeStr = await buildTheme(theme, userTheme);
       const rootVars = `:root, :host {\n${themeStr}\n}\n`;
 
       content = rootVars + content;
@@ -39,4 +40,22 @@ export const ensureStyles = async (
 
     shadowRoot.appendChild(style);
   }
+};
+
+/**
+ * Updates the theme styles dynamically when user preference changes.
+ */
+export const updateThemeStyles = async (
+  shadowRoot: ShadowRoot,
+  theme: ThemeConfig,
+  userTheme: UserThemePreference,
+) => {
+  const existingStyle = shadowRoot.querySelector("style[data-openlv-modal]");
+
+  if (!existingStyle) return;
+
+  const themeStr = await buildTheme(theme, userTheme);
+  const rootVars = `:root, :host {\n${themeStr}\n}\n`;
+
+  existingStyle.textContent = rootVars + cssContent;
 };

@@ -1,25 +1,55 @@
 import type { OpenLVProvider } from "@openlv/provider";
 import { createContext } from "preact";
 import type { FC } from "preact/compat";
-import { useContext } from "preact/hooks";
+import { useContext, useEffect } from "preact/hooks";
 
 import { ModalRoot } from "./components/ModalRoot.js";
-import type { OpenLVModalElementProps } from "./element.js";
+import { type OpenLVModalElementProps } from "./element.js";
+import { updateThemeStyles } from "./styles/index.js";
+import type { ThemeConfig } from "./theme/types.js";
+
+type ShadowRootModalProps = OpenLVModalElementProps & {
+  shadowRoot: ShadowRoot;
+};
 
 export type ProviderContextO = {
   provider: OpenLVProvider | undefined;
+  themeConfig?: ThemeConfig;
 };
 
 export const ModalContext = createContext<ProviderContextO>({
   provider: undefined,
+  themeConfig: undefined,
 });
 
-export const ModalProvider: FC<OpenLVModalElementProps> = ({
+export const ModalProvider: FC<ShadowRootModalProps> = ({
   provider,
   onClose,
+  theme,
+  shadowRoot,
 }) => {
+  useEffect(() => {
+    if (!theme || !shadowRoot) return;
+
+    const update = () => {
+      const userTheme = provider.storage.getSettings()?.theme ?? "system";
+
+      updateThemeStyles(shadowRoot, theme, userTheme);
+    };
+
+    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+
+    provider.storage.emitter.on("settings_change", update);
+    mediaQuery.addEventListener("change", update);
+
+    return () => {
+      provider.storage.emitter.off("settings_change", update);
+      mediaQuery.removeEventListener("change", update);
+    };
+  }, [provider, theme, shadowRoot]);
+
   return (
-    <ModalContext.Provider value={{ provider }}>
+    <ModalContext.Provider value={{ provider, themeConfig: theme }}>
       <ModalRoot onClose={onClose} />
     </ModalContext.Provider>
   );

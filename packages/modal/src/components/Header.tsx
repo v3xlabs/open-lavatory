@@ -1,17 +1,21 @@
+import type { Dispatch, StateUpdater } from "preact/hooks";
 import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
 
 import { Button } from "../ui/Button.js";
+import type { ModalView } from "./ModalRoot.js";
 
 export const Header = ({
   title,
   view,
   onClose,
   onBack,
+  setView,
 }: {
   title: string;
-  view: "start" | "uri" | "settings";
+  view: ModalView;
   onClose: () => void;
   onBack?: () => void;
+  setView: Dispatch<StateUpdater<ModalView>>;
 }) => {
   return (
     <div className="flex items-center justify-between px-2 py-2">
@@ -23,16 +27,22 @@ export const Header = ({
           $aspect="square"
           $size="md"
         >
-          <LuChevronLeft
-            className="h-6 w-6"
-            style={{ color: "var(--lv-text-muted)" }}
-          />
+          <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted)" />
         </Button>
       ) : (
+        // <Button
+        //   type="button"
+        //   href="https://openlv.sh"
+        //   target="_blank"
+        //   $variant="tertiary"
+        //   $aspect="square"
+        //   $size="md"
+        // >
+        //   <LuCircleHelp className="h-5 w-5" />
+        // </Button>
         <Button
           type="button"
-          href="https://openlv.sh"
-          target="_blank"
+          onClick={() => setView("info")}
           $variant="tertiary"
           $aspect="square"
           $size="md"
@@ -40,10 +50,7 @@ export const Header = ({
           <LuCircleHelp className="h-5 w-5" />
         </Button>
       )}
-      <h2
-        className="flex items-center justify-center gap-2 font-semibold text-lg"
-        style={{ color: "var(--lv-text-primary)" }}
-      >
+      <h2 className="flex items-center justify-center gap-2 font-semibold text-lg text-(--lv-text-primary)">
         {title}
       </h2>
       <Button
@@ -55,7 +62,7 @@ export const Header = ({
         $aspect="square"
         $size="md"
       >
-        <LuX className="h-6 w-6" style={{ color: "var(--lv-text-muted)" }} />
+        <LuX className="h-6 w-6 text-(--lv-text-muted)" />
       </Button>
     </div>
   );

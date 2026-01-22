@@ -20,12 +20,18 @@ export const mqtt: CreateSignalLayerFn = ({
   return createSignalingLayer({
     type: "mqtt",
     async setup() {
-      connection = await MQTT.connectAsync(url, {
-        reconnectOnConnackError: false,
-      });
+      connection = await MQTT.connectAsync(
+        url,
+        {
+          reconnectOnConnackError: false,
+          reconnectPeriod: 5000,
+          connectTimeout: 5000,
+        },
+        false,
+      );
     },
     teardown() {
-      connection?.end();
+      connection?.end(true, {});
       connection = undefined;
     },
     async publish(payload) {

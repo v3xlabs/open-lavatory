@@ -50,7 +50,7 @@ export const FooterStatus = () => {
   const { icon, text } = status;
 
   return (
-    <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-[var(--lv-button-secondary-background)]">
+    <div className="group flex items-center gap-2 rounded-md px-2 py-2 hover:bg-(--lv-control-button-secondary-background)">
       <div className="pointer-events-none whitespace-nowrap rounded-md text-xs opacity-0 group-hover:opacity-100">
         {text}
       </div>

@@ -14,7 +14,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
     <div className="flex flex-col items-center gap-4 p-6">
       <ConnectionGraphic />
       <div className="text-center">
-        <p className="text-sm" style={{ color: "var(--lv-text-secondary)" }}>
+        <p className="text-sm text-(--lv-text-secondary)">
           Click the button below to start a connection
         </p>
       </div>
@@ -38,10 +38,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
           $size="lg"
           $variant="secondary"
         >
-          <IoIosSettings
-            className="h-5 w-5"
-            style={{ color: "var(--lv-text-muted)" }}
-          />
+          <IoIosSettings className="h-5 w-5 text-(--lv-text-muted)" />
         </Button>
       </div>
     </div>

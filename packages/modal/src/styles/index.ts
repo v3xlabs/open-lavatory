@@ -1,11 +1,7 @@
 import "./index.css";
 
-import {
-  buildTheme,
-  DEFAULT_THEME_CONFIG,
-  resolveTheme,
-  type ThemeConfig,
-} from "../theme/index.js";
+import { buildTheme } from "../theme/index.js";
+import type { ThemeConfig } from "../theme/types.js";
 // @ts-expect-error - Vite handles this import at build time
 import cssContent from "./index.css?inline";
 
@@ -27,15 +23,19 @@ export const ensureStyles = async (
 
     style.setAttribute("data-openlv-modal", "true");
 
-    const { tokens } = resolveTheme(
-      theme ?? (DEFAULT_THEME_CONFIG as ThemeConfig),
-    );
-    const vars = buildTheme(tokens);
-    const rootVars = `:root, :host {\n${Object.entries(vars)
-      .map(([key, value]) => `${key}: ${value};`)
-      .join("\n")}\n}`;
+    let content = cssContent;
 
-    style.textContent = `${rootVars}\n${cssContent}`;
+    console.log("theme", theme);
+
+    if (theme) {
+      console.log("building theme");
+      const themeStr = await buildTheme(theme);
+      const rootVars = `:root, :host {\n${themeStr}\n}\n`;
+
+      content = rootVars + content;
+    }
+
+    style.textContent = content;
 
     shadowRoot.appendChild(style);
   }

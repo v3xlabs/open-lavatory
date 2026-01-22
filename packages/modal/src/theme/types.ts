@@ -1,12 +1,14 @@
-export type ThemeIdentifier = "openlv" | "simple";
 export type ThemeMode = "light" | "dark" | "system";
 
-export type OpenLVTheme = Partial<{
+type DeepPartial<T> = { [K in keyof T]?: DeepPartial<T[K]> };
+
+type OpenLVThemeShape = {
   font: {
     family: string;
   };
   body: {
     color: string;
+    /** Background color of the main modal */
     background: string;
   };
   border: {
@@ -74,7 +76,10 @@ export type OpenLVTheme = Partial<{
     heading?: string;
     body?: string;
   };
-}>;
+};
+
+// Theme with all properties deeply optional
+export type OpenLVTheme = DeepPartial<OpenLVThemeShape>;
 
 export type ThemeTokensMap = {
   common?: OpenLVTheme;
@@ -82,32 +87,8 @@ export type ThemeTokensMap = {
   dark?: OpenLVTheme;
 } & ({ light: OpenLVTheme } | { dark: OpenLVTheme });
 
-type HasLight<T extends ThemeTokensMap> = T extends { light: OpenLVTheme }
-  ? true
-  : false;
-
-type HasDark<T extends ThemeTokensMap> = T extends { dark: OpenLVTheme }
-  ? true
-  : false;
-
-export type ModesForTokens<T extends ThemeTokensMap> =
-  HasLight<T> extends true
-    ? HasDark<T> extends true
-      ? ThemeMode
-      : "light"
-    : HasDark<T> extends true
-      ? "dark"
-      : never;
-
+export type PredefinedThemeName = "simple" | "openlv";
 export type ThemeConfig<T extends ThemeTokensMap = ThemeTokensMap> = {
-  theme: ThemeIdentifier;
-  /**
-   * Optional override tokens for the selected theme.
-   * If omitted, defaults will be looked up by `theme`.
-   */
-  tokens?: T;
-  /**
-   * Active mode. Must be compatible with the provided/derived tokens.
-   */
-  mode: ModesForTokens<T>;
+  theme: T | PredefinedThemeName;
+  mode: ThemeMode;
 };

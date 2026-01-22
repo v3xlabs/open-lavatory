@@ -24,6 +24,7 @@ export type OpenLVProviderParameters = Prettify<
   {
     config?: object;
     openModal?: (provider: OpenLVProvider) => Promise<void>;
+    themeConfig?: unknown;
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
@@ -54,6 +55,7 @@ export type ProviderBase = {
   getSession: () => Session | undefined;
   getAccounts: () => Promise<Address[]>;
   getState: () => ProviderState;
+  themeConfig?: unknown;
 };
 
 export type OpenLVProvider = OxProvider.Provider<
@@ -68,15 +70,15 @@ export type OpenLVProvider = OxProvider.Provider<
  * https://openlv.sh/api/provider
  */
 export const createProvider = (
-  _parameters: OpenLVProviderParameters,
+  parameters: OpenLVProviderParameters,
 ): OpenLVProvider => {
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   const chainId: string = "1";
   let accounts: Address[] = [];
-  const storage = createProviderStorage({ storage: _parameters.storage });
-  const { openModal } = _parameters;
+  const storage = createProviderStorage({ storage: parameters.storage });
+  const { openModal } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -227,6 +229,7 @@ export const createProvider = (
     createSession: start,
     closeSession,
     getState: () => ({ status, session: session?.getState() ?? undefined }),
+    themeConfig: parameters.themeConfig,
   });
 
   return oxProvider as OpenLVProvider;

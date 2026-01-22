@@ -1,4 +1,4 @@
-import type { OpenLVModalElementProps } from "@openlv/modal";
+import type { ThemeConfig } from "@openlv/modal";
 import {
   createProvider,
   type OpenLVProvider,
@@ -12,8 +12,9 @@ import { log } from "./log.js";
 import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
-  Pick<OpenLVProviderParameters, "config" | "storage"> &
-  Pick<OpenLVModalElementProps, "theme">
+  Pick<OpenLVProviderParameters, "config" | "storage"> & {
+    theme?: ThemeConfig;
+  }
 >;
 
 export type OpenLVConnector = CreateConnectorFn<
@@ -34,6 +35,7 @@ export const openlv = ({
   const provider = createProvider({
     storage,
     config,
+    themeConfig: theme,
   });
 
   const onDisconnect = async () => {
@@ -62,7 +64,7 @@ export const openlv = ({
       const modal = await getTriggerModal();
 
       const modalDismissed = new Promise<void>((resolve) => {
-        modal?.({ theme, provider, onClose: () => resolve() });
+        modal?.({ provider, onClose: () => resolve() });
       });
 
       const connectionCompleted = new Promise<void>((resolve) => {
@@ -101,9 +103,9 @@ export const openlv = ({
       return {
         accounts: (withCapabilities
           ? accounts.map((account) => ({
-            address: account,
-            capabilities: {},
-          }))
+              address: account,
+              capabilities: {},
+            }))
           : accounts) as never,
         chainId,
         provider,

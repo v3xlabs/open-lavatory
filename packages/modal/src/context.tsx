@@ -14,27 +14,26 @@ type ShadowRootModalProps = OpenLVModalElementProps & {
 
 export type ProviderContextO = {
   provider: OpenLVProvider | undefined;
-  themeConfig?: ThemeConfig;
 };
 
 export const ModalContext = createContext<ProviderContextO>({
   provider: undefined,
-  themeConfig: undefined,
 });
 
 export const ModalProvider: FC<ShadowRootModalProps> = ({
   provider,
   onClose,
-  theme,
   shadowRoot,
 }) => {
+  const themeConfig = provider.themeConfig as ThemeConfig | undefined;
+
   useEffect(() => {
-    if (!theme || !shadowRoot) return;
+    if (!themeConfig || !shadowRoot) return;
 
     const update = () => {
       const userTheme = provider.storage.getSettings()?.theme ?? "system";
 
-      updateStyles(shadowRoot, theme, userTheme);
+      updateStyles(shadowRoot, themeConfig, userTheme);
     };
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
@@ -46,10 +45,10 @@ export const ModalProvider: FC<ShadowRootModalProps> = ({
       provider.storage.emitter.off("settings_change", update);
       mediaQuery.removeEventListener("change", update);
     };
-  }, [provider, theme, shadowRoot]);
+  }, [provider, themeConfig, shadowRoot]);
 
   return (
-    <ModalContext.Provider value={{ provider, themeConfig: theme }}>
+    <ModalContext.Provider value={{ provider }}>
       <ModalRoot onClose={onClose} />
     </ModalContext.Provider>
   );

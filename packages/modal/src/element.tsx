@@ -9,7 +9,6 @@ import type { ModalConnectionInterface } from "./types/connection.js";
 export type OpenLVModalElementProps = {
   provider: OpenLVProvider;
   onClose?: () => void;
-  theme?: ThemeConfig;
 };
 
 export class OpenLVModalElement
@@ -27,8 +26,11 @@ export class OpenLVModalElement
     this.shadow = this.attachShadow({ mode: "open" });
     const initialUserTheme =
       parameters.provider.storage.getSettings()?.theme ?? "system";
+    const themeConfig = parameters.provider.themeConfig as
+      | ThemeConfig
+      | undefined;
 
-    void updateStyles(this.shadow, this.parameters.theme, initialUserTheme);
+    void updateStyles(this.shadow, themeConfig, initialUserTheme);
   }
 
   connectedCallback() {

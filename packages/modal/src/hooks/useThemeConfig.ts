@@ -1,11 +1,16 @@
 import { useModalContext } from "../context.js";
-import type { ThemeMode, UserThemePreference } from "../theme/types.js";
+import type {
+  ThemeConfig,
+  ThemeMode,
+  UserThemePreference,
+} from "../theme/types.js";
 import { useSettings } from "./useSettings.js";
 
 export const useThemeConfig = () => {
-  const { themeConfig } = useModalContext();
+  const { provider } = useModalContext();
   const { settings, updateThemePreference } = useSettings();
 
+  const themeConfig = provider?.themeConfig as ThemeConfig | undefined;
   const appThemeMode: ThemeMode = themeConfig?.mode ?? "auto";
   const userTheme: UserThemePreference = settings?.theme ?? "system";
 

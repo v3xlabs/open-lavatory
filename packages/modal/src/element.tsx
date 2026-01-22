@@ -2,7 +2,7 @@ import type { OpenLVProvider } from "@openlv/provider";
 import { h, render } from "preact";
 
 import { ModalProvider } from "./context.js";
-import { ensureStyles } from "./styles/index.js";
+import { updateStyles } from "./styles/index.js";
 import type { ThemeConfig } from "./theme/types.js";
 import type { ModalConnectionInterface } from "./types/connection.js";
 
@@ -28,7 +28,7 @@ export class OpenLVModalElement
     const initialUserTheme =
       parameters.provider.storage.getSettings()?.theme ?? "system";
 
-    void ensureStyles(this.shadow, this.parameters.theme, initialUserTheme);
+    void updateStyles(this.shadow, this.parameters.theme, initialUserTheme);
   }
 
   connectedCallback() {

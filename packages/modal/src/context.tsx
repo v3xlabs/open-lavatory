@@ -5,7 +5,7 @@ import { useContext, useEffect } from "preact/hooks";
 
 import { ModalRoot } from "./components/ModalRoot.js";
 import { type OpenLVModalElementProps } from "./element.js";
-import { updateThemeStyles } from "./styles/index.js";
+import { updateStyles } from "./styles/index.js";
 import type { ThemeConfig } from "./theme/types.js";
 
 type ShadowRootModalProps = OpenLVModalElementProps & {
@@ -34,7 +34,7 @@ export const ModalProvider: FC<ShadowRootModalProps> = ({
     const update = () => {
       const userTheme = provider.storage.getSettings()?.theme ?? "system";
 
-      updateThemeStyles(shadowRoot, theme, userTheme);
+      updateStyles(shadowRoot, theme, userTheme);
     };
 
     const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");

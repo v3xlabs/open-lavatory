@@ -43,7 +43,9 @@ runs:
 
     - name: Install dependencies
       shell: bash
-      run: pnpm install --ignore-scripts
+      run: |
+        pnpm config set auto-install-peers false
+        pnpm install --ignore-scripts
 
     - name: Build packages
       if: inputs.build-packages == 'true'

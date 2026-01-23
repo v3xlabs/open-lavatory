@@ -4,7 +4,11 @@ import "../styles.css";
 import { openlv } from "@openlv/connector";
 // import { simpleTheme } from "@openlv/modal/theme";
 import { connectSession, type Session } from "@openlv/session";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+} from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
@@ -90,29 +94,24 @@ const TestSign = () => {
   const { signMessage, data: signedData, error, isPending } = useSignMessage();
   const { address, connector } = useAccount();
 
-  const [verificationResult, setVerificationResult] = useState<boolean | null>(
-    null,
-  );
-  const [verificationError, setVerificationError] = useState<string | null>(
-    null,
-  );
-  const [isVerifying, setIsVerifying] = useState(false);
+  const {
+    mutate: verifySignature,
+    data: verificationResult,
+    error: verificationError,
+    isPending: isVerifying,
+    reset: resetVerification,
+  } = useMutation({
+    mutationFn: async (signature: string) => {
+      if (!address || !connector) {
+        throw new Error("No address or connector available");
+      }
 
-  const verifySignature = async (signature: string) => {
-    if (!signature || !address || !connector) return;
-
-    setIsVerifying(true);
-    setVerificationError(null);
-
-    try {
       const provider = (await connector.getProvider()) as EIP1193Provider;
       const chainIdHex = await provider.request({
         method: "eth_chainId",
         params: [] as never,
       });
       const chainId = parseInt(chainIdHex as string, 16);
-
-      console.log("Remote wallet chainId:", chainId);
 
       const chainConfig = config.chains.find((c) => c.id === chainId);
 
@@ -125,39 +124,21 @@ const TestSign = () => {
         transport: viemHttp(),
       });
 
-      console.log("Verifying signature with:", {
-        address,
-        message: "Hello, world!",
-        signature: signature as `0x${string}`,
-        chainId: publicClient.chain?.id,
-      });
-
-      const valid = await publicClient.verifyMessage({
+      return publicClient.verifyMessage({
         address,
         message: "Hello, world!",
         signature: signature as `0x${string}`,
       });
-
-      console.log("Verification result:", valid);
-      setVerificationResult(valid);
-    } catch (error) {
-      console.error("Verification failed:", error);
-
-      setVerificationError(
-        error instanceof Error ? error.message : String(error),
-      );
-      setVerificationResult(false);
-    } finally {
-      setIsVerifying(false);
-    }
-  };
+    },
+  });
 
   if (
     signedData &&
     typeof signedData === "string" &&
     signedData.startsWith("0x") &&
     !isVerifying &&
-    verificationResult === null
+    verificationResult === undefined &&
+    !verificationError
   ) {
     verifySignature(signedData);
   }
@@ -171,8 +152,7 @@ const TestSign = () => {
         <button
           onClick={() => {
             signMessage({ message: "Hello, world!" });
-            setVerificationResult(null);
-            setVerificationError(null);
+            resetVerification();
           }}
           className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
         >
@@ -195,7 +175,7 @@ const TestSign = () => {
             <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
               Verifying signature...
             </div>
-          ) : verificationResult !== null ? (
+          ) : verificationResult !== undefined ? (
             <div
               className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
                 verificationResult
@@ -208,7 +188,10 @@ const TestSign = () => {
           ) : null}
           {verificationError && (
             <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
-              Error: {verificationError}
+              Error:{" "}
+              {verificationError instanceof Error
+                ? verificationError.message
+                : String(verificationError)}
             </div>
           )}
         </div>

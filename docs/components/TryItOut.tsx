@@ -4,46 +4,32 @@ import "../styles.css";
 import { openlv } from "@openlv/connector";
 // import { simpleTheme } from "@openlv/modal/theme";
 import { connectSession, type Session } from "@openlv/session";
-import {
-  QueryClient,
-  QueryClientProvider,
-  useMutation,
-} from "@tanstack/react-query";
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
-import {
-  type Address,
-  createPublicClient,
-  type EIP1193Provider,
-  http as viemHttp,
-} from "viem";
+import { type Address, type EIP1193Provider } from "viem";
 import {
   type Connector,
   createConfig,
   http,
   useAccount,
+  useChainId,
   useClient,
   useConnect,
   useConnections,
   useConnectorClient,
   useDisconnect,
   useSignMessage,
+  useVerifyMessage,
   WagmiProvider,
 } from "wagmi";
-import {
-  arbitrum,
-  base,
-  mainnet,
-  optimism,
-  polygon,
-  sepolia,
-} from "wagmi/chains";
+import { holesky, mainnet, sepolia } from "wagmi/chains";
 
 const queryClient = new QueryClient();
 
 const config = createConfig({
-  chains: [mainnet, sepolia, arbitrum, optimism, polygon, base],
+  chains: [mainnet, sepolia, holesky],
   connectors: [
     openlv({
       // theme: {
@@ -75,10 +61,7 @@ const config = createConfig({
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
-    [arbitrum.id]: http(),
-    [optimism.id]: http(),
-    [polygon.id]: http(),
-    [base.id]: http(),
+    [holesky.id]: http(),
   },
 });
 
@@ -91,57 +74,26 @@ const trimAddress = (address: Address | undefined | null) => {
 let session: Session | undefined = undefined;
 
 const TestSign = () => {
-  const { signMessage, data: signedData, error, isPending } = useSignMessage();
-  const { address, connector } = useAccount();
+  const {
+    signMessage,
+    data: signedData,
+    error,
+    isPending,
+    reset: resetSignature,
+  } = useSignMessage();
+  const { address } = useAccount();
+  const chainId = useChainId();
 
   const {
-    mutate: verifySignature,
     data: verificationResult,
     error: verificationError,
-    isPending: isVerifying,
-    reset: resetVerification,
-  } = useMutation({
-    mutationFn: async (signature: string) => {
-      if (!address || !connector) {
-        throw new Error("No address or connector available");
-      }
-
-      const provider = (await connector.getProvider()) as EIP1193Provider;
-      const chainIdHex = await provider.request({
-        method: "eth_chainId",
-        params: [] as never,
-      });
-      const chainId = parseInt(chainIdHex as string, 16);
-
-      const chainConfig = config.chains.find((c) => c.id === chainId);
-
-      if (!chainConfig) {
-        throw new Error(`Chain ${chainId} not configured`);
-      }
-
-      const publicClient = createPublicClient({
-        chain: chainConfig,
-        transport: viemHttp(),
-      });
-
-      return publicClient.verifyMessage({
-        address,
-        message: "Hello, world!",
-        signature: signature as `0x${string}`,
-      });
-    },
+    isLoading: isVerifying,
+  } = useVerifyMessage({
+    address,
+    message: "Hello, world!",
+    signature: signedData,
+    chainId,
   });
-
-  if (
-    signedData &&
-    typeof signedData === "string" &&
-    signedData.startsWith("0x") &&
-    !isVerifying &&
-    verificationResult === undefined &&
-    !verificationError
-  ) {
-    verifySignature(signedData);
-  }
 
   return (
     <div className="space-y-2">
@@ -151,8 +103,8 @@ const TestSign = () => {
         </div>
         <button
           onClick={() => {
+            resetSignature();
             signMessage({ message: "Hello, world!" });
-            resetVerification();
           }}
           className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
         >

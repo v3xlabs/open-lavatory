@@ -1,5 +1,14 @@
 # @openlv/signaling
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- 68feee0: Migrate mqtt.js to websocket-mqtt
+- 31e0469: Introduce session linking stage
+- Updated dependencies [31e0469]
+  - @openlv/core@0.0.1-beta.8
+
 ## 0.0.1-beta.6
 
 ### Patch Changes

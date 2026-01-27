@@ -1,5 +1,12 @@
 # @openlv/transport
 
+## 0.0.1-beta.6
+
+### Patch Changes
+
+- Updated dependencies [31e0469]
+  - @openlv/core@0.0.1-beta.8
+
 ## 0.0.1-beta.5
 
 ### Patch Changes

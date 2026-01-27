@@ -1,5 +1,16 @@
 # @openlv/provider
 
+## 0.0.1-beta.8
+
+### Patch Changes
+
+- Updated dependencies [68feee0]
+- Updated dependencies [31e0469]
+  - @openlv/signaling@0.0.1-beta.7
+  - @openlv/session@0.0.1-beta.9
+  - @openlv/core@0.0.1-beta.8
+  - @openlv/transport@0.0.1-beta.6
+
 ## 0.0.1-beta.7
 
 ### Patch Changes

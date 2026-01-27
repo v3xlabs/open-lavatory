@@ -766,12 +766,12 @@ importers:
       gun:
         specifier: ^0.2020.1241
         version: 0.2020.1241(bufferutil@4.0.9)(utf-8-validate@5.0.10)
-      mqtt:
-        specifier: ^5
-        version: 5.14.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       ts-pattern:
         specifier: ^5
         version: 5.9.0
+      websocket-mqtt:
+        specifier: 0.0.5
+        version: 0.0.5
     devDependencies:
       typescript:
         specifier: ^5
@@ -10799,6 +10799,9 @@ packages:
   webrtc-adapter@9.0.3:
     resolution: {integrity: sha512-5fALBcroIl31OeXAdd1YUntxiZl1eHlZZWzNg3U4Fn+J9/cGL3eT80YlrsWGvj2ojuz1rZr2OXkgCzIxAZ7vRQ==}
     engines: {node: '>=6.0.0', npm: '>=3.10.0'}
+
+  websocket-mqtt@0.0.5:
+    resolution: {integrity: sha512-tiFr+k0paN2nUjsX6F7BVet9w0SZcsux5dFa/mfMhFAp8GjcLXCdmDK0pGfp6e4X+ESNCJW89ycRmZo4tXZS/Q==}
 
   webview-crypto@0.1.14:
     resolution: {integrity: sha512-EEqt8rHOYxu6a00/AYY5Ba0O4RrARfmk4UfiK8p4QHGhP4FNMHFJEjk9DkoxqnoaR5dAbhIg2LcCEbGT4igWZQ==}
@@ -25134,6 +25137,8 @@ snapshots:
   webrtc-adapter@9.0.3:
     dependencies:
       sdp: 3.2.1
+
+  websocket-mqtt@0.0.5: {}
 
   webview-crypto@0.1.14:
     dependencies:

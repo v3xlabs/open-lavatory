@@ -25,10 +25,11 @@ const defaultConfig: WebRTCConfig = {
 };
 
 export const webrtc = (config: WebRTCConfig = defaultConfig) => {
+  const { iceServers = defaultConfig.iceServers } = config;
   const ident = Math.random().toString(36).substring(2, 4) + "#";
 
   return createTransportBase(({ emitter, isHost }) => {
-    const rtcConfig: RTCConfiguration = { iceServers: config.iceServers };
+    const rtcConfig: RTCConfiguration = { iceServers };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
 

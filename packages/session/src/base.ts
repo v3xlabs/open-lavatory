@@ -36,6 +36,7 @@ export const SESSION_STATE = {
   CREATED: "created",
   SIGNALING: "signaling",
   READY: "ready",
+  LINKING: "linking",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
 } as const;
@@ -102,6 +103,7 @@ export const createSession = async (
   const server = initParameters.s;
 
   const updateStatus = (newStatus: SessionState) => {
+    log("updateStatus", newStatus);
     status = newStatus;
     emitter.emit("state_change", { status, signaling: signal.getState() });
   };
@@ -225,6 +227,17 @@ export const createSession = async (
 
         if (state === SIGNAL_STATE.READY) {
           updateStatus(SESSION_STATE.READY);
+        }
+
+        if (
+          (
+            [
+              SIGNAL_STATE.HANDSHAKE,
+              SIGNAL_STATE.HANDSHAKE_PARTIAL,
+            ] as SignalState[]
+          ).includes(state)
+        ) {
+          updateStatus(SESSION_STATE.LINKING);
         }
 
         if (state === SIGNAL_STATE.ENCRYPTED) {

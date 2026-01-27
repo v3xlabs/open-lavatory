@@ -1,5 +1,11 @@
 # @openlv/connector
 
+## 0.0.1-beta.9
+
+### Patch Changes
+
+- 299f247: Removed @openlv/transport as dependency
+
 ## 0.0.1-beta.8
 
 ### Patch Changes

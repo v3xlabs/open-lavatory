@@ -472,9 +472,6 @@ importers:
       '@openlv/provider':
         specifier: workspace:*
         version: link:../provider
-      '@openlv/transport':
-        specifier: workspace:*
-        version: link:../transport
       eventemitter3:
         specifier: ^5.0.1
         version: 5.0.4

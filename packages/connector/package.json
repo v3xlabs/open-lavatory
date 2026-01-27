@@ -41,7 +41,6 @@
     "@openlv/core": "workspace:*",
     "@openlv/modal": "workspace:*",
     "@openlv/provider": "workspace:*",
-    "@openlv/transport": "workspace:*",
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {

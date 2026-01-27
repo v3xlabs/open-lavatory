@@ -12,4 +12,5 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
   },
   autoReconnect: false,
   retainHistory: false,
+  theme: "system",
 };

@@ -2,14 +2,13 @@ import type { OpenLVProvider } from "@openlv/provider";
 import { h, render } from "preact";
 
 import { ModalProvider } from "./context.js";
-import { ensureStyles } from "./styles/index.js";
+import { updateStyles } from "./styles/index.js";
 import type { ThemeConfig } from "./theme/types.js";
 import type { ModalConnectionInterface } from "./types/connection.js";
 
 export type OpenLVModalElementProps = {
   provider: OpenLVProvider;
   onClose?: () => void;
-  theme?: ThemeConfig;
 };
 
 export class OpenLVModalElement
@@ -25,7 +24,13 @@ export class OpenLVModalElement
     this.parameters = parameters;
 
     this.shadow = this.attachShadow({ mode: "open" });
-    ensureStyles(this.shadow, this.parameters.theme);
+    const initialUserTheme =
+      parameters.provider.storage.getSettings()?.theme ?? "system";
+    const themeConfig = parameters.provider.themeConfig as
+      | ThemeConfig
+      | undefined;
+
+    void updateStyles(this.shadow, themeConfig, initialUserTheme);
   }
 
   connectedCallback() {
@@ -57,7 +62,10 @@ export class OpenLVModalElement
   }
 
   private performRender() {
-    render(h(ModalProvider, this.parameters), this.shadow);
+    render(
+      h(ModalProvider, { ...this.parameters, shadowRoot: this.shadow }),
+      this.shadow,
+    );
   }
 }
 

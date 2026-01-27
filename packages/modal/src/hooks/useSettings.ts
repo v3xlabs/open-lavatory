@@ -1,4 +1,7 @@
-import type { ProviderStorage } from "@openlv/provider/storage";
+import type {
+  ProviderStorage,
+  UserThemePreference,
+} from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import { useEventEmitter } from "./useEventEmitter.js";
@@ -69,6 +72,15 @@ export const useSettings = () => {
     provider?.storage.setSettings({ ...settings, autoReconnect });
   };
 
+  const updateThemePreference = (theme: UserThemePreference) => {
+    if (!settings) return;
+
+    if (settings.theme === theme) return;
+
+    setSettings({ ...settings, theme });
+    provider?.storage.setSettings({ ...settings, theme });
+  };
+
   if (!settings) throw new Error("Settings not found");
 
   return {
@@ -77,5 +89,6 @@ export const useSettings = () => {
     updateSignalingServer,
     updateRetainHistory,
     updateAutoReconnect,
+    updateThemePreference,
   };
 };

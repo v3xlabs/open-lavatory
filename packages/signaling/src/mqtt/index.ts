@@ -1,6 +1,5 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
-import type { MqttClient } from "mqtt";
-import MQTT from "mqtt";
+import { createMqtt, type MqttClient } from "websocket-mqtt";
 
 import type { CreateSignalLayerFn, SignalBaseProperties } from "../base.js";
 import { createSignalingLayer } from "../index.js";
@@ -20,18 +19,17 @@ export const mqtt: CreateSignalLayerFn = ({
   return createSignalingLayer({
     type: "mqtt",
     async setup() {
-      connection = await MQTT.connectAsync(
+      connection = createMqtt({
         url,
-        {
-          reconnectOnConnackError: false,
-          reconnectPeriod: 5000,
-          connectTimeout: 5000,
-        },
-        false,
-      );
+        // reconnectOnConnackError: false,
+        // reconnectPeriod: 5000,
+        // connectTimeout: 5000,
+      });
+
+      await connection.connect();
     },
     teardown() {
-      connection?.end(true, {});
+      connection?.close();
       connection = undefined;
     },
     async publish(payload) {
@@ -57,7 +55,7 @@ export const mqtt: CreateSignalLayerFn = ({
       });
 
       return new Promise((resolve, reject) => {
-        connection?.subscribe(topic, (err) => {
+        connection?.subscribe(topic, (err: unknown) => {
           if (err) {
             log("MQTT: Error subscribing to topic", err);
             reject(err);

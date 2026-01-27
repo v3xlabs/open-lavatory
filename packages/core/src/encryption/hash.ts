@@ -34,10 +34,7 @@ export const initHash = async (
   initialHash: string | undefined,
   encryptionKey: EncryptionKey,
 ) => {
-  console.log("initialHash", initialHash);
   const ourHash = await hashPublicKey(encryptionKey);
-
-  console.log("ourHash", ourHash);
   const hash = initialHash || ourHash;
   const isHost = hash === ourHash;
 

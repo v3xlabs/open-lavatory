@@ -18,15 +18,32 @@ export const mqtt: CreateSignalLayerFn = ({
 
   return createSignalingLayer({
     type: "mqtt",
-    async setup() {
-      connection = createMqtt({
-        url,
-        // reconnectOnConnackError: false,
-        // reconnectPeriod: 5000,
-        // connectTimeout: 5000,
-      });
+    setup() {
+      return new Promise((resolve, reject) => {
+        connection = createMqtt({
+          url,
+          // reconnectOnConnackError: false,
+          // reconnectPeriod: 5000,
+          // connectTimeout: 5000,
+        });
 
-      await connection.connect();
+        connection.on("connect", () => {
+          resolve();
+        });
+        connection.on("error", (error) => {
+          console.error("MQTT: Error connecting to URL", error);
+          reject(error);
+        });
+
+        connection.on("close", () => {
+          console.log("MQTT: Closed connection to URL", url);
+          reject(new Error("MQTT: Closed connection to URL"));
+        });
+
+        console.log("MQTT: Connecting to URL", url);
+        connection.connect();
+        console.log("MQTT: Connected to URL", url);
+      });
     },
     teardown() {
       connection?.close();
@@ -54,16 +71,7 @@ export const mqtt: CreateSignalLayerFn = ({
         handler(decoded);
       });
 
-      return new Promise((resolve, reject) => {
-        connection?.subscribe(topic, (err: unknown) => {
-          if (err) {
-            log("MQTT: Error subscribing to topic", err);
-            reject(err);
-          }
-
-          resolve();
-        });
-      });
+      await connection?.subscribe(topic);
     },
   });
 };

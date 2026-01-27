@@ -25,10 +25,7 @@ export const ensureStyles = async (
 
     let content = cssContent;
 
-    console.log("theme", theme);
-
     if (theme) {
-      console.log("building theme");
       const themeStr = await buildTheme(theme);
       const rootVars = `:root, :host {\n${themeStr}\n}\n`;
 

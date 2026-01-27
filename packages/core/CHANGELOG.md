@@ -1,5 +1,11 @@
 # @openlv/core
 
+## 0.0.1-beta.8
+
+### Patch Changes
+
+- 31e0469: Introduce session linking stage
+
 ## 0.0.1-beta.7
 
 ### Patch Changes

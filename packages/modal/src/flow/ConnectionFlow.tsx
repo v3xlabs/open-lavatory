@@ -34,7 +34,7 @@ const FLOW = {
   CREATING: "creating",
   CONNECTING: "connecting",
   READY: "ready",
-  CONFIRMING: "confirming",
+  LINKING: "linking",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
   ERROR: "error",
@@ -72,15 +72,13 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
           .with({ state: SIGNAL_STATE.STANDBY }, () => FLOW.CONNECTING)
           .with({ state: SIGNAL_STATE.CONNECTING }, () => FLOW.CONNECTING)
           .with({ state: SIGNAL_STATE.READY }, () => FLOW.READY)
-          .with({ state: SIGNAL_STATE.HANDSHAKE }, () => FLOW.CONFIRMING)
-          .with(
-            { state: SIGNAL_STATE.HANDSHAKE_PARTIAL },
-            () => FLOW.CONFIRMING,
-          )
+          .with({ state: SIGNAL_STATE.HANDSHAKE }, () => FLOW.LINKING)
+          .with({ state: SIGNAL_STATE.HANDSHAKE_PARTIAL }, () => FLOW.LINKING)
           .with({ state: SIGNAL_STATE.ENCRYPTED }, () => FLOW.CONNECTED)
           .otherwise(() => FLOW.CONNECTING),
     )
     .with({ status: SESSION_STATE.READY }, () => FLOW.READY)
+    .with({ status: SESSION_STATE.LINKING }, () => FLOW.LINKING)
     .with({ status: SESSION_STATE.CONNECTED }, () => FLOW.CONNECTED)
     .with({ status: SESSION_STATE.DISCONNECTED }, () => FLOW.DISCONNECTED)
     .otherwise(() => FLOW.ERROR);
@@ -118,12 +116,16 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
           </div>
         ))
         .with(FLOW.READY, () => <HandshakeOpen onCopy={onCopy} />)
-        .with(FLOW.CONFIRMING, () => (
+        .with(FLOW.LINKING, () => (
           <div className="flex flex-col items-center gap-4 p-6">
+            <LoadingSpinner />
             <div className="text-center">
               <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
-                Establishing e2e encryption...
+                Establishing connection...
               </h3>
+              <p className="text-(--lv-text-muted) text-sm">
+                This may take a few seconds...
+              </p>
             </div>
           </div>
         ))

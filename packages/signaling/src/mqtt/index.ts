@@ -36,13 +36,10 @@ export const mqtt: CreateSignalLayerFn = ({
         });
 
         connection.on("close", () => {
-          console.log("MQTT: Closed connection to URL", url);
           reject(new Error("MQTT: Closed connection to URL"));
         });
 
-        console.log("MQTT: Connecting to URL", url);
         connection.connect();
-        console.log("MQTT: Connected to URL", url);
       });
     },
     teardown() {

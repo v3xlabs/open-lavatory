@@ -275,10 +275,7 @@ export const createSession = async (
     waitForLink: async () => {
       return new Promise((resolve) => {
         emitter.on("state_change", (state) => {
-          log("waitForLink state change", state);
-
           if (state?.status === SESSION_STATE.CONNECTED) {
-            log("waitForLink resolved");
             resolve();
           }
         });

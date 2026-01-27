@@ -13,7 +13,7 @@ import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage"> &
-  Pick<OpenLVModalElementProps, "theme">
+    Pick<OpenLVModalElementProps, "theme">
 >;
 
 export type OpenLVConnector = CreateConnectorFn<
@@ -94,16 +94,17 @@ export const openlv = ({
 
       const accounts = await provider.getAccounts();
 
-      const chainId = 1;
+      const chainIdHex = await provider.request({ method: "eth_chainId" });
+      const chainId = Number.parseInt(chainIdHex as string, 16);
 
-      log("completing connect() call");
+      log("completing connect() call with chainId", chainId);
 
       return {
         accounts: (withCapabilities
           ? accounts.map((account) => ({
-            address: account,
-            capabilities: {},
-          }))
+              address: account,
+              capabilities: {},
+            }))
           : accounts) as never,
         chainId,
         provider,
@@ -139,7 +140,11 @@ export const openlv = ({
 
         return chain;
       },
-      getChainId: async () => 1,
+      getChainId: async () => {
+        const chainIdHex = await provider.request({ method: "eth_chainId" });
+
+        return Number.parseInt(chainIdHex as string, 16);
+      },
       getProvider: async () => provider,
       onAccountsChanged: () => log("onAccountsChanged"),
       onChainChanged: () => log("onChainChanged"),

@@ -73,7 +73,6 @@ export const createProvider = (
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
-  const chainId: string = "1";
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: _parameters.storage });
   const { openModal } = _parameters;
@@ -129,8 +128,13 @@ export const createProvider = (
 
     accounts = await getAccounts();
 
+    const chainIdHex = (await session.send({
+      method: "eth_chainId",
+      params: [],
+    })) as string;
+
     updateStatus(PROVIDER_STATUS.CONNECTED);
-    oxEmitter.emit("connect", { chainId });
+    oxEmitter.emit("connect", { chainId: chainIdHex });
     oxEmitter.emit("accountsChanged", accounts);
 
     return session;
@@ -148,8 +152,17 @@ export const createProvider = (
 
     return (
       match(request)
-        .with({ method: "eth_chainId" }, () => {
+        .with({ method: "eth_chainId" }, async () => {
           log("eth_chainId");
+
+          if (session) {
+            log("sending eth_chainId to session");
+            const result = await session.send(request);
+
+            log("eth_chainId result from session", result);
+
+            return result;
+          }
 
           return "0x1";
         })

@@ -8,26 +8,28 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
-import type { Address, EIP1193Provider } from "viem";
+import { type Address, type EIP1193Provider } from "viem";
 import {
   type Connector,
   createConfig,
   http,
   useAccount,
+  useChainId,
   useClient,
   useConnect,
   useConnections,
   useConnectorClient,
   useDisconnect,
   useSignMessage,
+  useVerifyMessage,
   WagmiProvider,
 } from "wagmi";
-import { mainnet } from "wagmi/chains";
+import { holesky, mainnet, sepolia } from "wagmi/chains";
 
 const queryClient = new QueryClient();
 
 const config = createConfig({
-  chains: [mainnet],
+  chains: [mainnet, sepolia, holesky],
   connectors: [
     openlv({
       // theme: {
@@ -58,6 +60,8 @@ const config = createConfig({
   ],
   transports: {
     [mainnet.id]: http(),
+    [sepolia.id]: http(),
+    [holesky.id]: http(),
   },
 });
 
@@ -70,7 +74,26 @@ const trimAddress = (address: Address | undefined | null) => {
 let session: Session | undefined = undefined;
 
 const TestSign = () => {
-  const { signMessage, data: signedData } = useSignMessage();
+  const {
+    signMessage,
+    data: signedData,
+    error,
+    isPending,
+    reset: resetSignature,
+  } = useSignMessage();
+  const { address } = useAccount();
+  const chainId = useChainId();
+
+  const {
+    data: verificationResult,
+    error: verificationError,
+    isLoading: isVerifying,
+  } = useVerifyMessage({
+    address,
+    message: "Hello, world!",
+    signature: signedData,
+    chainId,
+  });
 
   return (
     <div className="space-y-2">
@@ -80,6 +103,7 @@ const TestSign = () => {
         </div>
         <button
           onClick={() => {
+            resetSignature();
             signMessage({ message: "Hello, world!" });
           }}
           className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
@@ -87,9 +111,41 @@ const TestSign = () => {
           Sign Message
         </button>
       </div>
+      {isPending && (
+        <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+          ⏳ Waiting for signature... (Check your wallet)
+        </div>
+      )}
+      {error && (
+        <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+          Signature request cancelled or failed
+        </div>
+      )}
       {signedData && (
-        <div className="rounded-md border border-amber-300 p-2 text-gray-500 text-sm">
-          Signed Data: {JSON.stringify(signedData)}
+        <div className="space-y-2">
+          {isVerifying ? (
+            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+              Verifying signature...
+            </div>
+          ) : verificationResult !== undefined ? (
+            <div
+              className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
+                verificationResult
+                  ? "text-green-500"
+                  : "text-[var(--vocs-color_text)]"
+              }`}
+            >
+              {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
+            </div>
+          ) : null}
+          {verificationError && (
+            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+              Error:{" "}
+              {verificationError instanceof Error
+                ? verificationError.message
+                : String(verificationError)}
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -145,9 +201,18 @@ const ConnectComponent = () => {
                   params: [] as never,
                 });
 
+                if (result) return result;
+              }
+
+              if (method === "eth_chainId") {
+                const result = await client.request({
+                  method: "eth_chainId",
+                  params: [] as never,
+                });
+
                 console.log("result from calling wallet", result);
 
-                if (result) return result;
+                return result;
               }
 
               if (["personal_sign"].includes(method)) {

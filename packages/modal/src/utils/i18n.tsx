@@ -16,7 +16,7 @@ export type LanguageTag =
   | "nl"
   | "fr"
   | "es"
-  | "se"
+  | "sv"
   | "zh-cn"
   | "ar"
   | "he"
@@ -33,7 +33,7 @@ export const LANGUAGES: LanguageInfo[] = [
   { tag: "en", name: "English", nativeName: "English" },
   { tag: "nl", name: "Dutch", nativeName: "Nederlands" },
   { tag: "es", name: "Spanish", nativeName: "Español" },
-  { tag: "se", name: "Swedish", nativeName: "Svenska" },
+  { tag: "sv", name: "Swedish", nativeName: "Svenska" },
   { tag: "zh-cn", name: "Chinese (Simplified)", nativeName: "简体中文" },
   { tag: "fr", name: "French", nativeName: "Français" },
   { tag: "ar", name: "Arabic", nativeName: "العربية", rtl: true },
@@ -190,7 +190,7 @@ const loadLanguagePack = async (
     .with("en", () => Promise.resolve(null))
     .with("nl", async () => import("../../lang/nl.json").then((m) => m.default))
     .with("es", async () => import("../../lang/es.json").then((m) => m.default))
-    .with("se", async () => import("../../lang/se.json").then((m) => m.default))
+    .with("sv", async () => import("../../lang/sv.json").then((m) => m.default))
     .with("fr", async () => import("../../lang/fr.json").then((m) => m.default))
     .with("zh-cn", async () =>
       import("../../lang/zh-cn.json").then((m) => m.default),

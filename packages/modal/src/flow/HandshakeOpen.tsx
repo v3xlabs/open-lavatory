@@ -3,10 +3,12 @@ import { useCallback } from "preact/hooks";
 import * as QRCode from "qrcode-generator";
 
 import { useSession } from "../hooks/useSession.js";
+import { useTranslation } from "../utils/i18n.js";
 
 export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
   onCopy,
 }) => {
+  const { t } = useTranslation();
   const { uri } = useSession();
 
   const handleCopy = useCallback(() => {
@@ -36,7 +38,7 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
             <button
               className="h-[200px] w-[200px] cursor-pointer rounded bg-(--lv-qr-background) text-(--lv-qr-color)"
               onClick={handleCopy}
-              title="Click to copy connection URL"
+              title={t("handshake.clickToCopyUrl")}
               dangerouslySetInnerHTML={{ __html: generateQRCode(uri) }}
             />
           </div>
@@ -48,14 +50,12 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
             onClick={handleCopy}
             className="w-full cursor-pointer rounded-lg border border-(--lv-control-button-secondary-border) bg-(--lv-control-button-secondary-background) px-4 py-2 text-sm text-(--lv-text-primary) transition hover:bg-(--lv-control-button-secondary-hoverBackground) active:bg-(--lv-control-button-secondary-activeBackground)"
           >
-            Copy Connection URL
+            {t("handshake.copyConnectionUrl")}
           </button>
         </div>
       </div>
       <div className="w-full text-sm text-(--lv-text-secondary)">
-        <span>Scan the code above using your mobile wallet.</span>
-        <br />
-        <span>Or copy the link and paste it into your wallet.</span>
+        <span>{t("handshake.scanCodeInstruction")}</span>
       </div>
     </div>
   );

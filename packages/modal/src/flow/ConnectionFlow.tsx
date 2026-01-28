@@ -5,6 +5,7 @@ import { match, P } from "ts-pattern";
 
 import { UnknownState } from "../components/UnknownState.js";
 import { useSession } from "../hooks/useSession.js";
+import { useTranslation } from "../utils/i18n.js";
 import { HandshakeOpen } from "./HandshakeOpen.js";
 
 const supportsViewTransitions = () =>
@@ -85,6 +86,7 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
 };
 
 export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
+  const { t } = useTranslation();
   const { status: sessionStatus } = useSession();
   const { displayState } = useFlowTransition(reduceState(sessionStatus));
 
@@ -96,9 +98,11 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             <LoadingSpinner />
             <div className="text-center">
               <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
-                Preparing connection
+                {t("connectionFlow.preparingConnection")}
               </h3>
-              <p className="text-(--lv-text-muted) text-sm">Generating keys…</p>
+              <p className="text-(--lv-text-muted) text-sm">
+                {t("connectionFlow.generatingKeys")}
+              </p>
             </div>
           </div>
         ))
@@ -107,10 +111,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             <LoadingSpinner />
             <div className="text-center">
               <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
-                Connecting
+                {t("connectionFlow.connecting")}
               </h3>
               <p className="text-(--lv-text-muted) text-sm">
-                Waiting for network connection...
+                {t("connectionFlow.waitingForNetwork")}
               </p>
             </div>
           </div>
@@ -121,10 +125,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             <LoadingSpinner />
             <div className="text-center">
               <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
-                Establishing connection...
+                {t("connectionFlow.establishingConnection")}
               </h3>
               <p className="text-(--lv-text-muted) text-sm">
-                This may take a few seconds...
+                {t("connectionFlow.mayTakeFewSeconds")}
               </p>
             </div>
           </div>
@@ -134,10 +138,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             <div className="text-center">
               <div className="mb-4 text-4xl">✅</div>
               <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
-                Connected Successfully!
+                {t("connectionFlow.connectedSuccessfully")}
               </h3>
               <p className="text-(--lv-text-muted) text-sm">
-                Your wallet is now connected and ready to use.
+                {t("connectionFlow.walletConnectedReady")}
               </p>
             </div>
           </div>
@@ -147,10 +151,10 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             <div className="text-center">
               <div className="mb-4 text-4xl">🔌</div>
               <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
-                Disconnected
+                {t("connectionFlow.disconnected")}
               </h3>
               <p className="mb-4 text-(--lv-text-muted) text-sm">
-                The connection has been closed.
+                {t("connectionFlow.connectionClosed")}
               </p>
             </div>
             <button
@@ -158,7 +162,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
               onClick={onClose}
               className="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
             >
-              Close
+              {t("common.close")}
             </button>
           </div>
         ))

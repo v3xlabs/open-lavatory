@@ -1,6 +1,7 @@
 import type { ProviderStorage } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
+import type { LanguageTag } from "../utils/i18n.js";
 import { useEventEmitter } from "./useEventEmitter.js";
 import { useProvider } from "./useProvider.js";
 
@@ -69,6 +70,13 @@ export const useSettings = () => {
     provider?.storage.setSettings({ ...settings, autoReconnect });
   };
 
+  const updateLanguage = (language: LanguageTag) => {
+    if (!settings) return;
+
+    setSettings({ ...settings, language });
+    provider?.storage.setSettings({ ...settings, language });
+  };
+
   if (!settings) throw new Error("Settings not found");
 
   return {
@@ -77,5 +85,6 @@ export const useSettings = () => {
     updateSignalingServer,
     updateRetainHistory,
     updateAutoReconnect,
+    updateLanguage,
   };
 };

@@ -5,6 +5,7 @@ import {
   migrateStorageToLatest,
   type ProviderStorageV0,
   type ProviderStorageV1,
+  type ProviderStorageV2,
   type ProviderStorageVAny,
 } from "./version.js";
 
@@ -33,9 +34,36 @@ const testCases = {
       },
     },
   ] as { name: string; input: ProviderStorageV0; output: ProviderStorageV1 }[],
+  v1tov2: [
+    {
+      name: "basic",
+      input: {
+        version: 1,
+        retainHistory: false,
+        autoReconnect: false,
+        signaling: {
+          p: "mqtt",
+          s: {
+            mqtt: "wss://test.mosquitto.org:8081/mqtt",
+          },
+        },
+      },
+      output: {
+        version: 2,
+        autoReconnect: false,
+        retainHistory: false,
+        signaling: {
+          p: "mqtt",
+          s: {
+            mqtt: "wss://test.mosquitto.org:8081/mqtt",
+          },
+        },
+      },
+    },
+  ] as { name: string; input: ProviderStorageV1; output: ProviderStorageV2 }[],
   startToFinish: [
     {
-      name: "v0->v1",
+      name: "v0->v1->v2",
       input: {
         version: 0,
         autoReconnect: false,
@@ -46,7 +74,7 @@ const testCases = {
         },
       },
       output: {
-        version: 1,
+        version: 2,
         autoReconnect: false,
         retainHistory: false,
         signaling: {

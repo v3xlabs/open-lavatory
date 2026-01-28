@@ -1,0 +1,74 @@
+{
+  "common": {
+    "close": "סגור",
+    "yes": "כן",
+    "no": "לא",
+    "protocol": "פרוטוקול"
+  },
+  "status": {
+    "connectedSuccessfully": "התחברת בהצלחה!",
+    "connecting": "מתחבר",
+    "ready": "מוכן",
+    "handshakeClosed": "לחיצת היד נסגרה",
+    "handshakePartial": "לחיצת יד חלקית",
+    "encrypted": "מוצפן",
+    "signalError": "שגיאת אות",
+    "disconnected": "מנותק"
+  },
+  "settings": {
+    "title": "הגדרות",
+    "language": "שפה",
+    "connectionPreferences": {
+      "title": "העדפות חיבור",
+      "retainSessionHistory": "שמור היסטוריית הפעלה",
+      "autoReconnect": "התחבר מחדש אוטומטית"
+    },
+    "signaling": {
+      "title": "איתות",
+      "description": "איתות הוא פרוטוקול לחיצת היד המשמש ליצירת חיבור.",
+      "server": "שרת",
+      "serverUrl": "כתובת השרת"
+    },
+    "transport": {
+      "title": "תעבורה",
+      "description": "כך מתוחזק החיבור.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "חבר ארנק"
+  },
+  "info": {
+    "title": "מה זה openlv?",
+    "scanQrCode": "סרוק קוד QR",
+    "approveOnDevice": "אשר במכשיר",
+    "youreConnected": "אתה מחובר!"
+  },
+  "disconnected": {
+    "prompt": "לחץ על הכפתור למטה כדי להתחיל חיבור",
+    "generateQr": "צור QR",
+    "connectionSettings": "הגדרות חיבור"
+  },
+  "connectionFlow": {
+    "preparingConnection": "מכין חיבור",
+    "generatingKeys": "מייצר מפתחות...",
+    "connecting": "מתחבר",
+    "waitingForNetwork": "ממתין לחיבור רשת...",
+    "establishingConnection": "יוצר חיבור...",
+    "mayTakeFewSeconds": "זה עשוי לקחת כמה שניות...",
+    "connectedSuccessfully": "התחברת בהצלחה!",
+    "walletConnectedReady": "הארנק שלך מחובר ומוכן לשימוש.",
+    "disconnected": "מנותק",
+    "connectionClosed": "החיבור נסגר."
+  },
+  "handshake": {
+    "clickToCopyUrl": "לחץ להעתקת כתובת החיבור",
+    "copyConnectionUrl": "העתק כתובת חיבור",
+    "scanCodeInstruction": "סרוק את הקוד למעלה באמצעות הארנק הנייד שלך.\nאו העתק את הקישור והדבק אותו בארנק שלך."
+  },
+  "modal": {
+    "urlCopied": "כתובת החיבור הועתקה ללוח!",
+    "backToQr": "חזור ל-QR",
+    "closeModal": "סגור חלון"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "common": {
+    "close": "Sluiten",
+    "yes": "Ja",
+    "no": "Nee",
+    "protocol": "Protocol"
+  },
+  "status": {
+    "connectedSuccessfully": "Succesvol verbonden!",
+    "connecting": "Verbinden",
+    "ready": "Gereed",
+    "handshakeClosed": "Handshake gesloten",
+    "handshakePartial": "Handshake gedeeltelijk",
+    "encrypted": "Versleuteld",
+    "signalError": "Signaalfout",
+    "disconnected": "Verbinding verbroken"
+  },
+  "settings": {
+    "title": "Instellingen",
+    "language": "Taal",
+    "connectionPreferences": {
+      "title": "Verbindingsvoorkeuren",
+      "retainSessionHistory": "Sessiegeschiedenis bewaren",
+      "autoReconnect": "Automatisch opnieuw verbinden"
+    },
+    "signaling": {
+      "title": "Signalering",
+      "description": "Signalering is het handshake-protocol dat wordt gebruikt om een verbinding tot stand te brengen.",
+      "server": "Server",
+      "serverUrl": "Server URL"
+    },
+    "transport": {
+      "title": "Transport",
+      "description": "Dit is hoe de verbinding wordt onderhouden.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "Verbind Wallet"
+  },
+  "info": {
+    "title": "Wat is openlv?",
+    "scanQrCode": "Scan QR-code",
+    "approveOnDevice": "Goedkeuren op apparaat",
+    "youreConnected": "Je bent verbonden!"
+  },
+  "disconnected": {
+    "prompt": "Klik op de knop hieronder om een verbinding te starten",
+    "generateQr": "Genereer QR",
+    "connectionSettings": "Verbindingsinstellingen"
+  },
+  "connectionFlow": {
+    "preparingConnection": "Verbinding voorbereiden",
+    "generatingKeys": "Sleutels genereren...",
+    "connecting": "Verbinden",
+    "waitingForNetwork": "Wachten op netwerkverbinding...",
+    "establishingConnection": "Verbinding tot stand brengen...",
+    "mayTakeFewSeconds": "Dit kan enkele seconden duren...",
+    "connectedSuccessfully": "Succesvol verbonden!",
+    "walletConnectedReady": "Je wallet is nu verbonden en klaar voor gebruik.",
+    "disconnected": "Verbinding verbroken",
+    "connectionClosed": "De verbinding is verbroken."
+  },
+  "handshake": {
+    "clickToCopyUrl": "Klik om link te kopiëren",
+    "copyConnectionUrl": "Kopieer link",
+    "scanCodeInstruction": "Scan de bovenstaande code met je mobiele wallet, of kopieer en plak hem."
+  },
+  "modal": {
+    "urlCopied": "Link gekopieerd naar klembord!",
+    "backToQr": "Terug naar QR",
+    "closeModal": "Modal sluiten"
+  }
+}

@@ -1,0 +1,74 @@
+{
+  "common": {
+    "close": "Cerrar",
+    "yes": "Sí",
+    "no": "No",
+    "protocol": "Protocolo"
+  },
+  "status": {
+    "connectedSuccessfully": "¡Conectado exitosamente!",
+    "connecting": "Conectando",
+    "ready": "Listo",
+    "handshakeClosed": "Handshake cerrado",
+    "handshakePartial": "Handshake parcial",
+    "encrypted": "Cifrado",
+    "signalError": "Error de señal",
+    "disconnected": "Desconectado"
+  },
+  "settings": {
+    "title": "Configuración",
+    "language": "Idioma",
+    "connectionPreferences": {
+      "title": "Preferencias de conexión",
+      "retainSessionHistory": "Conservar historial de sesión",
+      "autoReconnect": "Reconexión automática"
+    },
+    "signaling": {
+      "title": "Señalización",
+      "description": "La señalización es el protocolo de handshake utilizado para establecer una conexión.",
+      "server": "Servidor",
+      "serverUrl": "URL del servidor"
+    },
+    "transport": {
+      "title": "Transporte",
+      "description": "Así es como se mantiene la conexión.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "Conectar Wallet"
+  },
+  "info": {
+    "title": "¿Qué es openlv?",
+    "scanQrCode": "Escanear código QR",
+    "approveOnDevice": "Aprobar en el dispositivo",
+    "youreConnected": "¡Estás conectado!"
+  },
+  "disconnected": {
+    "prompt": "Haz clic en el botón de abajo para iniciar una conexión",
+    "generateQr": "Generar QR",
+    "connectionSettings": "Configuración de conexión"
+  },
+  "connectionFlow": {
+    "preparingConnection": "Preparando conexión",
+    "generatingKeys": "Generando claves...",
+    "connecting": "Conectando",
+    "waitingForNetwork": "Esperando conexión de red...",
+    "establishingConnection": "Estableciendo conexión...",
+    "mayTakeFewSeconds": "Esto puede tardar unos segundos...",
+    "connectedSuccessfully": "¡Conectado exitosamente!",
+    "walletConnectedReady": "Tu wallet está ahora conectada y lista para usar.",
+    "disconnected": "Desconectado",
+    "connectionClosed": "La conexión ha sido cerrada."
+  },
+  "handshake": {
+    "clickToCopyUrl": "Haz clic para copiar la URL de conexión",
+    "copyConnectionUrl": "Copiar URL de conexión",
+    "scanCodeInstruction": "Escanea el código de arriba usando tu wallet móvil.\nO copia el enlace y pégalo en tu wallet."
+  },
+  "modal": {
+    "urlCopied": "¡URL de conexión copiada al portapapeles!",
+    "backToQr": "Volver al QR",
+    "closeModal": "Cerrar modal"
+  }
+}

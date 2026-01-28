@@ -3,11 +3,13 @@ import { IoIosSettings } from "react-icons/io";
 
 import { useSessionStart } from "../../hooks/useSession.js";
 import { Button } from "../../ui/Button.js";
+import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
 export const Disconnected: FC<{ onSettings: () => void }> = ({
   onSettings,
 }) => {
+  const { t } = useTranslation();
   const { start } = useSessionStart();
 
   return (
@@ -15,7 +17,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
       <ConnectionGraphic />
       <div className="text-center">
         <p className="text-sm text-(--lv-text-secondary)">
-          Click the button below to start a connection
+          {t("disconnected.prompt")}
         </p>
       </div>
       <div className="flex items-center">
@@ -26,14 +28,14 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
           $variant="primary"
           $size="lg"
         >
-          Generate QR
+          {t("disconnected.generateQr")}
         </Button>
         <Button
           type="button"
-          aria-label="Connection settings"
+          aria-label={t("disconnected.connectionSettings")}
           aria-pressed={false}
           onClick={onSettings}
-          className="-ml-1 rounded-l-none px-3"
+          className="px-3 ltr:-ml-1 ltr:rounded-l-none rtl:-mr-1 rtl:rounded-r-none"
           $aspect="square"
           $size="lg"
           $variant="secondary"

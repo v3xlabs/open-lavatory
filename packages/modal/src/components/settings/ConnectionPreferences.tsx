@@ -1,23 +1,25 @@
 import { useSettings } from "../../hooks/useSettings.js";
+import { useTranslation } from "../../utils/i18n.js";
 import { MenuGroup } from "../../ui/menu/MenuGroup.js";
 import { MenuItem } from "../../ui/menu/MenuItem.js";
 import { Toggle } from "../../ui/Toggle.js";
 
 export const ConnectionPreferences = () => {
+  const { t } = useTranslation();
   const { settings, updateRetainHistory, updateAutoReconnect } = useSettings();
 
   return (
-    <MenuGroup title="Connection preferences">
+    <MenuGroup title={t("settings.connectionPreferences.title")}>
       {(
         [
           [
-            "Retain session history",
+            t("settings.connectionPreferences.retainSessionHistory"),
             "retainHistory",
             settings?.retainHistory ?? false,
             updateRetainHistory,
           ],
           [
-            "Auto reconnect",
+            t("settings.connectionPreferences.autoReconnect"),
             "autoReconnect",
             settings?.autoReconnect ?? false,
             updateAutoReconnect,

@@ -1,0 +1,74 @@
+{
+  "common": {
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No",
+    "protocol": "Protocol"
+  },
+  "status": {
+    "connectedSuccessfully": "Connected Successfully!",
+    "connecting": "Connecting",
+    "ready": "Ready",
+    "handshakeClosed": "Handshake Closed",
+    "handshakePartial": "Handshake Partial",
+    "encrypted": "Encrypted",
+    "signalError": "Signal Error",
+    "disconnected": "Disconnected"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "connectionPreferences": {
+      "title": "Connection preferences",
+      "retainSessionHistory": "Retain session history",
+      "autoReconnect": "Auto reconnect"
+    },
+    "signaling": {
+      "title": "Signaling",
+      "description": "Signaling is the handshake protocol used to establish a connection.",
+      "server": "Server",
+      "serverUrl": "Server URL"
+    },
+    "transport": {
+      "title": "Transport",
+      "description": "This is how the connection is maintained.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "Connect Wallet"
+  },
+  "info": {
+    "title": "What is openlv?",
+    "scanQrCode": "Scan QR Code",
+    "approveOnDevice": "Approve on device",
+    "youreConnected": "You're connected!"
+  },
+  "disconnected": {
+    "prompt": "Click the button below to start a connection",
+    "generateQr": "Generate QR",
+    "connectionSettings": "Connection settings"
+  },
+  "connectionFlow": {
+    "preparingConnection": "Preparing connection",
+    "generatingKeys": "Generating keys...",
+    "connecting": "Connecting",
+    "waitingForNetwork": "Waiting for network connection...",
+    "establishingConnection": "Establishing connection...",
+    "mayTakeFewSeconds": "This may take a few seconds...",
+    "connectedSuccessfully": "Connected Successfully!",
+    "walletConnectedReady": "Your wallet is now connected and ready to use.",
+    "disconnected": "Disconnected",
+    "connectionClosed": "The connection has been closed."
+  },
+  "handshake": {
+    "clickToCopyUrl": "Click to copy connection URL",
+    "copyConnectionUrl": "Copy Connection URL",
+    "scanCodeInstruction": "Scan the code above using your mobile wallet.\nOr copy the link and paste it into your wallet."
+  },
+  "modal": {
+    "urlCopied": "Connection URL copied to clipboard!",
+    "backToQr": "Back to QR",
+    "closeModal": "Close modal"
+  }
+}

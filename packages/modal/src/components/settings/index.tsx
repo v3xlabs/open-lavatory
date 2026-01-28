@@ -1,4 +1,5 @@
 import { ConnectionPreferences } from "./ConnectionPreferences.js";
+import { LanguageSettings } from "./LanguageSettings.js";
 import { SignalingSettings } from "./Signaling.js";
 import { TransportSettings } from "./Transport.js";
 
@@ -7,5 +8,6 @@ export const ModalSettings = () => (
     <SignalingSettings />
     <TransportSettings />
     <ConnectionPreferences />
+    <LanguageSettings />
   </div>
 );

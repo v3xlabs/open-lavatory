@@ -767,8 +767,8 @@ importers:
         specifier: ^5
         version: 5.9.0
       websocket-mqtt:
-        specifier: 0.0.6
-        version: 0.0.6
+        specifier: 0.0.7
+        version: 0.0.7
     devDependencies:
       typescript:
         specifier: ^5
@@ -10797,8 +10797,8 @@ packages:
     resolution: {integrity: sha512-5fALBcroIl31OeXAdd1YUntxiZl1eHlZZWzNg3U4Fn+J9/cGL3eT80YlrsWGvj2ojuz1rZr2OXkgCzIxAZ7vRQ==}
     engines: {node: '>=6.0.0', npm: '>=3.10.0'}
 
-  websocket-mqtt@0.0.6:
-    resolution: {integrity: sha512-2aAaxDdGDNNL0ngCx6GR4mUOottDF/z7SB0j+NjfXPOsQ6N1Ai/v2jReLnoXoI6oG+f9XoddHDUNnCAz403Lwg==}
+  websocket-mqtt@0.0.7:
+    resolution: {integrity: sha512-+33fT52HJ3IlJdybH/em5TNmswwxcDCSyubernwVCaXKf7/RCEg95Lr2U51Cgev1/dqi9dUgOyozhUK/09e4IA==}
 
   webview-crypto@0.1.14:
     resolution: {integrity: sha512-EEqt8rHOYxu6a00/AYY5Ba0O4RrARfmk4UfiK8p4QHGhP4FNMHFJEjk9DkoxqnoaR5dAbhIg2LcCEbGT4igWZQ==}
@@ -25135,7 +25135,7 @@ snapshots:
     dependencies:
       sdp: 3.2.1
 
-  websocket-mqtt@0.0.6: {}
+  websocket-mqtt@0.0.7: {}
 
   webview-crypto@0.1.14:
     dependencies:

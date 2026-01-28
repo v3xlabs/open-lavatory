@@ -1,4 +1,4 @@
-import type { ProviderStorage } from "@openlv/provider/storage";
+import type { ProviderStorage, TurnServer } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -77,6 +77,61 @@ export const useSettings = () => {
     provider?.storage.setSettings({ ...settings, language });
   };
 
+  const updateTransportProtocol = (protocol: string) => {
+    if (!settings) return;
+
+    if (settings.transport?.protocol === protocol) return;
+
+    const newSettings = {
+      ...settings,
+      transport: {
+        ...settings.transport,
+        protocol,
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
+  const updateStunServers = (stunServers: string[]) => {
+    if (!settings) return;
+
+    const newSettings = {
+      ...settings,
+      transport: {
+        ...settings.transport,
+        protocol: settings.transport?.protocol ?? "webrtc",
+        iceServers: {
+          ...settings.transport?.iceServers,
+          stun: stunServers.length > 0 ? stunServers : undefined,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
+  const updateTurnServers = (turnServers: TurnServer[]) => {
+    if (!settings) return;
+
+    const newSettings = {
+      ...settings,
+      transport: {
+        ...settings.transport,
+        protocol: settings.transport?.protocol ?? "webrtc",
+        iceServers: {
+          ...settings.transport?.iceServers,
+          turn: turnServers.length > 0 ? turnServers : undefined,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
   if (!settings) throw new Error("Settings not found");
 
   return {
@@ -86,5 +141,8 @@ export const useSettings = () => {
     updateRetainHistory,
     updateAutoReconnect,
     updateLanguage,
+    updateTransportProtocol,
+    updateStunServers,
+    updateTurnServers,
   };
 };

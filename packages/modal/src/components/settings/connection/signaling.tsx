@@ -1,14 +1,11 @@
-import { useSettings } from "../../hooks/useSettings.js";
-import { useTranslation } from "../../utils/i18n.js";
-import { InfoTooltip } from "../../ui/InfoTooltip.js";
-import { Input } from "../../ui/Input.js";
-import { MenuGroup } from "../../ui/menu/MenuGroup.js";
-import { MenuItem } from "../../ui/menu/MenuItem.js";
-import { Select } from "../../ui/Select.js";
+import { useSettings } from "../../../hooks/useSettings.js";
+import { Input } from "../../../ui/Input.js";
+import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
+import { MenuItem } from "../../../ui/menu/MenuItem.js";
+import { Select } from "../../../ui/Select.js";
+import { useTranslation } from "../../../utils/i18n.js";
 
-type SignalingProtocol = "MQTT" | "NTFY" | "GUN";
-
-const protocolOptions: SignalingProtocol[] = ["MQTT", "NTFY", "GUN"];
+const AVAILABLE_PROTOCOLS = ["mqtt", "ntfy", "gun"];
 
 export const SignalingSettings = () => {
   const { t } = useTranslation();
@@ -17,19 +14,12 @@ export const SignalingSettings = () => {
 
   return (
     <div>
-      <MenuGroup
-        title={t("settings.signaling.title")}
-        right={
-          <InfoTooltip variant="icon">
-            {t("settings.signaling.description")}
-          </InfoTooltip>
-        }
-      >
+      <MenuGroup title={t("settings.signaling.title")}>
         <MenuItem label={t("common.protocol")}>
           <Select
-            options={protocolOptions.map((option) => [
+            options={AVAILABLE_PROTOCOLS.map((option) => [
               option.toLowerCase(),
-              option,
+              option.toUpperCase(),
             ])}
             value={settings?.signaling.p || ""}
             onChange={updateSignalingProtocol}
@@ -46,6 +36,9 @@ export const SignalingSettings = () => {
           />
         </MenuItem>
       </MenuGroup>
+      <div className="p-2 text-sm text-(--lv-text-secondary) text-start">
+        {t("settings.signaling.description")}
+      </div>
     </div>
   );
 };

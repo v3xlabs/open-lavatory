@@ -32,7 +32,16 @@
     "transport": {
       "title": "انتقال",
       "description": "این نحوه حفظ اتصال است.",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "سرورهای ICE",
+        "stun": "سرورهای STUN",
+        "turn": "سرورهای TURN",
+        "addStun": "افزودن سرور STUN",
+        "addTurn": "افزودن سرور TURN",
+        "username": "نام کاربری",
+        "credential": "رمز عبور"
+      }
     }
   },
   "start": {

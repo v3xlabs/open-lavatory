@@ -32,7 +32,16 @@
     "transport": {
       "title": "Transport",
       "description": "Dit is hoe de verbinding wordt onderhouden.",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "ICE-servers",
+        "stun": "STUN-servers",
+        "turn": "TURN-servers",
+        "addStun": "STUN-server toevoegen",
+        "addTurn": "TURN-server toevoegen",
+        "username": "Gebruikersnaam",
+        "credential": "Wachtwoord"
+      }
     }
   },
   "start": {

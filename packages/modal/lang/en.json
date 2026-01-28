@@ -18,6 +18,10 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
+    "connection": {
+      "title": "Connection",
+      "description": "Configure how you connect to your wallet."
+    },
     "connectionPreferences": {
       "title": "Connection preferences",
       "retainSessionHistory": "Retain session history",
@@ -32,8 +36,18 @@
     "transport": {
       "title": "Transport",
       "description": "This is how the connection is maintained.",
-      "webrtc": "WebRTC"
-    }
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "ICE Servers",
+        "stun": "STUN Servers",
+        "turn": "TURN Servers",
+        "addStun": "Add STUN Server",
+        "addTurn": "Add TURN Server",
+        "username": "Username",
+        "credential": "Password"
+      }
+    },
+    "appearance": "Appearance"
   },
   "start": {
     "title": "Connect Wallet"

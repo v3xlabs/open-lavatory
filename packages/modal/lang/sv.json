@@ -32,7 +32,16 @@
     "transport": {
       "title": "Transport",
       "description": "Transport är hur anslutningen upprätthålls.",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "ICE-servrar",
+        "stun": "STUN-servrar",
+        "turn": "TURN-servrar",
+        "addStun": "Lägg till STUN-server",
+        "addTurn": "Lägg till TURN-server",
+        "username": "Användarnamn",
+        "credential": "Lösenord"
+      }
     }
   },
   "start": {

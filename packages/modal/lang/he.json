@@ -32,7 +32,16 @@
     "transport": {
       "title": "תעבורה",
       "description": "כך מתוחזק החיבור.",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "שרתי ICE",
+        "stun": "שרתי STUN",
+        "turn": "שרתי TURN",
+        "addStun": "הוסף שרת STUN",
+        "addTurn": "הוסף שרת TURN",
+        "username": "שם משתמש",
+        "credential": "סיסמה"
+      }
     }
   },
   "start": {

@@ -11,12 +11,22 @@ import { match } from "ts-pattern";
 
 import fallbackEnglish from "../../lang/en.json" with { type: "json" };
 
-export type LanguageTag = "en" | "nl" | "fr" | "es" | "se" | "zh-cn";
+export type LanguageTag =
+  | "en"
+  | "nl"
+  | "fr"
+  | "es"
+  | "se"
+  | "zh-cn"
+  | "ar"
+  | "he"
+  | "fa";
 
 export type LanguageInfo = {
   tag: LanguageTag;
   name: string;
   nativeName: string;
+  rtl?: boolean;
 };
 
 export const LANGUAGES: LanguageInfo[] = [
@@ -26,7 +36,15 @@ export const LANGUAGES: LanguageInfo[] = [
   { tag: "se", name: "Swedish", nativeName: "Svenska" },
   { tag: "zh-cn", name: "Chinese (Simplified)", nativeName: "简体中文" },
   { tag: "fr", name: "French", nativeName: "Français" },
+  { tag: "ar", name: "Arabic", nativeName: "العربية", rtl: true },
+  { tag: "he", name: "Hebrew", nativeName: "עברית", rtl: true },
+  { tag: "fa", name: "Persian", nativeName: "فارسی", rtl: true },
 ];
+
+export const isRtlLanguage = (tag: LanguageTag): boolean => {
+  const language = LANGUAGES.find((l) => l.tag === tag);
+  return language?.rtl ?? false;
+};
 
 const SUPPORTED_LANGUAGE_TAGS = LANGUAGES.map((l) => l.tag);
 
@@ -157,6 +175,7 @@ export type TranslationContextValue = {
   languageTag: LanguageTag;
   setLanguageTag: (languageTag: LanguageTag) => void;
   isLoadingLanguagePack: boolean;
+  isRtl: boolean;
   t: Translate;
 };
 
@@ -176,6 +195,9 @@ const loadLanguagePack = async (
     .with("zh-cn", async () =>
       import("../../lang/zh-cn.json").then((m) => m.default),
     )
+    .with("ar", async () => import("../../lang/ar.json").then((m) => m.default))
+    .with("he", async () => import("../../lang/he.json").then((m) => m.default))
+    .with("fa", async () => import("../../lang/fa.json").then((m) => m.default))
     .exhaustive();
 
 export type TranslationProviderProps = {
@@ -229,14 +251,17 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
     [languagePack],
   );
 
+  const isRtl = useMemo(() => isRtlLanguage(languageTag), [languageTag]);
+
   const contextValue = useMemo<TranslationContextValue>(
     () => ({
       languageTag,
       setLanguageTag,
       isLoadingLanguagePack,
+      isRtl,
       t,
     }),
-    [isLoadingLanguagePack, languageTag, t],
+    [isLoadingLanguagePack, isRtl, languageTag, t],
   );
 
   return (

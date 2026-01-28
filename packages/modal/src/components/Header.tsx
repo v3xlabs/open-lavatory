@@ -32,7 +32,7 @@ export const Header = ({
           $aspect="square"
           $size="md"
         >
-          <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted)" />
+          <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
         </Button>
       ) : (
         // <Button

@@ -1,0 +1,74 @@
+{
+  "common": {
+    "close": "بستن",
+    "yes": "بله",
+    "no": "خیر",
+    "protocol": "پروتکل"
+  },
+  "status": {
+    "connectedSuccessfully": "با موفقیت متصل شد!",
+    "connecting": "در حال اتصال",
+    "ready": "آماده",
+    "handshakeClosed": "دست‌دهی بسته شد",
+    "handshakePartial": "دست‌دهی ناقص",
+    "encrypted": "رمزگذاری شده",
+    "signalError": "خطای سیگنال",
+    "disconnected": "قطع شده"
+  },
+  "settings": {
+    "title": "تنظیمات",
+    "language": "زبان",
+    "connectionPreferences": {
+      "title": "ترجیحات اتصال",
+      "retainSessionHistory": "حفظ تاریخچه نشست",
+      "autoReconnect": "اتصال مجدد خودکار"
+    },
+    "signaling": {
+      "title": "سیگنال‌دهی",
+      "description": "سیگنال‌دهی پروتکل دست‌دهی است که برای برقراری اتصال استفاده می‌شود.",
+      "server": "سرور",
+      "serverUrl": "آدرس سرور"
+    },
+    "transport": {
+      "title": "انتقال",
+      "description": "این نحوه حفظ اتصال است.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "اتصال کیف پول"
+  },
+  "info": {
+    "title": "openlv چیست؟",
+    "scanQrCode": "اسکن کد QR",
+    "approveOnDevice": "تأیید در دستگاه",
+    "youreConnected": "شما متصل هستید!"
+  },
+  "disconnected": {
+    "prompt": "برای شروع اتصال روی دکمه زیر کلیک کنید",
+    "generateQr": "ایجاد QR",
+    "connectionSettings": "تنظیمات اتصال"
+  },
+  "connectionFlow": {
+    "preparingConnection": "آماده‌سازی اتصال",
+    "generatingKeys": "در حال ایجاد کلیدها...",
+    "connecting": "در حال اتصال",
+    "waitingForNetwork": "در انتظار اتصال شبکه...",
+    "establishingConnection": "در حال برقراری اتصال...",
+    "mayTakeFewSeconds": "این ممکن است چند ثانیه طول بکشد...",
+    "connectedSuccessfully": "با موفقیت متصل شد!",
+    "walletConnectedReady": "کیف پول شما اکنون متصل و آماده استفاده است.",
+    "disconnected": "قطع شده",
+    "connectionClosed": "اتصال بسته شده است."
+  },
+  "handshake": {
+    "clickToCopyUrl": "برای کپی آدرس اتصال کلیک کنید",
+    "copyConnectionUrl": "کپی آدرس اتصال",
+    "scanCodeInstruction": "کد بالا را با کیف پول موبایل خود اسکن کنید.\nیا لینک را کپی کرده و در کیف پول خود قرار دهید."
+  },
+  "modal": {
+    "urlCopied": "آدرس اتصال در کلیپ‌بورد کپی شد!",
+    "backToQr": "بازگشت به QR",
+    "closeModal": "بستن پنجره"
+  }
+}

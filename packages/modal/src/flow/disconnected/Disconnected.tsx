@@ -2,8 +2,8 @@ import type { FC } from "preact/compat";
 import { IoIosSettings } from "react-icons/io";
 
 import { useSessionStart } from "../../hooks/useSession.js";
-import { useTranslation } from "../../utils/i18n.js";
 import { Button } from "../../ui/Button.js";
+import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
 export const Disconnected: FC<{ onSettings: () => void }> = ({
@@ -35,7 +35,7 @@ export const Disconnected: FC<{ onSettings: () => void }> = ({
           aria-label={t("disconnected.connectionSettings")}
           aria-pressed={false}
           onClick={onSettings}
-          className="-ml-1 rounded-l-none px-3"
+          className="px-3 ltr:-ml-1 ltr:rounded-l-none rtl:-mr-1 rtl:rounded-r-none"
           $aspect="square"
           $size="lg"
           $variant="secondary"

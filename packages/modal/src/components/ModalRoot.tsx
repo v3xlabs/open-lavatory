@@ -144,7 +144,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     isTransitioning: isStatusTransitioning,
   } = usePunchTransition(status);
   const openSettings = useCallback(() => setView("settings"), [setView]);
-  const { t } = useTranslation();
+  const { t, isRtl } = useTranslation();
 
   const title = match(modalView)
     .with("start", () => t("start.title"))
@@ -304,6 +304,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
+      dir={isRtl ? "rtl" : "ltr"}
       style={overlayStyle}
     >
       <div
@@ -354,8 +355,10 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
 
         <div
           className={classNames(
-            "absolute top-5 right-5 rounded-lg bg-blue-500 px-4 py-3 font-medium text-sm text-white transition-all",
-            copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
+            "absolute top-5 rounded-lg bg-blue-500 px-4 py-3 font-medium text-sm text-white transition-all ltr:right-5 rtl:left-5",
+            copied
+              ? "translate-x-0 opacity-100"
+              : "opacity-0 ltr:translate-x-full rtl:-translate-x-full",
           )}
         >
           {t("modal.urlCopied")}

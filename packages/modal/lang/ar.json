@@ -1,0 +1,74 @@
+{
+  "common": {
+    "close": "إغلاق",
+    "yes": "نعم",
+    "no": "لا",
+    "protocol": "البروتوكول"
+  },
+  "status": {
+    "connectedSuccessfully": "تم الاتصال بنجاح!",
+    "connecting": "جارٍ الاتصال",
+    "ready": "جاهز",
+    "handshakeClosed": "تم إغلاق المصافحة",
+    "handshakePartial": "مصافحة جزئية",
+    "encrypted": "مشفر",
+    "signalError": "خطأ في الإشارة",
+    "disconnected": "غير متصل"
+  },
+  "settings": {
+    "title": "الإعدادات",
+    "language": "اللغة",
+    "connectionPreferences": {
+      "title": "تفضيلات الاتصال",
+      "retainSessionHistory": "الاحتفاظ بسجل الجلسة",
+      "autoReconnect": "إعادة الاتصال تلقائياً"
+    },
+    "signaling": {
+      "title": "الإشارة",
+      "description": "الإشارة هي بروتوكول المصافحة المستخدم لإنشاء اتصال.",
+      "server": "الخادم",
+      "serverUrl": "عنوان الخادم"
+    },
+    "transport": {
+      "title": "النقل",
+      "description": "هذه هي طريقة الحفاظ على الاتصال.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "ربط المحفظة"
+  },
+  "info": {
+    "title": "ما هو openlv؟",
+    "scanQrCode": "مسح رمز QR",
+    "approveOnDevice": "الموافقة على الجهاز",
+    "youreConnected": "أنت متصل!"
+  },
+  "disconnected": {
+    "prompt": "انقر على الزر أدناه لبدء الاتصال",
+    "generateQr": "إنشاء رمز QR",
+    "connectionSettings": "إعدادات الاتصال"
+  },
+  "connectionFlow": {
+    "preparingConnection": "جارٍ تحضير الاتصال",
+    "generatingKeys": "جارٍ إنشاء المفاتيح...",
+    "connecting": "جارٍ الاتصال",
+    "waitingForNetwork": "في انتظار اتصال الشبكة...",
+    "establishingConnection": "جارٍ إنشاء الاتصال...",
+    "mayTakeFewSeconds": "قد يستغرق هذا بضع ثوانٍ...",
+    "connectedSuccessfully": "تم الاتصال بنجاح!",
+    "walletConnectedReady": "محفظتك متصلة الآن وجاهزة للاستخدام.",
+    "disconnected": "غير متصل",
+    "connectionClosed": "تم إغلاق الاتصال."
+  },
+  "handshake": {
+    "clickToCopyUrl": "انقر لنسخ رابط الاتصال",
+    "copyConnectionUrl": "نسخ رابط الاتصال",
+    "scanCodeInstruction": "امسح الرمز أعلاه باستخدام محفظتك المحمولة.\nأو انسخ الرابط والصقه في محفظتك."
+  },
+  "modal": {
+    "urlCopied": "تم نسخ رابط الاتصال إلى الحافظة!",
+    "backToQr": "العودة إلى رمز QR",
+    "closeModal": "إغلاق النافذة"
+  }
+}

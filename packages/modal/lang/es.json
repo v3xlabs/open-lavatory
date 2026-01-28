@@ -64,8 +64,7 @@
   "handshake": {
     "clickToCopyUrl": "Haz clic para copiar la URL de conexión",
     "copyConnectionUrl": "Copiar URL de conexión",
-    "scanCodeInstruction": "Escanea el código de arriba usando tu wallet móvil.",
-    "orCopyLink": "O copia el enlace y pégalo en tu wallet."
+    "scanCodeInstruction": "Escanea el código de arriba usando tu wallet móvil.\nO copia el enlace y pégalo en tu wallet."
   },
   "modal": {
     "urlCopied": "¡URL de conexión copiada al portapapeles!",

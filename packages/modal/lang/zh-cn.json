@@ -64,8 +64,7 @@
   "handshake": {
     "clickToCopyUrl": "点击复制连接链接",
     "copyConnectionUrl": "复制连接链接",
-    "scanCodeInstruction": "使用您的移动钱包扫描上方的二维码。",
-    "orCopyLink": "或复制链接并粘贴到您的钱包中。"
+    "scanCodeInstruction": "使用您的移动钱包扫描上方的二维码。\n或复制链接并粘贴到您的钱包中。"
   },
   "modal": {
     "urlCopied": "连接链接已复制到剪贴板！",

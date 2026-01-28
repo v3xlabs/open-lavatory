@@ -1,5 +1,5 @@
 import { createContext } from "preact";
-import type { FC } from "preact/compat";
+import type { FC, ReactNode } from "preact/compat";
 import {
   useCallback,
   useContext,
@@ -91,7 +91,7 @@ export const getLanguageScore = (tag: string): number => {
 export type Translate = (
   key: string,
   params?: Readonly<Record<string, string | number>>,
-) => string;
+) => string | ReactNode;
 
 export type Translations = Record<string, unknown>;
 
@@ -223,7 +223,9 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
         fallback: fallbackEnglish as unknown as Translations,
         key,
         params,
-      }),
+      })
+        .split("\n")
+        .map((line, index) => [line, <br key={index} />]),
     [languagePack],
   );
 

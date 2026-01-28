@@ -6,7 +6,7 @@
     "yes": "Oui"
   },
   "connectionFlow": {
-    "connectedSuccessfully": "Connecté avec succès !",
+    "connectedSuccessfully": "Connecté avec succès!",
     "connecting": "De liaison",
     "connectionClosed": "La connexion a été fermée.",
     "disconnected": "Déconnecté",
@@ -25,19 +25,18 @@
   "handshake": {
     "clickToCopyUrl": "Cliquez pour copier l'URL de connexion",
     "copyConnectionUrl": "Copier l'URL de connexion",
-    "orCopyLink": "Ou copiez le lien et collez-le dans votre portefeuille.",
-    "scanCodeInstruction": "Scannez le code ci-dessus à l'aide de votre portefeuille mobile."
+    "scanCodeInstruction": "Scannez le code ci-dessus à l'aide de votre portefeuille mobile.\nOu copiez le lien et collez-le dans votre portefeuille."
   },
   "info": {
     "approveOnDevice": "Approuver sur l'appareil",
     "scanQrCode": "Scanner le code QR",
-    "title": "Qu’est-ce qu’openlv ?",
-    "youreConnected": "Vous êtes connecté !"
+    "title": "Qu'est-ce qu'openlv ?",
+    "youreConnected": "Vous êtes connecté!"
   },
   "modal": {
     "backToQr": "Retour au QR",
     "closeModal": "Fermer modale",
-    "urlCopied": "URL de connexion copiée dans le presse-papier !"
+    "urlCopied": "URL de connexion copiée dans le presse-papier!"
   },
   "settings": {
     "connectionPreferences": {
@@ -63,7 +62,7 @@
     "title": "Connecter le portefeuille"
   },
   "status": {
-    "connectedSuccessfully": "Connecté avec succès !",
+    "connectedSuccessfully": "Connecté avec succès!",
     "connecting": "De liaison",
     "disconnected": "Déconnecté",
     "encrypted": "Crypté",

@@ -64,8 +64,7 @@
   "handshake": {
     "clickToCopyUrl": "Klik om verbindings-URL te kopiëren",
     "copyConnectionUrl": "Kopieer verbindings-URL",
-    "scanCodeInstruction": "Scan de bovenstaande code met je mobiele wallet.",
-    "orCopyLink": "Of kopieer de link en plak deze in je wallet."
+    "scanCodeInstruction": "Scan de bovenstaande code met je mobiele wallet, of kopieer en plak hem in je wallet."
   },
   "modal": {
     "urlCopied": "Verbindings-URL gekopieerd naar klembord!",

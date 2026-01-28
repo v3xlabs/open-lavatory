@@ -64,8 +64,7 @@
   "handshake": {
     "clickToCopyUrl": "Klicka för att kopiera anslutnings-URL",
     "copyConnectionUrl": "Kopiera anslutnings-URL",
-    "scanCodeInstruction": "Skanna koden ovan med din mobila plånbok.",
-    "orCopyLink": "Eller kopiera länken och klistra in den i din plånbok."
+    "scanCodeInstruction": "Skanna koden ovan med din mobila plånbok.\nEller kopiera länken och klistra in den i din plånbok."
   },
   "modal": {
     "urlCopied": "Anslutnings-URL kopierad till urklipp!",

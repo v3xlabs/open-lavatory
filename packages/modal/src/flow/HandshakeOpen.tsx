@@ -56,8 +56,6 @@ export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
       </div>
       <div className="w-full text-sm text-(--lv-text-secondary)">
         <span>{t("handshake.scanCodeInstruction")}</span>
-        <br />
-        <span>{t("handshake.orCopyLink")}</span>
       </div>
     </div>
   );

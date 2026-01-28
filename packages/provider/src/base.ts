@@ -209,6 +209,10 @@ export const createProvider = (
             return await getAccounts();
           }
 
+          const session = await start();
+
+          log("session started from eth_requestAccounts", session);
+
           return await getAccounts();
         })
         .with({ method: "eth_accounts" }, async () => {

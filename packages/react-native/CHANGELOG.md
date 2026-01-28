@@ -1,5 +1,11 @@
 # @openlv/react-native
 
+## 0.0.1-beta.3
+
+### Patch Changes
+
+- 624017e: Upgrade get-random-values to version 2
+
 ## 0.0.1-beta.2
 
 ### Patch Changes

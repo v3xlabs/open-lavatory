@@ -59,15 +59,15 @@
     "connectedSuccessfully": "Succesvol verbonden!",
     "walletConnectedReady": "Je wallet is nu verbonden en klaar voor gebruik.",
     "disconnected": "Verbinding verbroken",
-    "connectionClosed": "De verbinding is gesloten."
+    "connectionClosed": "De verbinding is verbroken."
   },
   "handshake": {
-    "clickToCopyUrl": "Klik om verbindings-URL te kopiëren",
-    "copyConnectionUrl": "Kopieer verbindings-URL",
-    "scanCodeInstruction": "Scan de bovenstaande code met je mobiele wallet, of kopieer en plak hem in je wallet."
+    "clickToCopyUrl": "Klik om link te kopiëren",
+    "copyConnectionUrl": "Kopieer link",
+    "scanCodeInstruction": "Scan de bovenstaande code met je mobiele wallet, of kopieer en plak hem."
   },
   "modal": {
-    "urlCopied": "Verbindings-URL gekopieerd naar klembord!",
+    "urlCopied": "Link gekopieerd naar klembord!",
     "backToQr": "Terug naar QR",
     "closeModal": "Modal sluiten"
   }

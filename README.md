@@ -12,8 +12,12 @@
 </p>
 
 <p align="center">
-    <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-blue?style=flat" alt="Documentation: openlv.sh"></a>
-    <a href="#"><img src="https://img.shields.io/badge/Status-In%20Development-orange?style=flat" alt="Status: In Development"></a>
+    <a href="https://openlv.sh"><img src="https://img.shields.io/badge/Documentation-openlv.sh-orange?style=flat" alt="Documentation: openlv.sh"></a>
+    <a href="#"><img src="https://img.shields.io/badge/Status-In%20Development-blue?style=flat" alt="Status: In Development"></a>
+    <a href="#"><img src="https://img.shields.io/badge/Tests-Passing-lime?style=flat&color=63ba83" alt="Tests: Passing"></a>
+    <br />
+    <a href="#"><img src="https://img.shields.io/badge/Translations-9-blue?style=flat&color=4bdbe3" alt="Translations: 9"></a>
+    <a href="#"><img src="https://img.shields.io/badge/License-LGPL--3.0-hotpink?style=flat" alt="License: LGPL-3.0"></a>
 </p>
 
 ---

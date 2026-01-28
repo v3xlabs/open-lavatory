@@ -1,0 +1,75 @@
+{
+  "common": {
+    "close": "Fermer",
+    "no": "Non",
+    "protocol": "Protocole",
+    "yes": "Oui"
+  },
+  "connectionFlow": {
+    "connectedSuccessfully": "Connecté avec succès !",
+    "connecting": "De liaison",
+    "connectionClosed": "La connexion a été fermée.",
+    "disconnected": "Déconnecté",
+    "establishingConnection": "Établir la connexion...",
+    "generatingKeys": "Génération de clés...",
+    "mayTakeFewSeconds": "Cela peut prendre quelques secondes...",
+    "preparingConnection": "Préparation de la connexion",
+    "waitingForNetwork": "En attente de connexion réseau...",
+    "walletConnectedReady": "Votre portefeuille est maintenant connecté et prêt à être utilisé."
+  },
+  "disconnected": {
+    "connectionSettings": "Paramètres de connexion",
+    "generateQr": "Générer des QR",
+    "prompt": "Cliquez sur le bouton ci-dessous pour démarrer une connexion"
+  },
+  "handshake": {
+    "clickToCopyUrl": "Cliquez pour copier l'URL de connexion",
+    "copyConnectionUrl": "Copier l'URL de connexion",
+    "orCopyLink": "Ou copiez le lien et collez-le dans votre portefeuille.",
+    "scanCodeInstruction": "Scannez le code ci-dessus à l'aide de votre portefeuille mobile."
+  },
+  "info": {
+    "approveOnDevice": "Approuver sur l'appareil",
+    "scanQrCode": "Scanner le code QR",
+    "title": "Qu’est-ce qu’openlv ?",
+    "youreConnected": "Vous êtes connecté !"
+  },
+  "modal": {
+    "backToQr": "Retour au QR",
+    "closeModal": "Fermer modale",
+    "urlCopied": "URL de connexion copiée dans le presse-papier !"
+  },
+  "settings": {
+    "connectionPreferences": {
+      "autoReconnect": "Reconnexion automatique",
+      "retainSessionHistory": "Conserver l'historique des sessions",
+      "title": "Préférences de connexion"
+    },
+    "language": "Langue",
+    "signaling": {
+      "description": "La signalisation est le protocole de prise de contact utilisé pour établir une connexion.",
+      "server": "Serveur",
+      "serverUrl": "URL du serveur",
+      "title": "Signalisation"
+    },
+    "title": "Paramètres",
+    "transport": {
+      "description": "C'est ainsi que la connexion est maintenue.",
+      "title": "Transport",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "Connecter le portefeuille"
+  },
+  "status": {
+    "connectedSuccessfully": "Connecté avec succès !",
+    "connecting": "De liaison",
+    "disconnected": "Déconnecté",
+    "encrypted": "Crypté",
+    "handshakeClosed": "Poignée de main fermée",
+    "handshakePartial": "Poignée de main partielle",
+    "ready": "Prêt",
+    "signalError": "Erreur de signal"
+  }
+}

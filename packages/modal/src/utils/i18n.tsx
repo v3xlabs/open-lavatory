@@ -11,7 +11,7 @@ import { match } from "ts-pattern";
 
 import fallbackEnglish from "../../lang/en.json" with { type: "json" };
 
-export type LanguageTag = "en" | "nl" | "es" | "se" | "zh-cn";
+export type LanguageTag = "en" | "nl" | "fr" | "es" | "se" | "zh-cn";
 
 export type LanguageInfo = {
   tag: LanguageTag;
@@ -25,6 +25,7 @@ export const LANGUAGES: LanguageInfo[] = [
   { tag: "es", name: "Spanish", nativeName: "Español" },
   { tag: "se", name: "Swedish", nativeName: "Svenska" },
   { tag: "zh-cn", name: "Chinese (Simplified)", nativeName: "简体中文" },
+  { tag: "fr", name: "French", nativeName: "Français" },
 ];
 
 const SUPPORTED_LANGUAGE_TAGS = LANGUAGES.map((l) => l.tag);
@@ -171,6 +172,7 @@ const loadLanguagePack = async (
     .with("nl", async () => import("../../lang/nl.json").then((m) => m.default))
     .with("es", async () => import("../../lang/es.json").then((m) => m.default))
     .with("se", async () => import("../../lang/se.json").then((m) => m.default))
+    .with("fr", async () => import("../../lang/fr.json").then((m) => m.default))
     .with("zh-cn", async () =>
       import("../../lang/zh-cn.json").then((m) => m.default),
     )

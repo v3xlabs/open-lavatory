@@ -691,8 +691,8 @@ importers:
         specifier: ^1.0.6
         version: 1.0.6
       react-native-get-random-values:
-        specifier: ^1.11.0
-        version: 1.11.0(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10))
+        specifier: ^2.0.0
+        version: 2.0.0(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10))
       react-native-url-polyfill:
         specifier: ^2.0.0
         version: 2.0.0(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10))
@@ -9147,10 +9147,10 @@ packages:
       react: 19.1.0
       react-native: '*'
 
-  react-native-get-random-values@1.11.0:
-    resolution: {integrity: sha512-4BTbDbRmS7iPdhYLRcz3PGFIpFJBwNZg9g42iwa2P6FOv9vZj/xJc678RZXnLNZzd0qd7Q3CCF6Yd+CU2eoXKQ==}
+  react-native-get-random-values@2.0.0:
+    resolution: {integrity: sha512-wx7/aPqsUIiWsG35D+MsUJd8ij96e3JKddklSdrdZUrheTx89gPtz3Q2yl9knBArj5u26Cl23T88ai+Q0vypdQ==}
     peerDependencies:
-      react-native: '>=0.56'
+      react-native: '>=0.81'
 
   react-native-is-edge-to-edge@1.2.1:
     resolution: {integrity: sha512-FLbPWl/MyYQWz+KwqOZsSyj2JmLKglHatd3xLZWskXOpRaio4LfEDEz8E/A6uD8QoTHW6Aobw1jbEwK7KMgR7Q==}
@@ -22989,7 +22989,7 @@ snapshots:
       react: 19.1.0
       react-native: 0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)
 
-  react-native-get-random-values@1.11.0(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)):
+  react-native-get-random-values@2.0.0(react-native@0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)):
     dependencies:
       fast-base64-decode: 1.0.0
       react-native: 0.81.5(@babel/core@7.28.6)(@types/react@19.1.4)(bufferutil@4.0.9)(react@19.1.0)(utf-8-validate@5.0.10)

@@ -54,7 +54,7 @@
     "@openlv/session": "workspace:*",
     "base-64": "^1.0.0",
     "fast-text-encoding": "^1.0.6",
-    "react-native-get-random-values": "^1.11.0",
+    "react-native-get-random-values": "^2.0.0",
     "react-native-url-polyfill": "^2.0.0",
     "react-native-webrtc": "^124.0.6",
     "react-native-webview": "^13.15.0",

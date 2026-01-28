@@ -6,11 +6,11 @@
     "protocol": "Protokoll"
   },
   "status": {
-    "connectedSuccessfully": "Ansluten framgångsrikt!",
+    "connectedSuccessfully": "Anslutningen lyckades!",
     "connecting": "Ansluter",
     "ready": "Redo",
-    "handshakeClosed": "Handskakning stängd",
-    "handshakePartial": "Handskakning delvis",
+    "handshakeClosed": "Handskakning klar",
+    "handshakePartial": "Handskakning pågår",
     "encrypted": "Krypterad",
     "signalError": "Signalfel",
     "disconnected": "Frånkopplad"
@@ -21,7 +21,7 @@
     "connectionPreferences": {
       "title": "Anslutningsinställningar",
       "retainSessionHistory": "Behåll sessionshistorik",
-      "autoReconnect": "Automatisk återanslutning"
+      "autoReconnect": "Återanslut automatiskt"
     },
     "signaling": {
       "title": "Signalering",
@@ -31,7 +31,7 @@
     },
     "transport": {
       "title": "Transport",
-      "description": "Det här är hur anslutningen upprätthålls.",
+      "description": "Transport är hur anslutningen upprätthålls.",
       "webrtc": "WebRTC"
     }
   },
@@ -46,7 +46,7 @@
   },
   "disconnected": {
     "prompt": "Klicka på knappen nedan för att starta en anslutning",
-    "generateQr": "Generera QR",
+    "generateQr": "Generera QR-kod",
     "connectionSettings": "Anslutningsinställningar"
   },
   "connectionFlow": {
@@ -56,19 +56,19 @@
     "waitingForNetwork": "Väntar på nätverksanslutning...",
     "establishingConnection": "Upprättar anslutning...",
     "mayTakeFewSeconds": "Detta kan ta några sekunder...",
-    "connectedSuccessfully": "Ansluten framgångsrikt!",
+    "connectedSuccessfully": "Anslutningen lyckades!",
     "walletConnectedReady": "Din plånbok är nu ansluten och redo att användas.",
     "disconnected": "Frånkopplad",
     "connectionClosed": "Anslutningen har stängts."
   },
   "handshake": {
-    "clickToCopyUrl": "Klicka för att kopiera anslutnings-URL",
-    "copyConnectionUrl": "Kopiera anslutnings-URL",
-    "scanCodeInstruction": "Skanna koden ovan med din mobila plånbok.\nEller kopiera länken och klistra in den i din plånbok."
+    "clickToCopyUrl": "Klicka för att kopiera anslutnings-URLen",
+    "copyConnectionUrl": "Kopiera anslutnings-URLen",
+    "scanCodeInstruction": "Skanna koden ovan eller kopiera länken och klistra in den i din plånbok."
   },
   "modal": {
-    "urlCopied": "Anslutnings-URL kopierad till urklipp!",
-    "backToQr": "Tillbaka till QR",
+    "urlCopied": "Anslutnings-URLen kopierad till urklipp!",
+    "backToQr": "Tillbaka till QR-koden",
     "closeModal": "Stäng modal"
   }
 }

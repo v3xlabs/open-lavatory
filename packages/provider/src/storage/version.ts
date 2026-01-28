@@ -1,4 +1,3 @@
-import { match } from "ts-pattern";
 import z from "zod";
 
 export const SignalingSettingsV0Schema = z.object({
@@ -44,7 +43,17 @@ export const ProviderStorageV1Schema = z.object({
 
 export type ProviderStorageV1 = z.infer<typeof ProviderStorageV1Schema>;
 
-export type ProviderStorage = ProviderStorageV1;
+export const ProviderStorageV2Schema = z.object({
+  version: z.literal(2),
+  retainHistory: z.boolean(),
+  autoReconnect: z.boolean(),
+  signaling: SignalingSettingsV1Schema,
+  language: z.string().optional(),
+});
+
+export type ProviderStorageV2 = z.infer<typeof ProviderStorageV2Schema>;
+
+export type ProviderStorage = ProviderStorageV2;
 
 export const convertProviderStorageV0ToV1 = (
   settings: ProviderStorageV0,
@@ -59,26 +68,42 @@ export const convertProviderStorageV0ToV1 = (
   };
 };
 
+export const convertProviderStorageV1ToV2 = (
+  settings: ProviderStorageV1,
+): ProviderStorageV2 => {
+  return {
+    version: 2,
+    retainHistory: settings.retainHistory,
+    autoReconnect: settings.autoReconnect,
+    signaling: settings.signaling,
+    language: undefined,
+  };
+};
+
 export const AnyStorage = z.discriminatedUnion("version", [
   ProviderStorageV0Schema.transform((v) => ({ version: 0, ...v })),
   ProviderStorageV1Schema,
+  ProviderStorageV2Schema,
 ]);
 
 export type ProviderStorageVAny = z.infer<typeof AnyStorage>;
 
 export const migrateStorageToLatest = (
   storage: ProviderStorageVAny,
-): z.infer<typeof AnyStorage> => {
+): ProviderStorage => {
   console.log("migrateStorageToLatest", storage);
 
-  return (
-    match(storage)
-      .with({ version: 0 }, (v) =>
-        migrateStorageToLatest(convertProviderStorageV0ToV1(v)),
-      )
-      // .with({ version: 1 }, (v) => v)
-      .otherwise((s) => s)
-  );
+  if (storage.version === 0 || storage.version === undefined) {
+    return migrateStorageToLatest(
+      convertProviderStorageV0ToV1(storage as ProviderStorageV0),
+    );
+  }
+
+  if (storage.version === 1) {
+    return convertProviderStorageV1ToV2(storage as ProviderStorageV1);
+  }
+
+  return storage as ProviderStorage;
 };
 
 /**

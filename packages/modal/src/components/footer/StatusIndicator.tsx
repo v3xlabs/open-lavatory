@@ -1,8 +1,10 @@
 import { match } from "ts-pattern";
 
 import { useSession } from "../../hooks/useSession.js";
+import { useTranslation } from "../../utils/i18n.js";
 
 export const FooterStatus = () => {
+  const { t } = useTranslation();
   const { status: sessionStatus } = useSession();
   const sessionState = sessionStatus?.status;
   const signalState = sessionStatus?.signaling?.state as string | undefined;
@@ -10,38 +12,38 @@ export const FooterStatus = () => {
   const status = match({ sessionState, signalState })
     .with({ sessionState: "connected" }, () => ({
       icon: "✅",
-      text: "Connected Successfully!",
+      text: t("status.connectedSuccessfully"),
     }))
     .with({ sessionState: "signaling", signalState: "standby" }, () => ({
       icon: "🫥",
-      text: "Connecting",
+      text: t("status.connecting"),
     }))
     .with({ sessionState: "signaling", signalState: "connecting" }, () => ({
       icon: "↗️",
-      text: "Connecting",
+      text: t("status.connecting"),
     }))
     .with({ sessionState: "signaling", signalState: "ready" }, () => ({
       icon: "👋",
-      text: "Ready",
+      text: t("status.ready"),
     }))
     .with({ sessionState: "signaling", signalState: "handshake" }, () => ({
       icon: "🤝",
-      text: "Handshake Closed",
+      text: t("status.handshakeClosed"),
     }))
     .with(
       { sessionState: "signaling", signalState: "handshake-partial" },
       () => ({
         icon: "🤝",
-        text: "Handshake Partial",
+        text: t("status.handshakePartial"),
       }),
     )
     .with({ sessionState: "signaling", signalState: "encrypted" }, () => ({
       icon: "🔒",
-      text: "Encrypted",
+      text: t("status.encrypted"),
     }))
     .with({ sessionState: "signaling", signalState: "error" }, () => ({
       icon: "❌",
-      text: "Signal Error",
+      text: t("status.signalError"),
     }))
     .otherwise(() => undefined);
 

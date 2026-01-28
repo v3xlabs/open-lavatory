@@ -1,6 +1,7 @@
 import type { Dispatch, StateUpdater } from "preact/hooks";
 import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
 
+import { useTranslation } from "../utils/i18n.js";
 import { Button } from "../ui/Button.js";
 import type { ModalView } from "./ModalRoot.js";
 
@@ -17,12 +18,16 @@ export const Header = ({
   onBack?: () => void;
   setView: Dispatch<StateUpdater<ModalView>>;
 }) => {
+  const { t } = useTranslation();
+
   return (
     <div className="flex items-center justify-between px-2 py-2">
       {onBack ? (
         <Button
           onClick={onBack}
-          aria-label={view === "settings" ? "Back to QR" : "Close modal"}
+          aria-label={
+            view === "settings" ? t("modal.backToQr") : t("modal.closeModal")
+          }
           $variant="tertiary"
           $aspect="square"
           $size="md"
@@ -50,12 +55,12 @@ export const Header = ({
           <LuCircleHelp className="h-5 w-5" />
         </Button>
       )}
-      <h2 className="flex items-center justify-center gap-2 font-semibold text-lg text-(--lv-text-primary)">
+      <h2 className="flex items-center justify-center gap-2 font-semibold text-(--lv-text-primary) text-lg">
         {title}
       </h2>
       <Button
         type="button"
-        aria-label={"close"}
+        aria-label={t("common.close")}
         aria-pressed={false}
         onClick={onClose}
         $variant="tertiary"

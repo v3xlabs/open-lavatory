@@ -1,0 +1,75 @@
+{
+  "common": {
+    "close": "Stäng",
+    "yes": "Ja",
+    "no": "Nej",
+    "protocol": "Protokoll"
+  },
+  "status": {
+    "connectedSuccessfully": "Ansluten framgångsrikt!",
+    "connecting": "Ansluter",
+    "ready": "Redo",
+    "handshakeClosed": "Handskakning stängd",
+    "handshakePartial": "Handskakning delvis",
+    "encrypted": "Krypterad",
+    "signalError": "Signalfel",
+    "disconnected": "Frånkopplad"
+  },
+  "settings": {
+    "title": "Inställningar",
+    "language": "Språk",
+    "connectionPreferences": {
+      "title": "Anslutningsinställningar",
+      "retainSessionHistory": "Behåll sessionshistorik",
+      "autoReconnect": "Automatisk återanslutning"
+    },
+    "signaling": {
+      "title": "Signalering",
+      "description": "Signalering är handskakningsprotokollet som används för att upprätta en anslutning.",
+      "server": "Server",
+      "serverUrl": "Server-URL"
+    },
+    "transport": {
+      "title": "Transport",
+      "description": "Det här är hur anslutningen upprätthålls.",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "Anslut plånbok"
+  },
+  "info": {
+    "title": "Vad är openlv?",
+    "scanQrCode": "Skanna QR-kod",
+    "approveOnDevice": "Godkänn på enhet",
+    "youreConnected": "Du är ansluten!"
+  },
+  "disconnected": {
+    "prompt": "Klicka på knappen nedan för att starta en anslutning",
+    "generateQr": "Generera QR",
+    "connectionSettings": "Anslutningsinställningar"
+  },
+  "connectionFlow": {
+    "preparingConnection": "Förbereder anslutning",
+    "generatingKeys": "Genererar nycklar...",
+    "connecting": "Ansluter",
+    "waitingForNetwork": "Väntar på nätverksanslutning...",
+    "establishingConnection": "Upprättar anslutning...",
+    "mayTakeFewSeconds": "Detta kan ta några sekunder...",
+    "connectedSuccessfully": "Ansluten framgångsrikt!",
+    "walletConnectedReady": "Din plånbok är nu ansluten och redo att användas.",
+    "disconnected": "Frånkopplad",
+    "connectionClosed": "Anslutningen har stängts."
+  },
+  "handshake": {
+    "clickToCopyUrl": "Klicka för att kopiera anslutnings-URL",
+    "copyConnectionUrl": "Kopiera anslutnings-URL",
+    "scanCodeInstruction": "Skanna koden ovan med din mobila plånbok.",
+    "orCopyLink": "Eller kopiera länken och klistra in den i din plånbok."
+  },
+  "modal": {
+    "urlCopied": "Anslutnings-URL kopierad till urklipp!",
+    "backToQr": "Tillbaka till QR",
+    "closeModal": "Stäng modal"
+  }
+}

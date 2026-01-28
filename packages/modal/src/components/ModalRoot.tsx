@@ -14,16 +14,17 @@ import { match, P } from "ts-pattern";
 
 import { ConnectionFlow } from "../flow/ConnectionFlow.js";
 import { Disconnected } from "../flow/disconnected/Disconnected.js";
+import { InfoScreen } from "../flow/InfoScreen.js";
 import { copyToClipboard } from "../hooks/useClipboard.js";
 import { useProvider } from "../hooks/useProvider.js";
 import { usePunchTransition } from "../hooks/usePunchTransition.js";
 import { useSession } from "../hooks/useSession.js";
+import { useTranslation } from "../utils/i18n.jsx";
 import { log } from "../utils/log.js";
 import { Footer } from "./footer/Footer.js";
 import { Header } from "./Header.js";
 import { ModalSettings } from "./settings/index.js";
 import { UnknownState } from "./UnknownState.js";
-import { InfoScreen } from "../flow/InfoScreen.js";
 
 export interface ModalRootProps {
   onClose?: () => void;
@@ -143,11 +144,12 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     isTransitioning: isStatusTransitioning,
   } = usePunchTransition(status);
   const openSettings = useCallback(() => setView("settings"), [setView]);
+  const { t } = useTranslation();
 
   const title = match(modalView)
-    .with("start", () => "Connect Wallet")
-    .with("settings", () => "Settings")
-    .with("info", () => "What is openlv?")
+    .with("start", () => t("start.title"))
+    .with("settings", () => t("settings.title"))
+    .with("info", () => t("info.title"))
     .exhaustive();
 
   useEscapeToClose(onClose);
@@ -356,7 +358,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
             copied ? "translate-x-0 opacity-100" : "translate-x-full opacity-0",
           )}
         >
-          📋 Connection URL copied to clipboard!
+          {t("modal.urlCopied")}
         </div>
       </div>
     </div>

@@ -1,0 +1,75 @@
+{
+  "common": {
+    "close": "关闭",
+    "yes": "是",
+    "no": "否",
+    "protocol": "协议"
+  },
+  "status": {
+    "connectedSuccessfully": "连接成功！",
+    "connecting": "连接中",
+    "ready": "就绪",
+    "handshakeClosed": "握手已关闭",
+    "handshakePartial": "握手部分完成",
+    "encrypted": "已加密",
+    "signalError": "信号错误",
+    "disconnected": "已断开连接"
+  },
+  "settings": {
+    "title": "设置",
+    "language": "语言",
+    "connectionPreferences": {
+      "title": "连接偏好设置",
+      "retainSessionHistory": "保留会话历史",
+      "autoReconnect": "自动重连"
+    },
+    "signaling": {
+      "title": "信令",
+      "description": "信令是用于建立连接的握手协议。",
+      "server": "服务器",
+      "serverUrl": "服务器地址"
+    },
+    "transport": {
+      "title": "传输",
+      "description": "这是维持连接的方式。",
+      "webrtc": "WebRTC"
+    }
+  },
+  "start": {
+    "title": "连接钱包"
+  },
+  "info": {
+    "title": "什么是 openlv？",
+    "scanQrCode": "扫描二维码",
+    "approveOnDevice": "在设备上确认",
+    "youreConnected": "您已连接！"
+  },
+  "disconnected": {
+    "prompt": "点击下方按钮开始连接",
+    "generateQr": "生成二维码",
+    "connectionSettings": "连接设置"
+  },
+  "connectionFlow": {
+    "preparingConnection": "正在准备连接",
+    "generatingKeys": "正在生成密钥...",
+    "connecting": "连接中",
+    "waitingForNetwork": "等待网络连接...",
+    "establishingConnection": "正在建立连接...",
+    "mayTakeFewSeconds": "这可能需要几秒钟...",
+    "connectedSuccessfully": "连接成功！",
+    "walletConnectedReady": "您的钱包已连接并可以使用。",
+    "disconnected": "已断开连接",
+    "connectionClosed": "连接已关闭。"
+  },
+  "handshake": {
+    "clickToCopyUrl": "点击复制连接链接",
+    "copyConnectionUrl": "复制连接链接",
+    "scanCodeInstruction": "使用您的移动钱包扫描上方的二维码。",
+    "orCopyLink": "或复制链接并粘贴到您的钱包中。"
+  },
+  "modal": {
+    "urlCopied": "连接链接已复制到剪贴板！",
+    "backToQr": "返回二维码",
+    "closeModal": "关闭弹窗"
+  }
+}

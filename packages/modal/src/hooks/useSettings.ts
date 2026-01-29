@@ -1,4 +1,7 @@
-import type { ProviderStorage } from "@openlv/provider/storage";
+import type {
+  ProviderStorage,
+  UserThemePreference,
+} from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -70,6 +73,15 @@ export const useSettings = () => {
     provider?.storage.setSettings({ ...settings, autoReconnect });
   };
 
+  const updateThemePreference = (theme: UserThemePreference) => {
+    if (!settings) return;
+
+    if (settings.theme === theme) return;
+
+    setSettings({ ...settings, theme });
+    provider?.storage.setSettings({ ...settings, theme });
+  };
+
   const updateLanguage = (language: LanguageTag) => {
     if (!settings) return;
 
@@ -85,6 +97,7 @@ export const useSettings = () => {
     updateSignalingServer,
     updateRetainHistory,
     updateAutoReconnect,
+    updateThemePreference,
     updateLanguage,
   };
 };

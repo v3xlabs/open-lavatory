@@ -18,6 +18,13 @@
   "settings": {
     "title": "الإعدادات",
     "language": "اللغة",
+    "theme": {
+      "title": "المظهر",
+      "mode": "السمة",
+      "light": "فاتح",
+      "dark": "داكن",
+      "system": "النظام"
+    },
     "connectionPreferences": {
       "title": "تفضيلات الاتصال",
       "retainSessionHistory": "الاحتفاظ بسجل الجلسة",

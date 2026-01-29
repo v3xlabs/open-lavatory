@@ -18,6 +18,13 @@
   "settings": {
     "title": "Settings",
     "language": "Language",
+    "theme": {
+      "title": "Appearance",
+      "mode": "Theme",
+      "light": "Light",
+      "dark": "Dark",
+      "system": "System"
+    },
     "connectionPreferences": {
       "title": "Connection preferences",
       "retainSessionHistory": "Retain session history",

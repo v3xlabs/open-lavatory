@@ -5,6 +5,7 @@
 export { ModalRoot } from "./components/ModalRoot.js";
 export { OpenLVModalElement, type OpenLVModalElementProps } from "./element.js";
 export { useConnectionState } from "./hooks/useConnectionState.js";
+export type { ThemeConfig } from "./theme/index.js";
 
 import OpenLVModalElementDefault, {
   type OpenLVModalElementProps,

@@ -18,6 +18,13 @@
   "settings": {
     "title": "Inställningar",
     "language": "Språk",
+    "theme": {
+      "title": "Utseende",
+      "mode": "Tema",
+      "light": "Ljust",
+      "dark": "Mörkt",
+      "system": "System"
+    },
     "connectionPreferences": {
       "title": "Anslutningsinställningar",
       "retainSessionHistory": "Behåll sessionshistorik",
@@ -76,7 +83,7 @@
     "scanCodeInstruction": "Skanna koden ovan eller kopiera länken och klistra in den i din plånbok."
   },
   "modal": {
-    "urlCopied": "Anslutnings-UR:en kopierad till urklipp!",
+    "urlCopied": "Anslutnings-URL:en kopierad till urklipp!",
     "backToQr": "Tillbaka till QR-koden",
     "closeModal": "Stäng modal"
   }

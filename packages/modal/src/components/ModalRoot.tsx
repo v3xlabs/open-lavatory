@@ -19,6 +19,7 @@ import { copyToClipboard } from "../hooks/useClipboard.js";
 import { useProvider } from "../hooks/useProvider.js";
 import { usePunchTransition } from "../hooks/usePunchTransition.js";
 import { useSession } from "../hooks/useSession.js";
+import { useThemeConfig } from "../hooks/useThemeConfig.js";
 import { useTranslation } from "../utils/i18n.jsx";
 import { log } from "../utils/log.js";
 import { Footer } from "./footer/Footer.js";
@@ -151,6 +152,10 @@ const ModalRootInner = ({
   } = usePunchTransition(status);
   const openSettings = useCallback(() => setView("settings"), [setView]);
   const { t, isRtl } = useTranslation();
+  const { appThemeMode, userTheme } = useThemeConfig();
+
+  const isForcedMode = appThemeMode !== "auto";
+  const themePreference = isForcedMode ? appThemeMode : (userTheme ?? "system");
 
   // Settings navigation ref and title
   const settingsNavRef = useRef<SettingsNavigationRef | null>(null);
@@ -325,6 +330,7 @@ const ModalRootInner = ({
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
+      data-openlv-theme-preference={themePreference}
       dir={isRtl ? "rtl" : "ltr"}
       style={overlayStyle}
     >

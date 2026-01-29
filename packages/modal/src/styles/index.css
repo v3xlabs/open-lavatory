@@ -51,8 +51,14 @@
     animation: modal-transition-in 200ms ease-out forwards;
 }
 
-[data-openlv-mode="dark"] img[data-openlv-brand-logo] {
+[data-openlv-theme-preference="dark"] img[data-openlv-brand-logo] {
     filter: invert(1) brightness(1.1);
+}
+
+[data-openlv-theme-preference="system"] img[data-openlv-brand-logo] {
+    @media (prefers-color-scheme: dark) {
+        filter: invert(1) brightness(1.1);
+    }
 }
 
 @keyframes modal-transition-in {

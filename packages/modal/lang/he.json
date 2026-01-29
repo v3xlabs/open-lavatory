@@ -18,6 +18,13 @@
   "settings": {
     "title": "הגדרות",
     "language": "שפה",
+    "theme": {
+      "title": "מראה",
+      "mode": "ערכת נושא",
+      "light": "בהיר",
+      "dark": "כהה",
+      "system": "מערכת"
+    },
     "connectionPreferences": {
       "title": "העדפות חיבור",
       "retainSessionHistory": "שמור היסטוריית הפעלה",

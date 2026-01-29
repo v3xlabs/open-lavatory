@@ -26,6 +26,9 @@ export type SignalingSettingsV1 = z.infer<typeof SignalingSettingsV1Schema>;
 
 export type SignalingSettings = SignalingSettingsV1;
 
+export const UserThemePreferenceSchema = z.enum(["light", "dark", "system"]);
+export type UserThemePreference = z.infer<typeof UserThemePreferenceSchema>;
+
 const convertSignalingSettingsV0ToV1 = (
   settings: SignalingSettingsV0,
 ): SignalingSettingsV1 => {
@@ -61,6 +64,7 @@ export const ProviderStorageV2Schema = z.object({
   autoReconnect: z.boolean(),
   signaling: SignalingSettingsV1Schema,
   language: z.string().optional(),
+  theme: UserThemePreferenceSchema.optional(),
 });
 
 export type ProviderStorageV2 = z.infer<typeof ProviderStorageV2Schema>;
@@ -129,6 +133,7 @@ export const convertProviderStorageV1ToV2 = (
     autoReconnect: settings.autoReconnect,
     signaling: settings.signaling,
     language: undefined,
+    theme: undefined,
   };
 };
 

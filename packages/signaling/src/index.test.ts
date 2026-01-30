@@ -9,23 +9,57 @@ import { log } from "./utils/log.js";
 
 const hKey = "test";
 
-const providersByType: Record<
+const providersByType: readonly [
   string,
-  [CreateSignalLayerFn, SignalBaseProperties][]
-> = {
-  mqtt: [
+  readonly [string, CreateSignalLayerFn, SignalBaseProperties][],
+][] = [
+  [
+    "mqtt",
     [
-      mqtt,
-      { topic: "mytesttopic1111", url: "wss://mqtt-dashboard.com:8884/mqtt" },
+      [
+        "mqtt-dashboard",
+        mqtt,
+        { topic: "mytesttopic1111", url: "wss://mqtt-dashboard.com:8884/mqtt" },
+      ],
+      [
+        "broker.emqx.io",
+        mqtt,
+        { topic: "mytesttopic1111", url: "ws://broker.emqx.io:8083/mqtt" },
+      ],
+      [
+        "test.mosquitto.org",
+        mqtt,
+        { topic: "mytesttopic1111", url: "ws://test.mosquitto.org:8080/mqtt" },
+      ],
+      [
+        "broker.itdata.nu",
+        mqtt,
+        { topic: "mytesttopic1111", url: "wss://broker.itdata.nu/mqtt" },
+      ],
     ],
-    [mqtt, { topic: "mytesttopic1111", url: "ws://broker.emqx.io:8083/mqtt" }],
   ],
-  ntfy: [
-    [ntfy, { topic: "mytesttopic1111", url: "https://ntfy.sh/" }],
-    [ntfy, { topic: "mytesttopic1111", url: "https://ntfy.envs.net/" }],
+  [
+    "ntfy",
+    [
+      ["ntfy.sh", ntfy, { topic: "mytesttopic1111", url: "https://ntfy.sh/" }],
+      [
+        "ntfy.envs.net",
+        ntfy,
+        { topic: "mytesttopic1111", url: "https://ntfy.envs.net/" },
+      ],
+    ],
   ],
-  gundb: [[gundb, { topic: "mytesttopic1111", url: "wss://try.axe.eco/gun" }]],
-};
+  [
+    "gundb",
+    [
+      [
+        "try.axe.eco",
+        gundb,
+        { topic: "mytesttopic1111", url: "wss://try.axe.eco/gun" },
+      ],
+    ],
+  ],
+] as const;
 
 async function testSignalingLayer(
   layer: CreateSignalLayerFn,
@@ -89,13 +123,13 @@ async function testSignalingLayer(
 const PROVIDER_TIMEOUT_MS = 5_000;
 
 type ProviderResult =
-  | { url: string; ok: true }
+  | { url: string; ok: true; duration: number }
   | { url: string; ok: false; error: string };
 
-async function testProvider([layer, props]: [
-  CreateSignalLayerFn,
-  SignalBaseProperties,
-]): Promise<ProviderResult> {
+async function testProvider(
+  layer: CreateSignalLayerFn,
+  props: SignalBaseProperties,
+): Promise<ProviderResult> {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error(`Timeout after ${PROVIDER_TIMEOUT_MS}ms`)),
@@ -103,41 +137,50 @@ async function testProvider([layer, props]: [
     ),
   );
 
+  const startTime = performance.now();
+
   try {
     await Promise.race([testSignalingLayer(layer, props), timeout]);
+    const duration = Math.round(performance.now() - startTime);
 
-    return { url: props.url, ok: true };
+    return { url: props.url, ok: true, duration };
   } catch (error) {
-    return { url: props.url, ok: false, error: (error as Error).message };
+    return {
+      url: props.url,
+      ok: false,
+      error: (error as Error).message,
+    };
   }
 }
 
 function formatResults(typeName: string, results: ProviderResult[]): string {
   const passed = results.filter((r) => r.ok).length;
+  const total = results.length;
 
   return [
-    `${typeName.toUpperCase()}: ${passed}/${results.length} succeeded`,
-    ...results.map((r) => (r.ok ? `  ✓ ${r.url}` : `  ✗ ${r.url}: ${r.error}`)),
+    `${typeName.toUpperCase()}: ${passed}/${total}`,
+    ...results.map((r) =>
+      r.ok ? `✓ ${r.url} ${r.duration}ms` : `✗ ${r.url} - ${r.error}`,
+    ),
   ].join("\n");
 }
 
-describe.each(Object.entries(providersByType))(
-  "Signaling: %s",
-  (typeName, providers) => {
-    it(
-      "at least one provider works",
-      { timeout: PROVIDER_TIMEOUT_MS * providers.length + 5_000 },
-      async () => {
-        const results = await Promise.all(providers.map(testProvider));
-        const summary = formatResults(typeName, results);
+describe.for(providersByType)("signaling: %s", ([typeName, providers]) => {
+  it(
+    "should pass signaling messages between peers",
+    { timeout: PROVIDER_TIMEOUT_MS * providers.length + 5_000 },
+    async () => {
+      const results = await Promise.all(
+        providers.map(([, layer, props]) => testProvider(layer, props)),
+      );
 
-        console.log(`\n${summary}`);
+      const summary = formatResults(typeName, results);
 
-        expect(
-          results.some((r) => r.ok),
-          summary,
-        ).toBe(true);
-      },
-    );
-  },
-);
+      console.log(`\n${summary}`);
+
+      const passed = results.filter((r) => r.ok).length;
+
+      expect(passed).toBeGreaterThan(0);
+    },
+  );
+});

@@ -13,7 +13,15 @@ export const SignalingSettingsV1Schema = z.object({
 
 export type SignalingSettingsV1 = z.infer<typeof SignalingSettingsV1Schema>;
 
-export type SignalingSettings = SignalingSettingsV1;
+export const SignalingSettingsV2Schema = z.object({
+  p: z.string(),
+  s: z.record(z.string(), z.string()),
+  lastUsed: z.record(z.string(), z.array(z.string()).max(3)).optional(),
+});
+
+export type SignalingSettingsV2 = z.infer<typeof SignalingSettingsV2Schema>;
+
+export type SignalingSettings = SignalingSettingsV2;
 
 const convertSignalingSettingsV0ToV1 = (
   settings: SignalingSettingsV0,
@@ -53,7 +61,17 @@ export const ProviderStorageV2Schema = z.object({
 
 export type ProviderStorageV2 = z.infer<typeof ProviderStorageV2Schema>;
 
-export type ProviderStorage = ProviderStorageV2;
+export const ProviderStorageV3Schema = z.object({
+  version: z.literal(3),
+  retainHistory: z.boolean(),
+  autoReconnect: z.boolean(),
+  signaling: SignalingSettingsV2Schema,
+  language: z.string().optional(),
+});
+
+export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
+
+export type ProviderStorage = ProviderStorageV3;
 
 export const convertProviderStorageV0ToV1 = (
   settings: ProviderStorageV0,
@@ -80,10 +98,31 @@ export const convertProviderStorageV1ToV2 = (
   };
 };
 
+export const convertProviderStorageV2ToV3 = (
+  settings: ProviderStorageV2,
+): ProviderStorageV3 => {
+  // Initialize empty lastUsed for all protocols - only track actually used servers
+  return {
+    version: 3,
+    retainHistory: settings.retainHistory,
+    autoReconnect: settings.autoReconnect,
+    signaling: {
+      ...settings.signaling,
+      lastUsed: {
+        mqtt: [],
+        ntfy: [],
+        gun: [],
+      },
+    },
+    language: settings.language,
+  };
+};
+
 export const AnyStorage = z.discriminatedUnion("version", [
   ProviderStorageV0Schema.transform((v) => ({ version: 0, ...v })),
   ProviderStorageV1Schema,
   ProviderStorageV2Schema,
+  ProviderStorageV3Schema,
 ]);
 
 export type ProviderStorageVAny = z.infer<typeof AnyStorage>;
@@ -100,7 +139,15 @@ export const migrateStorageToLatest = (
   }
 
   if (storage.version === 1) {
-    return convertProviderStorageV1ToV2(storage as ProviderStorageV1);
+    return migrateStorageToLatest(
+      convertProviderStorageV1ToV2(storage as ProviderStorageV1),
+    );
+  }
+
+  if (storage.version === 2) {
+    return migrateStorageToLatest(
+      convertProviderStorageV2ToV3(storage as ProviderStorageV2),
+    );
   }
 
   return storage as ProviderStorage;

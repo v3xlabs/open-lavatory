@@ -72,7 +72,7 @@ export const useSession = () => {
 
 export const useSessionStart = () => {
   const { provider } = useProvider();
-  const { settings } = useSettings();
+  const { settings, commitServerToHistory } = useSettings();
 
   return {
     start: () => {
@@ -82,6 +82,8 @@ export const useSessionStart = () => {
       if (!p || !s) {
         throw new Error("Invalid protocol or server");
       }
+
+      commitServerToHistory(s);
 
       return provider?.createSession({
         p,

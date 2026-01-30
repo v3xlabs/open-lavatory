@@ -1,4 +1,5 @@
 import type { ProviderStorage } from "@openlv/provider/storage";
+import { addToHistory } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -56,6 +57,33 @@ export const useSettings = () => {
     provider?.storage.setSettings(newSettings);
   };
 
+  const commitServerToHistory = (server?: string) => {
+    if (!settings) return;
+
+    const currentProtocol = settings.signaling.p;
+    const url = server ?? settings.signaling.s[currentProtocol] ?? "";
+
+    if (!url.trim()) return;
+
+    const protocolHistory =
+      settings.signaling.lastUsed?.[currentProtocol] || [];
+    const updatedHistory = addToHistory(protocolHistory, url);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        lastUsed: {
+          ...settings.signaling.lastUsed,
+          [currentProtocol]: updatedHistory,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
   const updateRetainHistory = (retainHistory: boolean) => {
     if (!settings) return;
 
@@ -83,6 +111,7 @@ export const useSettings = () => {
     settings,
     updateSignalingProtocol,
     updateSignalingServer,
+    commitServerToHistory,
     updateRetainHistory,
     updateAutoReconnect,
     updateLanguage,

@@ -1,10 +1,13 @@
+import { getHistoryForProtocol } from "@openlv/provider/storage";
+
 import { useSettings } from "../../hooks/useSettings.js";
-import { useTranslation } from "../../utils/i18n.js";
 import { InfoTooltip } from "../../ui/InfoTooltip.js";
 import { Input } from "../../ui/Input.js";
 import { MenuGroup } from "../../ui/menu/MenuGroup.js";
 import { MenuItem } from "../../ui/menu/MenuItem.js";
 import { Select } from "../../ui/Select.js";
+import { ServerHistoryBadges } from "../../ui/ServerHistoryBadges.js";
+import { useTranslation } from "../../utils/i18n.js";
 
 type SignalingProtocol = "MQTT" | "NTFY" | "GUN";
 
@@ -14,6 +17,13 @@ export const SignalingSettings = () => {
   const { t } = useTranslation();
   const { settings, updateSignalingProtocol, updateSignalingServer } =
     useSettings();
+
+  const currentProtocol = settings?.signaling.p || "";
+  const history = getHistoryForProtocol(
+    settings?.signaling.lastUsed,
+    currentProtocol,
+  );
+  const currentServer = settings?.signaling.s[currentProtocol] || "";
 
   return (
     <div>
@@ -31,20 +41,25 @@ export const SignalingSettings = () => {
               option.toLowerCase(),
               option,
             ])}
-            value={settings?.signaling.p || ""}
+            value={currentProtocol}
             onChange={updateSignalingProtocol}
           />
         </MenuItem>
         <MenuItem label={t("settings.signaling.server")}>
           <Input
             id="server"
-            value={settings?.signaling.s[settings?.signaling.p || ""] || ""}
+            value={currentServer}
             onChange={(value) => updateSignalingServer(value)}
             placeholder={t("settings.signaling.serverUrl")}
             ariaLabel={t("settings.signaling.serverUrl")}
             readOnly={false}
           />
         </MenuItem>
+        <ServerHistoryBadges
+          history={history}
+          currentServer={currentServer}
+          onSelect={updateSignalingServer}
+        />
       </MenuGroup>
     </div>
   );

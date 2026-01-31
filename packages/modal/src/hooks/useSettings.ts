@@ -1,5 +1,5 @@
 import type { ProviderStorage } from "@openlv/provider/storage";
-import { addToHistory } from "@openlv/provider/storage";
+import { addToHistory, removeFromHistory } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -60,6 +60,8 @@ export const useSettings = () => {
   const commitServerToHistory = (server?: string) => {
     if (!settings) return;
 
+    if (!settings.retainHistory) return;
+
     const currentProtocol = settings.signaling.p;
     const url = server ?? settings.signaling.s[currentProtocol] ?? "";
 
@@ -84,11 +86,43 @@ export const useSettings = () => {
     provider?.storage.setSettings(newSettings);
   };
 
+  const removeServerFromHistory = (urlToRemove: string) => {
+    if (!settings) return;
+
+    const currentProtocol = settings.signaling.p;
+    const protocolHistory =
+      settings.signaling.lastUsed?.[currentProtocol] || [];
+    const updatedHistory = removeFromHistory(protocolHistory, urlToRemove);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        lastUsed: {
+          ...settings.signaling.lastUsed,
+          [currentProtocol]: updatedHistory,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
   const updateRetainHistory = (retainHistory: boolean) => {
     if (!settings) return;
 
-    setSettings({ ...settings, retainHistory });
-    provider?.storage.setSettings({ ...settings, retainHistory });
+    const newSettings = {
+      ...settings,
+      retainHistory,
+      signaling: {
+        ...settings.signaling,
+        lastUsed: retainHistory ? settings.signaling.lastUsed : {},
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
   };
 
   const updateAutoReconnect = (autoReconnect: boolean) => {
@@ -112,6 +146,7 @@ export const useSettings = () => {
     updateSignalingProtocol,
     updateSignalingServer,
     commitServerToHistory,
+    removeServerFromHistory,
     updateRetainHistory,
     updateAutoReconnect,
     updateLanguage,

@@ -22,6 +22,13 @@ export const addToHistory = (
   return updated.slice(0, maxItems);
 };
 
+export const removeFromHistory = (
+  history: string[],
+  urlToRemove: string,
+): string[] => {
+  return history.filter((url) => url !== urlToRemove);
+};
+
 export const getHistoryForProtocol = (
   lastUsed: Record<string, string[]> | undefined,
   protocol: string,

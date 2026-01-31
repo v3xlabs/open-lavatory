@@ -8,12 +8,14 @@ export type ServerHistoryBadgesProps = {
   history: string[];
   currentServer: string;
   onSelect: (url: string) => void;
+  onDelete?: (url: string) => void;
 };
 
 export const ServerHistoryBadges = ({
   history,
   currentServer,
   onSelect,
+  onDelete,
 }: ServerHistoryBadgesProps) => {
   const filtered = history.filter((url) => url !== currentServer);
 
@@ -24,15 +26,29 @@ export const ServerHistoryBadges = ({
   return (
     <div className="flex flex-wrap gap-1.5 pt-1">
       {filtered.map((url) => (
-        <button
-          key={url}
-          type="button"
-          className={badgeStyles()}
-          onClick={() => onSelect(url)}
-          title={url}
-        >
-          {new URL(url).host || url}
-        </button>
+        <div key={url} className={badgeStyles()}>
+          <button
+            type="button"
+            className="flex-1 truncate"
+            onClick={() => onSelect(url)}
+            title={url}
+          >
+            {new URL(url).host || url}
+          </button>
+          {onDelete && (
+            <button
+              type="button"
+              className="ml-1 text-xs opacity-50 hover:opacity-100 transition-opacity"
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(url);
+              }}
+              aria-label="Remove from history"
+            >
+              ×
+            </button>
+          )}
+        </div>
       ))}
     </div>
   );

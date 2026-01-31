@@ -15,8 +15,12 @@ const protocolOptions: SignalingProtocol[] = ["MQTT", "NTFY", "GUN"];
 
 export const SignalingSettings = () => {
   const { t } = useTranslation();
-  const { settings, updateSignalingProtocol, updateSignalingServer } =
-    useSettings();
+  const {
+    settings,
+    updateSignalingProtocol,
+    updateSignalingServer,
+    removeServerFromHistory,
+  } = useSettings();
 
   const currentProtocol = settings?.signaling.p || "";
   const history = getHistoryForProtocol(
@@ -59,6 +63,7 @@ export const SignalingSettings = () => {
           history={history}
           currentServer={currentServer}
           onSelect={updateSignalingServer}
+          onDelete={removeServerFromHistory}
         />
       </MenuGroup>
     </div>

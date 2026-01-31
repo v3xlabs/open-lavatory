@@ -16,6 +16,6 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
     },
   },
   autoReconnect: false,
-  retainHistory: false,
+  retainHistory: true,
   language: undefined,
 };

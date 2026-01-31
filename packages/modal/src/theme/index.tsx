@@ -1,11 +1,18 @@
 // import type { FC, PropsWithChildren } from "preact/compat";
 
-import type { ThemeConfig, ThemeTokensMap } from "./types.js";
+import type {
+  ThemeConfig,
+  ThemeMode,
+  ThemeTokensMap,
+  UserThemePreference,
+} from "./types.js";
 
 export type {
   PredefinedThemeName,
   ThemeConfig,
+  ThemeMode,
   ThemeTokensMap,
+  UserThemePreference,
 } from "./types.js";
 
 const importOrPassthrough = async (
@@ -51,14 +58,21 @@ export const flattenToCssVars = <T extends Record<string, unknown>>(
   return out;
 };
 
-const resolveMode = (mode: ThemeConfig["mode"]): "light" | "dark" => {
-  if (mode === "system") {
+export const resolveMode = (
+  appThemeMode: ThemeMode = "auto",
+  userTheme: UserThemePreference = "system",
+): "light" | "dark" => {
+  if (appThemeMode === "light" || appThemeMode === "dark") {
+    return appThemeMode;
+  }
+
+  if (userTheme === "system") {
     return window.matchMedia("(prefers-color-scheme: dark)").matches
       ? "dark"
       : "light";
   }
 
-  return mode;
+  return userTheme;
 };
 
 const deepMerge = (
@@ -82,10 +96,13 @@ const deepMerge = (
 
 // Converts the theme into css variables
 // --lv-
-export const buildTheme = async (config: ThemeConfig) => {
+export const buildTheme = async (
+  config: ThemeConfig,
+  userTheme: UserThemePreference = "system",
+) => {
   const theme = await importOrPassthrough(config.theme);
 
-  const resolvedMode = resolveMode(config.mode);
+  const resolvedMode = resolveMode(config.mode, userTheme);
   const variant = theme[resolvedMode];
 
   if (!variant) return "";

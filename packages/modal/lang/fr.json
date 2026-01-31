@@ -45,6 +45,13 @@
       "title": "Préférences de connexion"
     },
     "language": "Langue",
+    "theme": {
+      "title": "Apparence",
+      "mode": "Thème",
+      "light": "Clair",
+      "dark": "Sombre",
+      "system": "Système"
+    },
     "signaling": {
       "description": "La signalisation est le protocole de prise de contact utilisé pour établir une connexion.",
       "server": "Serveur",

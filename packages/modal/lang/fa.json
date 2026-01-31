@@ -18,6 +18,13 @@
   "settings": {
     "title": "تنظیمات",
     "language": "زبان",
+    "theme": {
+      "title": "ظاهر",
+      "mode": "تم",
+      "light": "روشن",
+      "dark": "تاریک",
+      "system": "سیستم"
+    },
     "connectionPreferences": {
       "title": "ترجیحات اتصال",
       "retainSessionHistory": "حفظ تاریخچه نشست",

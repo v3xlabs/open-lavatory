@@ -18,6 +18,13 @@
   "settings": {
     "title": "设置",
     "language": "语言",
+    "theme": {
+      "title": "外观",
+      "mode": "主题",
+      "light": "浅色",
+      "dark": "深色",
+      "system": "跟随系统"
+    },
     "connectionPreferences": {
       "title": "连接偏好设置",
       "retainSessionHistory": "保留会话历史",

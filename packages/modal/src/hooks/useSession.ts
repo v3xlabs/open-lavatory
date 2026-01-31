@@ -1,6 +1,6 @@
 import { encodeConnectionURL } from "@openlv/core";
 import type { Session, SessionStateObject } from "@openlv/session";
-import { useEffect, useState } from "preact/hooks";
+import { useEffect, useRef, useState } from "preact/hooks";
 
 import { log } from "../utils/log.js";
 import { useEventEmitter } from "./useEventEmitter.js";
@@ -9,6 +9,7 @@ import { useSettings } from "./useSettings.js";
 
 export const useSession = () => {
   const { provider } = useProvider();
+  const { commitServerToHistory } = useSettings();
   const [session, setSession] = useState<Session | undefined>(
     provider?.getSession(),
   );
@@ -17,6 +18,7 @@ export const useSession = () => {
   const [status, setStatus] = useState<SessionStateObject | undefined>(
     session?.getState(),
   );
+  const savedHistoryForSession = useRef<Session | undefined>();
 
   useEventEmitter(session?.emitter, "state_change", (event) => {
     log("session state change: ", event);
@@ -49,6 +51,7 @@ export const useSession = () => {
     const onSessionStart = (_session: Session) => {
       setSession(_session);
       setStatus(_session.getState());
+      savedHistoryForSession.current = undefined;
     };
 
     provider?.on("session_started", onSessionStart);
@@ -63,6 +66,21 @@ export const useSession = () => {
       setStatus(session.getState());
     }
   }, [session]);
+
+  useEffect(() => {
+    if (
+      status?.status === "ready" &&
+      session &&
+      savedHistoryForSession.current !== session
+    ) {
+      const params = session.getHandshakeParameters();
+
+      if (params?.s) {
+        commitServerToHistory(params.s);
+        savedHistoryForSession.current = session;
+      }
+    }
+  }, [status, session, commitServerToHistory]);
 
   return {
     uri,

@@ -19,6 +19,7 @@ import { copyToClipboard } from "../hooks/useClipboard.js";
 import { useProvider } from "../hooks/useProvider.js";
 import { usePunchTransition } from "../hooks/usePunchTransition.js";
 import { useSession } from "../hooks/useSession.js";
+import { useThemeMode } from "../hooks/useThemeMode.js";
 import { useTranslation } from "../utils/i18n.jsx";
 import { log } from "../utils/log.js";
 import { Footer } from "./footer/Footer.js";
@@ -145,6 +146,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   } = usePunchTransition(status);
   const openSettings = useCallback(() => setView("settings"), [setView]);
   const { t, isRtl } = useTranslation();
+  const themeMode = useThemeMode();
 
   const title = match(modalView)
     .with("start", () => t("start.title"))
@@ -304,6 +306,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
+      data-openlv-mode={themeMode}
       dir={isRtl ? "rtl" : "ltr"}
       style={overlayStyle}
     >

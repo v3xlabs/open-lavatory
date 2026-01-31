@@ -239,15 +239,22 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
   }, [languageTag]);
 
   const t: Translate = useCallback(
-    (key, params) =>
-      resolveTranslation({
+    (key, params) => {
+      const translation = resolveTranslation({
         primary: languagePack,
         fallback: fallbackEnglish as unknown as Translations,
         key,
         params,
-      })
-        .split("\n")
-        .map((line, index) => [line, <br key={index} />]),
+      });
+
+      const lines = translation.split("\n");
+
+      if (lines.length === 1) {
+        return translation;
+      }
+
+      return lines.map((line, index) => [line, <br key={index} />]);
+    },
     [languagePack],
   );
 

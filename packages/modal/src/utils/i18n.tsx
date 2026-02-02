@@ -43,6 +43,7 @@ export const LANGUAGES: LanguageInfo[] = [
 
 export const isRtlLanguage = (tag: LanguageTag): boolean => {
   const language = LANGUAGES.find((l) => l.tag === tag);
+
   return language?.rtl ?? false;
 };
 
@@ -239,22 +240,17 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
   }, [languageTag]);
 
   const t: Translate = useCallback(
-    (key, params) => {
-      const translation = resolveTranslation({
+    (key, params) =>
+      resolveTranslation({
         primary: languagePack,
         fallback: fallbackEnglish as unknown as Translations,
         key,
         params,
-      });
-
-      const lines = translation.split("\n");
-
-      if (lines.length === 1) {
-        return translation;
-      }
-
-      return lines.map((line, index) => [line, <br key={index} />]);
-    },
+      })
+        .split("\n")
+        .map((line, index, array) =>
+          index < array.length - 1 ? [line, <br key={index} />] : [line],
+        ),
     [languagePack],
   );
 

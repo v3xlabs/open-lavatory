@@ -1,4 +1,6 @@
-const version = `openlv@0.0.1-beta.1`;
+import packageJson from "../../package.json" with { type: "json" };
+
+const version = `openlv@${packageJson.version}`;
 
 type ErrorConfig = {
   getDocsUrl?: ((args: BaseErrorParameters) => string | undefined) | undefined;

@@ -152,10 +152,7 @@ const ModalRootInner = ({
   } = usePunchTransition(status);
   const openSettings = useCallback(() => setView("settings"), [setView]);
   const { t, isRtl } = useTranslation();
-  const { appThemeMode, userTheme } = useThemeConfig();
-
-  const isForcedMode = appThemeMode !== "auto";
-  const themePreference = isForcedMode ? appThemeMode : (userTheme ?? "system");
+  const { themeMode } = useThemeConfig();
 
   // Settings navigation ref and title
   const settingsNavRef = useRef<SettingsNavigationRef | null>(null);
@@ -330,7 +327,7 @@ const ModalRootInner = ({
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root
-      data-openlv-theme-preference={themePreference}
+      data-openlv-theme-mode={themeMode}
       dir={isRtl ? "rtl" : "ltr"}
       style={overlayStyle}
     >

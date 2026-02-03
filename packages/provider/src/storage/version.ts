@@ -64,7 +64,6 @@ export const ProviderStorageV2Schema = z.object({
   autoReconnect: z.boolean(),
   signaling: SignalingSettingsV1Schema,
   language: z.string().optional(),
-  theme: UserThemePreferenceSchema.optional(),
 });
 
 export type ProviderStorageV2 = z.infer<typeof ProviderStorageV2Schema>;
@@ -105,6 +104,7 @@ export const ProviderStorageV3Schema = z.object({
   signaling: SignalingSettingsV1Schema.optional(),
   language: z.string().optional(),
   transport: TransportSettingsSchema.optional(),
+  theme: UserThemePreferenceSchema.optional(),
 });
 
 export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
@@ -133,7 +133,6 @@ export const convertProviderStorageV1ToV2 = (
     autoReconnect: settings.autoReconnect,
     signaling: settings.signaling,
     language: undefined,
-    theme: undefined,
   };
 };
 
@@ -147,6 +146,7 @@ export const convertProviderStorageV2ToV3 = (
     signaling: settings.signaling,
     language: settings.language,
     transport: undefined,
+    theme: undefined,
   };
 };
 

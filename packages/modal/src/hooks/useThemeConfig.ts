@@ -7,13 +7,18 @@ export const useThemeConfig = () => {
   const { settings, updateThemePreference } = useSettings();
 
   const appThemeMode: ThemeMode = themeConfig?.mode ?? "auto";
-  const userTheme: UserThemePreference = settings?.theme ?? "system";
+  const userThemeMode: UserThemePreference = settings?.theme ?? "system";
 
   const isUserConfigurable = appThemeMode === "auto";
 
+  const themeMode = !isUserConfigurable
+    ? appThemeMode
+    : (userThemeMode ?? "system");
+
   return {
+    themeMode,
     appThemeMode,
-    userTheme,
+    userThemeMode,
     isUserConfigurable,
     updateThemePreference,
   };

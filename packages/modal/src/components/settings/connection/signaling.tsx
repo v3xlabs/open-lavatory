@@ -40,18 +40,16 @@ export const SignalingSettings = () => {
             readOnly={false}
           />
         </MenuItem>
-        <div className="px-2 pb-2">
-          <ServerHistoryBadges
-            history={
-              settings?.signaling.lastUsed?.[settings?.signaling?.p ?? ""] || []
-            }
-            currentServer={
-              settings?.signaling?.s?.[settings?.signaling?.p ?? ""] ?? ""
-            }
-            onSelect={(url) => updateSignalingServer(url)}
-            onDelete={(url) => removeServerFromHistory(url)}
-          />
-        </div>
+        <ServerHistoryBadges
+          history={
+            settings?.signaling.lastUsed?.[settings?.signaling?.p ?? ""] || []
+          }
+          currentServer={
+            settings?.signaling?.s?.[settings?.signaling?.p ?? ""] ?? ""
+          }
+          onSelect={(url) => updateSignalingServer(url)}
+          onDelete={(url) => removeServerFromHistory(url)}
+        />
       </MenuGroup>
       <div className="p-2 text-sm text-(--lv-text-secondary) text-start">
         {t("settings.signaling.description")}

@@ -7,6 +7,7 @@ import {
   type TransportLayerParameters,
   type TransportState,
 } from "./layer.js";
+import type { WebRTCConfig } from "./webrtc/index.js";
 
 export type TransportMessage =
   | {
@@ -31,6 +32,7 @@ export type TransportLayer = {
   emitter: EventEmitter<TLayerEventMap>;
 };
 export type TLayer = (parameters: TransportLayerParameters) => TransportLayer;
+export type CreateTransportLayerFn = (config?: WebRTCConfig) => TLayer;
 export type TransportLayerBase = {
   type: string;
   setup: () => MaybePromise<void>;

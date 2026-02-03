@@ -83,13 +83,10 @@ export const useSessionStart = () => {
         throw new Error("Invalid protocol or server");
       }
 
-      return provider?.createSession(
-        {
-          p,
-          s,
-        },
-        provider?.transportOptions,
-      );
+      return provider?.createSession({
+        p,
+        s,
+      });
     },
   };
 };

@@ -1,4 +1,8 @@
-import type { ProviderStorage, TurnServer } from "@openlv/provider/storage";
+import type {
+  ProviderStorage,
+  TurnServer,
+  UserThemePreference,
+} from "@openlv/provider/storage";
 import { removeFromHistory } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
@@ -83,6 +87,7 @@ export const useSettings = () => {
 
   const updateRetainHistory = (retainHistory: boolean) => {
     if (!settings) return;
+
     const newSettings = {
       ...settings,
       retainHistory,

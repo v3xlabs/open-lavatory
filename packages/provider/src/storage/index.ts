@@ -4,14 +4,12 @@ import { DEFAULT_SETTINGS } from "./default.js";
 import { parseProviderStorage, type ProviderStorage } from "./version.js";
 
 export { addToHistory, removeFromHistory } from "./history.js";
-export type { ProviderStorage, TurnServer } from "./version.js";
-const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
-
 export type {
   ProviderStorage,
   TurnServer,
   UserThemePreference,
 } from "./version.js";
+const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
 
 export type ProviderStorageParameters = {
   // Defaults to localStorage

@@ -24,7 +24,7 @@ export const ServerHistoryBadges = ({
   }
 
   return (
-    <div className="flex flex-wrap gap-1.5 pt-1">
+    <div className="flex flex-wrap gap-1.5 px-2 pb-2">
       {filtered.map((url) => (
         <div key={url} className={badgeStyles()}>
           <button

@@ -1,4 +1,5 @@
 import type { ProviderStorage, TurnServer } from "@openlv/provider/storage";
+import { removeFromHistory } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -57,10 +58,43 @@ export const useSettings = () => {
     });
   };
 
-  const updateRetainHistory = (retainHistory: boolean) => {
+  const removeServerFromHistory = (urlToRemove: string) => {
     if (!settings) return;
 
-    persistSettings({ ...settings, retainHistory });
+    const currentProtocol = settings.signaling.p;
+    const protocolHistory =
+      settings.signaling.lastUsed?.[currentProtocol] || [];
+    const updatedHistory = removeFromHistory(protocolHistory, urlToRemove);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        lastUsed: {
+          ...settings.signaling.lastUsed,
+          [currentProtocol]: updatedHistory,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
+  const updateRetainHistory = (retainHistory: boolean) => {
+    if (!settings) return;
+    const newSettings = {
+      ...settings,
+      retainHistory,
+      signaling: {
+        ...settings.signaling,
+        lastUsed: retainHistory
+          ? settings.signaling.lastUsed
+          : { mqtt: [], ntfy: [], gun: [] },
+      },
+    };
+
+    persistSettings(newSettings);
   };
 
   const updateAutoReconnect = (autoReconnect: boolean) => {
@@ -193,6 +227,7 @@ export const useSettings = () => {
     settings,
     updateSignalingProtocol,
     updateSignalingServer,
+    removeServerFromHistory,
     updateRetainHistory,
     updateAutoReconnect,
     updateThemePreference,

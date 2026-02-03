@@ -1,6 +1,6 @@
 const labelClasses = "font-semibold text-xs uppercase tracking-wide";
 const inputClasses =
-  "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)";
+  "h-9 w-full rounded-lg border px-3 text-sm focus:outline-none focus:ring-2 text-(--lv-control-input-text) bg-(--lv-control-input-background) border-(--lv-control-input-border) focus:border-(--lv-control-button-primary-background) focus:ring-(--lv-control-button-primary-background,rgba(255,106,0,0.2))";
 
 type LabelProps = {
   htmlFor?: string;
@@ -47,6 +47,9 @@ export const Input = ({
       if (e.target instanceof HTMLInputElement) {
         onChange?.(e.target.value);
       }
+    }}
+    onKeyDown={(e) => {
+      e.stopPropagation();
     }}
   />
 );

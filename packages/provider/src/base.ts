@@ -15,6 +15,7 @@ import type { Address, Prettify } from "viem";
 import type { ProviderEvents } from "./events.js";
 import type { RpcSchema } from "./rpc.js";
 import {
+  addToHistory,
   createProviderStorage,
   type ProviderStorageParameters,
   type ProviderStorageR,
@@ -118,11 +119,40 @@ export const createProvider = (
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
+  let sessionSavedToHistory: Session | undefined;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
     log("updateStatus", status);
     oxEmitter.emit("status_change", newStatus);
+  };
+
+  const commitServerToHistory = (server: string) => {
+    const settings = storage.getSettings();
+
+    if (!settings.retainHistory) return;
+
+    const currentProtocol = settings.signaling.p;
+    const url = server.trim();
+
+    if (!url) return;
+
+    const protocolHistory =
+      settings.signaling.lastUsed?.[currentProtocol] || [];
+    const updatedHistory = addToHistory(protocolHistory, url);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        lastUsed: {
+          ...settings.signaling.lastUsed,
+          [currentProtocol]: updatedHistory,
+        },
+      },
+    };
+
+    storage.setSettings(newSettings);
   };
 
   const onMessage = async (message: object) => {
@@ -159,6 +189,22 @@ export const createProvider = (
       webrtc(transportOptions),
       onMessage,
     );
+
+    session.emitter.on("state_change", (state?: SessionStateObject) => {
+      if (
+        state?.status === "ready" &&
+        session &&
+        sessionSavedToHistory !== session
+      ) {
+        const params = session.getHandshakeParameters();
+
+        if (params?.s) {
+          commitServerToHistory(params.s);
+          sessionSavedToHistory = session;
+        }
+      }
+    });
+
     updateStatus(PROVIDER_STATUS.CONNECTING);
 
     log("session created");
@@ -189,6 +235,7 @@ export const createProvider = (
   const closeSession = async () => {
     await session?.close();
     session = undefined;
+    sessionSavedToHistory = undefined;
     updateStatus(PROVIDER_STATUS.STANDBY);
   };
 

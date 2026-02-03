@@ -188,6 +188,7 @@ const ConnectComponent = () => {
             className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1 placeholder:text-neutral-500"
             onChange={(e) => setUrl(e.target.value)}
             placeholder="openlv://..."
+            onKeyDown={(e) => e.stopPropagation()}
           />
         </div>
         <button

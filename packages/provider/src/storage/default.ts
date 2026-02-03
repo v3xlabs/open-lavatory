@@ -1,7 +1,7 @@
 import type { ProviderStorage } from "./version.js";
 
 export const DEFAULT_SETTINGS: ProviderStorage = {
-  version: 4,
+  version: 3,
   signaling: {
     p: "mqtt",
     s: {
@@ -14,6 +14,6 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
   retainHistory: false,
   language: undefined,
   transport: {
-    protocol: "webrtc",
+    p: "webrtc",
   },
 };

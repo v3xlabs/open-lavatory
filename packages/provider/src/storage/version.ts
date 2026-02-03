@@ -1,14 +1,25 @@
 import z from "zod";
 
+// Signaling protocol types
+export const SignalingProtocol = z.enum(["mqtt", "ntfy", "gun"]);
+export type SignalingProtocol = z.infer<typeof SignalingProtocol>;
+
 export const SignalingSettingsV0Schema = z.object({
   p: z.string(),
   s: z.string(),
 });
 
 export type SignalingSettingsV0 = z.infer<typeof SignalingSettingsV0Schema>;
+
 export const SignalingSettingsV1Schema = z.object({
-  p: z.string(),
-  s: z.record(z.string(), z.string()),
+  p: SignalingProtocol,
+  s: z
+    .object({
+      mqtt: z.string(),
+      ntfy: z.string(),
+      gun: z.string(),
+    })
+    .partial(),
 });
 
 export type SignalingSettingsV1 = z.infer<typeof SignalingSettingsV1Schema>;
@@ -18,9 +29,11 @@ export type SignalingSettings = SignalingSettingsV1;
 const convertSignalingSettingsV0ToV1 = (
   settings: SignalingSettingsV0,
 ): SignalingSettingsV1 => {
+  const protocol = SignalingProtocol.parse(settings.p);
+
   return {
-    p: settings.p,
-    s: { [settings.p]: settings.s },
+    p: protocol,
+    s: { [protocol]: settings.s },
   };
 };
 
@@ -38,7 +51,6 @@ export const ProviderStorageV1Schema = z.object({
   retainHistory: z.boolean(),
   autoReconnect: z.boolean(),
   signaling: SignalingSettingsV1Schema,
-  // transport: TransportSettingsSchema,
 });
 
 export type ProviderStorageV1 = z.infer<typeof ProviderStorageV1Schema>;
@@ -53,29 +65,7 @@ export const ProviderStorageV2Schema = z.object({
 
 export type ProviderStorageV2 = z.infer<typeof ProviderStorageV2Schema>;
 
-export const TransportSettingsV0Schema = z.object({
-  protocol: z.string(),
-  iceServers: z
-    .object({
-      stun: z.string().optional(),
-      turn: z.string().optional(),
-    })
-    .optional(),
-});
-
-export type TransportSettingsV0 = z.infer<typeof TransportSettingsV0Schema>;
-
-export const ProviderStorageV3Schema = z.object({
-  version: z.literal(3),
-  retainHistory: z.boolean(),
-  autoReconnect: z.boolean(),
-  signaling: SignalingSettingsV1Schema,
-  language: z.string().optional(),
-  transport: TransportSettingsV0Schema.optional(),
-});
-
-export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
-
+// TURN server configuration
 export const TurnServerSchema = z.object({
   urls: z.string(),
   username: z.string().optional(),
@@ -84,30 +74,38 @@ export const TurnServerSchema = z.object({
 
 export type TurnServer = z.infer<typeof TurnServerSchema>;
 
+// WebRTC-specific settings
+export const WebRTCSettingsSchema = z.object({
+  stun: z.array(z.string()).optional(),
+  turn: z.array(TurnServerSchema).optional(),
+});
+
+export type WebRTCSettings = z.infer<typeof WebRTCSettingsSchema>;
+
+// Transport settings with protocol-specific configurations
 export const TransportSettingsSchema = z.object({
-  protocol: z.string(),
-  iceServers: z
+  p: z.string(),
+  s: z
     .object({
-      stun: z.array(z.string()).optional(),
-      turn: z.array(TurnServerSchema).optional(),
+      webrtc: WebRTCSettingsSchema.optional(),
     })
     .optional(),
 });
 
 export type TransportSettings = z.infer<typeof TransportSettingsSchema>;
 
-export const ProviderStorageV4Schema = z.object({
-  version: z.literal(4),
+export const ProviderStorageV3Schema = z.object({
+  version: z.literal(3),
   retainHistory: z.boolean(),
   autoReconnect: z.boolean(),
-  signaling: SignalingSettingsV1Schema,
+  signaling: SignalingSettingsV1Schema.optional(),
   language: z.string().optional(),
   transport: TransportSettingsSchema.optional(),
 });
 
-export type ProviderStorageV4 = z.infer<typeof ProviderStorageV4Schema>;
+export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
 
-export type ProviderStorage = ProviderStorageV4;
+export type ProviderStorage = ProviderStorageV3;
 
 export const convertProviderStorageV0ToV1 = (
   settings: ProviderStorageV0,
@@ -143,32 +141,7 @@ export const convertProviderStorageV2ToV3 = (
     autoReconnect: settings.autoReconnect,
     signaling: settings.signaling,
     language: settings.language,
-    transport: {
-      protocol: "webrtc",
-    },
-  };
-};
-
-export const convertProviderStorageV3ToV4 = (
-  settings: ProviderStorageV3,
-): ProviderStorageV4 => {
-  const oldIce = settings.transport?.iceServers;
-
-  return {
-    version: 4,
-    retainHistory: settings.retainHistory,
-    autoReconnect: settings.autoReconnect,
-    signaling: settings.signaling,
-    language: settings.language,
-    transport: {
-      protocol: settings.transport?.protocol ?? "webrtc",
-      iceServers: oldIce
-        ? {
-            stun: oldIce.stun ? [oldIce.stun] : undefined,
-            turn: oldIce.turn ? [{ urls: oldIce.turn }] : undefined,
-          }
-        : undefined,
-    },
+    transport: undefined,
   };
 };
 
@@ -177,7 +150,6 @@ export const AnyStorage = z.discriminatedUnion("version", [
   ProviderStorageV1Schema,
   ProviderStorageV2Schema,
   ProviderStorageV3Schema,
-  ProviderStorageV4Schema,
 ]);
 
 export type ProviderStorageVAny = z.infer<typeof AnyStorage>;
@@ -200,13 +172,7 @@ export const migrateStorageToLatest = (
   }
 
   if (storage.version === 2) {
-    return migrateStorageToLatest(
-      convertProviderStorageV2ToV3(storage as ProviderStorageV2),
-    );
-  }
-
-  if (storage.version === 3) {
-    return convertProviderStorageV3ToV4(storage as ProviderStorageV3);
+    return convertProviderStorageV2ToV3(storage as ProviderStorageV2);
   }
 
   return storage as ProviderStorage;

@@ -21,14 +21,14 @@ export const SignalingSettings = () => {
               option.toLowerCase(),
               option.toUpperCase(),
             ])}
-            value={settings?.signaling.p || ""}
+            value={settings?.signaling?.p || ""}
             onChange={updateSignalingProtocol}
           />
         </MenuItem>
         <MenuItem label={t("settings.signaling.server")}>
           <Input
             id="server"
-            value={settings?.signaling.s[settings?.signaling.p || ""] || ""}
+            value={settings?.signaling?.s?.[settings?.signaling?.p ?? ""] ?? ""}
             onChange={(value) => updateSignalingServer(value)}
             placeholder={t("settings.signaling.serverUrl")}
             ariaLabel={t("settings.signaling.serverUrl")}

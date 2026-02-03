@@ -41,26 +41,29 @@ const AddServerButton = ({
 
 export const TransportSettings = () => {
   const { t } = useTranslation();
-  const { settings, updateStunServers, updateTurnServers } = useSettings();
+  const {
+    settings,
+    addStunServer,
+    removeStunServer,
+    updateStunServer,
+    addTurnServer,
+    removeTurnServer,
+    updateTurnServer,
+  } = useSettings();
 
-  const stunServers = settings?.transport?.iceServers?.stun ?? [];
-  const turnServers = settings?.transport?.iceServers?.turn ?? [];
+  const stunServers = settings?.transport?.s?.webrtc?.stun ?? [];
+  const turnServers = settings?.transport?.s?.webrtc?.turn ?? [];
 
   const handleStunChange = (index: number, value: string) => {
-    const newServers = [...stunServers];
-
-    newServers[index] = value;
-    updateStunServers(newServers);
+    updateStunServer(index, value);
   };
 
   const handleAddStun = () => {
-    updateStunServers([...stunServers, ""]);
+    addStunServer("");
   };
 
   const handleRemoveStun = (index: number) => {
-    const newServers = stunServers.filter((_, i) => i !== index);
-
-    updateStunServers(newServers);
+    removeStunServer(index);
   };
 
   const handleTurnChange = (
@@ -68,20 +71,15 @@ export const TransportSettings = () => {
     field: keyof TurnServer,
     value: string,
   ) => {
-    const newServers = [...turnServers];
-
-    newServers[index] = { ...newServers[index], [field]: value || undefined };
-    updateTurnServers(newServers);
+    updateTurnServer(index, { [field]: value || undefined });
   };
 
   const handleAddTurn = () => {
-    updateTurnServers([...turnServers, { urls: "" }]);
+    addTurnServer({ urls: "" });
   };
 
   const handleRemoveTurn = (index: number) => {
-    const newServers = turnServers.filter((_, i) => i !== index);
-
-    updateTurnServers(newServers);
+    removeTurnServer(index);
   };
 
   return (

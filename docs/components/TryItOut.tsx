@@ -32,6 +32,16 @@ const config = createConfig({
   chains: [mainnet, sepolia, holesky],
   connectors: [
     openlv({
+      // config: {
+      //   transport: {
+      //     p: "webrtc",
+      //     s: {
+      //       webrtc: {
+      //         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+      //       },
+      //     },
+      //   },
+      // },
       // theme: {
       //   theme: simpleTheme,
       //   mode: "light",

@@ -1,5 +1,6 @@
 import { decodeConnectionURL, encodeConnectionURL } from "@openlv/core";
 import { ntfy } from "@openlv/signaling/ntfy";
+import { webrtc } from "@openlv/transport";
 import { describe, expect, test } from "vitest";
 
 import { connectSession, createSession } from "./base.js";
@@ -13,6 +14,7 @@ describe("Session", () => {
         s: "https://ntfy.sh/",
       },
       ntfy,
+      webrtc(),
       async (message) => {
         console.log("sessionA received message", message);
 
@@ -39,11 +41,15 @@ describe("Session", () => {
 
     console.log("Connecting to session B");
 
-    const sessionB = await connectSession(encodedUrl, async (message) => {
-      console.log("sessionB received message", message);
+    const sessionB = await connectSession(
+      encodedUrl,
+      async (message) => {
+        console.log("sessionB received message", message);
 
-      return { result: "success" };
-    });
+        return { result: "success" };
+      },
+      webrtc(),
+    );
 
     console.log(sessionB.getState());
     await sessionB.connect();

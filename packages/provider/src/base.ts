@@ -5,6 +5,7 @@ import {
   type SessionStateObject,
 } from "@openlv/session";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
+import { webrtc, type WebRTCConfig } from "@openlv/transport";
 import { Provider as OxProvider } from "ox";
 import type { EventMap } from "ox/Provider";
 import type { ExtractReturnType } from "ox/RpcSchema";
@@ -18,11 +19,25 @@ import {
   type ProviderStorageParameters,
   type ProviderStorageR,
 } from "./storage/index.js";
+import type { SignalingProtocol } from "./storage/version.js";
 import { log } from "./utils/log.js";
+
+export type TransportProtocol = "webrtc";
+
+export type OpenLVProviderConfig = {
+  signaling?: {
+    p?: SignalingProtocol;
+    s?: Record<SignalingProtocol, string>;
+  };
+  transport?: {
+    p?: TransportProtocol;
+    s?: Record<TransportProtocol, WebRTCConfig>;
+  };
+};
 
 export type OpenLVProviderParameters = Prettify<
   {
-    config?: object;
+    config?: OpenLVProviderConfig;
     openModal?: (provider: OpenLVProvider) => Promise<void>;
   } & Pick<ProviderStorageParameters, "storage">
 >;
@@ -62,20 +77,47 @@ export type OpenLVProvider = OxProvider.Provider<
 > &
   ProviderBase;
 
+type transportInput =
+  | {
+      stun?: string[] | undefined;
+      turn?:
+        | {
+            urls: string;
+            username?: string | undefined;
+            credential?: string | undefined;
+          }[]
+        | undefined;
+    }
+  | undefined;
+
+const convertTempV1 = (transport: transportInput): WebRTCConfig => {
+  const stun = transport?.stun?.map((url) => ({ urls: url })) || [];
+  const turn =
+    transport?.turn?.map((server) => ({
+      urls: server.urls,
+      username: server.username,
+      credential: server.credential,
+    })) || [];
+
+  return {
+    iceServers: [...stun, ...turn],
+  };
+};
+
 /**
  * OpenLV Provider
  *
  * https://openlv.sh/api/provider
  */
 export const createProvider = (
-  _parameters: OpenLVProviderParameters,
+  parameters: OpenLVProviderParameters,
 ): OpenLVProvider => {
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let accounts: Address[] = [];
-  const storage = createProviderStorage({ storage: _parameters.storage });
-  const { openModal } = _parameters;
+  const storage = createProviderStorage({ storage: parameters.storage });
+  const { openModal, config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -107,9 +149,14 @@ export const createProvider = (
     },
   ) => {
     updateStatus(PROVIDER_STATUS.CREATING);
+    const transportOptions =
+      convertTempV1(storage.getSettings().transport?.s?.webrtc) ||
+      config?.transport?.s?.webrtc;
+
     session = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
+      webrtc(transportOptions),
       onMessage,
     );
     updateStatus(PROVIDER_STATUS.CONNECTING);

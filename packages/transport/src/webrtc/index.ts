@@ -1,12 +1,15 @@
 /* eslint-disable sonarjs/no-duplicate-string */
 import { match } from "ts-pattern";
 
-import { createTransportBase, type TransportMessage } from "../base.js";
+import {
+  createTransportBase,
+  type CreateTransportLayerFn,
+  type TransportMessage,
+} from "../base.js";
 import { log } from "../utils/log.js";
 
-type WebRTCConfig = {
+export type WebRTCConfig = {
   iceServers?: RTCConfiguration["iceServers"];
-  isHost: boolean;
 };
 
 // TODO: decide wether we want defaults, and if so what defaults
@@ -21,11 +24,14 @@ const defaultConfig: WebRTCConfig = {
       credential: "openrelayproject",
     },
   ],
-  isHost: true,
 };
 
-export const webrtc = (config: WebRTCConfig = defaultConfig) => {
+export const webrtc: CreateTransportLayerFn = (
+  config: WebRTCConfig = defaultConfig,
+) => {
   const { iceServers = defaultConfig.iceServers } = config;
+
+  console.log("WEBRTC ICE CONFIG", config);
   const ident = Math.random().toString(36).substring(2, 4) + "#";
 
   return createTransportBase(({ emitter, isHost }) => {

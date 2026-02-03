@@ -11,7 +11,7 @@ export const MenuLink: FC<MenuLinkProps> = ({ label, value, onClick }) => (
   <button
     type="button"
     onClick={onClick}
-    className="flex w-full cursor-pointer items-center justify-between gap-2 first:rounded-t-sm last:rounded-b-sm px-2 py-1 hover:bg-(--lv-control-button-tertiary-hoverBackground)"
+    className="flex w-full cursor-pointer items-center justify-between gap-2 first:rounded-t-sm last:rounded-b-sm px-2 py-1 first:pt-1.5 last:pb-2 hover:bg-(--lv-control-button-tertiary-hoverBackground)"
   >
     <div className="text-sm text-(--lv-text-secondary) flex items-center gap-1">
       {label}

@@ -63,7 +63,7 @@ const testCases = {
   ] as { name: string; input: ProviderStorageV1; output: ProviderStorageV2 }[],
   startToFinish: [
     {
-      name: "v0->v1->v2",
+      name: "v0->v1->v2->v3",
       input: {
         version: 0,
         autoReconnect: false,
@@ -74,7 +74,7 @@ const testCases = {
         },
       },
       output: {
-        version: 2,
+        version: 3,
         autoReconnect: false,
         retainHistory: false,
         signaling: {

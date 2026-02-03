@@ -4,7 +4,8 @@ import type { FC } from "preact/compat";
 import { useContext, useMemo } from "preact/hooks";
 
 import { ModalRoot } from "./components/ModalRoot.js";
-import type { OpenLVModalElementProps } from "./element.js";
+import { type OpenLVModalElementProps } from "./element.js";
+import type { ThemeConfig } from "./theme/types.js";
 import {
   detectBrowserLanguage,
   type LanguageTag,
@@ -13,10 +14,12 @@ import {
 
 export type ProviderContextO = {
   provider: OpenLVProvider | undefined;
+  themeConfig?: ThemeConfig;
 };
 
 export const ModalContext = createContext<ProviderContextO>({
   provider: undefined,
+  themeConfig: undefined,
 });
 
 const getInitialLanguage = (
@@ -34,6 +37,7 @@ const getInitialLanguage = (
 export const ModalProvider: FC<OpenLVModalElementProps> = ({
   provider,
   onClose,
+  theme,
 }) => {
   const initialLanguage = useMemo(
     () => getInitialLanguage(provider),
@@ -42,7 +46,7 @@ export const ModalProvider: FC<OpenLVModalElementProps> = ({
 
   return (
     <TranslationProvider initialLanguageTag={initialLanguage}>
-      <ModalContext.Provider value={{ provider }}>
+      <ModalContext.Provider value={{ provider, themeConfig: theme }}>
         <ModalRoot onClose={onClose} />
       </ModalContext.Provider>
     </TranslationProvider>

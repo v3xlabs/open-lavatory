@@ -16,4 +16,5 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
   transport: {
     p: "webrtc",
   },
+  theme: "system",
 };

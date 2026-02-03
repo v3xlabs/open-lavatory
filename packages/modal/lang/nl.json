@@ -18,6 +18,13 @@
   "settings": {
     "title": "Instellingen",
     "language": "Taal",
+    "theme": {
+      "title": "Weergave",
+      "mode": "Thema",
+      "light": "Licht",
+      "dark": "Donker",
+      "system": "Systeem"
+    },
     "connectionPreferences": {
       "title": "Verbindingsvoorkeuren",
       "retainSessionHistory": "Sessiegeschiedenis bewaren",

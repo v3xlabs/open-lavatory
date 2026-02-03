@@ -32,6 +32,7 @@ const config = createConfig({
   chains: [mainnet, sepolia, holesky],
   connectors: [
     openlv({
+      // Optionally set app suggested defaults
       // config: {
       //   transport: {
       //     p: "webrtc",
@@ -64,7 +65,7 @@ const config = createConfig({
         //     },
         //   },
         // },
-        mode: "light",
+        mode: "auto",
       },
     }),
   ],

@@ -18,6 +18,13 @@
   "settings": {
     "title": "Configuración",
     "language": "Idioma",
+    "theme": {
+      "title": "Apariencia",
+      "mode": "Tema",
+      "light": "Claro",
+      "dark": "Oscuro",
+      "system": "Sistema"
+    },
     "connectionPreferences": {
       "title": "Preferencias de conexión",
       "retainSessionHistory": "Conservar historial de sesión",

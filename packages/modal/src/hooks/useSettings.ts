@@ -65,6 +65,15 @@ export const useSettings = () => {
     persistSettings({ ...settings, autoReconnect });
   };
 
+  const updateThemePreference = (theme: UserThemePreference) => {
+    if (!settings) return;
+
+    if (settings.theme === theme) return;
+
+    setSettings({ ...settings, theme });
+    provider?.storage.setSettings({ ...settings, theme });
+  };
+
   const updateLanguage = (language: LanguageTag) => {
     if (!settings) return;
     persistSettings({ ...settings, language });
@@ -182,6 +191,7 @@ export const useSettings = () => {
     updateSignalingServer,
     updateRetainHistory,
     updateAutoReconnect,
+    updateThemePreference,
     updateLanguage,
     updateTransportProtocol,
     // STUN reducers

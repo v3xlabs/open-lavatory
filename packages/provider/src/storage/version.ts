@@ -82,13 +82,6 @@ export const TurnServerSchema = z.object({
   username: z.string().optional(),
   credential: z.string().optional(),
 });
-export const ProviderStorageV3Schema = z.object({
-  version: z.literal(3),
-  retainHistory: z.boolean(),
-  autoReconnect: z.boolean(),
-  signaling: SignalingSettingsV2Schema,
-  language: z.string().optional(),
-});
 
 export type TurnServer = z.infer<typeof TurnServerSchema>;
 
@@ -202,6 +195,7 @@ export const migrateStorageToLatest = (
       convertProviderStorageV2ToV3(storage as ProviderStorageV2),
     );
   }
+
   return storage as ProviderStorage;
 };
 

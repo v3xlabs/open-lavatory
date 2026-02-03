@@ -5,6 +5,12 @@ import { parseProviderStorage, type ProviderStorage } from "./version.js";
 
 const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
 
+export type {
+  ProviderStorage,
+  TurnServer,
+  UserThemePreference,
+} from "./version.js";
+
 export type ProviderStorageParameters = {
   // Defaults to localStorage
   storage?: Storage;

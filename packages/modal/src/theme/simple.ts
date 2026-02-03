@@ -68,4 +68,45 @@ export const simpleTheme = {
       body: "#6a7282",
     },
   },
+  dark: {
+    body: { color: "#F3F4F6", background: "#16181D" },
+    border: { color: "#2F343C", width: "1px" },
+    overlay: {
+      background: "rgba(0,0,0,0.55)",
+      backdrop: { filter: "blur(8px)" },
+    },
+    modal: { shadow: "0px 22px 60px rgba(0,0,0,0.55)" },
+    control: {
+      input: { background: "#12151A", border: "#2F343C", text: "#E8EAED" },
+      button: {
+        primary: {
+          background: "#FF6A00",
+          color: "#0D0E12",
+          hoverBackground: "#FF7D1F",
+          activeBackground: "#E76200",
+          disabledBackground: "#2A2F36",
+          disabledColor: "#8E949C",
+          border: "#FF6A00",
+        },
+        secondary: {
+          background: "#262A31",
+          color: "#E8EAED",
+          hoverBackground: "#2D323A",
+          activeBackground: "#23272E",
+          disabledBackground: "#1D2026",
+          disabledColor: "#8E949C",
+          border: "#333843",
+        },
+        tertiary: {
+          color: "#A4A9B1",
+          hoverBackground: "#20242A",
+          activeBackground: "#1B1F24",
+          disabledColor: "#6F747B",
+        },
+      },
+    },
+    qr: { background: "#FFFFFF", color: "#0D0E12" },
+    card: { background: "#1E2127" },
+    text: { primary: "#F3F4F6", secondary: "#C8CCD2", muted: "#9AA0A9" },
+  },
 } satisfies ThemeTokensMap;

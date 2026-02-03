@@ -10,6 +10,7 @@ import {
   type LanguageTag,
   useTranslation,
 } from "../../../utils/i18n.js";
+import { ThemeSettings } from "./theme.js";
 
 export const LanguageSettings = () => {
   const { t, languageTag, setLanguageTag } = useTranslation();
@@ -40,6 +41,7 @@ export const LanguageSettings = () => {
           onChange={handleLanguageChange}
         />
       </MenuItem>
+      <ThemeSettings />
     </MenuGroup>
   );
 };

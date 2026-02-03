@@ -1,13 +1,13 @@
-import * as React from 'react';
-import { Ionicons } from '@expo/vector-icons';
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Ionicons } from "@expo/vector-icons";
+import type { Session } from "@openlv/react-native";
+import * as React from "react";
+import { Pressable, StyleSheet, TextInput, View } from "react-native";
 
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Button } from '@/components/ui/button';
-import { Colors } from '@/constants/theme';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import type { Session } from '@openlv/react-native';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Button } from "@/components/ui/button";
+import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/use-theme-color";
 
 type SessionCardProps = {
   connectionUrl: string;
@@ -30,12 +30,12 @@ export function SessionCard({
   onConnect,
   onClose,
 }: SessionCardProps) {
-  const textColor = useThemeColor({}, 'text');
-  const backgroundColor = useThemeColor({}, 'background');
-  const surfaceColor = useThemeColor({}, 'surface');
-  const borderColor = useThemeColor({}, 'border');
-  const mutedTextColor = useThemeColor({}, 'mutedText');
-  const tintColor = useThemeColor({}, 'tint');
+  const textColor = useThemeColor({}, "text");
+  const backgroundColor = useThemeColor({}, "background");
+  const surfaceColor = useThemeColor({}, "surface");
+  const borderColor = useThemeColor({}, "border");
+  const mutedTextColor = useThemeColor({}, "mutedText");
+  const tintColor = useThemeColor({}, "tint");
 
   return (
     <ThemedView
@@ -84,7 +84,7 @@ export function SessionCard({
 
       <View style={styles.row}>
         <Button
-          title={session ? 'Session running' : 'Connect'}
+          title={session ? "Session running" : "Connect"}
           onPress={onConnect}
           disabled={!!session}
           variant="primary"
@@ -110,7 +110,9 @@ export function SessionCard({
       <ThemedText type="defaultSemiBold" style={styles.logTitle}>
         Log
       </ThemedText>
-      <View style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}>
+      <View
+        style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}
+      >
         {logLines.length === 0 ? (
           <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>
             No logs yet.
@@ -144,9 +146,9 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   inputRow: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
-    alignItems: 'stretch',
+    alignItems: "stretch",
   },
   inputFlex: {
     flex: 1,
@@ -155,14 +157,14 @@ const styles = StyleSheet.create({
     width: 44,
     borderRadius: 8,
     borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonPressed: {
     opacity: 0.85,
   },
   row: {
-    flexDirection: 'row',
+    flexDirection: "row",
     gap: 10,
     marginTop: 10,
   },

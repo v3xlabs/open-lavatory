@@ -26,6 +26,7 @@ export const useSettings = () => {
 
   const updateSignalingProtocol = (update: string) => {
     if (!settings?.signaling) return;
+
     if (settings.signaling.p === update) return;
 
     persistSettings({
@@ -41,6 +42,7 @@ export const useSettings = () => {
 
   const updateSignalingServer = (server: string) => {
     if (!settings?.signaling) return;
+
     if (settings.signaling.s[settings.signaling.p] === server) return;
 
     persistSettings({
@@ -57,11 +59,13 @@ export const useSettings = () => {
 
   const updateRetainHistory = (retainHistory: boolean) => {
     if (!settings) return;
+
     persistSettings({ ...settings, retainHistory });
   };
 
   const updateAutoReconnect = (autoReconnect: boolean) => {
     if (!settings) return;
+
     persistSettings({ ...settings, autoReconnect });
   };
 
@@ -76,11 +80,13 @@ export const useSettings = () => {
 
   const updateLanguage = (language: LanguageTag) => {
     if (!settings) return;
+
     persistSettings({ ...settings, language });
   };
 
   const updateTransportProtocol = (protocol: string) => {
     if (!settings) return;
+
     if (settings.transport?.p === protocol) return;
 
     persistSettings({
@@ -98,9 +104,7 @@ export const useSettings = () => {
       current: NonNullable<
         NonNullable<ProviderStorage["transport"]>["s"]
       >["webrtc"],
-    ) => NonNullable<
-      NonNullable<ProviderStorage["transport"]>["s"]
-    >["webrtc"],
+    ) => NonNullable<NonNullable<ProviderStorage["transport"]>["s"]>["webrtc"],
   ) => {
     if (!settings) return;
 

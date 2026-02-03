@@ -1,15 +1,13 @@
-import * as React from 'react';
-import {
-  connectSession,
-  type Session,
-} from '@openlv/react-native';
+import { connectSession, type Session } from "@openlv/react-native";
+import * as React from "react";
 
-const DUMMY_ADDRESS = '0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7'.toLowerCase();
-const DUMMY_SIGNATURE = (`0x${'11'.repeat(65)}`) as const;
+const DUMMY_ADDRESS =
+  "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
+const DUMMY_SIGNATURE = `0x${"11".repeat(65)}` as const;
 
 export function useWalletSession() {
-  const [connectionUrl, setConnectionUrl] = React.useState<string>('');
-  const [status, setStatus] = React.useState<string>('idle');
+  const [connectionUrl, setConnectionUrl] = React.useState<string>("");
+  const [status, setStatus] = React.useState<string>("idle");
   const [logLines, setLogLines] = React.useState<string[]>([]);
   const [session, setSession] = React.useState<Session | null>(null);
 
@@ -20,11 +18,11 @@ export function useWalletSession() {
   const startSession = React.useCallback(async () => {
     try {
       if (!connectionUrl.trim()) {
-        throw new Error('Missing connection URL');
+        throw new Error("Missing connection URL");
       }
 
-      setStatus('connecting');
-      appendLog('Connecting…');
+      setStatus("connecting");
+      appendLog("Connecting…");
 
       const nextSession = await connectSession(
         connectionUrl.trim(),
@@ -32,11 +30,14 @@ export function useWalletSession() {
           appendLog(`RPC <= ${JSON.stringify(message)}`);
           const req = message as { method?: string; params?: unknown };
 
-          if (req.method === 'eth_accounts' || req.method === 'eth_requestAccounts') {
-            return [DUMMY_ADDRESS]
+          if (
+            req.method === "eth_accounts" ||
+            req.method === "eth_requestAccounts"
+          ) {
+            return [DUMMY_ADDRESS];
           }
 
-          if (req.method === 'personal_sign') {
+          if (req.method === "personal_sign") {
             return DUMMY_SIGNATURE;
           }
 
@@ -44,8 +45,8 @@ export function useWalletSession() {
         },
       );
 
-      nextSession.emitter.on('state_change', (state) => {
-        if (typeof state !== 'undefined') {
+      nextSession.emitter.on("state_change", (state) => {
+        if (typeof state !== "undefined") {
           appendLog(`session state => ${state.status}`);
           setStatus(`session: ${state.status}`);
         }
@@ -55,27 +56,30 @@ export function useWalletSession() {
 
       await nextSession.connect();
 
-      appendLog('Connected; waiting for link…');
+      appendLog("Connected; waiting for link…");
       void nextSession.waitForLink().then(() => {
-        appendLog('Linked! (transport should start)');
+        appendLog("Linked! (transport should start)");
       });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+
       appendLog(`ERROR: ${msg}`);
-      setStatus('error');
+      setStatus("error");
     }
   }, [appendLog, connectionUrl]);
 
   const closeSession = React.useCallback(async () => {
     try {
       if (!session) return;
-      appendLog('Closing session…');
+
+      appendLog("Closing session…");
       await session.close();
       setSession(null);
-      setStatus('idle');
-      appendLog('Closed.');
+      setStatus("idle");
+      appendLog("Closed.");
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
+
       appendLog(`ERROR: ${msg}`);
     }
   }, [appendLog, session]);

@@ -1,11 +1,12 @@
-import { Pressable, StyleSheet, type ViewStyle } from 'react-native';
-import { ThemedText } from '@/components/themed-text';
+import { Pressable, StyleSheet, type ViewStyle } from "react-native";
+
+import { ThemedText } from "@/components/themed-text";
 
 type ButtonProps = {
   title: string;
   onPress: () => void;
   disabled?: boolean;
-  variant?: 'primary' | 'secondary';
+  variant?: "primary" | "secondary";
   backgroundColor?: string;
   borderColor?: string;
   textColor?: string;
@@ -16,7 +17,7 @@ export function Button({
   title,
   onPress,
   disabled,
-  variant = 'primary',
+  variant = "primary",
   backgroundColor,
   borderColor,
   textColor,
@@ -28,7 +29,7 @@ export function Button({
       disabled={disabled}
       style={({ pressed }) => [
         styles.button,
-        variant === 'secondary' ? styles.buttonSecondary : null,
+        variant === "secondary" ? styles.buttonSecondary : null,
         backgroundColor ? { backgroundColor } : undefined,
         borderColor ? { borderColor } : undefined,
         disabled ? styles.buttonDisabled : null,
@@ -36,7 +37,12 @@ export function Button({
         style,
       ]}
     >
-      <ThemedText style={[styles.buttonText, textColor ? { color: textColor } : undefined]}>
+      <ThemedText
+        style={[
+          styles.buttonText,
+          textColor ? { color: textColor } : undefined,
+        ]}
+      >
         {title}
       </ThemedText>
     </Pressable>
@@ -50,11 +56,11 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     borderWidth: 1,
     flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    alignItems: "center",
+    justifyContent: "center",
   },
   buttonSecondary: {
-    backgroundColor: 'transparent',
+    backgroundColor: "transparent",
   },
   buttonPressed: {
     opacity: 0.85,
@@ -63,6 +69,6 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   buttonText: {
-    fontWeight: '600',
+    fontWeight: "600",
   },
 });

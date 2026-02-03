@@ -1,19 +1,19 @@
-import * as React from 'react';
-import { Image } from 'expo-image';
-import { StyleSheet } from 'react-native';
+import { Image } from "expo-image";
+import * as React from "react";
+import { StyleSheet } from "react-native";
 
-import ParallaxScrollView from '@/components/parallax-scroll-view';
-import { ScannerModal } from '@/components/scanner-modal';
-import { SessionCard } from '@/components/session-card';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors } from '@/constants/theme';
-import { useThemeColor } from '@/hooks/use-theme-color';
-import { useWalletSession } from '@/hooks/use-wallet-session';
+import ParallaxScrollView from "@/components/parallax-scroll-view";
+import { ScannerModal } from "@/components/scanner-modal";
+import { SessionCard } from "@/components/session-card";
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { Colors } from "@/constants/theme";
+import { useThemeColor } from "@/hooks/use-theme-color";
+import { useWalletSession } from "@/hooks/use-wallet-session";
 
 export default function HomeScreen() {
   const [scannerOpen, setScannerOpen] = React.useState(false);
-  const mutedTextColor = useThemeColor({}, 'mutedText');
+  const mutedTextColor = useThemeColor({}, "mutedText");
 
   const {
     connectionUrl,
@@ -30,15 +30,18 @@ export default function HomeScreen() {
       setConnectionUrl(data);
       setScannerOpen(false);
     },
-    [setConnectionUrl]
+    [setConnectionUrl],
   );
 
   return (
     <ParallaxScrollView
-      headerBackgroundColor={{ light: Colors.light.background, dark: Colors.dark.background }}
+      headerBackgroundColor={{
+        light: Colors.light.background,
+        dark: Colors.dark.background,
+      }}
       headerImage={
         <Image
-          source={require('@/assets/images/partial-react-logo.png')}
+          source={require("@/assets/images/partial-react-logo.png")}
           style={styles.reactLogo}
         />
       }
@@ -78,7 +81,7 @@ const styles = StyleSheet.create({
     width: 290,
     bottom: 0,
     left: 0,
-    position: 'absolute',
+    position: "absolute",
   },
   page: {
     flex: 1,

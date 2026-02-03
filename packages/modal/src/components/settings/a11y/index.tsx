@@ -1,15 +1,15 @@
 import { useMemo } from "preact/hooks";
 
-import { useSettings } from "../../hooks/useSettings.js";
-import { MenuGroup } from "../../ui/menu/MenuGroup.js";
-import { MenuItem } from "../../ui/menu/MenuItem.js";
-import { Select } from "../../ui/Select.js";
+import { useSettings } from "../../../hooks/useSettings.js";
+import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
+import { MenuItem } from "../../../ui/menu/MenuItem.js";
+import { Select } from "../../../ui/Select.js";
 import {
   getLanguageScore,
   LANGUAGES,
   type LanguageTag,
   useTranslation,
-} from "../../utils/i18n.js";
+} from "../../../utils/i18n.js";
 
 export const LanguageSettings = () => {
   const { t, languageTag, setLanguageTag } = useTranslation();
@@ -32,7 +32,7 @@ export const LanguageSettings = () => {
   };
 
   return (
-    <MenuGroup title={t("settings.language")}>
+    <MenuGroup title={t("settings.appearance")}>
       <MenuItem label={t("settings.language")}>
         <Select
           options={sortedLanguages.map((lang) => [lang.tag, lang.nativeName])}

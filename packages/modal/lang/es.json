@@ -32,7 +32,16 @@
     "transport": {
       "title": "Transporte",
       "description": "Así es como se mantiene la conexión.",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "Servidores ICE",
+        "stun": "Servidores STUN",
+        "turn": "Servidores TURN",
+        "addStun": "Agregar servidor STUN",
+        "addTurn": "Agregar servidor TURN",
+        "username": "Usuario",
+        "credential": "Contraseña"
+      }
     }
   },
   "start": {

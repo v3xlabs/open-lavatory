@@ -32,7 +32,16 @@
     "transport": {
       "title": "النقل",
       "description": "هذه هي طريقة الحفاظ على الاتصال.",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "خوادم ICE",
+        "stun": "خوادم STUN",
+        "turn": "خوادم TURN",
+        "addStun": "إضافة خادم STUN",
+        "addTurn": "إضافة خادم TURN",
+        "username": "اسم المستخدم",
+        "credential": "كلمة المرور"
+      }
     }
   },
   "start": {

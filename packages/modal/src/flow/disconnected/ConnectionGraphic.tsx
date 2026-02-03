@@ -1,7 +1,7 @@
 const TabletGraphic = ({ isApple }: { isApple: boolean }) => {
   return (
     <div className="flex h-full w-full justify-between">
-      <div className="grow py-1 pl-1">
+      <div className="grow py-1 ps-1">
         <div className="h-full rounded-sm border border-gray-300 bg-gray-400"></div>
       </div>
       <div className="flex h-full w-3 flex-col items-center justify-center gap-0.5 pr-0.5">

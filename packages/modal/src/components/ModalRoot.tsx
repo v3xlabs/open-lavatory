@@ -23,7 +23,7 @@ import { useTranslation } from "../utils/i18n.jsx";
 import { log } from "../utils/log.js";
 import { Footer } from "./footer/Footer.js";
 import { Header } from "./Header.js";
-import { ModalSettings } from "./settings/index.js";
+import { ModalSettings, type SettingsNavigationRef } from "./settings/index.js";
 import { UnknownState } from "./UnknownState.js";
 
 export interface ModalRootProps {
@@ -128,7 +128,13 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
+const ModalRootInner = ({
+  onClose,
+  onCopy,
+}: {
+  onClose: () => void;
+  onCopy?: (uri: string) => void;
+}) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status, provider } = useProvider();
@@ -146,9 +152,13 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const openSettings = useCallback(() => setView("settings"), [setView]);
   const { t, isRtl } = useTranslation();
 
+  // Settings navigation ref and title
+  const settingsNavRef = useRef<SettingsNavigationRef | null>(null);
+  const [settingsTitleKey, setSettingsTitleKey] = useState("settings.title");
+
   const title = match(modalView)
     .with("start", () => t("start.title"))
-    .with("settings", () => t("settings.title"))
+    .with("settings", () => t(settingsTitleKey))
     .with("info", () => t("info.title"))
     .exhaustive();
 
@@ -237,7 +247,13 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const onBack = match({ view: modalView, status })
     .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => undefined)
     .with({ view: "start" }, () => closeSessionIfExists)
-    .with({ view: "settings" }, () => () => setView("start"))
+    .with({ view: "settings" }, () => {
+      if (settingsNavRef.current && !settingsNavRef.current.isAtRoot) {
+        return () => settingsNavRef.current?.goBack();
+      }
+
+      return () => setView("start");
+    })
     .with({ view: "info" }, () => () => setView("start"))
     .otherwise(() => () => {
       closeSessionIfExists();
@@ -247,7 +263,12 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
   const renderDisconnectedView = (targetView: ModalView) =>
     match(targetView)
       .with("start", () => <Disconnected onSettings={openSettings} />)
-      .with("settings", () => <ModalSettings />)
+      .with("settings", () => (
+        <ModalSettings
+          onTitleChange={setSettingsTitleKey}
+          navigationRef={settingsNavRef}
+        />
+      ))
       .with("info", () => <InfoScreen />)
       .otherwise(() => <UnknownState state={targetView} />);
 
@@ -367,3 +388,7 @@ export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => {
     </div>
   );
 };
+
+export const ModalRoot = ({ onClose = () => {}, onCopy }: ModalRootProps) => (
+  <ModalRootInner onClose={onClose} onCopy={onCopy} />
+);

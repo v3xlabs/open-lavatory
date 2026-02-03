@@ -1,8 +1,8 @@
 import type { Dispatch, StateUpdater } from "preact/hooks";
 import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
 
-import { useTranslation } from "../utils/i18n.js";
 import { Button } from "../ui/Button.js";
+import { useTranslation } from "../utils/i18n.js";
 import type { ModalView } from "./ModalRoot.js";
 
 export const Header = ({

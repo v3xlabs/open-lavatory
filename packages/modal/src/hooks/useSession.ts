@@ -77,7 +77,7 @@ export const useSessionStart = () => {
   return {
     start: () => {
       const p = settings?.signaling?.p;
-      const s = settings?.signaling?.s[p];
+      const s = p ? settings?.signaling?.s?.[p] : undefined;
 
       if (!p || !s) {
         throw new Error("Invalid protocol or server");

@@ -55,7 +55,16 @@
     "transport": {
       "description": "C'est ainsi que la connexion est maintenue.",
       "title": "Transport",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "Serveurs ICE",
+        "stun": "Serveurs STUN",
+        "turn": "Serveurs TURN",
+        "addStun": "Ajouter un serveur STUN",
+        "addTurn": "Ajouter un serveur TURN",
+        "username": "Nom d'utilisateur",
+        "credential": "Mot de passe"
+      }
     }
   },
   "start": {

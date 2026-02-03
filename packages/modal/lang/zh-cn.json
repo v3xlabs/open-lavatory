@@ -32,7 +32,16 @@
     "transport": {
       "title": "传输",
       "description": "这是维持连接的方式。",
-      "webrtc": "WebRTC"
+      "webrtc": "WebRTC",
+      "iceServers": {
+        "title": "ICE 服务器",
+        "stun": "STUN 服务器",
+        "turn": "TURN 服务器",
+        "addStun": "添加 STUN 服务器",
+        "addTurn": "添加 TURN 服务器",
+        "username": "用户名",
+        "credential": "密码"
+      }
     }
   },
   "start": {

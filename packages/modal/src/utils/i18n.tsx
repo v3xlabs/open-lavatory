@@ -43,6 +43,7 @@ export const LANGUAGES: LanguageInfo[] = [
 
 export const isRtlLanguage = (tag: LanguageTag): boolean => {
   const language = LANGUAGES.find((l) => l.tag === tag);
+
   return language?.rtl ?? false;
 };
 
@@ -247,7 +248,9 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
         params,
       })
         .split("\n")
-        .map((line, index) => [line, <br key={index} />]),
+        .map((line, index, array) =>
+          index < array.length - 1 ? [line, <br key={index} />] : [line],
+        ),
     [languagePack],
   );
 

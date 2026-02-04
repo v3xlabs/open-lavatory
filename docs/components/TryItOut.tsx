@@ -4,7 +4,7 @@ import "../styles.css";
 import { openlv } from "@openlv/connector";
 // import { simpleTheme } from "@openlv/modal/theme";
 import { connectSession, type Session } from "@openlv/session";
-import { webrtc } from "@openlv/transport";
+import { webrtc } from "@openlv/transport/webrtc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";

@@ -4,6 +4,7 @@ import "../styles.css";
 import { openlv } from "@openlv/connector";
 // import { simpleTheme } from "@openlv/modal/theme";
 import { connectSession, type Session } from "@openlv/session";
+import { webrtc } from "@openlv/transport";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
@@ -198,44 +199,48 @@ const ConnectComponent = () => {
             const client =
               (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
 
-            session = await connectSession(url, async (message) => {
-              console.log("received message", message);
-              const { method } = message as { method: string };
+            session = await connectSession(
+              url,
+              async (message) => {
+                console.log("received message", message);
+                const { method } = message as { method: string };
 
-              console.log("wc", walletClient);
+                console.log("wc", walletClient);
 
-              console.log("method", method);
+                console.log("method", method);
 
-              if (method === "eth_accounts") {
-                const result = await client.request({
-                  method: "eth_accounts",
-                  params: [] as never,
-                });
+                if (method === "eth_accounts") {
+                  const result = await client.request({
+                    method: "eth_accounts",
+                    params: [] as never,
+                  });
 
-                if (result) return result;
-              }
+                  if (result) return result;
+                }
 
-              if (method === "eth_chainId") {
-                const result = await client.request({
-                  method: "eth_chainId",
-                  params: [] as never,
-                });
+                if (method === "eth_chainId") {
+                  const result = await client.request({
+                    method: "eth_chainId",
+                    params: [] as never,
+                  });
 
-                console.log("result from calling wallet", result);
+                  console.log("result from calling wallet", result);
 
-                return result;
-              }
+                  return result;
+                }
 
-              if (["personal_sign"].includes(method)) {
-                const result = await client.request(message as never);
+                if (["personal_sign"].includes(method)) {
+                  const result = await client.request(message as never);
 
-                console.log("result from calling wallet", result);
+                  console.log("result from calling wallet", result);
 
-                return result;
-              }
+                  return result;
+                }
 
-              return { result: "success" };
-            });
+                return { result: "success" };
+              },
+              webrtc,
+            );
             console.log("session", session);
 
             await session.connect();

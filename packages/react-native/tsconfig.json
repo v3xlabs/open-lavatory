@@ -4,7 +4,8 @@
     "module": "nodenext",
     "moduleResolution": "nodenext",
     "jsx": "react-jsx",
-    "outDir": "dist"
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "include": ["src"]
 }

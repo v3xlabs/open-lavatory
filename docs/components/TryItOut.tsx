@@ -2,7 +2,6 @@
 import "../styles.css";
 
 import { openlv } from "@openlv/connector";
-// import { simpleTheme } from "@openlv/modal/theme";
 import { connectSession, type Session } from "@openlv/session";
 import { webrtc } from "@openlv/transport/webrtc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -239,7 +238,7 @@ const ConnectComponent = () => {
 
                 return { result: "success" };
               },
-              webrtc,
+              webrtc(),
             );
             console.log("session", session);
 

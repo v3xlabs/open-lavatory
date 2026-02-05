@@ -2,8 +2,6 @@ import { EventEmitter } from "eventemitter3";
 
 import { DEFAULT_SETTINGS } from "./default.js";
 import { parseProviderStorage, type ProviderStorage } from "./version.js";
-
-export { addToHistory, removeFromHistory } from "./history.js";
 export type {
   ProviderStorage,
   TurnServer,

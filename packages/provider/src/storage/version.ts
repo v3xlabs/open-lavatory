@@ -27,7 +27,7 @@ export type SignalingSettingsV1 = z.infer<typeof SignalingSettingsV1Schema>;
 export const SignalingSettingsV2Schema = z.object({
   p: z.string(),
   s: z.record(z.string(), z.string()),
-  lastUsed: z.record(z.string(), z.array(z.string()).max(3)).optional(),
+  h: z.record(z.string(), z.array(z.string()).max(3)).optional(),
 });
 
 export type SignalingSettingsV2 = z.infer<typeof SignalingSettingsV2Schema>;
@@ -146,18 +146,20 @@ export const convertProviderStorageV1ToV2 = (
 export const convertProviderStorageV2ToV3 = (
   settings: ProviderStorageV2,
 ): ProviderStorageV3 => {
-  // Initialize empty lastUsed for all protocols - only track actually used servers
+  const servers = settings.signaling.s || {};
+  const h: Record<string, string[]> = {};
+
+  for (const k of Object.keys(servers)) {
+    h[k] = [];
+  }
+
   return {
     version: 3,
     retainHistory: settings.retainHistory,
     autoReconnect: settings.autoReconnect,
     signaling: {
       ...settings.signaling,
-      lastUsed: {
-        mqtt: [],
-        ntfy: [],
-        gun: [],
-      },
+      h,
     },
     language: settings.language,
     transport: undefined,

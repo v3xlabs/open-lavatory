@@ -41,9 +41,7 @@ export const SignalingSettings = () => {
           />
         </MenuItem>
         <ServerHistoryBadges
-          history={
-            settings?.signaling.lastUsed?.[settings?.signaling?.p ?? ""] || []
-          }
+          history={settings?.signaling.h?.[settings?.signaling?.p ?? ""] || []}
           currentServer={
             settings?.signaling?.s?.[settings?.signaling?.p ?? ""] ?? ""
           }

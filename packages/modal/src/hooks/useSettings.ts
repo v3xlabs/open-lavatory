@@ -3,7 +3,6 @@ import type {
   TurnServer,
   UserThemePreference,
 } from "@openlv/provider/storage";
-import { removeFromHistory } from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -66,16 +65,15 @@ export const useSettings = () => {
     if (!settings) return;
 
     const currentProtocol = settings.signaling.p;
-    const protocolHistory =
-      settings.signaling.lastUsed?.[currentProtocol] || [];
-    const updatedHistory = removeFromHistory(protocolHistory, urlToRemove);
+    const protocolHistory = settings.signaling.h?.[currentProtocol] || [];
+    const updatedHistory = protocolHistory.filter((u) => u !== urlToRemove);
 
     const newSettings = {
       ...settings,
       signaling: {
         ...settings.signaling,
-        lastUsed: {
-          ...settings.signaling.lastUsed,
+        h: {
+          ...settings.signaling.h,
           [currentProtocol]: updatedHistory,
         },
       },
@@ -93,9 +91,7 @@ export const useSettings = () => {
       retainHistory,
       signaling: {
         ...settings.signaling,
-        lastUsed: retainHistory
-          ? settings.signaling.lastUsed
-          : { mqtt: [], ntfy: [], gun: [] },
+        h: retainHistory ? settings.signaling.h : {},
       },
     };
 

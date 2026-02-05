@@ -5,7 +5,7 @@ import {
   type SessionStateObject,
 } from "@openlv/session";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
-import { webrtc, type WebRTCConfig } from "@openlv/transport";
+import { webrtc, type WebRTCConfig } from "@openlv/transport/webrtc";
 import { Provider as OxProvider } from "ox";
 import type { EventMap } from "ox/Provider";
 import type { ExtractReturnType } from "ox/RpcSchema";

@@ -1,6 +1,6 @@
 import { decodeConnectionURL, encodeConnectionURL } from "@openlv/core";
 import { ntfy } from "@openlv/signaling/ntfy";
-import { webrtc } from "@openlv/transport";
+import { webrtc } from "@openlv/transport/webrtc";
 import { describe, expect, test } from "vitest";
 
 import { connectSession, createSession } from "./base.js";

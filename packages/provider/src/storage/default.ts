@@ -9,11 +9,7 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
       ntfy: "https://ntfy.sh",
       gun: "wss://try.axe.eco/gun",
     },
-    lastUsed: {
-      mqtt: [],
-      ntfy: [],
-      gun: [],
-    },
+    h: {},
   },
   autoReconnect: false,
   retainHistory: true,

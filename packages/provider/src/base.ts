@@ -15,7 +15,6 @@ import type { Address, Prettify } from "viem";
 import type { ProviderEvents } from "./events.js";
 import type { RpcSchema } from "./rpc.js";
 import {
-  addToHistory,
   createProviderStorage,
   type ProviderStorageParameters,
   type ProviderStorageR,
@@ -137,16 +136,16 @@ export const createProvider = (
 
     if (!url) return;
 
-    const protocolHistory =
-      settings.signaling.lastUsed?.[currentProtocol] || [];
-    const updatedHistory = addToHistory(protocolHistory, url);
+    const protocolHistory = settings.signaling.h?.[currentProtocol] || [];
+    const filtered = protocolHistory.filter((u) => u !== url);
+    const updatedHistory = [url, ...filtered].slice(0, 3);
 
     const newSettings = {
       ...settings,
       signaling: {
         ...settings.signaling,
-        lastUsed: {
-          ...settings.signaling.lastUsed,
+        h: {
+          ...settings.signaling.h,
           [currentProtocol]: updatedHistory,
         },
       },

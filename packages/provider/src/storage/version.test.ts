@@ -67,7 +67,7 @@ const testCases = {
   ] as { name: string; input: ProviderStorageV1; output: ProviderStorageV2 }[],
   v2tov3: [
     {
-      name: "basic - initializes empty lastUsed for recently used tracking",
+      name: "basic - initializes empty history mapping for recently used tracking",
       input: {
         version: 2,
         retainHistory: false,
@@ -93,10 +93,8 @@ const testCases = {
             ntfy: "https://ntfy.sh",
             gun: "wss://try.axe.eco/gun",
           },
-          lastUsed: {
+          h: {
             mqtt: [],
-            ntfy: [],
-            gun: [],
           },
         },
         language: undefined,
@@ -124,7 +122,7 @@ const testCases = {
           s: {
             mqtt: "wss://test.mosquitto.org:8081/mqtt",
           },
-          lastUsed: {
+          h: {
             mqtt: [],
             ntfy: [],
             gun: [],

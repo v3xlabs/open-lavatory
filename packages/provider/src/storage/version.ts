@@ -146,12 +146,10 @@ export const convertProviderStorageV1ToV2 = (
 export const convertProviderStorageV2ToV3 = (
   settings: ProviderStorageV2,
 ): ProviderStorageV3 => {
-  const servers = settings.signaling.s || {};
-  const h: Record<string, string[]> = {};
-
-  for (const k of Object.keys(servers)) {
-    h[k] = [];
-  }
+  const currentProtocol = settings.signaling.p;
+  const h: Record<string, string[]> = {
+    [currentProtocol]: [],
+  };
 
   return {
     version: 3,

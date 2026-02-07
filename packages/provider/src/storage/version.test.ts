@@ -98,6 +98,8 @@ const testCases = {
           },
         },
         language: undefined,
+        transport: undefined,
+        theme: undefined,
       },
     },
   ] as { name: string; input: ProviderStorageV2; output: ProviderStorageV3 }[],
@@ -124,11 +126,11 @@ const testCases = {
           },
           h: {
             mqtt: [],
-            ntfy: [],
-            gun: [],
           },
         },
         language: undefined,
+        transport: undefined,
+        theme: undefined,
       },
     },
   ] as {

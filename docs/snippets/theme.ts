@@ -7,8 +7,8 @@ export const wagmiConfig = createConfig({
   connectors: [
     openlv({
       theme: {
-        theme: "simple", // [!code ++]
-        mode: "light", // [!code ++]
+        theme: "simple", // or "openlv" // [!code ++]
+        mode: "auto", // or "light" or "dark" // [!code ++]
       },
     }),
   ],

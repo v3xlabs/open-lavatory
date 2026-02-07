@@ -1,5 +1,59 @@
 # Connector
 
-:::info
-TODO: This page has not been written yet.
-:::
+`@openlv/connector` provides the Wagmi connector for Open Lavatory.
+
+This is the recommended dApp integration path.
+
+## Basic usage
+
+```ts [wagmi.ts] twoslash
+import { openlv } from '@openlv/connector'
+import { createConfig, http } from 'wagmi'
+import { mainnet } from 'wagmi/chains'
+
+export const wagmiConfig = createConfig({
+  chains: [mainnet],
+  connectors: [openlv()],
+  transports: {
+    [mainnet.id]: http(),
+  },
+})
+```
+
+## Connector options
+
+`openlv(options?)` supports:
+
+- `config?`: provider defaults
+  - `config.signaling.p`
+  - `config.signaling.s`
+  - `config.transport.p`
+  - `config.transport.s`
+- `storage?`: storage backend
+- `theme?`: modal theme configuration
+
+## Example with custom defaults
+
+```ts [connector.ts] twoslash
+import { openlv } from '@openlv/connector'
+
+openlv({
+  config: {
+    signaling: {
+      p: 'mqtt',
+      s: {
+        mqtt: 'wss://test.mosquitto.org:8081/mqtt',
+        ntfy: 'https://ntfy.sh',
+        gun: 'wss://try.axe.eco/gun',
+      },
+    },
+    transport: {
+      p: 'webrtc',
+    },
+  },
+  theme: {
+    theme: 'simple',
+    mode: 'auto',
+  },
+})
+```

@@ -6,8 +6,27 @@
 
 ## Custom Themes
 
-You can also pass in your own custom theme object to the connector.
+You can pass your own theme token object to the connector.
 
 ```ts [theme-custom.ts] twoslash
 // [!include ~/snippets/theme-custom.ts]
+```
+
+## Light & Dark mode
+
+`mode` controls which variant the modal uses:
+
+- `auto` (default): follows system preference and allows the user to adjust in the modal settings.
+- `light`: forces light mode and hides theme selection in modal settings.
+- `dark`: forces dark mode and hides theme selection in modal settings.
+
+```ts [theme-mode.ts] twoslash
+import { openlv } from "@openlv/connector";
+
+openlv({
+  theme: {
+    theme: "simple", // or "openlv" or custom tokens
+    mode: "auto", // "auto" | "light" | "dark"
+  },
+});
 ```

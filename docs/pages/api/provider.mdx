@@ -1,5 +1,66 @@
 # Provider
 
-:::info
-TODO: This page has not been written yet.
-:::
+`@openlv/provider` exposes an EIP-1193 style provider with OpenLV session lifecycle management.
+
+Most dApps should use `@openlv/connector` instead of calling this directly.
+
+## Exports
+
+- `createProvider(parameters)`
+- `PROVIDER_STATUS`
+
+## Basic usage
+
+```ts
+import { createProvider } from '@openlv/provider'
+
+const provider = createProvider({
+  config: {
+    signaling: {
+      p: 'mqtt',
+      s: {
+        mqtt: 'wss://test.mosquitto.org:8081/mqtt',
+      },
+    },
+    transport: {
+      p: 'webrtc',
+    },
+  },
+})
+
+await provider.request({ method: 'eth_requestAccounts' })
+const chainId = await provider.request({ method: 'eth_chainId' })
+```
+
+## Parameters
+
+- `config?`: protocol defaults (signaling + transport)
+- `storage?`: custom storage backend (defaults to localStorage where available)
+- `openModal?`: optional UI hook used by connector/modal integrations
+
+## Provider helpers
+
+- `createSession(parameters?)`
+- `closeSession()`
+- `getSession()`
+- `getAccounts()`
+- `getState()`
+
+## Provider states
+
+`PROVIDER_STATUS` values:
+
+- `standby`
+- `creating`
+- `connecting`
+- `connected`
+- `error`
+
+## Events
+
+Provider emits state/session events including:
+
+- `status_change`
+- `session_started`
+- `connect`
+- `accountsChanged`

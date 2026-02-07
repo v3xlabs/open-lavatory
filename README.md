@@ -91,7 +91,7 @@ This repository includes the following packages:
 > [!IMPORTANT]
 > This specification was written during a hackathon, it has its flaws, and should be treated as a proof of concept.
 
-You can find the entire specification in [spec.md](./docs/spec.md).
+You can find the specification set in [docs/specs](./docs/specs), starting with [001_initial.md](./docs/specs/001_initial.md).
 
 ## Contributing
 

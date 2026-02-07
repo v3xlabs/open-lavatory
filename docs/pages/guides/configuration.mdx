@@ -1,24 +1,61 @@
 # Configuration
 
-```ts [wagmi.ts]
-import { http, createConfig, createStorage } from 'wagmi'
+For most applications, no additional configuration should be required.
+We ship with sensible defaults for most use cases, however allow for full customization.
+
+## Give me the defaults
+
+If you just want to get started you can simply use `openlv()`
+
+```ts [wagmi.ts] twoslash
+import { http, createConfig } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
-import { openlv } from '@openlv/connector' // [!code ++]
+import { openlv } from '@openlv/connector'
+
+export const wagmiConfig = createConfig({
+  chains: [mainnet],
+  connectors: [openlv()], // [!code ++]
+  transports: {
+    [mainnet.id]: http(),
+  },
+})
+```
+
+## Configure your app defaults
+
+If you want your app to customize what signaling servers are used by default, you can pass a `config` object when initializing.
+
+```ts [wagmi.ts] twoslash
+import { http, createConfig } from 'wagmi'
+import { mainnet } from 'wagmi/chains'
+import { openlv } from '@openlv/connector'
 
 export const wagmiConfig = createConfig({
   chains: [mainnet],
   connectors: [
     openlv({
-      signaling: [
-        { // [!code ++]
-            type: 'mqtt', // [!code ++]
-            url: 'wss://test.mosquitto.org:8081/mqtt', // [!code ++]
-        } // [!code ++]
-      ],
-    })
+      config: {
+        signaling: {
+          // specify your preferred signaling protocol
+          p: 'mqtt',
+          s: {
+            // specify your preferred signaling server per protocol
+            mqtt: 'wss://test.mosquitto.org:8081/mqtt',
+            ntfy: 'https://ntfy.sh',
+            gun: 'wss://try.axe.eco/gun',
+          },
+        },
+        transport: {
+          p: 'webrtc', // this is the default
+        },
+      },
+    }),
   ],
   transports: {
     [mainnet.id]: http(),
   },
 })
 ```
+
+It is important to keep in mind this sets the defaults for your app.
+Users at any time retain the freedom to choose their own signaling server and protocol.

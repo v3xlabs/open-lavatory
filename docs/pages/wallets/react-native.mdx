@@ -1,64 +1,70 @@
 # Mobile Wallets
 
 Open Lavatory is implemented to be as platform agnostic as possible.
+
 To use openlv in react-native you can use the `@openlv/react-native` package.
-This package is a lightweight shim around `@openlv/session` packing a provider and the necessary polyfills.
+This package wraps `@openlv/session` packing a provider and the necessary polyfills.
+
 
 ## Installation
 
 :::code-group
 
 ```bash [npm]
-npm install @openlv/react-native
+npm install @openlv/react-native @openlv/transport
 ```
 
 ```bash [pnpm]
-pnpm install @openlv/react-native
+pnpm install @openlv/react-native @openlv/transport
 ```
 
 ```bash [yarn]
-yarn install @openlv/react-native
+yarn add @openlv/react-native @openlv/transport
 ```
 
 ```bash [bun]
-bun install @openlv/react-native
+bun install @openlv/react-native @openlv/transport
 ```
 
 :::
 
-## Implementation
-
-Below is a simple example of using `@openlv/react-native` in a react-native app
+## Example
 
 ```tsx [App.tsx]
-import React from "react";
-import { OpenLVGlobals } from "@openlv/react-native";  // [!code ++]
-import { connectSession } from "@openlv/react-native";  // [!code ++]
-import { View, Text, Button } from "react-native";
+import React from 'react';
+import { View, Text, Button } from 'react-native';
+import { OpenLVGlobals, connectSession } from '@openlv/react-native'; // [!code ++]
+import { webrtc } from '@openlv/transport/webrtc'; // [!code ++]
 
 export default function App() {
-  const [session, setSession] = React.useState<any>(null);
+  const [connected, setConnected] = React.useState(false)
 
   const startSession = async () => {
-    const newSession = await connectSession("openlv://...", async (msg) => {  // [!code ++]
-      // Handle incoming requests from dApps  // [!code ++]
-      return "ok"; // [!code ++]
-    }); // [!code ++]
-    await newSession.connect(); // [!code ++]
-    setSession(newSession); // [!code ++]
-  };
+    const session = await connectSession( // [!code ++]
+      'openlv://...', // [!code ++]
+      async (message) => { // [!code ++]
+        // Handle incoming RPC-like requests from dApp peer // [!code ++]
+        return { result: 'ok' } // [!code ++]
+      }, // [!code ++]
+      webrtc(), // [!code ++]
+    ); // [!code ++]
+
+    await session.connect();
+    await session.waitForLink();
+    setConnected(true);
+  }
 
   return (
     <>
-      <OpenLVGlobals /> {/* // [!code ++] */}
-      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+      <OpenLVGlobals />
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
         <Text>OpenLV Mobile Wallet</Text>
-        <Button title="Start Session" onPress={startSession} />
-        {session && <Text>Session Connected!</Text>}
+        <Button title='Start Session' onPress={startSession} />
+        {connected && <Text>Session Connected</Text>}
       </View>
     </>
-  );
-}
+  )
+};
 ```
 
 This example demonstrates how to:

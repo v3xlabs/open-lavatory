@@ -116,6 +116,15 @@ export default defineConfig({
   ],
   topNav: [
     {
+      text: "Docs",
+      link: "/getting-started",
+      match: (path) => !(path.startsWith("specs") || path === "/"),
+    },
+    {
+      text: "Specs",
+      link: "/specs",
+    },
+    {
       text: "GitHub",
       link: "https://github.com/v3xlabs/open-lavatory",
     },

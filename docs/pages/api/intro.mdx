@@ -1,1 +1,20 @@
-# Introduction
+# API Introduction
+
+Open Lavatory has two main implementations strategies
+
+1. dApp-side integration via `@openlv/connector` (wagmi compatible connector).
+2. Wallet-side implementation via `@openlv/session`.
+
+When in action, Open Lavatory operates in two phases:
+
+1. **Signaling**: peers exchange handshake and transport negotiation data over untrusted public relays.
+2. **Transport**: peers establish WebRTC and continue over an encrypted direct connection.
+
+## Main packages
+
+- `@openlv/connector`: Wagmi compatible connector for dApp integration.
+- `@openlv/provider`: EIP-1193 style provider used by the connector.
+- `@openlv/session`: low-level session API for wallets.
+- `@openlv/signaling`: signaling layer implementations (`mqtt`, `ntfy`, `gun`).
+- `@openlv/transport`: transport layer implementation (`webrtc`).
+- `@openlv/core`: shared types and URI helpers.

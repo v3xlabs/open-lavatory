@@ -323,7 +323,7 @@ const ModalRootInner = ({
 
   return (
     <div
-      className="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center font-sans md:items-center lg:p-4"
+      className="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4"
       onClick={onClose}
       role="presentation"
       data-openlv-modal-root

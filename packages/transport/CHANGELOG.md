@@ -1,5 +1,11 @@
 # @openlv/transport
 
+## 0.0.1-beta.7
+
+### Patch Changes
+
+- 4f1eff0: Added transport & signaling configs to the connector
+
 ## 0.0.1-beta.6
 
 ### Patch Changes

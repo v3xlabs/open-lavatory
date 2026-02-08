@@ -13,7 +13,7 @@
         "@openlv/connector": "workspace:*",
         "@openlv/modal": "workspace:*",
         "@openlv/session": "workspace:*",
-        "@openlv/transport": "0.0.1-beta.6",
+        "@openlv/transport": "workspace:*",
         "@tanstack/react-query": "^5.83.0",
         "mqtt": "^5.14.1",
         "react": "latest",

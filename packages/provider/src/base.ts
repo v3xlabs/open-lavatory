@@ -129,7 +129,7 @@ export const createProvider = (
   const addToLastUsed = (server: string) => {
     const settings = storage.getSettings();
 
-    if (!settings.retainHistory) return;
+    if (!settings.retainLastUsed) return;
 
     const currentProtocol = settings.signaling.p;
     const url = server.trim();

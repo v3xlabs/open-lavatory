@@ -85,7 +85,7 @@ const testCases = {
       output: {
         version: 3,
         autoReconnect: false,
-        retainHistory: false,
+        retainLastUsed: false,
         signaling: {
           p: "mqtt",
           s: {
@@ -118,7 +118,7 @@ const testCases = {
       output: {
         version: 3,
         autoReconnect: false,
-        retainHistory: false,
+        retainLastUsed: false,
         signaling: {
           p: "mqtt",
           s: {

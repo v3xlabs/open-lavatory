@@ -83,15 +83,15 @@ export const useSettings = () => {
     provider?.storage.setSettings(newSettings);
   };
 
-  const updateRetainHistory = (retainHistory: boolean) => {
+  const updateRetainLastUsed = (retainLastUsed: boolean) => {
     if (!settings) return;
 
     const newSettings = {
       ...settings,
-      retainHistory,
+      retainLastUsed,
       signaling: {
         ...settings.signaling,
-        lu: retainHistory ? settings.signaling.lu : {},
+        lu: retainLastUsed ? settings.signaling.lu : {},
       },
     };
 
@@ -229,7 +229,7 @@ export const useSettings = () => {
     updateSignalingProtocol,
     updateSignalingServer,
     removeServerFromLastUsed,
-    updateRetainHistory,
+    updateRetainLastUsed,
     updateAutoReconnect,
     updateThemePreference,
     updateLanguage,

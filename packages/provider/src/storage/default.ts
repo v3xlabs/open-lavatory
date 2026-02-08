@@ -12,7 +12,7 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
     lu: {},
   },
   autoReconnect: false,
-  retainHistory: true,
+  retainLastUsed: true,
   language: undefined,
   transport: {
     p: "webrtc",

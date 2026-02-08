@@ -107,7 +107,7 @@ export type TransportSettings = z.infer<typeof TransportSettingsSchema>;
 
 export const ProviderStorageV3Schema = z.object({
   version: z.literal(3),
-  retainHistory: z.boolean(),
+  retainLastUsed: z.boolean(),
   autoReconnect: z.boolean(),
   signaling: SignalingSettingsV2Schema,
   language: z.string().optional(),
@@ -153,7 +153,7 @@ export const convertProviderStorageV2ToV3 = (
 
   return {
     version: 3,
-    retainHistory: settings.retainHistory,
+    retainLastUsed: settings.retainHistory,
     autoReconnect: settings.autoReconnect,
     signaling: {
       ...settings.signaling,

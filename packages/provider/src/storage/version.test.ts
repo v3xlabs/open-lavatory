@@ -5,11 +5,13 @@ import {
   convertProviderStorageV0ToV1,
   convertProviderStorageV1ToV2,
   convertProviderStorageV2ToV3,
+  convertProviderStorageV3ToV4,
   migrateStorageToLatest,
   type ProviderStorageV0,
   type ProviderStorageV1,
   type ProviderStorageV2,
   type ProviderStorageV3,
+  type ProviderStorageV4,
   type ProviderStorageVAny,
 } from "./version.js";
 
@@ -67,7 +69,7 @@ const testCases = {
   ] as { name: string; input: ProviderStorageV1; output: ProviderStorageV2 }[],
   v2tov3: [
     {
-      name: "basic - initializes empty history mapping for recently used tracking",
+      name: "basic",
       input: {
         version: 2,
         retainHistory: false,
@@ -84,6 +86,43 @@ const testCases = {
       },
       output: {
         version: 3,
+        autoReconnect: false,
+        retainHistory: false,
+        signaling: {
+          p: "mqtt",
+          s: {
+            mqtt: "wss://test.mosquitto.org:8081/mqtt",
+            ntfy: "https://ntfy.sh",
+            gun: "wss://try.axe.eco/gun",
+          },
+        },
+        language: undefined,
+        transport: undefined,
+        theme: undefined,
+      },
+    },
+  ] as { name: string; input: ProviderStorageV2; output: ProviderStorageV3 }[],
+  v3tov4: [
+    {
+      name: "basic",
+      input: {
+        version: 3,
+        retainHistory: false,
+        autoReconnect: false,
+        signaling: {
+          p: "mqtt",
+          s: {
+            mqtt: "wss://test.mosquitto.org:8081/mqtt",
+            ntfy: "https://ntfy.sh",
+            gun: "wss://try.axe.eco/gun",
+          },
+        },
+        language: undefined,
+        transport: undefined,
+        theme: undefined,
+      },
+      output: {
+        version: 4,
         autoReconnect: false,
         retainLastUsed: false,
         signaling: {
@@ -102,10 +141,10 @@ const testCases = {
         theme: undefined,
       },
     },
-  ] as { name: string; input: ProviderStorageV2; output: ProviderStorageV3 }[],
+  ] as { name: string; input: ProviderStorageV3; output: ProviderStorageV4 }[],
   startToFinish: [
     {
-      name: "v0->v1->v2->v3",
+      name: "v0->v1->v2->v3->v4",
       input: {
         version: 0,
         autoReconnect: false,
@@ -116,7 +155,7 @@ const testCases = {
         },
       },
       output: {
-        version: 3,
+        version: 4,
         autoReconnect: false,
         retainLastUsed: false,
         signaling: {
@@ -160,6 +199,14 @@ describe("Storage Migrations", () => {
   for (const testCase of testCases.v2tov3) {
     test(`v2 to v3: ${testCase.name}`, () => {
       const result = convertProviderStorageV2ToV3(testCase.input);
+
+      expect(result).toEqual(testCase.output);
+    });
+  }
+
+  for (const testCase of testCases.v3tov4) {
+    test(`v3 to v4: ${testCase.name}`, () => {
+      const result = convertProviderStorageV3ToV4(testCase.input);
 
       expect(result).toEqual(testCase.output);
     });

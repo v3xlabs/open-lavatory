@@ -1,7 +1,7 @@
 import type { ProviderStorage } from "./version.js";
 
 export const DEFAULT_SETTINGS: ProviderStorage = {
-  version: 3,
+  version: 4,
   signaling: {
     p: "mqtt",
     s: {

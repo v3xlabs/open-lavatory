@@ -107,6 +107,18 @@ export type TransportSettings = z.infer<typeof TransportSettingsSchema>;
 
 export const ProviderStorageV3Schema = z.object({
   version: z.literal(3),
+  retainHistory: z.boolean(),
+  autoReconnect: z.boolean(),
+  signaling: SignalingSettingsV1Schema,
+  language: z.string().optional(),
+  transport: TransportSettingsSchema.optional(),
+  theme: UserThemePreferenceSchema.optional(),
+});
+
+export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
+
+export const ProviderStorageV4Schema = z.object({
+  version: z.literal(4),
   retainLastUsed: z.boolean(),
   autoReconnect: z.boolean(),
   signaling: SignalingSettingsV2Schema,
@@ -115,9 +127,9 @@ export const ProviderStorageV3Schema = z.object({
   theme: UserThemePreferenceSchema.optional(),
 });
 
-export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
+export type ProviderStorageV4 = z.infer<typeof ProviderStorageV4Schema>;
 
-export type ProviderStorage = ProviderStorageV3;
+export type ProviderStorage = ProviderStorageV4;
 export const convertProviderStorageV0ToV1 = (
   settings: ProviderStorageV0,
 ): ProviderStorageV1 => {
@@ -146,22 +158,37 @@ export const convertProviderStorageV1ToV2 = (
 export const convertProviderStorageV2ToV3 = (
   settings: ProviderStorageV2,
 ): ProviderStorageV3 => {
+  return {
+    version: 3,
+    retainHistory: settings.retainHistory,
+    autoReconnect: settings.autoReconnect,
+    signaling: settings.signaling,
+    language: settings.language,
+    transport: undefined,
+    theme: undefined,
+  };
+};
+
+export const convertProviderStorageV3ToV4 = (
+  settings: ProviderStorageV3,
+): ProviderStorageV4 => {
   const currentProtocol = settings.signaling.p;
   const lu: Record<string, string[]> = {
     [currentProtocol]: [],
   };
 
   return {
-    version: 3,
+    version: 4,
     retainLastUsed: settings.retainHistory,
     autoReconnect: settings.autoReconnect,
     signaling: {
-      ...settings.signaling,
+      p: settings.signaling.p,
+      s: settings.signaling.s || {},
       lu,
     },
     language: settings.language,
-    transport: undefined,
-    theme: undefined,
+    transport: settings.transport,
+    theme: settings.theme,
   };
 };
 export const AnyStorage = z.discriminatedUnion("version", [
@@ -169,6 +196,7 @@ export const AnyStorage = z.discriminatedUnion("version", [
   ProviderStorageV1Schema,
   ProviderStorageV2Schema,
   ProviderStorageV3Schema,
+  ProviderStorageV4Schema,
 ]);
 
 export type ProviderStorageVAny = z.infer<typeof AnyStorage>;
@@ -194,6 +222,10 @@ export const migrateStorageToLatest = (
     return migrateStorageToLatest(
       convertProviderStorageV2ToV3(storage as ProviderStorageV2),
     );
+  }
+
+  if (storage.version === 3) {
+    return convertProviderStorageV3ToV4(storage as ProviderStorageV3);
   }
 
   return storage as ProviderStorage;

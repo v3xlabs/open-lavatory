@@ -61,20 +61,20 @@ export const useSettings = () => {
     });
   };
 
-  const removeServerFromHistory = (urlToRemove: string) => {
+  const removeServerFromLastUsed = (urlToRemove: string) => {
     if (!settings) return;
 
     const currentProtocol = settings.signaling.p;
-    const protocolHistory = settings.signaling.h?.[currentProtocol] || [];
-    const updatedHistory = protocolHistory.filter((u) => u !== urlToRemove);
+    const protocolLastUsed = settings.signaling.lu?.[currentProtocol] || [];
+    const updatedLastUsed = protocolLastUsed.filter((u) => u !== urlToRemove);
 
     const newSettings = {
       ...settings,
       signaling: {
         ...settings.signaling,
-        h: {
-          ...settings.signaling.h,
-          [currentProtocol]: updatedHistory,
+        lu: {
+          ...settings.signaling.lu,
+          [currentProtocol]: updatedLastUsed,
         },
       },
     };
@@ -91,7 +91,7 @@ export const useSettings = () => {
       retainHistory,
       signaling: {
         ...settings.signaling,
-        h: retainHistory ? settings.signaling.h : {},
+        lu: retainHistory ? settings.signaling.lu : {},
       },
     };
 
@@ -228,7 +228,7 @@ export const useSettings = () => {
     settings,
     updateSignalingProtocol,
     updateSignalingServer,
-    removeServerFromHistory,
+    removeServerFromLastUsed,
     updateRetainHistory,
     updateAutoReconnect,
     updateThemePreference,

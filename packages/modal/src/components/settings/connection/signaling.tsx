@@ -1,9 +1,9 @@
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Input } from "../../../ui/Input.js";
+import { LastUsedServerBadges } from "../../../ui/LastUsedServerBadges.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
 import { MenuItem } from "../../../ui/menu/MenuItem.js";
 import { Select } from "../../../ui/Select.js";
-import { ServerHistoryBadges } from "../../../ui/ServerHistoryBadges.js";
 import { useTranslation } from "../../../utils/i18n.js";
 
 const AVAILABLE_PROTOCOLS = ["mqtt", "ntfy", "gun"];
@@ -14,7 +14,7 @@ export const SignalingSettings = () => {
     settings,
     updateSignalingProtocol,
     updateSignalingServer,
-    removeServerFromHistory,
+    removeServerFromLastUsed,
   } = useSettings();
 
   return (
@@ -40,13 +40,15 @@ export const SignalingSettings = () => {
             readOnly={false}
           />
         </MenuItem>
-        <ServerHistoryBadges
-          history={settings?.signaling.h?.[settings?.signaling?.p ?? ""] || []}
+        <LastUsedServerBadges
+          lastUsed={
+            settings?.signaling.lu?.[settings?.signaling?.p ?? ""] || []
+          }
           currentServer={
             settings?.signaling?.s?.[settings?.signaling?.p ?? ""] ?? ""
           }
           onSelect={(url) => updateSignalingServer(url)}
-          onDelete={(url) => removeServerFromHistory(url)}
+          onDelete={(url) => removeServerFromLastUsed(url)}
         />
       </MenuGroup>
       <div className="p-2 text-sm text-(--lv-text-secondary) text-start">

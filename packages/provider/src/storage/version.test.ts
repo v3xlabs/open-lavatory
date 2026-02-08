@@ -93,7 +93,7 @@ const testCases = {
             ntfy: "https://ntfy.sh",
             gun: "wss://try.axe.eco/gun",
           },
-          h: {
+          lu: {
             mqtt: [],
           },
         },
@@ -124,7 +124,7 @@ const testCases = {
           s: {
             mqtt: "wss://test.mosquitto.org:8081/mqtt",
           },
-          h: {
+          lu: {
             mqtt: [],
           },
         },

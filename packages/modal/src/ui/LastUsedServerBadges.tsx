@@ -4,20 +4,20 @@ const badgeStyles = tv({
   base: "inline-flex items-center rounded-md px-2 py-0.5 text-xs transition-all duration-100 cursor-pointer active:scale-95 border bg-(--lv-control-button-secondary-background) text-(--lv-control-button-secondary-color) border-(--lv-control-button-secondary-border,var(--lv-control-button-secondary-background)) hover:bg-(--lv-control-button-secondary-hoverBackground,var(--lv-control-button-secondary-background)) active:bg-(--lv-control-button-secondary-activeBackground,var(--lv-control-button-secondary-hoverBackground,var(--lv-control-button-secondary-background))) max-w-[200px] truncate",
 });
 
-export type ServerHistoryBadgesProps = {
-  history: string[];
+export type LastUsedServerBadgesProps = {
+  lastUsed: string[];
   currentServer: string;
   onSelect: (url: string) => void;
   onDelete?: (url: string) => void;
 };
 
-export const ServerHistoryBadges = ({
-  history,
+export const LastUsedServerBadges = ({
+  lastUsed,
   currentServer,
   onSelect,
   onDelete,
-}: ServerHistoryBadgesProps) => {
-  const filtered = history.filter((url) => url !== currentServer);
+}: LastUsedServerBadgesProps) => {
+  const filtered = lastUsed.filter((url) => url !== currentServer);
 
   if (filtered.length === 0) {
     return null;
@@ -43,7 +43,7 @@ export const ServerHistoryBadges = ({
                 e.stopPropagation();
                 onDelete(url);
               }}
-              aria-label="Remove from history"
+              aria-label="Remove from last used"
             >
               ×
             </button>

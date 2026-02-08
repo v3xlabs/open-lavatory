@@ -27,7 +27,7 @@ export type SignalingSettingsV1 = z.infer<typeof SignalingSettingsV1Schema>;
 export const SignalingSettingsV2Schema = z.object({
   p: z.string(),
   s: z.record(z.string(), z.string()),
-  h: z.record(z.string(), z.array(z.string()).max(3)).optional(),
+  lu: z.record(z.string(), z.array(z.string()).max(3)).optional(),
 });
 
 export type SignalingSettingsV2 = z.infer<typeof SignalingSettingsV2Schema>;
@@ -147,7 +147,7 @@ export const convertProviderStorageV2ToV3 = (
   settings: ProviderStorageV2,
 ): ProviderStorageV3 => {
   const currentProtocol = settings.signaling.p;
-  const h: Record<string, string[]> = {
+  const lu: Record<string, string[]> = {
     [currentProtocol]: [],
   };
 
@@ -157,7 +157,7 @@ export const convertProviderStorageV2ToV3 = (
     autoReconnect: settings.autoReconnect,
     signaling: {
       ...settings.signaling,
-      h,
+      lu,
     },
     language: settings.language,
     transport: undefined,

@@ -118,7 +118,7 @@ export const createProvider = (
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
-  let sessionSavedToHistory: Session | undefined;
+  let sessionAddedToLastUsed: Session | undefined;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -126,7 +126,7 @@ export const createProvider = (
     oxEmitter.emit("status_change", newStatus);
   };
 
-  const commitServerToHistory = (server: string) => {
+  const addToLastUsed = (server: string) => {
     const settings = storage.getSettings();
 
     if (!settings.retainHistory) return;
@@ -136,17 +136,17 @@ export const createProvider = (
 
     if (!url) return;
 
-    const protocolHistory = settings.signaling.h?.[currentProtocol] || [];
-    const filtered = protocolHistory.filter((u) => u !== url);
-    const updatedHistory = [url, ...filtered].slice(0, 3);
+    const protocolLastUsed = settings.signaling.lu?.[currentProtocol] || [];
+    const filtered = protocolLastUsed.filter((u) => u !== url);
+    const updatedLastUsed = [url, ...filtered].slice(0, 3);
 
     const newSettings = {
       ...settings,
       signaling: {
         ...settings.signaling,
-        h: {
-          ...settings.signaling.h,
-          [currentProtocol]: updatedHistory,
+        lu: {
+          ...settings.signaling.lu,
+          [currentProtocol]: updatedLastUsed,
         },
       },
     };
@@ -193,13 +193,13 @@ export const createProvider = (
       if (
         state?.status === "ready" &&
         session &&
-        sessionSavedToHistory !== session
+        sessionAddedToLastUsed !== session
       ) {
         const params = session.getHandshakeParameters();
 
         if (params?.s) {
-          commitServerToHistory(params.s);
-          sessionSavedToHistory = session;
+          addToLastUsed(params.s);
+          sessionAddedToLastUsed = session;
         }
       }
     });
@@ -234,7 +234,7 @@ export const createProvider = (
   const closeSession = async () => {
     await session?.close();
     session = undefined;
-    sessionSavedToHistory = undefined;
+    sessionAddedToLastUsed = undefined;
     updateStatus(PROVIDER_STATUS.STANDBY);
   };
 

@@ -1,4 +1,8 @@
-import type { ProviderStorage, TurnServer } from "@openlv/provider/storage";
+import type {
+  ProviderStorage,
+  TurnServer,
+  UserThemePreference,
+} from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -57,10 +61,41 @@ export const useSettings = () => {
     });
   };
 
+  const removeServerFromHistory = (urlToRemove: string) => {
+    if (!settings) return;
+
+    const currentProtocol = settings.signaling.p;
+    const protocolHistory = settings.signaling.h?.[currentProtocol] || [];
+    const updatedHistory = protocolHistory.filter((u) => u !== urlToRemove);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        h: {
+          ...settings.signaling.h,
+          [currentProtocol]: updatedHistory,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
   const updateRetainHistory = (retainHistory: boolean) => {
     if (!settings) return;
 
-    persistSettings({ ...settings, retainHistory });
+    const newSettings = {
+      ...settings,
+      retainHistory,
+      signaling: {
+        ...settings.signaling,
+        h: retainHistory ? settings.signaling.h : {},
+      },
+    };
+
+    persistSettings(newSettings);
   };
 
   const updateAutoReconnect = (autoReconnect: boolean) => {
@@ -193,6 +228,7 @@ export const useSettings = () => {
     settings,
     updateSignalingProtocol,
     updateSignalingServer,
+    removeServerFromHistory,
     updateRetainHistory,
     updateAutoReconnect,
     updateThemePreference,

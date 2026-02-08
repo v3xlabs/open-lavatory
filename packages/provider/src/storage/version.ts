@@ -24,7 +24,15 @@ export const SignalingSettingsV1Schema = z.object({
 
 export type SignalingSettingsV1 = z.infer<typeof SignalingSettingsV1Schema>;
 
-export type SignalingSettings = SignalingSettingsV1;
+export const SignalingSettingsV2Schema = z.object({
+  p: z.string(),
+  s: z.record(z.string(), z.string()),
+  h: z.record(z.string(), z.array(z.string()).max(3)).optional(),
+});
+
+export type SignalingSettingsV2 = z.infer<typeof SignalingSettingsV2Schema>;
+
+export type SignalingSettings = SignalingSettingsV2;
 
 export const UserThemePreferenceSchema = z.enum(["light", "dark", "system"]);
 export type UserThemePreference = z.infer<typeof UserThemePreferenceSchema>;
@@ -101,7 +109,7 @@ export const ProviderStorageV3Schema = z.object({
   version: z.literal(3),
   retainHistory: z.boolean(),
   autoReconnect: z.boolean(),
-  signaling: SignalingSettingsV1Schema.optional(),
+  signaling: SignalingSettingsV2Schema,
   language: z.string().optional(),
   transport: TransportSettingsSchema.optional(),
   theme: UserThemePreferenceSchema.optional(),
@@ -110,7 +118,6 @@ export const ProviderStorageV3Schema = z.object({
 export type ProviderStorageV3 = z.infer<typeof ProviderStorageV3Schema>;
 
 export type ProviderStorage = ProviderStorageV3;
-
 export const convertProviderStorageV0ToV1 = (
   settings: ProviderStorageV0,
 ): ProviderStorageV1 => {
@@ -139,17 +146,24 @@ export const convertProviderStorageV1ToV2 = (
 export const convertProviderStorageV2ToV3 = (
   settings: ProviderStorageV2,
 ): ProviderStorageV3 => {
+  const currentProtocol = settings.signaling.p;
+  const h: Record<string, string[]> = {
+    [currentProtocol]: [],
+  };
+
   return {
     version: 3,
     retainHistory: settings.retainHistory,
     autoReconnect: settings.autoReconnect,
-    signaling: settings.signaling,
+    signaling: {
+      ...settings.signaling,
+      h,
+    },
     language: settings.language,
     transport: undefined,
     theme: undefined,
   };
 };
-
 export const AnyStorage = z.discriminatedUnion("version", [
   ProviderStorageV0Schema.transform((v) => ({ version: 0, ...v })),
   ProviderStorageV1Schema,
@@ -177,7 +191,9 @@ export const migrateStorageToLatest = (
   }
 
   if (storage.version === 2) {
-    return convertProviderStorageV2ToV3(storage as ProviderStorageV2);
+    return migrateStorageToLatest(
+      convertProviderStorageV2ToV3(storage as ProviderStorageV2),
+    );
   }
 
   return storage as ProviderStorage;

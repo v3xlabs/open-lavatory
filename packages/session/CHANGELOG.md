@@ -1,5 +1,13 @@
 # @openlv/session
 
+## 0.0.1-beta.10
+
+### Patch Changes
+
+- 4f1eff0: Added transport & signaling configs to the connector
+- Updated dependencies [4f1eff0]
+  - @openlv/transport@0.0.1-beta.7
+
 ## 0.0.1-beta.9
 
 ### Patch Changes

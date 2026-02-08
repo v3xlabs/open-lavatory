@@ -1,5 +1,13 @@
 # @openlv/react-native
 
+## 0.0.1-beta.3
+
+### Patch Changes
+
+- 624017e: Upgrade get-random-values to version 2
+- Updated dependencies [4f1eff0]
+  - @openlv/session@0.0.1-beta.10
+
 ## 0.0.1-beta.2
 
 ### Patch Changes

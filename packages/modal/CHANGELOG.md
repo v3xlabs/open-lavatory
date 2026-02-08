@@ -1,5 +1,16 @@
 # @openlv/modal
 
+## 0.0.1-beta.10
+
+### Patch Changes
+
+- 4f1eff0: Added transport & signaling configs to the connector
+- 56eca76: Introduce user-configurable theme mode in the settings menu
+- Updated dependencies [4f1eff0]
+- Updated dependencies [56eca76]
+  - @openlv/provider@0.0.1-beta.10
+  - @openlv/session@0.0.1-beta.10
+
 ## 0.0.1-beta.9
 
 ### Patch Changes

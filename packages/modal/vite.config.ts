@@ -17,6 +17,7 @@ export default defineConfig({
       name: "OpenLVModal",
       entry: {
         index: "src/index.ts",
+        theme: "src/theme.ts",
       },
       formats: ["es", "cjs"],
       fileName: (format, entry) => `${entry}.${format}.js`,

@@ -61,6 +61,6 @@ export const parseNtfyUrl = (url: string): NtfyUrl => {
     host,
     protocol,
     credentials,
-    parameters,
+    parameters: parameters || undefined,
   };
 };

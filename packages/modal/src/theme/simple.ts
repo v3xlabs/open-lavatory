@@ -2,7 +2,9 @@ import type { ThemeTokensMap } from "./types.js";
 
 export const simpleTheme = {
   light: {
-    font: { family: "sans-serif" },
+    font: {
+      family: "inherit, sans-serif",
+    },
     body: {
       color: "#1E293B",
       background: "#FFFFFF",

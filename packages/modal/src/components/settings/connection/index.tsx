@@ -13,7 +13,7 @@ export const ConnectionPreferences = ({
   onNavigate: (screen: SettingsScreen) => void;
 }) => {
   const { t } = useTranslation();
-  const { settings, updateRetainHistory, updateAutoReconnect } = useSettings();
+  const { settings, updateRetainLastUsed, updateAutoReconnect } = useSettings();
 
   return (
     <MenuGroup title={t("settings.connectionPreferences.title")}>
@@ -45,9 +45,9 @@ export const ConnectionPreferences = ({
         [
           [
             t("settings.connectionPreferences.retainSessionHistory"),
-            "retainHistory",
-            settings?.retainHistory ?? false,
-            updateRetainHistory,
+            "retainLastUsed",
+            settings?.retainLastUsed ?? false,
+            updateRetainLastUsed,
           ],
           [
             t("settings.connectionPreferences.autoReconnect"),

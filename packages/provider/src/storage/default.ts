@@ -1,7 +1,7 @@
 import type { ProviderStorage } from "./version.js";
 
 export const DEFAULT_SETTINGS: ProviderStorage = {
-  version: 3,
+  version: 4,
   signaling: {
     p: "mqtt",
     s: {
@@ -9,9 +9,10 @@ export const DEFAULT_SETTINGS: ProviderStorage = {
       ntfy: "https://ntfy.sh",
       gun: "wss://try.axe.eco/gun",
     },
+    lu: {},
   },
   autoReconnect: false,
-  retainHistory: false,
+  retainLastUsed: true,
   language: undefined,
   transport: {
     p: "webrtc",

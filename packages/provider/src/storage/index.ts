@@ -2,14 +2,12 @@ import { EventEmitter } from "eventemitter3";
 
 import { DEFAULT_SETTINGS } from "./default.js";
 import { parseProviderStorage, type ProviderStorage } from "./version.js";
-
-const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
-
 export type {
   ProviderStorage,
   TurnServer,
   UserThemePreference,
 } from "./version.js";
+const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
 
 export type ProviderStorageParameters = {
   // Defaults to localStorage

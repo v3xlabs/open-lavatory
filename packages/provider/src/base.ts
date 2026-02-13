@@ -118,11 +118,40 @@ export const createProvider = (
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
+  let sessionAddedToLastUsed: Session | undefined;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
     log("updateStatus", status);
     oxEmitter.emit("status_change", newStatus);
+  };
+
+  const addToLastUsed = (server: string) => {
+    const settings = storage.getSettings();
+
+    if (!settings.retainLastUsed) return;
+
+    const currentProtocol = settings.signaling.p;
+    const url = server.trim();
+
+    if (!url) return;
+
+    const protocolLastUsed = settings.signaling.lu?.[currentProtocol] || [];
+    const filtered = protocolLastUsed.filter((u) => u !== url);
+    const updatedLastUsed = [url, ...filtered].slice(0, 3);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        lu: {
+          ...settings.signaling.lu,
+          [currentProtocol]: updatedLastUsed,
+        },
+      },
+    };
+
+    storage.setSettings(newSettings);
   };
 
   const onMessage = async (message: object) => {
@@ -159,6 +188,22 @@ export const createProvider = (
       webrtc(transportOptions),
       onMessage,
     );
+
+    session.emitter.on("state_change", (state?: SessionStateObject) => {
+      if (
+        state?.status === "ready" &&
+        session &&
+        sessionAddedToLastUsed !== session
+      ) {
+        const params = session.getHandshakeParameters();
+
+        if (params?.s) {
+          addToLastUsed(params.s);
+          sessionAddedToLastUsed = session;
+        }
+      }
+    });
+
     updateStatus(PROVIDER_STATUS.CONNECTING);
 
     log("session created");
@@ -189,6 +234,7 @@ export const createProvider = (
   const closeSession = async () => {
     await session?.close();
     session = undefined;
+    sessionAddedToLastUsed = undefined;
     updateStatus(PROVIDER_STATUS.STANDBY);
   };
 

@@ -1,4 +1,8 @@
-import type { ProviderStorage, TurnServer } from "@openlv/provider/storage";
+import type {
+  ProviderStorage,
+  TurnServer,
+  UserThemePreference,
+} from "@openlv/provider/storage";
 import { useState } from "preact/hooks";
 
 import type { LanguageTag } from "../utils/i18n.js";
@@ -57,10 +61,41 @@ export const useSettings = () => {
     });
   };
 
-  const updateRetainHistory = (retainHistory: boolean) => {
+  const removeServerFromLastUsed = (urlToRemove: string) => {
     if (!settings) return;
 
-    persistSettings({ ...settings, retainHistory });
+    const currentProtocol = settings.signaling.p;
+    const protocolLastUsed = settings.signaling.lu?.[currentProtocol] || [];
+    const updatedLastUsed = protocolLastUsed.filter((u) => u !== urlToRemove);
+
+    const newSettings = {
+      ...settings,
+      signaling: {
+        ...settings.signaling,
+        lu: {
+          ...settings.signaling.lu,
+          [currentProtocol]: updatedLastUsed,
+        },
+      },
+    };
+
+    setSettings(newSettings);
+    provider?.storage.setSettings(newSettings);
+  };
+
+  const updateRetainLastUsed = (retainLastUsed: boolean) => {
+    if (!settings) return;
+
+    const newSettings = {
+      ...settings,
+      retainLastUsed,
+      signaling: {
+        ...settings.signaling,
+        lu: retainLastUsed ? settings.signaling.lu : {},
+      },
+    };
+
+    persistSettings(newSettings);
   };
 
   const updateAutoReconnect = (autoReconnect: boolean) => {
@@ -193,7 +228,8 @@ export const useSettings = () => {
     settings,
     updateSignalingProtocol,
     updateSignalingServer,
-    updateRetainHistory,
+    removeServerFromLastUsed,
+    updateRetainLastUsed,
     updateAutoReconnect,
     updateThemePreference,
     updateLanguage,

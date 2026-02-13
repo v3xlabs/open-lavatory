@@ -11,4 +11,5 @@ export default defineConfig([
     ],
   },
   ...v3xlint.configs["recommended"],
+  ...v3xlint.configs["react"],
 ]);

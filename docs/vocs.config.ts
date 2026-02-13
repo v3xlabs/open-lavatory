@@ -1,3 +1,5 @@
+import { fileURLToPath } from "node:url";
+
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vocs";
 
@@ -157,5 +159,18 @@ export default defineConfig({
   basePath: process.env.DOCS_BASE_PATH || "/",
   vite: {
     plugins: [tailwindcss() as unknown as any],
+    ssr: {
+      noExternal: [
+        "@openlv/connector",
+        "@openlv/session",
+        "@openlv/transport",
+        "@openlv/modal",
+      ],
+    },
+    server: {
+      fs: {
+        allow: [fileURLToPath(new URL("..", import.meta.url))],
+      },
+    },
   },
 });

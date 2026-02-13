@@ -70,7 +70,6 @@ const useEscapeToClose = (handler: () => void) => {
 const useDynamicDialogHeight = () => {
   const contentRef = useRef<HTMLDivElement | null>(null);
   const [height, setHeight] = useState<number>(0);
-  const hasMeasuredRef = useRef(false);
 
   const measureHeight = useCallback(
     (targetElement?: HTMLElement | null, useScrollHeight = false) => {
@@ -83,13 +82,12 @@ const useDynamicDialogHeight = () => {
         : node.getBoundingClientRect().height;
 
       if (nextHeight > 0) {
-        setHeight(previousHeight =>
-          (typeof previousHeight === "number"
-            && Math.abs(previousHeight - nextHeight) < 0.5
+        setHeight((previousHeight) =>
+          typeof previousHeight === "number" &&
+          Math.abs(previousHeight - nextHeight) < 0.5
             ? previousHeight
-            : nextHeight),
+            : nextHeight,
         );
-        hasMeasuredRef.current = true;
       }
     },
     [],
@@ -125,7 +123,6 @@ const useDynamicDialogHeight = () => {
     contentRef,
     height,
     measureHeight,
-    setHeight,
   };
 };
 
@@ -199,8 +196,7 @@ const ModalRootInner = ({
           isInitialMountRef.current = false;
         }
       }, 0);
-    }
-    else {
+    } else {
       measureHeight();
     }
 
@@ -213,12 +209,12 @@ const ModalRootInner = ({
 
   // Manage overflow-hidden during height transitions
   useEffect(() => {
-    const isHeightChanging
-      = previousHeightRef.current !== undefined
-        && height !== previousHeightRef.current
-        && height > 0
-        && previousHeightRef.current > 0
-        && Math.abs(height - previousHeightRef.current) > 0.5;
+    const isHeightChanging =
+      previousHeightRef.current !== undefined &&
+      height !== previousHeightRef.current &&
+      height > 0 &&
+      previousHeightRef.current > 0 &&
+      Math.abs(height - previousHeightRef.current) > 0.5;
 
     if (isHeightChanging) {
       setShouldHideOverflow(true);
@@ -227,7 +223,6 @@ const ModalRootInner = ({
         globalThis.clearTimeout(overflowTimeoutRef.current);
       }
 
-      // Remove overflow-hidden after CSS transition completes (200ms)
       overflowTimeoutRef.current = globalThis.setTimeout(() => {
         setShouldHideOverflow(false);
         overflowTimeoutRef.current = undefined;
@@ -306,7 +301,7 @@ const ModalRootInner = ({
           <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
         ),
       )
-      .otherwise(state => <UnknownState state={state || "unknown status"} />);
+      .otherwise((state) => <UnknownState state={state || "unknown status"} />);
 
   log("view", modalView);
 
@@ -340,7 +335,7 @@ const ModalRootInner = ({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        onClick={event => event.stopPropagation()}
+        onClick={(event) => event.stopPropagation()}
         style={{
           ...(typeof height === "number" && height > 0
             ? { height: `${height}px` }

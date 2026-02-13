@@ -21,5 +21,5 @@ export type TransportLayerParameters = {
   encrypt: EncryptionKey["encrypt"];
   decrypt: DecryptionKey["decrypt"];
   subsend: (message: TransportMessage) => Promise<void>;
-  onmessage: (message: object) => void;
+  onmessage: (message: { type: string; payload: object; messageId: string; }) => void;
 };

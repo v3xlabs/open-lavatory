@@ -15,10 +15,10 @@ export interface UseNavigationStackReturn<T> {
   isAtRoot: boolean;
 }
 
-export function useNavigationStack<T>(
+export const useNavigationStack = <T>(
   initialScreen: T,
   { transitionDuration = 200 }: UseNavigationStackOptions = {},
-): UseNavigationStackReturn<T> {
+): UseNavigationStackReturn<T> => {
   const [screen, setScreen] = useState<T>(initialScreen);
   const { current, previous, isTransitioning } = usePunchTransition(screen, {
     duration: transitionDuration,
@@ -40,4 +40,4 @@ export function useNavigationStack<T>(
     goBack,
     isAtRoot: current === initialScreen,
   };
-}
+};

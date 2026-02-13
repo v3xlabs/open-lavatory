@@ -13,7 +13,7 @@ type ButtonProps = {
   style?: ViewStyle;
 };
 
-export function Button({
+export const Button = ({
   title,
   onPress,
   disabled,
@@ -22,32 +22,30 @@ export function Button({
   borderColor,
   textColor,
   style,
-}: ButtonProps) {
-  return (
-    <Pressable
-      onPress={onPress}
-      disabled={disabled}
-      style={({ pressed }) => [
-        styles.button,
-        variant === "secondary" ? styles.buttonSecondary : null,
-        backgroundColor ? { backgroundColor } : undefined,
-        borderColor ? { borderColor } : undefined,
-        disabled ? styles.buttonDisabled : null,
-        pressed && !disabled ? styles.buttonPressed : null,
-        style,
+}: ButtonProps) => (
+  <Pressable
+    onPress={onPress}
+    disabled={disabled}
+    style={({ pressed }) => [
+      styles.button,
+      variant === "secondary" ? styles.buttonSecondary : null,
+      backgroundColor ? { backgroundColor } : undefined,
+      borderColor ? { borderColor } : undefined,
+      disabled ? styles.buttonDisabled : null,
+      pressed && !disabled ? styles.buttonPressed : null,
+      style,
+    ]}
+  >
+    <ThemedText
+      style={[
+        styles.buttonText,
+        textColor ? { color: textColor } : undefined,
       ]}
     >
-      <ThemedText
-        style={[
-          styles.buttonText,
-          textColor ? { color: textColor } : undefined,
-        ]}
-      >
-        {title}
-      </ThemedText>
-    </Pressable>
-  );
-}
+      {title}
+    </ThemedText>
+  </Pressable>
+);
 
 const styles = StyleSheet.create({
   button: {

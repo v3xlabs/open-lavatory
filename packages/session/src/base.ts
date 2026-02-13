@@ -150,16 +150,13 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: object) => {
+    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
       console.log("Session: received message from transport", message);
 
-      // @ts-ignore
       if (message["type"] === "request") {
-        // @ts-ignore
         const data = await onMessage(message["payload"] as object);
         const response: SessionMessage = {
           type: "response",
-          // @ts-ignore
           messageId: message["messageId"] as string,
           payload: data,
         };
@@ -167,7 +164,6 @@ export const createSession = async (
         await transport.send(response);
       }
 
-      // @ts-ignore
       if (message["type"] === "response") {
         messages.emit("message", message);
       }

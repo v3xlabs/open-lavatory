@@ -13,16 +13,16 @@ type ScannerModalProps = {
   onScanned: (data: string) => void;
 };
 
-export function ScannerModal({
+export const ScannerModal = ({
   visible,
   onClose,
   onScanned,
-}: ScannerModalProps) {
+}: ScannerModalProps) => {
   const [cameraPermissionGranted, setCameraPermissionGranted]
-    = React.useState(false);
+        = React.useState(false);
   const [cameraError, setCameraError] = React.useState<string | null>(null);
   const [cameraModule, setCameraModule] = React.useState<
-    null | typeof import("expo-camera")
+        null | typeof import("expo-camera")
   >(null);
   const [scanned, setScanned] = React.useState(false);
 
@@ -48,7 +48,9 @@ export function ScannerModal({
     }
 
     try {
-      const mod = (await import("expo-camera")) as typeof import("expo-camera");
+      const mod = (await import(
+        "expo-camera",
+      )) as typeof import("expo-camera");
 
       setCameraModule(mod);
 
@@ -114,15 +116,21 @@ export function ScannerModal({
                     Scanner unavailable
                   </ThemedText>
                   <ThemedText
-                    style={[styles.scannerMessageBody, { color: mutedTextColor }]}
+                    style={[
+                      styles.scannerMessageBody,
+                      { color: mutedTextColor },
+                    ]}
                   >
                     {cameraError}
                   </ThemedText>
                   <ThemedText
-                    style={[styles.scannerMessageBody, { color: mutedTextColor }]}
+                    style={[
+                      styles.scannerMessageBody,
+                      { color: mutedTextColor },
+                    ]}
                   >
-                    If you’re using a custom dev client, rebuild it after installing
-                    expo-camera.
+                    If you’re using a custom dev client, rebuild it
+                    after installing expo-camera.
                   </ThemedText>
                 </View>
               )
@@ -130,7 +138,10 @@ export function ScannerModal({
                 ? (
                     <View style={styles.scannerMessage}>
                       <ThemedText
-                        style={[styles.scannerMessageBody, { color: mutedTextColor }]}
+                        style={[
+                          styles.scannerMessageBody,
+                          { color: mutedTextColor },
+                        ]}
                       >
                         Requesting camera…
                       </ThemedText>
@@ -144,20 +155,24 @@ export function ScannerModal({
                         <CameraViewComponent
                           style={styles.camera}
                           onBarcodeScanned={handleBarCodeScanned}
-                          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                          barcodeScannerSettings={{
+                            barcodeTypes: ["qr"],
+                          }}
                         />
                       );
                     })()
                   ))}
         </View>
 
-        <ThemedText style={[styles.scannerHint, { color: mutedTextColor }]}>
+        <ThemedText
+          style={[styles.scannerHint, { color: mutedTextColor }]}
+        >
           Point the camera at an openlv QR code.
         </ThemedText>
       </ThemedView>
     </Modal>
   );
-}
+};
 
 const styles = StyleSheet.create({
   scannerScreen: {

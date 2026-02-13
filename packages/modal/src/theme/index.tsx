@@ -38,9 +38,7 @@ type Leaf = Primitive; // extend if you want to allow Date, bigint, etc.
 
 type FlatCssVars = Record<`--${string}`, Leaf>;
 
-function isPlainObject(value: unknown): value is Record<string, unknown> {
-  return typeof value === "object" && value !== null && !Array.isArray(value);
-}
+const isPlainObject = (value: unknown): value is Record<string, unknown> => typeof value === "object" && value !== null && !Array.isArray(value);
 
 export const flattenToCssVars = <T extends Record<string, unknown>>(
   obj: T,
@@ -89,7 +87,7 @@ const deepMerge = (
     const overlayValue = overlay[key];
 
     result[key]
-      = isPlainObject(baseValue) && isPlainObject(overlayValue)
+            = isPlainObject(baseValue) && isPlainObject(overlayValue)
         ? deepMerge(baseValue, overlayValue)
         : overlayValue;
   }

@@ -38,7 +38,7 @@ export class OpenLVModalElement
   }
 
   disconnectedCallback() {
-    render(null, this.shadow);
+    render(undefined, this.shadow);
     this.themeCleanup?.();
   }
 

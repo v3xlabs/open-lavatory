@@ -152,7 +152,7 @@ const interpolate = (
 };
 
 export const resolveTranslation = (parameters: {
-  primary: Translations | null;
+  primary: Translations | undefined;
   fallback: Translations;
   key: string;
   params?: Readonly<Record<string, string | number>>;
@@ -180,15 +180,16 @@ export type TranslationContextValue = {
   t: Translate;
 };
 
-export const TranslationContext = createContext<TranslationContextValue | null>(
-  null,
+export const TranslationContext = createContext<TranslationContextValue | undefined>(
+  undefined,
 );
 
 const loadLanguagePack = async (
   languageTag: LanguageTag,
-): Promise<Translations | null> =>
+): Promise<Translations | undefined> =>
   match(languageTag)
-    .with("en", () => Promise.resolve(null))
+
+    .with("en", () => Promise.resolve(undefined))
     .with("nl", async () => import("../../lang/nl.json").then(m => m.default))
     .with("es", async () => import("../../lang/es.json").then(m => m.default))
     .with("sv", async () => import("../../lang/sv.json").then(m => m.default))
@@ -212,7 +213,7 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
 }) => {
   const [languageTag, setLanguageTag]
     = useState<LanguageTag>(initialLanguageTag);
-  const [languagePack, setLanguagePack] = useState<Translations | null>(null);
+  const [languagePack, setLanguagePack] = useState<Translations | undefined>(undefined);
   const [isLoadingLanguagePack, setIsLoadingLanguagePack] = useState(false);
 
   useEffect(() => {

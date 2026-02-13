@@ -2,10 +2,10 @@ import { connectSession, type Session } from "@openlv/react-native";
 import * as React from "react";
 
 const DUMMY_ADDRESS
-  = "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
+    = "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
 const DUMMY_SIGNATURE = `0x${"11".repeat(65)}` as const;
 
-export function useWalletSession() {
+export const useWalletSession = () => {
   const [connectionUrl, setConnectionUrl] = React.useState<string>("");
   const [status, setStatus] = React.useState<string>("idle");
   const [logLines, setLogLines] = React.useState<string[]>([]);
@@ -28,7 +28,10 @@ export function useWalletSession() {
         connectionUrl.trim(),
         async (message) => {
           appendLog(`RPC <= ${JSON.stringify(message)}`);
-          const req = message as { method?: string; params?: unknown; };
+          const req = message as {
+            method?: string;
+            params?: unknown;
+          };
 
           if (
             req.method === "eth_accounts"
@@ -95,4 +98,4 @@ export function useWalletSession() {
     startSession,
     closeSession,
   };
-}
+};

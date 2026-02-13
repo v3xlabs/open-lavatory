@@ -60,7 +60,7 @@ importers:
         specifier: ^5.83.0
         version: 5.90.19(react@19.1.0)
       mqtt:
-        specifier: ^5.14.1
+        specifier: ^5
         version: 5.14.1(bufferutil@4.0.9)(utf-8-validate@5.0.10)
       react:
         specifier: 19.1.0

@@ -3,7 +3,9 @@ import packageJson from "../../package.json" with { type: "json" };
 const version = `openlv@${packageJson.version}`;
 
 type ErrorConfig = {
-  getDocsUrl?: ((args: BaseErrorParameters) => string | undefined) | undefined;
+  getDocsUrl?:
+        | ((args: BaseErrorParameters) => string | undefined)
+        | undefined;
   version?: string | undefined;
 };
 
@@ -20,9 +22,9 @@ let errorConfig: ErrorConfig = {
   version,
 };
 
-export function setErrorConfig(config: ErrorConfig) {
+export const setErrorConfig = (config: ErrorConfig) => {
   errorConfig = config;
-}
+};
 
 type BaseErrorParameters = {
   cause?: BaseError | Error | undefined;
@@ -81,15 +83,15 @@ export class BaseError extends Error {
 
   walk(): Error;
   walk(fn: (err: unknown) => boolean): Error | null;
-  walk(fn?: any): any {
-    return walk(this, fn);
+  walk(fn?: (err: unknown) => boolean): Error | null {
+    return walk(this, fn) as Error | null;
   }
 }
 
-function walk(
+const walk = (
   err: unknown,
   fn?: ((err: unknown) => boolean) | undefined,
-): unknown {
+): unknown => {
   if (fn?.(err)) return err;
 
   if (
@@ -101,4 +103,4 @@ function walk(
     return walk(err.cause, fn);
 
   return fn ? null : err;
-}
+};

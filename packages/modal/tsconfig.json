@@ -5,7 +5,7 @@
     "rootDir": "src",
     "jsx": "react-jsx",
     "jsxImportSource": "preact",
-    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "lib": ["ES2021", "DOM", "DOM.Iterable"],
     "declarationDir": "dist",
     "module": "NodeNext",
     "declaration": true,

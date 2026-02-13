@@ -92,7 +92,7 @@ export const createTransportBase = (init: TransportLayerBaseInit): TLayer => ({ 
     console.log("onMessage", message);
     const data = await decrypt(message);
 
-    onmessage(JSON.parse(data) as object);
+    onmessage(JSON.parse(data) as { type: string; payload: object; messageId: string; });
   });
 
   const {

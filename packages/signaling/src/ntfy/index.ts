@@ -33,7 +33,7 @@ export type NtfyMessage = {
  * https://openlv.sh/api/signaling/ntfy
  */
 export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
-  let connection: WebSocket | null = null;
+  let connection: WebSocket | undefined;
   const connectionInfo = parseNtfyUrl(url);
   const wsProtocol = match(connectionInfo.protocol)
     .with("https", () => "wss")
@@ -59,13 +59,13 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       connection = new WebSocket(wsUrl);
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      connection.onerror = (_event) => {};
+      connection?.addEventListener("error", (_event) => {});
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       connection.addEventListener("close", (_event) => {});
 
       const awaitOpenConfirm = new Promise<void>((resolve) => {
-        connection!.onmessage = (event) => {
+        connection!.addEventListener("message", (event) => {
           log("NTFY: Received message:", event.data);
           const data = JSON.parse(event.data) as NtfyMessage;
 
@@ -75,7 +75,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
           else if (data.event === "message") {
             events.emit("message", data.message);
           }
-        };
+        });
       });
 
       const awaitOpen = new Promise<void>((resolve) => {
@@ -95,7 +95,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       const headers = { "Content-Type": "application/json" } as HeadersInit;
 
       // TODO: Add response handling
-      // @ts-expect-error
+      // @ts-expect-error - TODO: Add response handling
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
       const _response = await fetch(
         `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`,

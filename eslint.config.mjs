@@ -12,4 +12,9 @@ export default defineConfig([
   },
   ...v3xlint.configs["recommended"],
   ...v3xlint.configs["react"],
+  {
+    rules: {
+      "unicorn/no-useless-undefined": "off",
+    },
+  },
 ]);

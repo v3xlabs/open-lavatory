@@ -20,7 +20,7 @@ type SessionCardProps = {
   onClose: () => void;
 };
 
-export function SessionCard({
+export const SessionCard = ({
   connectionUrl,
   setConnectionUrl,
   onScanPress,
@@ -29,7 +29,7 @@ export function SessionCard({
   logLines,
   onConnect,
   onClose,
-}: SessionCardProps) {
+}: SessionCardProps) => {
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
   const surfaceColor = useThemeColor({}, "surface");
@@ -78,7 +78,11 @@ export function SessionCard({
             pressed ? styles.buttonPressed : null,
           ]}
         >
-          <Ionicons name="qr-code-outline" size={20} color={tintColor} />
+          <Ionicons
+            name="qr-code-outline"
+            size={20}
+            color={tintColor}
+          />
         </Pressable>
       </View>
 
@@ -113,11 +117,16 @@ export function SessionCard({
         Log
       </ThemedText>
       <View
-        style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}
+        style={[
+          styles.logBox,
+          { borderColor, backgroundColor: surfaceColor },
+        ]}
       >
         {logLines.length === 0
           ? (
-              <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>
+              <ThemedText
+                style={[styles.logLine, { color: mutedTextColor }]}
+              >
                 No logs yet.
               </ThemedText>
             )
@@ -131,7 +140,7 @@ export function SessionCard({
       </View>
     </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {

@@ -15,7 +15,7 @@ export default defineContentScript({
   },
 });
 
-function shouldInjectProvider(): boolean {
+const shouldInjectProvider = (): boolean => {
   // Don't inject on extension pages
   if (
     globalThis.location.protocol === "chrome-extension:"
@@ -30,9 +30,9 @@ function shouldInjectProvider(): boolean {
   }
 
   return true;
-}
+};
 
-function injectOpenLVProvider() {
+const injectOpenLVProvider = () => {
   // Create script element to inject the provider
   const script = document.createElement("script");
 
@@ -48,20 +48,31 @@ function injectOpenLVProvider() {
 
   // Set up communication bridge between injected script and extension
   setupCommunicationBridge();
-}
+};
 
-function setupCommunicationBridge() {
+type ProviderMessage = {
+  source?: string;
+  type?: string;
+  data?: unknown;
+  requestId?: string | number;
+};
+
+type TypedDataPayload = {
+  params: unknown[];
+};
+
+const setupCommunicationBridge = () => {
   // Listen for messages from the injected provider
   window.addEventListener("message", async (event) => {
     // Only accept messages from same origin
     if (event.source !== globalThis) return;
 
-    const message = event.data;
+    const message = event.data as ProviderMessage;
 
     if (!message || message.source !== "openlv-provider") return;
 
     try {
-      let response: any;
+      let response: unknown;
 
       switch (message.type) {
         case "eth_requestAccounts": {
@@ -92,7 +103,10 @@ function setupCommunicationBridge() {
         case "eth_signTypedData":
         case "eth_signTypedData_v3":
         case "eth_signTypedData_v4": {
-          response = await handleSignTypedData(message.type, message.data);
+          response = await handleSignTypedData(
+            message.type,
+            message.data,
+          );
           break;
         }
 
@@ -122,7 +136,10 @@ function setupCommunicationBridge() {
         }
 
         default: {
-          response = { success: false, error: "Unknown message type" };
+          response = {
+            success: false,
+            error: "Unknown message type",
+          };
         }
       }
 
@@ -144,7 +161,10 @@ function setupCommunicationBridge() {
           requestId: message.requestId,
           response: {
             success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+            error:
+                            error instanceof Error
+                              ? error.message
+                              : "Unknown error",
           },
         },
         "*",
@@ -157,9 +177,12 @@ function setupCommunicationBridge() {
     // Forward relevant messages to injected provider
     if (
       message.type
-      && ["accountsChanged", "chainChanged", "connect", "disconnect"].includes(
-        message.type,
-      )
+      && [
+        "accountsChanged",
+        "chainChanged",
+        "connect",
+        "disconnect",
+      ].includes(message.type)
     ) {
       window.postMessage(
         {
@@ -171,11 +194,11 @@ function setupCommunicationBridge() {
       );
     }
   });
-}
+};
 
 // Handler functions for EIP-1193 methods
 
-async function handleRequestAccounts() {
+const handleRequestAccounts = async () => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_requestAccounts",
@@ -191,12 +214,17 @@ async function handleRequestAccounts() {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to request accounts",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to request accounts",
     };
   }
-}
+};
 
-async function handleGetBalance(data: { address: string; blockTag: string; }) {
+const handleGetBalance = async (data: {
+  address: string;
+  blockTag: string;
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_getBalance",
@@ -211,12 +239,17 @@ async function handleGetBalance(data: { address: string; blockTag: string; }) {
   catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to get balance",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to get balance",
     };
   }
-}
+};
 
-async function handleSendTransaction(data: { transaction: any; }) {
+const handleSendTransaction = async (data: {
+  transaction: Record<string, unknown>;
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_sendTransaction",
@@ -232,12 +265,17 @@ async function handleSendTransaction(data: { transaction: any; }) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to send transaction",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to send transaction",
     };
   }
-}
+};
 
-async function handlePersonalSign(data: { message: string; address: string; }) {
+const handlePersonalSign = async (data: {
+  message: string;
+  address: string;
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "personal_sign",
@@ -252,12 +290,15 @@ async function handlePersonalSign(data: { message: string; address: string; }) {
   catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to sign message",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to sign message",
     };
   }
-}
+};
 
-async function handleEthSign(data: { address: string; message: string; }) {
+const handleEthSign = async (data: { address: string; message: string; }) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_sign",
@@ -272,12 +313,15 @@ async function handleEthSign(data: { address: string; message: string; }) {
   catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to sign message",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to sign message",
     };
   }
-}
+};
 
-async function handleSignTypedData(method: string, data: { params: any[]; }) {
+const handleSignTypedData = async (method: string, data: TypedDataPayload) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: method,
@@ -293,12 +337,14 @@ async function handleSignTypedData(method: string, data: { params: any[]; }) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to sign typed data",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to sign typed data",
     };
   }
-}
+};
 
-async function handleSwitchChain(data: { chainId?: string; }) {
+const handleSwitchChain = async (data: { chainId?: string; }) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_switchEthereumChain",
@@ -313,12 +359,15 @@ async function handleSwitchChain(data: { chainId?: string; }) {
   catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to switch chain",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to switch chain",
     };
   }
-}
+};
 
-async function handleAddChain(data: any) {
+const handleAddChain = async (data: Record<string, unknown>) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_addEthereumChain",
@@ -333,12 +382,13 @@ async function handleAddChain(data: any) {
   catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add chain",
+      error:
+                error instanceof Error ? error.message : "Failed to add chain",
     };
   }
-}
+};
 
-async function handleGetPermissions() {
+const handleGetPermissions = async () => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_getPermissions",
@@ -354,12 +404,14 @@ async function handleGetPermissions() {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to get permissions",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to get permissions",
     };
   }
-}
+};
 
-async function handleRequestPermissions(data: { permissions: any; }) {
+const handleRequestPermissions = async (data: { permissions: unknown; }) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_requestPermissions",
@@ -375,14 +427,17 @@ async function handleRequestPermissions(data: { permissions: any; }) {
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to request permissions",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to request permissions",
     };
   }
-}
+};
 
-async function handleForwardRequest(data: { method: string; params: any[]; }) {
+const handleForwardRequest = async (data: {
+  method: string;
+  params: unknown[];
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "forward_request",
@@ -398,16 +453,17 @@ async function handleForwardRequest(data: { method: string; params: any[]; }) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to forward request",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to forward request",
     };
   }
-}
+};
 
-async function getCurrentTabId(): Promise<number> {
-  return new Promise((resolve) => {
+const getCurrentTabId = async (): Promise<number> =>
+  new Promise((resolve) => {
     browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       // eslint-disable-next-line no-restricted-syntax
       resolve(tabs[0]?.id || 0);
     });
   });
-}

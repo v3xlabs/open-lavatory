@@ -8,7 +8,9 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
       return true;
     }
   }
-  catch {}
+  catch (error) {
+    console.error("Failed to copy to clipboard", error);
+  }
 
   try {
     const textArea = document.createElement("textarea");

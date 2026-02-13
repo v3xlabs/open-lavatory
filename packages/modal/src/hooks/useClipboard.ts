@@ -7,7 +7,8 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
 
       return true;
     }
-  } catch (_error) {}
+  }
+  catch {}
 
   try {
     const textArea = document.createElement("textarea");
@@ -16,15 +17,16 @@ export const copyToClipboard = async (text: string): Promise<boolean> => {
     textArea.style.position = "fixed";
     textArea.style.left = "-999999px";
     textArea.style.top = "-999999px";
-    document.body.appendChild(textArea);
+    document.body.append(textArea);
     textArea.focus();
     textArea.select();
     const result = document.execCommand("copy");
 
-    document.body.removeChild(textArea);
+    textArea.remove();
 
     return result;
-  } catch (_fallbackError) {
+  }
+  catch {
     return false;
   }
 };

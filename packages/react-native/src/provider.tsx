@@ -19,7 +19,7 @@ const getGlobal = () => globalThis as unknown as Record<string, unknown>;
 export const OpenLVGlobals = ({
   cryptoTimeoutMs,
 }: OpenLVGlobalsProps = {}): React.ReactElement => {
-  const [error, setError] = React.useState<unknown>(undefined);
+  const [error, setError] = React.useState<unknown>();
 
   React.useEffect(() => {
     try {
@@ -32,8 +32,9 @@ export const OpenLVGlobals = ({
 
         installOpenLVReactNativePolyfills();
       }
-    } catch (e) {
-      setError(e);
+    }
+    catch (error_) {
+      setError(error_);
     }
   }, []);
 
@@ -49,8 +50,9 @@ export const OpenLVGlobals = ({
         const g = getGlobal();
 
         g.__openlvRnCryptoReady = true;
-      } catch (e) {
-        if (!cancelled) setError(e);
+      }
+      catch (error_) {
+        if (!cancelled) setError(error_);
       }
     })();
 

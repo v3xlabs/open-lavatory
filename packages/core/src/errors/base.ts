@@ -34,7 +34,7 @@ type BaseErrorParameters = {
   name?: string | undefined;
 };
 
-export type BaseErrorType = BaseError & { name: "BaseError" };
+export type BaseErrorType = BaseError & { name: "BaseError"; };
 export class BaseError extends Error {
   details: string;
   docsPath?: string | undefined;
@@ -93,10 +93,10 @@ function walk(
   if (fn?.(err)) return err;
 
   if (
-    err &&
-    typeof err === "object" &&
-    "cause" in err &&
-    err.cause !== undefined
+    err
+    && typeof err === "object"
+    && "cause" in err
+    && err.cause !== undefined
   )
     return walk(err.cause, fn);
 

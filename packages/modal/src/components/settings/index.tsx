@@ -22,12 +22,15 @@ export interface ModalSettingsProps {
 
 const getSettingsTitleKey = (screen: SettingsScreen): string => {
   switch (screen) {
-    case "main":
+    case "main": {
       return "settings.title";
-    case "signaling":
+    }
+    case "signaling": {
       return "settings.signaling.title";
-    case "transport":
+    }
+    case "transport": {
       return "settings.transport.title";
+    }
   }
 };
 
@@ -62,17 +65,20 @@ export const ModalSettings: FC<ModalSettingsProps> = ({
 
   const renderScreen = (s: SettingsScreen) => {
     switch (s) {
-      case "main":
+      case "main": {
         return (
           <>
             <ConnectionPreferences onNavigate={navigate} />
             <LanguageSettings />
           </>
         );
-      case "signaling":
+      }
+      case "signaling": {
         return <SignalingSettings />;
-      case "transport":
+      }
+      case "transport": {
         return <TransportSettings />;
+      }
     }
   };
 

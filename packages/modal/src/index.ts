@@ -3,7 +3,7 @@
 /** biome-ignore-all lint/suspicious/noConsole: temp */
 
 export { ModalRoot } from "./components/ModalRoot.js";
-export { OpenLVModalElement, type OpenLVModalElementProps } from "./element.js";
+export { default, OpenLVModalElement, type OpenLVModalElementProps } from "./element.js";
 export { useConnectionState } from "./hooks/useConnectionState.js";
 export type { ThemeConfig } from "./theme/index.js";
 
@@ -14,11 +14,11 @@ import { log } from "./utils/log.js";
 export { OPENLV_ICON_128 } from "./assets/logo.js";
 
 export const registerOpenLVModal = (tagName = "openlv-modal") => {
-  if (typeof window === "undefined") {
+  if (globalThis.window === undefined) {
     return tagName;
   }
 
-  const registry = window.customElements;
+  const registry = globalThis.customElements;
 
   if (!registry) {
     console.warn(
@@ -38,9 +38,6 @@ export const registerOpenLVModal = (tagName = "openlv-modal") => {
   return tagName;
 };
 
-// eslint-disable-next-line import/no-default-export
-export default OpenLVModalElementDefault;
-
 export const triggerOpenModal = (props: OpenLVModalElementProps) => {
   const modal = document.querySelector("openlv-modal");
 
@@ -58,7 +55,7 @@ export const triggerOpenModal = (props: OpenLVModalElementProps) => {
       theme: props.theme,
     });
 
-    document.body.appendChild(x);
+    document.body.append(x);
     x.showModal();
   }
 };

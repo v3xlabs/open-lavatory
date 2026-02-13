@@ -6,7 +6,7 @@ import { Button } from "../../ui/Button.js";
 import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
-export const Disconnected: FC<{ onSettings: () => void }> = ({
+export const Disconnected: FC<{ onSettings: () => void; }> = ({
   onSettings,
 }) => {
   const { t } = useTranslation();

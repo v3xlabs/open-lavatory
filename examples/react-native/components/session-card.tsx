@@ -104,7 +104,9 @@ export function SessionCard({
       </View>
 
       <ThemedText style={[styles.status, { color: mutedTextColor }]}>
-        Status: <ThemedText type="defaultSemiBold">{status}</ThemedText>
+        Status:
+        {" "}
+        <ThemedText type="defaultSemiBold">{status}</ThemedText>
       </ThemedText>
 
       <ThemedText type="defaultSemiBold" style={styles.logTitle}>
@@ -113,17 +115,19 @@ export function SessionCard({
       <View
         style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}
       >
-        {logLines.length === 0 ? (
-          <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>
-            No logs yet.
-          </ThemedText>
-        ) : (
-          logLines.map((l, i) => (
-            <ThemedText key={`${i}-${l}`} style={styles.logLine}>
-              {l}
-            </ThemedText>
-          ))
-        )}
+        {logLines.length === 0
+          ? (
+              <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>
+                No logs yet.
+              </ThemedText>
+            )
+          : (
+              logLines.map((l, i) => (
+                <ThemedText key={`${i}-${l}`} style={styles.logLine}>
+                  {l}
+                </ThemedText>
+              ))
+            )}
       </View>
     </ThemedView>
   );

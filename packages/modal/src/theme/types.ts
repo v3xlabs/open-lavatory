@@ -1,10 +1,8 @@
-import type { UserThemePreference } from "@openlv/provider/storage";
 
 /** Developer-controlled theme mode */
 export type ThemeMode = "auto" | "light" | "dark";
 
 /** User's theme preference (only used when ThemeMode is "auto") */
-export type { UserThemePreference };
 
 type DeepPartial<T> = { [K in keyof T]?: DeepPartial<T[K]> };
 
@@ -91,7 +89,7 @@ export type ThemeTokensMap = {
   common?: OpenLVTheme;
   light?: OpenLVTheme;
   dark?: OpenLVTheme;
-} & ({ light: OpenLVTheme } | { dark: OpenLVTheme });
+} & ({ light: OpenLVTheme; } | { dark: OpenLVTheme; });
 
 export type PredefinedThemeName = "simple" | "openlv";
 export type ThemeConfig<T extends ThemeTokensMap = ThemeTokensMap> = {
@@ -99,3 +97,5 @@ export type ThemeConfig<T extends ThemeTokensMap = ThemeTokensMap> = {
   /** Theme mode. Defaults to "auto" if not specified. */
   mode?: ThemeMode;
 };
+
+export { type UserThemePreference } from "@openlv/provider/storage";

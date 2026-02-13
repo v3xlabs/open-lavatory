@@ -18,8 +18,8 @@ export function ScannerModal({
   onClose,
   onScanned,
 }: ScannerModalProps) {
-  const [cameraPermissionGranted, setCameraPermissionGranted] =
-    React.useState(false);
+  const [cameraPermissionGranted, setCameraPermissionGranted]
+    = React.useState(false);
   const [cameraError, setCameraError] = React.useState<string | null>(null);
   const [cameraModule, setCameraModule] = React.useState<
     null | typeof import("expo-camera")
@@ -62,8 +62,9 @@ export function ScannerModal({
       }
 
       setCameraPermissionGranted(true);
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+    }
+    catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
 
       setCameraPermissionGranted(false);
       setCameraError(msg);
@@ -106,44 +107,48 @@ export function ScannerModal({
         </View>
 
         <View style={[styles.scannerFrame, { borderColor }]}>
-          {cameraError ? (
-            <View style={styles.scannerMessage}>
-              <ThemedText type="defaultSemiBold">
-                Scanner unavailable
-              </ThemedText>
-              <ThemedText
-                style={[styles.scannerMessageBody, { color: mutedTextColor }]}
-              >
-                {cameraError}
-              </ThemedText>
-              <ThemedText
-                style={[styles.scannerMessageBody, { color: mutedTextColor }]}
-              >
-                If you’re using a custom dev client, rebuild it after installing
-                expo-camera.
-              </ThemedText>
-            </View>
-          ) : !cameraModule || !cameraPermissionGranted ? (
-            <View style={styles.scannerMessage}>
-              <ThemedText
-                style={[styles.scannerMessageBody, { color: mutedTextColor }]}
-              >
-                Requesting camera…
-              </ThemedText>
-            </View>
-          ) : (
-            (() => {
-              const CameraViewComponent = cameraModule.CameraView;
+          {cameraError
+            ? (
+                <View style={styles.scannerMessage}>
+                  <ThemedText type="defaultSemiBold">
+                    Scanner unavailable
+                  </ThemedText>
+                  <ThemedText
+                    style={[styles.scannerMessageBody, { color: mutedTextColor }]}
+                  >
+                    {cameraError}
+                  </ThemedText>
+                  <ThemedText
+                    style={[styles.scannerMessageBody, { color: mutedTextColor }]}
+                  >
+                    If you’re using a custom dev client, rebuild it after installing
+                    expo-camera.
+                  </ThemedText>
+                </View>
+              )
+            : (!cameraModule || !cameraPermissionGranted
+                ? (
+                    <View style={styles.scannerMessage}>
+                      <ThemedText
+                        style={[styles.scannerMessageBody, { color: mutedTextColor }]}
+                      >
+                        Requesting camera…
+                      </ThemedText>
+                    </View>
+                  )
+                : (
+                    (() => {
+                      const CameraViewComponent = cameraModule.CameraView;
 
-              return (
-                <CameraViewComponent
-                  style={styles.camera}
-                  onBarcodeScanned={handleBarCodeScanned}
-                  barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-                />
-              );
-            })()
-          )}
+                      return (
+                        <CameraViewComponent
+                          style={styles.camera}
+                          onBarcodeScanned={handleBarCodeScanned}
+                          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+                        />
+                      );
+                    })()
+                  ))}
         </View>
 
         <ThemedText style={[styles.scannerHint, { color: mutedTextColor }]}>

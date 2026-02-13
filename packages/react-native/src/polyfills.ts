@@ -45,17 +45,17 @@ const restoreUnifiedCrypto = () => {
   const backupGetRandomValues = g[CRYPTO_GRV_BACKUP_KEY];
 
   if (
-    typeof targetCrypto.getRandomValues !== "function" &&
-    typeof backupGetRandomValues === "function"
+    typeof targetCrypto.getRandomValues !== "function"
+    && typeof backupGetRandomValues === "function"
   ) {
     targetCrypto.getRandomValues = backupGetRandomValues;
   }
 
   // If WebCrypto landed on window.crypto, copy `subtle` onto global crypto.
   if (
-    typeof targetCrypto.subtle === "undefined" &&
-    windowCrypto &&
-    typeof windowCrypto.subtle !== "undefined"
+    targetCrypto.subtle === undefined
+    && windowCrypto
+    && windowCrypto.subtle !== undefined
   ) {
     targetCrypto.subtle = windowCrypto.subtle;
   }
@@ -64,7 +64,7 @@ const restoreUnifiedCrypto = () => {
 const hasWebCryptoSubtle = (): boolean => {
   const crypto = getCrypto();
 
-  return !!crypto && typeof crypto.subtle !== "undefined";
+  return !!crypto && crypto.subtle !== undefined;
 };
 
 const hasGetRandomValues = (): boolean => {
@@ -76,11 +76,11 @@ const hasGetRandomValues = (): boolean => {
 const ensureAtobBtoa = () => {
   const g = getGlobal();
 
-  if (typeof g.btoa === "undefined") {
+  if (g.btoa === undefined) {
     g.btoa = (input: string) => base64Encode(input);
   }
 
-  if (typeof g.atob === "undefined") {
+  if (g.atob === undefined) {
     g.atob = (input: string) => base64Decode(input);
   }
 };
@@ -95,7 +95,7 @@ const ensureCryptoRandomUUID = () => {
   if (typeof crypto.randomUUID === "function") return;
 
   if (typeof crypto.getRandomValues !== "function") {
-    throw new Error(
+    throw new TypeError(
       "@openlv/react-native: crypto.getRandomValues is missing. Add <OpenLVGlobals /> from '@openlv/react-native' somewhere in your app.",
     );
   }
@@ -106,22 +106,22 @@ const ensureCryptoRandomUUID = () => {
     (crypto.getRandomValues as (a: Uint8Array) => Uint8Array)(bytes);
 
     // RFC 4122 v4
-    bytes[6] = (bytes[6] & 0x0f) | 0x40;
-    bytes[8] = (bytes[8] & 0x3f) | 0x80;
+    bytes[6] = (bytes[6] & 0x0F) | 0x40;
+    bytes[8] = (bytes[8] & 0x3F) | 0x80;
 
     const toHex = (b: number) => b.toString(16).padStart(2, "0");
     const hex = Array.from(bytes, toHex);
 
     return (
-      hex.slice(0, 4).join("") +
-      "-" +
-      hex.slice(4, 6).join("") +
-      "-" +
-      hex.slice(6, 8).join("") +
-      "-" +
-      hex.slice(8, 10).join("") +
-      "-" +
-      hex.slice(10, 16).join("")
+      hex.slice(0, 4).join("")
+      + "-"
+      + hex.slice(4, 6).join("")
+      + "-"
+      + hex.slice(6, 8).join("")
+      + "-"
+      + hex.slice(8, 10).join("")
+      + "-"
+      + hex.slice(10, 16).join("")
     );
   };
 };
@@ -129,17 +129,17 @@ const ensureCryptoRandomUUID = () => {
 const ensureMinimumGlobalsForSession = () => {
   const g = getGlobal();
 
-  if (typeof g.URL === "undefined") {
-    throw new Error(
+  if (g.URL === undefined) {
+    throw new TypeError(
       "@openlv/react-native: global URL is missing. Install a URL polyfill (e.g. 'react-native-url-polyfill') or use an environment that provides URL.",
     );
   }
 
   if (
-    typeof g.TextEncoder === "undefined" ||
-    typeof g.TextDecoder === "undefined"
+    g.TextEncoder === undefined
+    || g.TextDecoder === undefined
   ) {
-    throw new Error(
+    throw new TypeError(
       "@openlv/react-native: TextEncoder/TextDecoder are missing. Use Hermes/modern RN, or add a polyfill (e.g. 'fast-text-encoding').",
     );
   }
@@ -152,9 +152,9 @@ const ensureMinimumGlobalsForSession = () => {
   const capturedCrypto = g.crypto as undefined | Record<string, unknown>;
 
   if (
-    typeof g[CRYPTO_GRV_BACKUP_KEY] !== "function" &&
-    capturedCrypto &&
-    typeof capturedCrypto.getRandomValues === "function"
+    typeof g[CRYPTO_GRV_BACKUP_KEY] !== "function"
+    && capturedCrypto
+    && typeof capturedCrypto.getRandomValues === "function"
   ) {
     g[CRYPTO_GRV_BACKUP_KEY] = capturedCrypto.getRandomValues;
   }
@@ -183,7 +183,7 @@ export const ensureWebCryptoSubtle = async (
   const start = Date.now();
 
   while (Date.now() - start < timeoutMs) {
-    await new Promise((r) => setTimeout(r, pollIntervalMs));
+    await new Promise(r => setTimeout(r, pollIntervalMs));
 
     if (hasWebCryptoSubtle()) {
       restoreUnifiedCrypto();
@@ -204,9 +204,7 @@ export const installOpenLVReactNativePolyfills = (): void => {
 
 export const OpenLVCryptoPolyfill = (
   props: Record<string, unknown> = {},
-): React.ReactElement => {
-  return React.createElement(
-    PolyfillCrypto as React.ComponentType<Record<string, unknown>>,
-    props,
-  );
-};
+): React.ReactElement => React.createElement(
+  PolyfillCrypto as React.ComponentType<Record<string, unknown>>,
+  props,
+);

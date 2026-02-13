@@ -17,21 +17,21 @@ export const usePunchTransition = <T>(
     if (Object.is(value, lastValueRef.current)) return;
 
     if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
+      globalThis.clearTimeout(timeoutRef.current);
     }
 
     setPrevious(lastValueRef.current);
     setCurrent(value);
     lastValueRef.current = value;
 
-    timeoutRef.current = window.setTimeout(() => {
+    timeoutRef.current = globalThis.setTimeout(() => {
       setPrevious(null);
       timeoutRef.current = undefined;
     }, duration);
 
     return () => {
       if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
+        globalThis.clearTimeout(timeoutRef.current);
       }
     };
   }, [value, duration]);

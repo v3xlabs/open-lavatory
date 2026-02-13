@@ -37,7 +37,7 @@ describe("Session", () => {
     expect(decodedUrl).toEqual(handshakeParametersA);
 
     //
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise(resolve => setTimeout(resolve, 1000));
 
     console.log("Connecting to session B");
 

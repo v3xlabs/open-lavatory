@@ -20,9 +20,7 @@ const createPassthrough = () => {
   const map = new Map<string, string>();
 
   return {
-    getItem: (key: string) => {
-      return map.get(key);
-    },
+    getItem: (key: string) => map.get(key),
     setItem: (key: string, value: string) => {
       map.set(key, value);
     },
@@ -30,11 +28,11 @@ const createPassthrough = () => {
 };
 
 const getStorage = () => {
-  if (typeof window === "undefined") return undefined;
+  if (globalThis.window === undefined) return;
 
-  if (!("localStorage" in window)) return undefined;
+  if (!("localStorage" in globalThis)) return;
 
-  return window.localStorage;
+  return globalThis.localStorage;
 };
 
 export type ProviderStorageR = {

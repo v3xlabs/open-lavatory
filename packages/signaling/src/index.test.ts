@@ -71,7 +71,7 @@ async function testSignalingLayer(
   const signalingLayer = await layer(props);
   const signalA = await signalingLayer({
     h,
-    rpDiscovered: (v) => log("rpKey", v),
+    rpDiscovered: v => log("rpKey", v),
     canEncrypt: () => true,
     encrypt: publicKey.encrypt,
     decrypt: decryptionKey.decrypt,
@@ -80,7 +80,7 @@ async function testSignalingLayer(
   });
   const signalB = await signalingLayer({
     h,
-    rpDiscovered: (v) => log("rpKey", v),
+    rpDiscovered: v => log("rpKey", v),
     canEncrypt: () => true,
     encrypt: publicKey.encrypt,
     decrypt: decryptionKey.decrypt,
@@ -120,11 +120,11 @@ async function testSignalingLayer(
   await signalB.teardown();
 }
 
-const PROVIDER_TIMEOUT_MS = 5_000;
+const PROVIDER_TIMEOUT_MS = 5000;
 
 type ProviderResult =
-  | { url: string; ok: true; duration: number }
-  | { url: string; ok: false; error: string };
+  | { url: string; ok: true; duration: number; }
+  | { url: string; ok: false; error: string; };
 
 async function testProvider(
   layer: CreateSignalLayerFn,
@@ -144,7 +144,8 @@ async function testProvider(
     const duration = Math.round(performance.now() - startTime);
 
     return { url: props.url, ok: true, duration };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       url: props.url,
       ok: false,
@@ -154,13 +155,13 @@ async function testProvider(
 }
 
 function formatResults(typeName: string, results: ProviderResult[]): string {
-  const passed = results.filter((r) => r.ok).length;
+  const passed = results.filter(r => r.ok).length;
   const total = results.length;
 
   return [
     `${typeName.toUpperCase()}: ${passed}/${total}`,
-    ...results.map((r) =>
-      r.ok ? `✓ ${r.url} ${r.duration}ms` : `✗ ${r.url} - ${r.error}`,
+    ...results.map(r =>
+      (r.ok ? `✓ ${r.url} ${r.duration}ms` : `✗ ${r.url} - ${r.error}`),
     ),
   ].join("\n");
 }
@@ -168,7 +169,7 @@ function formatResults(typeName: string, results: ProviderResult[]): string {
 describe.for(providersByType)("signaling: %s", ([typeName, providers]) => {
   it(
     "should pass signaling messages between peers",
-    { timeout: PROVIDER_TIMEOUT_MS * providers.length + 5_000 },
+    { timeout: PROVIDER_TIMEOUT_MS * providers.length + 5000 },
     async () => {
       const results = await Promise.all(
         providers.map(([, layer, props]) => testProvider(layer, props)),
@@ -178,7 +179,7 @@ describe.for(providersByType)("signaling: %s", ([typeName, providers]) => {
 
       console.log(`\n${summary}`);
 
-      const passed = results.filter((r) => r.ok).length;
+      const passed = results.filter(r => r.ok).length;
 
       expect(passed).toBeGreaterThan(0);
     },

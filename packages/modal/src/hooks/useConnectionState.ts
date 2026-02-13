@@ -9,7 +9,7 @@ export const useConnectionState = (initialState: ConnectionState = "idle") => {
 
   const updateState = useCallback(
     (newState: ConnectionState, additionalInfo?: Partial<ConnectionInfo>) => {
-      setConnectionInfo((prev) => ({
+      setConnectionInfo(prev => ({
         ...prev,
         state: newState,
         ...additionalInfo,

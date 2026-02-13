@@ -39,21 +39,21 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     .with("https", () => "wss")
     .with("http", () => "ws")
     .exhaustive();
-  const events = new EventEmitter<{ message: string }>();
+  const events = new EventEmitter<{ message: string; }>();
 
   return createSignalingLayer({
     type: "ntfy",
     async setup() {
       log("NTFY: Setting up");
 
-      const wsUrl =
-        wsProtocol +
-        "://" +
-        connectionInfo.host +
-        "/" +
-        topic +
-        "/ws" +
-        (connectionInfo.parameters || "");
+      const wsUrl
+        = wsProtocol
+          + "://"
+          + connectionInfo.host
+          + "/"
+          + topic
+          + "/ws"
+          + (connectionInfo.parameters || "");
 
       log("NTFY: Connecting to WebSocket", wsUrl);
       connection = new WebSocket(wsUrl);
@@ -62,7 +62,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       connection.onerror = (_event) => {};
 
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      connection.onclose = (_event) => {};
+      connection.addEventListener("close", (_event) => {});
 
       const awaitOpenConfirm = new Promise<void>((resolve) => {
         connection!.onmessage = (event) => {
@@ -71,17 +71,18 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
           if (data.event === "open") {
             resolve();
-          } else if (data.event === "message") {
+          }
+          else if (data.event === "message") {
             events.emit("message", data.message);
           }
         };
       });
 
       const awaitOpen = new Promise<void>((resolve) => {
-        connection!.onopen = () => {
+        connection!.addEventListener("open", () => {
           log("NTFY: Connected to WebSocket");
           resolve();
-        };
+        });
       });
 
       await awaitOpen;

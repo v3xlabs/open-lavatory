@@ -32,49 +32,62 @@ export default defineBackground(() => {
         console.log("Background received message:", message.type);
 
         switch (message.type) {
-          case "eth_requestAccounts":
+          case "eth_requestAccounts": {
             return await handleRequestAccounts(message.data, sender.tab?.id);
+          }
 
-          case "eth_getBalance":
+          case "eth_getBalance": {
             return await handleGetBalance(message.data);
+          }
 
-          case "eth_sendTransaction":
+          case "eth_sendTransaction": {
             return await handleSendTransaction(message.data, sender.tab?.id);
+          }
 
-          case "personal_sign":
+          case "personal_sign": {
             return await handlePersonalSign(message.data, sender.tab?.id);
+          }
 
-          case "eth_sign":
+          case "eth_sign": {
             return await handleEthSign(message.data, sender.tab?.id);
+          }
 
           case "eth_signTypedData":
           case "eth_signTypedData_v3":
-          case "eth_signTypedData_v4":
+          case "eth_signTypedData_v4": {
             return await handleSignTypedData(
               message.type,
               message.data,
               sender.tab?.id,
             );
+          }
 
-          case "wallet_switchEthereumChain":
+          case "wallet_switchEthereumChain": {
             return await handleSwitchChain(message.data, sender.tab?.id);
+          }
 
-          case "wallet_addEthereumChain":
+          case "wallet_addEthereumChain": {
             return await handleAddChain(message.data, sender.tab?.id);
+          }
 
-          case "wallet_getPermissions":
+          case "wallet_getPermissions": {
             return await handleGetPermissions(message.data);
+          }
 
-          case "wallet_requestPermissions":
+          case "wallet_requestPermissions": {
             return await handleRequestPermissions(message.data, sender.tab?.id);
+          }
 
-          case "forward_request":
+          case "forward_request": {
             return await handleForwardRequest(message.data);
+          }
 
-          default:
+          default: {
             return { success: false, error: "Unknown message type" };
+          }
         }
-      } catch (error) {
+      }
+      catch (error) {
         return {
           success: false,
           error: error instanceof Error ? error.message : "Unknown error",
@@ -86,7 +99,7 @@ export default defineBackground(() => {
   // Handler functions for EIP-1193 methods
 
   async function handleRequestAccounts(
-    _data: { tabId: number },
+    _data: { tabId: number; },
     tabId?: number,
   ) {
     console.log("Handling eth_requestAccounts");
@@ -123,7 +136,8 @@ export default defineBackground(() => {
           type: "accountsChanged",
           data: { accounts: walletState.accounts },
         });
-      } catch (_error) {}
+      }
+      catch {}
     }
 
     return {
@@ -132,7 +146,7 @@ export default defineBackground(() => {
     };
   }
 
-  async function handleGetBalance(data: { address: string; blockTag: string }) {
+  async function handleGetBalance(data: { address: string; blockTag: string; }) {
     console.log("Handling eth_getBalance for:", data.address);
 
     // In a real wallet, this would query the blockchain
@@ -146,7 +160,7 @@ export default defineBackground(() => {
   }
 
   async function handleSendTransaction(
-    data: { transaction: any },
+    data: { transaction: any; },
     _tabId?: number,
   ) {
     console.log("Handling eth_sendTransaction:", data.transaction);
@@ -161,11 +175,11 @@ export default defineBackground(() => {
     );
 
     // Mock transaction hash
-    const mockTxHash =
-      "0x" +
-      Array.from({ length: 64 }, () =>
-        Math.floor(Math.random() * 16).toString(16),
-      ).join("");
+    const mockTxHash
+      = "0x"
+        + Array.from({ length: 64 }, () =>
+          Math.floor(Math.random() * 16).toString(16),
+        ).join("");
 
     return {
       success: true,
@@ -174,7 +188,7 @@ export default defineBackground(() => {
   }
 
   async function handlePersonalSign(
-    data: { message: string; address: string },
+    data: { message: string; address: string; },
     _tabId?: number,
   ) {
     console.log("Handling personal_sign");
@@ -184,11 +198,11 @@ export default defineBackground(() => {
     );
 
     // Mock signature
-    const mockSignature =
-      "0x" +
-      Array.from({ length: 130 }, () =>
-        Math.floor(Math.random() * 16).toString(16),
-      ).join("");
+    const mockSignature
+      = "0x"
+        + Array.from({ length: 130 }, () =>
+          Math.floor(Math.random() * 16).toString(16),
+        ).join("");
 
     return {
       success: true,
@@ -197,7 +211,7 @@ export default defineBackground(() => {
   }
 
   async function handleEthSign(
-    data: { address: string; message: string },
+    data: { address: string; message: string; },
     _tabId?: number,
   ) {
     console.log("Handling eth_sign");
@@ -207,11 +221,11 @@ export default defineBackground(() => {
     );
 
     // Mock signature
-    const mockSignature =
-      "0x" +
-      Array.from({ length: 130 }, () =>
-        Math.floor(Math.random() * 16).toString(16),
-      ).join("");
+    const mockSignature
+      = "0x"
+        + Array.from({ length: 130 }, () =>
+          Math.floor(Math.random() * 16).toString(16),
+        ).join("");
 
     return {
       success: true,
@@ -221,7 +235,7 @@ export default defineBackground(() => {
 
   async function handleSignTypedData(
     method: string,
-    _data: { params: any[] },
+    _data: { params: any[]; },
     _tabId?: number,
   ) {
     console.log("Handling", method);
@@ -231,11 +245,11 @@ export default defineBackground(() => {
     );
 
     // Mock signature
-    const mockSignature =
-      "0x" +
-      Array.from({ length: 130 }, () =>
-        Math.floor(Math.random() * 16).toString(16),
-      ).join("");
+    const mockSignature
+      = "0x"
+        + Array.from({ length: 130 }, () =>
+          Math.floor(Math.random() * 16).toString(16),
+        ).join("");
 
     return {
       success: true,
@@ -244,7 +258,7 @@ export default defineBackground(() => {
   }
 
   async function handleSwitchChain(
-    data: { chainId?: string },
+    data: { chainId?: string; },
     _tabId?: number,
   ) {
     console.log("Handling wallet_switchEthereumChain to:", data.chainId);
@@ -269,7 +283,8 @@ export default defineBackground(() => {
           type: "chainChanged",
           data: { chainId: walletState.chainId },
         });
-      } catch (_error) {}
+      }
+      catch {}
     }
 
     return {
@@ -292,7 +307,7 @@ export default defineBackground(() => {
     };
   }
 
-  async function handleGetPermissions(_data: { tabId: number }) {
+  async function handleGetPermissions(_data: { tabId: number; }) {
     console.log("Handling wallet_getPermissions");
 
     return {
@@ -302,7 +317,7 @@ export default defineBackground(() => {
   }
 
   async function handleRequestPermissions(
-    data: { permissions: any },
+    data: { permissions: any; },
     _tabId?: number,
   ) {
     console.log("Handling wallet_requestPermissions");
@@ -325,7 +340,7 @@ export default defineBackground(() => {
     };
   }
 
-  async function handleForwardRequest(data: { method: string; params: any[] }) {
+  async function handleForwardRequest(data: { method: string; params: any[]; }) {
     console.log("Handling forward_request:", data.method);
 
     // For unknown methods, return a mock response

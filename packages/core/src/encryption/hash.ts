@@ -12,7 +12,7 @@ export const hashPublicKey = async (
   const hash = await crypto.subtle.digest("SHA-256", buffer);
   const hashArray = new Uint8Array(hash);
   const hashHex = Array.from(hashArray)
-    .map((b) => b.toString(16).padStart(2, "0"))
+    .map(b => b.toString(16).padStart(2, "0"))
     .join("");
 
   return hashHex.slice(0, HASH_LENGTH);

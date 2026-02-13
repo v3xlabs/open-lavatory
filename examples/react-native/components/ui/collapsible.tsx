@@ -10,7 +10,7 @@ import { useColorScheme } from "@/hooks/use-color-scheme";
 export function Collapsible({
   children,
   title,
-}: PropsWithChildren & { title: string }) {
+}: PropsWithChildren & { title: string; }) {
   const [isOpen, setIsOpen] = useState(false);
   const theme = useColorScheme() ?? "light";
 
@@ -18,7 +18,7 @@ export function Collapsible({
     <ThemedView>
       <TouchableOpacity
         style={styles.heading}
-        onPress={() => setIsOpen((value) => !value)}
+        onPress={() => setIsOpen(value => !value)}
         activeOpacity={0.8}
       >
         <IconSymbol

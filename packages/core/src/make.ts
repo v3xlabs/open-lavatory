@@ -15,6 +15,4 @@ export function combine<Target extends object, Parts extends readonly object[]>(
   return Object.assign({}, ...parts) as any;
 }
 
-export const make = <M extends object, O extends object>(e: M, o: O) => {
-  return Object.assign(e, o) as M & O;
-};
+export const make = <M extends object, O extends object>(e: M, o: O) => Object.assign(e, o) as M & O;

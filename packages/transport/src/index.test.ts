@@ -10,8 +10,8 @@ describe("Transport", () => {
     const { encryptionKey: publicKey, decryptionKey } = await generateKeyPair();
     const { encrypt } = publicKey;
     const { decrypt } = decryptionKey;
-    const signalA = new EventEmitter<{ signal: string; message: object }>();
-    const signalB = new EventEmitter<{ signal: string; message: object }>();
+    const signalA = new EventEmitter<{ signal: string; message: object; }>();
+    const signalB = new EventEmitter<{ signal: string; message: object; }>();
 
     const transportA = webrtc()({
       encrypt,

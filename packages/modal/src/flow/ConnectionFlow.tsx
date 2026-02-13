@@ -15,7 +15,8 @@ const startViewTransition = (callback: () => void) => {
   if (supportsViewTransitions()) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (document as any).startViewTransition(callback);
-  } else {
+  }
+  else {
     callback();
   }
 };
@@ -68,7 +69,7 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
     .with({ status: SESSION_STATE.CREATED }, () => FLOW.CREATING)
     .with(
       { status: SESSION_STATE.SIGNALING, signaling: P.select() },
-      (signaling) =>
+      signaling =>
         match(signaling)
           .with({ state: SIGNAL_STATE.STANDBY }, () => FLOW.CONNECTING)
           .with({ state: SIGNAL_STATE.CONNECTING }, () => FLOW.CONNECTING)

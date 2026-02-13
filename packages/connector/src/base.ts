@@ -13,7 +13,7 @@ import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage"> &
-    Pick<OpenLVModalElementProps, "theme">
+  Pick<OpenLVModalElementProps, "theme">
 >;
 
 export type OpenLVConnector = CreateConnectorFn<
@@ -82,14 +82,12 @@ export const openlv = ({
       await Promise.race([modalDismissed, connectionCompleted]);
 
       if (
-        !provider.getSession() ||
-        provider.getState().status !== "connected"
+        !provider.getSession()
+        || provider.getState().status !== "connected"
       ) {
         provider.closeSession();
 
-        return Promise.reject(
-          new UserRejectedRequestError(new Error("User closed modal")),
-        );
+        throw new UserRejectedRequestError(new Error("User closed modal"));
       }
 
       const accounts = await provider.getAccounts();
@@ -101,7 +99,7 @@ export const openlv = ({
 
       return {
         accounts: (withCapabilities
-          ? accounts.map((account) => ({
+          ? accounts.map(account => ({
               address: account,
               capabilities: {},
             }))
@@ -132,7 +130,7 @@ export const openlv = ({
         log("switchChain", chainId);
 
         // eslint-disable-next-line no-restricted-syntax
-        const chain = chains.find((chain) => chain.id === chainId);
+        const chain = chains.find(chain => chain.id === chainId);
 
         if (!chain) throw new Error(`Chain ${chainId} not found`);
 

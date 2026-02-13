@@ -19,7 +19,7 @@ export const Toggle: FC<ToggleProps> = ({ value, onChange }) => {
         ["false", String(t("common.no"))],
       ]}
       value={value ? "true" : "false"}
-      onChange={(value) => onChange(value === "true")}
+      onChange={value => onChange(value === "true")}
     />
   );
 };

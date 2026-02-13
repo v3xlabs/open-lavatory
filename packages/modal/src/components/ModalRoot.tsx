@@ -42,9 +42,9 @@ const useModalState = () => {
   useEffect(() => {
     if (!copied) return;
 
-    const timeout = window.setTimeout(() => setCopied(false), 2000);
+    const timeout = globalThis.setTimeout(() => setCopied(false), 2000);
 
-    return () => window.clearTimeout(timeout);
+    return () => globalThis.clearTimeout(timeout);
   }, [copied]);
 
   return {
@@ -83,11 +83,11 @@ const useDynamicDialogHeight = () => {
         : node.getBoundingClientRect().height;
 
       if (nextHeight > 0) {
-        setHeight((previousHeight) =>
-          typeof previousHeight === "number" &&
-          Math.abs(previousHeight - nextHeight) < 0.5
+        setHeight(previousHeight =>
+          (typeof previousHeight === "number"
+            && Math.abs(previousHeight - nextHeight) < 0.5
             ? previousHeight
-            : nextHeight,
+            : nextHeight),
         );
         hasMeasuredRef.current = true;
       }
@@ -110,7 +110,7 @@ const useDynamicDialogHeight = () => {
   }, [measureHeight]);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
+    if (globalThis.window === undefined) return;
 
     const handleResize = () => {
       measureHeight();
@@ -190,44 +190,45 @@ const ModalRootInner = ({
 
     if (isInitialMountRef.current) {
       if (initialMeasureTimeoutRef.current) {
-        window.clearTimeout(initialMeasureTimeoutRef.current);
+        globalThis.clearTimeout(initialMeasureTimeoutRef.current);
       }
 
-      initialMeasureTimeoutRef.current = window.setTimeout(() => {
+      initialMeasureTimeoutRef.current = globalThis.setTimeout(() => {
         if (contentRef.current) {
           measureHeight(undefined, true);
           isInitialMountRef.current = false;
         }
       }, 0);
-    } else {
+    }
+    else {
       measureHeight();
     }
 
     return () => {
       if (initialMeasureTimeoutRef.current) {
-        window.clearTimeout(initialMeasureTimeoutRef.current);
+        globalThis.clearTimeout(initialMeasureTimeoutRef.current);
       }
     };
   }, [measureHeight, displayedStatus, displayedModalView]);
 
   // Manage overflow-hidden during height transitions
   useEffect(() => {
-    const isHeightChanging =
-      previousHeightRef.current !== undefined &&
-      height !== previousHeightRef.current &&
-      height > 0 &&
-      previousHeightRef.current > 0 &&
-      Math.abs(height - previousHeightRef.current) > 0.5;
+    const isHeightChanging
+      = previousHeightRef.current !== undefined
+        && height !== previousHeightRef.current
+        && height > 0
+        && previousHeightRef.current > 0
+        && Math.abs(height - previousHeightRef.current) > 0.5;
 
     if (isHeightChanging) {
       setShouldHideOverflow(true);
 
       if (overflowTimeoutRef.current) {
-        window.clearTimeout(overflowTimeoutRef.current);
+        globalThis.clearTimeout(overflowTimeoutRef.current);
       }
 
       // Remove overflow-hidden after CSS transition completes (200ms)
-      overflowTimeoutRef.current = window.setTimeout(() => {
+      overflowTimeoutRef.current = globalThis.setTimeout(() => {
         setShouldHideOverflow(false);
         overflowTimeoutRef.current = undefined;
       }, 200);
@@ -237,7 +238,7 @@ const ModalRootInner = ({
 
     return () => {
       if (overflowTimeoutRef.current) {
-        window.clearTimeout(overflowTimeoutRef.current);
+        globalThis.clearTimeout(overflowTimeoutRef.current);
       }
     };
   }, [height]);
@@ -247,7 +248,7 @@ const ModalRootInner = ({
   };
 
   const onBack = match({ view: modalView, status })
-    .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => undefined)
+    .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => {})
     .with({ view: "start" }, () => closeSessionIfExists)
     .with({ view: "settings" }, () => {
       if (settingsNavRef.current && !settingsNavRef.current.isAtRoot) {
@@ -305,7 +306,7 @@ const ModalRootInner = ({
           <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
         ),
       )
-      .otherwise((state) => <UnknownState state={state || "unknown status"} />);
+      .otherwise(state => <UnknownState state={state || "unknown status"} />);
 
   log("view", modalView);
 
@@ -339,7 +340,7 @@ const ModalRootInner = ({
         role="dialog"
         aria-modal="true"
         aria-label={title}
-        onClick={(event) => event.stopPropagation()}
+        onClick={event => event.stopPropagation()}
         style={{
           ...(typeof height === "number" && height > 0
             ? { height: `${height}px` }

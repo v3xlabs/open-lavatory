@@ -70,7 +70,7 @@ const Body = ({
   }
 };
 
-const SessionDialog = ({ setOpen }: { setOpen: (open: boolean) => void }) => {
+const SessionDialog = ({ setOpen }: { setOpen: (open: boolean) => void; }) => {
   const [uri, setUri] = useState<string | null>(null);
 
   const [isConnecting, setIsConnecting] = useState(false);

@@ -120,7 +120,7 @@ export default defineConfig({
     {
       text: "Docs",
       link: "/getting-started",
-      match: (path) => !(path.startsWith("specs") || path === "/"),
+      match: path => !(path.startsWith("specs") || path === "/"),
     },
     {
       text: "Specs",

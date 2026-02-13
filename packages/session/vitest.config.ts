@@ -8,7 +8,7 @@ export default defineConfig({
       provider: "v8",
     },
     exclude: ["dist", "node_modules"],
-    testTimeout: 10000,
+    testTimeout: 10_000,
     browser: {
       enabled: true,
       provider: playwright(),

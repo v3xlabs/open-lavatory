@@ -47,7 +47,7 @@ export const Select: FC<SelectProps> = ({
       <select
         className={dropdown}
         value={value}
-        onChange={(e) => onChange((e.target as HTMLSelectElement).value)}
+        onChange={e => onChange((e.target as HTMLSelectElement).value)}
       >
         {options.map(([slug, label]) => (
           <option key={slug} value={slug}>

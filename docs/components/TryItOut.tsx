@@ -134,25 +134,25 @@ const TestSign = () => {
       )}
       {signedData && (
         <div className="space-y-2">
-          {isVerifying
-            ? (
-                <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
-                  Verifying signature...
-                </div>
-              )
-            : (verificationResult === undefined
-                ? null
-                : (
-                    <div
-                      className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
-                        verificationResult
-                          ? "text-green-500"
-                          : "text-[var(--vocs-color_text)]"
-                      }`}
-                    >
-                      {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
-                    </div>
-                  ))}
+          {/* eslint-disable @stylistic/multiline-ternary -- nested ternary in JSX */}
+          {isVerifying ? (
+            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+              Verifying signature...
+            </div>
+          ) : (verificationResult
+            === undefined // eslint-disable-next-line unicorn/no-null -- React requires null for empty renders
+            ? null : (
+              <div
+                className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
+                  verificationResult
+                    ? "text-green-500"
+                    : "text-[var(--vocs-color_text)]"
+                }`}
+              >
+                {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
+              </div>
+            ))}
+          {/* eslint-enable @stylistic/multiline-ternary */}
           {verificationError && (
             <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
               Error:

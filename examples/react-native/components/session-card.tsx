@@ -75,14 +75,10 @@ export const SessionCard = ({
           style={({ pressed }) => [
             styles.qrButton,
             { borderColor, backgroundColor: surfaceColor },
-            pressed ? styles.buttonPressed : null,
+            pressed ? styles.buttonPressed : undefined,
           ]}
         >
-          <Ionicons
-            name="qr-code-outline"
-            size={20}
-            color={tintColor}
-          />
+          <Ionicons name="qr-code-outline" size={20} color={tintColor} />
         </Pressable>
       </View>
 
@@ -117,16 +113,11 @@ export const SessionCard = ({
         Log
       </ThemedText>
       <View
-        style={[
-          styles.logBox,
-          { borderColor, backgroundColor: surfaceColor },
-        ]}
+        style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}
       >
         {logLines.length === 0
           ? (
-              <ThemedText
-                style={[styles.logLine, { color: mutedTextColor }]}
-              >
+              <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>
                 No logs yet.
               </ThemedText>
             )

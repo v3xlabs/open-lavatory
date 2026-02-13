@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 // Content script for OpenLV Extension - EIP-6963 Compatible
 // This script runs in the context of web pages and provides EIP-1193 wallet connectivity
 
@@ -103,10 +102,7 @@ const setupCommunicationBridge = () => {
         case "eth_signTypedData":
         case "eth_signTypedData_v3":
         case "eth_signTypedData_v4": {
-          response = await handleSignTypedData(
-            message.type,
-            message.data,
-          );
+          response = await handleSignTypedData(message.type, message.data);
           break;
         }
 
@@ -161,10 +157,7 @@ const setupCommunicationBridge = () => {
           requestId: message.requestId,
           response: {
             success: false,
-            error:
-                            error instanceof Error
-                              ? error.message
-                              : "Unknown error",
+            error: error instanceof Error ? error.message : "Unknown error",
           },
         },
         "*",
@@ -177,12 +170,9 @@ const setupCommunicationBridge = () => {
     // Forward relevant messages to injected provider
     if (
       message.type
-      && [
-        "accountsChanged",
-        "chainChanged",
-        "connect",
-        "disconnect",
-      ].includes(message.type)
+      && ["accountsChanged", "chainChanged", "connect", "disconnect"].includes(
+        message.type,
+      )
     ) {
       window.postMessage(
         {
@@ -214,9 +204,7 @@ const handleRequestAccounts = async () => {
     return {
       success: false,
       error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to request accounts",
+        error instanceof Error ? error.message : "Failed to request accounts",
     };
   }
 };
@@ -239,10 +227,7 @@ const handleGetBalance = async (data: {
   catch (error) {
     return {
       success: false,
-      error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to get balance",
+      error: error instanceof Error ? error.message : "Failed to get balance",
     };
   }
 };
@@ -265,9 +250,7 @@ const handleSendTransaction = async (data: {
     return {
       success: false,
       error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to send transaction",
+        error instanceof Error ? error.message : "Failed to send transaction",
     };
   }
 };
@@ -290,10 +273,7 @@ const handlePersonalSign = async (data: {
   catch (error) {
     return {
       success: false,
-      error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to sign message",
+      error: error instanceof Error ? error.message : "Failed to sign message",
     };
   }
 };
@@ -313,10 +293,7 @@ const handleEthSign = async (data: { address: string; message: string; }) => {
   catch (error) {
     return {
       success: false,
-      error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to sign message",
+      error: error instanceof Error ? error.message : "Failed to sign message",
     };
   }
 };
@@ -337,9 +314,7 @@ const handleSignTypedData = async (method: string, data: TypedDataPayload) => {
     return {
       success: false,
       error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to sign typed data",
+        error instanceof Error ? error.message : "Failed to sign typed data",
     };
   }
 };
@@ -359,10 +334,7 @@ const handleSwitchChain = async (data: { chainId?: string; }) => {
   catch (error) {
     return {
       success: false,
-      error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to switch chain",
+      error: error instanceof Error ? error.message : "Failed to switch chain",
     };
   }
 };
@@ -382,8 +354,7 @@ const handleAddChain = async (data: Record<string, unknown>) => {
   catch (error) {
     return {
       success: false,
-      error:
-                error instanceof Error ? error.message : "Failed to add chain",
+      error: error instanceof Error ? error.message : "Failed to add chain",
     };
   }
 };
@@ -404,9 +375,7 @@ const handleGetPermissions = async () => {
     return {
       success: false,
       error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to get permissions",
+        error instanceof Error ? error.message : "Failed to get permissions",
     };
   }
 };
@@ -427,9 +396,9 @@ const handleRequestPermissions = async (data: { permissions: unknown; }) => {
     return {
       success: false,
       error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to request permissions",
+        error instanceof Error
+          ? error.message
+          : "Failed to request permissions",
     };
   }
 };
@@ -453,9 +422,7 @@ const handleForwardRequest = async (data: {
     return {
       success: false,
       error:
-                error instanceof Error
-                  ? error.message
-                  : "Failed to forward request",
+        error instanceof Error ? error.message : "Failed to forward request",
     };
   }
 };

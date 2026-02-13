@@ -22,7 +22,7 @@ export default defineUnlistedScript(() => {
   //   }
 
   console.log("OpenLV EIP-6963 Provider Injected");
-  // @ts-expect-error
+  // @ts-expect-error -- openModal signature differs from provider type expectations
   const provider = createProvider({
     openModal: async (provider) => {
       console.log("openModal", provider);

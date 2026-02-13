@@ -9,7 +9,7 @@ import styles from "./QRScanner.module.css";
 
 type State = {
   isConnecting: boolean;
-  uri: string | null;
+  uri: string | undefined;
 };
 
 const Title = ({ isConnecting, uri }: State) => {
@@ -70,8 +70,12 @@ const Body = ({
   }
 };
 
-const SessionDialog = ({ setOpen }: { setOpen: (open: boolean) => void; }) => {
-  const [uri, setUri] = useState<string | null>(null);
+const SessionDialog = ({
+  setOpen: _setOpen,
+}: {
+  setOpen: (open: boolean) => void;
+}) => {
+  const [uri, setUri] = useState<string | undefined>(undefined);
 
   const [isConnecting, setIsConnecting] = useState(false);
 

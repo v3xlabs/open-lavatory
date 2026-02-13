@@ -11,6 +11,7 @@ import { Colors } from "@/constants/theme";
 import { useThemeColor } from "@/hooks/use-theme-color";
 import { useWalletSession } from "@/hooks/use-wallet-session";
 
+// eslint-disable-next-line import/no-default-export -- Expo Router requires default exports
 export default function HomeScreen() {
   const [scannerOpen, setScannerOpen] = React.useState(false);
   const mutedTextColor = useThemeColor({}, "mutedText");
@@ -41,6 +42,7 @@ export default function HomeScreen() {
       }}
       headerImage={(
         <Image
+          // eslint-disable-next-line @typescript-eslint/no-require-imports -- React Native metro bundler requires require() for images
           source={require("@/assets/images/partial-react-logo.png")}
           style={styles.reactLogo}
         />

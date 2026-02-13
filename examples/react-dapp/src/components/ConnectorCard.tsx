@@ -39,19 +39,19 @@ export const ConnectorCard = ({
       </div>
 
       <div className="mb-3 grow space-y-1 text-gray-500 text-xs">
+        {/* eslint-disable @stylistic/multiline-ternary */}
         {(["id", "type", "uid", "rdns"] as (keyof typeof connector)[]).map(key =>
-          (connector[key]
-            ? (
-                <div className="flex justify-between" key={key}>
-                  <span>
-                    {key.toUpperCase()}
-                    :
-                  </span>
-                  <span className="truncate font-mono text-xs">
-                    {connector[key] as string}
-                  </span>
-                </div>
-              )
+          (connector[key] ? (
+            <div className="flex justify-between" key={key}>
+              <span>
+                {key.toUpperCase()}
+                :
+              </span>
+              <span className="truncate font-mono text-xs">
+                {connector[key] as string}
+              </span>
+            </div>
+          ) // eslint-disable-next-line unicorn/no-null -- React requires null for conditional renders
             : null),
         )}
       </div>

@@ -30,13 +30,13 @@ export const deriveSymmetricKey = async (k: string): Promise<SymmetricKey> => {
       combined.set(iv);
       combined.set(new Uint8Array(encrypted), iv.length);
 
-      return btoa(String.fromCharCode.apply(null, Array.from(combined)));
+      return btoa(String.fromCodePoint(...Array.from(combined)));
     },
     decrypt: async (message: string) => {
       const combined = new Uint8Array(
         atob(message)
           .split("")
-          .map(char => char.charCodeAt(0)),
+          .map(char => char.codePointAt(0)!),
       );
       const iv = combined.slice(0, 12);
       const encrypted = combined.slice(12);

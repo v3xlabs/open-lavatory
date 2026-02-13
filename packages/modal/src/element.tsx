@@ -43,6 +43,7 @@ export class OpenLVModalElement
   }
 
   private setupThemeListener() {
+    // eslint-disable-next-line unicorn/consistent-function-scoping -- captures `this` context
     const update = () => {
       const userTheme
         = this.parameters.provider.storage.getSettings()?.theme ?? "system";

@@ -50,9 +50,9 @@ export const ModalSettings: FC<ModalSettingsProps> = ({
   // Expose navigation methods to parent via ref
   const internalRef = useRef<SettingsNavigationRef>({ goBack, isAtRoot });
 
-  internalRef.current = { goBack, isAtRoot };
-
   useEffect(() => {
+    internalRef.current = { goBack, isAtRoot };
+
     if (navigationRef) {
       navigationRef.current = internalRef.current;
     }

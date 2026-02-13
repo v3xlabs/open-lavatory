@@ -107,7 +107,7 @@ const useDynamicDialogHeight = () => {
     observer.observe(node);
 
     return () => observer.disconnect();
-  }, [measureHeight]);
+  }, [measureHeight, contentRef]);
 
   useEffect(() => {
     if (globalThis.window === undefined) return;
@@ -209,7 +209,7 @@ const ModalRootInner = ({
         globalThis.clearTimeout(initialMeasureTimeoutRef.current);
       }
     };
-  }, [measureHeight, displayedStatus, displayedModalView]);
+  }, [measureHeight, displayedStatus, displayedModalView]); // eslint-disable-line react-hooks/exhaustive-deps -- contentRef is stable
 
   // Manage overflow-hidden during height transitions
   useEffect(() => {
@@ -247,6 +247,14 @@ const ModalRootInner = ({
     provider?.closeSession();
   };
 
+  const navigateToStart = useCallback(() => setView("start"), [setView]);
+
+  const closeAndDismiss = useCallback(() => {
+    closeSessionIfExists();
+    onClose();
+  }, [onClose]); // eslint-disable-line react-hooks/exhaustive-deps -- closeSessionIfExists is stable within render
+
+  /* eslint-disable react-hooks/refs -- settingsNavRef access is intentional for navigation logic */
   const onBack = match({ view: modalView, status })
     .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => {})
     .with({ view: "start" }, () => closeSessionIfExists)
@@ -255,13 +263,11 @@ const ModalRootInner = ({
         return () => settingsNavRef.current?.goBack();
       }
 
-      return () => setView("start");
+      return navigateToStart;
     })
-    .with({ view: "info" }, () => () => setView("start"))
-    .otherwise(() => () => {
-      closeSessionIfExists();
-      onClose();
-    });
+    .with({ view: "info" }, () => navigateToStart)
+    .otherwise(() => closeAndDismiss);
+  /* eslint-enable react-hooks/refs */
 
   const renderDisconnectedView = (targetView: ModalView) =>
     match(targetView)

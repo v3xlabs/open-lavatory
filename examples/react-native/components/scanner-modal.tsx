@@ -19,11 +19,13 @@ export const ScannerModal = ({
   onScanned,
 }: ScannerModalProps) => {
   const [cameraPermissionGranted, setCameraPermissionGranted]
-        = React.useState(false);
-  const [cameraError, setCameraError] = React.useState<string | null>(null);
+    = React.useState(false);
+  const [cameraError, setCameraError] = React.useState<string | undefined>(
+    undefined,
+  );
   const [cameraModule, setCameraModule] = React.useState<
-        null | typeof import("expo-camera")
-  >(null);
+    undefined | typeof import("expo-camera")
+  >(undefined);
   const [scanned, setScanned] = React.useState(false);
 
   const textColor = useThemeColor({}, "text");
@@ -35,7 +37,7 @@ export const ScannerModal = ({
   React.useEffect(() => {
     if (visible) {
       setScanned(false);
-      setCameraError(null);
+      setCameraError(undefined);
       void loadCamera();
     }
   }, [visible]);
@@ -48,9 +50,7 @@ export const ScannerModal = ({
     }
 
     try {
-      const mod = (await import(
-        "expo-camera",
-      )) as typeof import("expo-camera");
+      const mod = (await import("expo-camera")) as typeof import("expo-camera");
 
       setCameraModule(mod);
 
@@ -101,7 +101,7 @@ export const ScannerModal = ({
             style={({ pressed }) => [
               styles.scannerClose,
               { borderColor, backgroundColor: surfaceColor },
-              pressed ? styles.buttonPressed : null,
+              pressed ? styles.buttonPressed : undefined,
             ]}
           >
             <Ionicons name="close" size={18} color={textColor} />
@@ -116,21 +116,15 @@ export const ScannerModal = ({
                     Scanner unavailable
                   </ThemedText>
                   <ThemedText
-                    style={[
-                      styles.scannerMessageBody,
-                      { color: mutedTextColor },
-                    ]}
+                    style={[styles.scannerMessageBody, { color: mutedTextColor }]}
                   >
                     {cameraError}
                   </ThemedText>
                   <ThemedText
-                    style={[
-                      styles.scannerMessageBody,
-                      { color: mutedTextColor },
-                    ]}
+                    style={[styles.scannerMessageBody, { color: mutedTextColor }]}
                   >
-                    If you’re using a custom dev client, rebuild it
-                    after installing expo-camera.
+                    If you’re using a custom dev client, rebuild it after installing
+                    expo-camera.
                   </ThemedText>
                 </View>
               )
@@ -138,10 +132,7 @@ export const ScannerModal = ({
                 ? (
                     <View style={styles.scannerMessage}>
                       <ThemedText
-                        style={[
-                          styles.scannerMessageBody,
-                          { color: mutedTextColor },
-                        ]}
+                        style={[styles.scannerMessageBody, { color: mutedTextColor }]}
                       >
                         Requesting camera…
                       </ThemedText>
@@ -164,9 +155,7 @@ export const ScannerModal = ({
                   ))}
         </View>
 
-        <ThemedText
-          style={[styles.scannerHint, { color: mutedTextColor }]}
-        >
+        <ThemedText style={[styles.scannerHint, { color: mutedTextColor }]}>
           Point the camera at an openlv QR code.
         </ThemedText>
       </ThemedView>

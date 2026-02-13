@@ -12,6 +12,7 @@ export const ThemeSettings: FC = () => {
     = useThemeConfig();
 
   if (!isUserConfigurable) {
+    // eslint-disable-next-line unicorn/no-null -- React requires null for empty renders
     return null;
   }
 

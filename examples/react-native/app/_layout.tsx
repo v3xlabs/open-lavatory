@@ -15,6 +15,7 @@ export const unstable_settings = {
   anchor: "(tabs)",
 };
 
+// eslint-disable-next-line import/no-default-export -- Expo Router requires default exports
 export default function RootLayout() {
   const colorScheme = useColorScheme();
 

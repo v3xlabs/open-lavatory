@@ -3,9 +3,7 @@ import packageJson from "../../package.json" with { type: "json" };
 const version = `openlv@${packageJson.version}`;
 
 type ErrorConfig = {
-  getDocsUrl?:
-        | ((args: BaseErrorParameters) => string | undefined)
-        | undefined;
+  getDocsUrl?: ((args: BaseErrorParameters) => string | undefined) | undefined;
   version?: string | undefined;
 };
 
@@ -82,9 +80,9 @@ export class BaseError extends Error {
   }
 
   walk(): Error;
-  walk(fn: (err: unknown) => boolean): Error | null;
-  walk(fn?: (err: unknown) => boolean): Error | null {
-    return walk(this, fn) as Error | null;
+  walk(fn: (err: unknown) => boolean): Error | undefined;
+  walk(fn?: (err: unknown) => boolean): Error | undefined {
+    return walk(this, fn) as Error | undefined;
   }
 }
 
@@ -102,5 +100,5 @@ const walk = (
   )
     return walk(err.cause, fn);
 
-  return fn ? null : err;
+  return fn ? undefined : err;
 };

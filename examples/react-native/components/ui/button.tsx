@@ -28,19 +28,16 @@ export const Button = ({
     disabled={disabled}
     style={({ pressed }) => [
       styles.button,
-      variant === "secondary" ? styles.buttonSecondary : null,
+      variant === "secondary" ? styles.buttonSecondary : undefined,
       backgroundColor ? { backgroundColor } : undefined,
       borderColor ? { borderColor } : undefined,
-      disabled ? styles.buttonDisabled : null,
-      pressed && !disabled ? styles.buttonPressed : null,
+      disabled ? styles.buttonDisabled : undefined,
+      pressed && !disabled ? styles.buttonPressed : undefined,
       style,
     ]}
   >
     <ThemedText
-      style={[
-        styles.buttonText,
-        textColor ? { color: textColor } : undefined,
-      ]}
+      style={[styles.buttonText, textColor ? { color: textColor } : undefined]}
     >
       {title}
     </ThemedText>

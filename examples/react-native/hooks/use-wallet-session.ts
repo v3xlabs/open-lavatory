@@ -2,14 +2,14 @@ import { connectSession, type Session } from "@openlv/react-native";
 import * as React from "react";
 
 const DUMMY_ADDRESS
-    = "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
+  = "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
 const DUMMY_SIGNATURE = `0x${"11".repeat(65)}` as const;
 
 export const useWalletSession = () => {
   const [connectionUrl, setConnectionUrl] = React.useState<string>("");
   const [status, setStatus] = React.useState<string>("idle");
   const [logLines, setLogLines] = React.useState<string[]>([]);
-  const [session, setSession] = React.useState<Session | null>(null);
+  const [session, setSession] = React.useState<Session | undefined>(undefined);
 
   const appendLog = React.useCallback((line: string) => {
     setLogLines(prev => [line, ...prev].slice(0, 50));
@@ -78,7 +78,7 @@ export const useWalletSession = () => {
 
       appendLog("Closing session…");
       await session.close();
-      setSession(null);
+      setSession(undefined);
       setStatus("idle");
       appendLog("Closed.");
     }

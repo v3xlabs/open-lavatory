@@ -18,6 +18,7 @@ type Props = PropsWithChildren<{
   headerBackgroundColor: { dark: string; light: string; };
 }>;
 
+// eslint-disable-next-line import/no-default-export -- used as default import by convention
 export default function ParallaxScrollView({
   children,
   headerImage,

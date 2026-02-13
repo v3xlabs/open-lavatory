@@ -22,39 +22,31 @@ export const Header = ({
 
   return (
     <div className="flex items-center justify-between px-2 py-2">
-      {onBack ? (
-        <Button
-          onClick={onBack}
-          aria-label={
-            view === "settings" ? t("modal.backToQr") : t("modal.closeModal")
-          }
-          $variant="tertiary"
-          $aspect="square"
-          $size="md"
-        >
-          <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
-        </Button>
-      ) : (
-        // <Button
-        //   type="button"
-        //   href="https://openlv.sh"
-        //   target="_blank"
-        //   $variant="tertiary"
-        //   $aspect="square"
-        //   $size="md"
-        // >
-        //   <LuCircleHelp className="h-5 w-5" />
-        // </Button>
-        <Button
-          type="button"
-          onClick={() => setView("info")}
-          $variant="tertiary"
-          $aspect="square"
-          $size="md"
-        >
-          <LuCircleHelp className="h-5 w-5" />
-        </Button>
-      )}
+      {onBack
+        ? (
+            <Button
+              onClick={onBack}
+              aria-label={
+                view === "settings" ? t("modal.backToQr") : t("modal.closeModal")
+              }
+              $variant="tertiary"
+              $aspect="square"
+              $size="md"
+            >
+              <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
+            </Button>
+          )
+        : (
+            <Button
+              type="button"
+              onClick={() => setView("info")}
+              $variant="tertiary"
+              $aspect="square"
+              $size="md"
+            >
+              <LuCircleHelp className="h-5 w-5" />
+            </Button>
+          )}
       <h2 className="flex items-center justify-center gap-2 font-semibold text-(--lv-text-primary) text-lg">
         {title}
       </h2>

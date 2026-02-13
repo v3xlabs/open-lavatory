@@ -12,6 +12,33 @@ import { arbitrum, base, mainnet, optimism, polygon, sepolia } from "wagmi/chain
 
 import { ConnectorCard } from "./components/ConnectorCard.tsx";
 
+const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+
+const formatBalance = (bal: { formatted: string; symbol: string; } | undefined) => {
+  if (!bal) return "0";
+
+  const value = Number(bal.formatted);
+
+  if (value === 0) return "0";
+
+  if (value < 0.0001) return "< 0.0001";
+
+  return value.toFixed(4);
+};
+
+const getChainColor = (chainId: number) => {
+  const colors: Record<number, string> = {
+    [mainnet.id]: "bg-blue-500",
+    [sepolia.id]: "bg-purple-500",
+    [arbitrum.id]: "bg-blue-600",
+    [base.id]: "bg-indigo-500",
+    [optimism.id]: "bg-red-500",
+    [polygon.id]: "bg-purple-600",
+  };
+
+  return colors[chainId] || "bg-gray-500";
+};
+
 interface WalletInfo {
   address: string;
   ensName?: string;
@@ -31,8 +58,9 @@ const App = () => {
     address,
   });
 
-  const [walletInfo, setWalletInfo] = useState<WalletInfo | null>(null);
+  const [walletInfo, setWalletInfo] = useState<WalletInfo | undefined>(undefined);
 
+  /* eslint-disable react-hooks/set-state-in-effect -- syncing wagmi state */
   useEffect(() => {
     if (isConnected && address && connector) {
       setWalletInfo({
@@ -43,45 +71,19 @@ const App = () => {
       });
     }
     else {
-      setWalletInfo(null);
+      setWalletInfo(undefined);
     }
   }, [isConnected, address, connector, chainId]);
+  /* eslint-enable react-hooks/set-state-in-effect */
 
   const refreshWallets = () => {
     setRefreshKey(prev => prev + 1);
   };
 
-  const formatAddress = (addr: string) => `${addr.slice(0, 6)}...${addr.slice(-4)}`;
+  const getChainName = (chainId: number) => {
+    const chain = chains.find(c => c.id === chainId);
 
-  const formatBalance = (bal: { formatted: string; symbol: string; } | undefined) => {
-    if (!bal) return "0";
-
-    const value = Number(bal.formatted);
-
-    if (value === 0) return "0";
-
-    if (value < 0.0001) return "< 0.0001";
-
-    return value.toFixed(4);
-  };
-
-  const getChainName = (id: number) => {
-    const chain = chains.find(c => c.id === id);
-
-    return chain?.name || `Chain ${id}`;
-  };
-
-  const getChainColor = (id: number) => {
-    const colors: Record<number, string> = {
-      [mainnet.id]: "bg-blue-500",
-      [sepolia.id]: "bg-purple-500",
-      [arbitrum.id]: "bg-blue-600",
-      [base.id]: "bg-indigo-500",
-      [optimism.id]: "bg-red-500",
-      [polygon.id]: "bg-purple-600",
-    };
-
-    return colors[id] || "bg-gray-500";
+    return chain?.name || `Chain ${chainId}`;
   };
 
   return (
@@ -196,6 +198,7 @@ const App = () => {
               Wallet Information
             </h2>
 
+            {/* eslint-disable @stylistic/multiline-ternary */}
             {walletInfo ? (
               <div className="space-y-6">
                 {/* Address */}
@@ -223,13 +226,11 @@ const App = () => {
                     Balance
                   </label>
                   <div className="font-semibold text-gray-800 text-lg">
-                    {balanceLoading
-                      ? (
-                          <div className="h-8 w-32 animate-pulse rounded bg-gray-200"></div>
-                        )
-                      : (
-                          `${formatBalance(balance)} ${balance?.symbol || "ETH"}`
-                        )}
+                    {balanceLoading ? (
+                      <div className="h-8 w-32 animate-pulse rounded bg-gray-200"></div>
+                    ) : (
+                      `${formatBalance(balance)} ${balance?.symbol || "ETH"}`
+                    )}
                   </div>
                 </div>
 
@@ -290,6 +291,7 @@ const App = () => {
             )}
           </div>
         </div>
+        {/* eslint-enable @stylistic/multiline-ternary */}
 
         {/* Available Chains */}
         {isConnected && (

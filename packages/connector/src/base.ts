@@ -44,6 +44,7 @@ export const openlv = ({
   return createConnector<OpenLVProvider>((wagmiConfig) => {
     const { chains } = wagmiConfig;
 
+    // eslint-disable-next-line unicorn/consistent-function-scoping -- captures `provider` from connector scope
     const getAccounts = async () => {
       log("getAccounts");
 
@@ -54,9 +55,10 @@ export const openlv = ({
       return await provider.getAccounts();
     };
 
-    const connect = async (
-      { withCapabilities } = { withCapabilities: false },
-    ) => {
+    /* eslint-disable unicorn/consistent-function-scoping */
+    const connect = async ({
+      withCapabilities = false,
+    }: { withCapabilities?: boolean; } = {}) => {
       log("connect");
 
       const modal = await getTriggerModal();
@@ -108,6 +110,7 @@ export const openlv = ({
         provider,
       };
     };
+    /* eslint-enable unicorn/consistent-function-scoping */
 
     return {
       ...openlvDetails,
@@ -124,7 +127,9 @@ export const openlv = ({
       async isAuthorized() {
         log("isAuthorized");
 
-        return (await getAccounts()).length > 0;
+        const accounts = await getAccounts();
+
+        return accounts.length > 0;
       },
       async switchChain({ chainId }) {
         log("switchChain", chainId);

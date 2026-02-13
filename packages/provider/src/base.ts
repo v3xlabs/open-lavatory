@@ -105,6 +105,11 @@ const convertTempV1 = (transport: transportInput): WebRTCConfig => {
   };
 };
 
+const DEFAULT_SESSION_LINK_PARAMETERS: SessionLinkParameters = {
+  p: "mqtt",
+  s: "wss://mqtt-dashboard.com:8884/mqtt",
+};
+
 /**
  * OpenLV Provider
  *
@@ -144,10 +149,7 @@ export const createProvider = (
   };
 
   const start = async (
-    parameters: SessionLinkParameters = {
-      p: "mqtt",
-      s: "wss://mqtt-dashboard.com:8884/mqtt",
-    },
+    parameters: SessionLinkParameters = DEFAULT_SESSION_LINK_PARAMETERS,
   ) => {
     updateStatus(PROVIDER_STATUS.CREATING);
     const transportOptions

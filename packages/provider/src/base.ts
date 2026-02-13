@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/consistent-function-scoping */
 import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,

@@ -84,7 +84,7 @@ export const createSignalingLayer = (
     state = _state;
     emitter.emit("state_change", _state);
   };
-  const handshakeKey = k ? k : undefined;
+  const handshakeKey = k || undefined;
 
   const send = async (
     method: "handshake" | "encrypted",

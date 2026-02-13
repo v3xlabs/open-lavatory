@@ -85,6 +85,7 @@ const ensureAtobBtoa = () => {
   }
 };
 
+const toHex = (b: number) => b.toString(16).padStart(2, "0");
 const ensureCryptoRandomUUID = () => {
   const g = getGlobal();
 
@@ -109,7 +110,6 @@ const ensureCryptoRandomUUID = () => {
     bytes[6] = (bytes[6] & 0x0F) | 0x40;
     bytes[8] = (bytes[8] & 0x3F) | 0x80;
 
-    const toHex = (b: number) => b.toString(16).padStart(2, "0");
     const hex = Array.from(bytes, toHex);
 
     return (

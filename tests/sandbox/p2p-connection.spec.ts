@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { type BrowserContext, expect, type Page, test } from "@playwright/test";
 
 test.describe("OpenLV Sandbox P2P Connection", () => {

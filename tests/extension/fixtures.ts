@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/rules-of-hooks */
 
 import path from "node:path";
 

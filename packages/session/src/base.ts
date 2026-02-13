@@ -81,9 +81,9 @@ export const createSession = async (
   onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
-  const messages = new EventEmitter<{ message: SessionMessage }>();
-  const sessionId =
-    "sessionId" in initParameters
+  const messages = new EventEmitter<{ message: SessionMessage; }>();
+  const sessionId
+    = "sessionId" in initParameters
       ? initParameters.sessionId
       : generateSessionId();
   const {
@@ -91,8 +91,8 @@ export const createSession = async (
     decryptionKey: { decrypt },
   } = await initEncryptionKeys(initParameters);
   let relyingPublicKey: EncryptionKey | undefined;
-  const handshakeKey =
-    "k" in initParameters
+  const handshakeKey
+    = "k" in initParameters
       ? await deriveSymmetricKey(initParameters.k)
       : await generateHandshakeKey();
   const { hash, isHost } = await initHash(
@@ -150,16 +150,13 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: object) => {
+    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
       console.log("Session: received message from transport", message);
 
-      // @ts-ignore
       if (message["type"] === "request") {
-        // @ts-ignore
         const data = await onMessage(message["payload"] as object);
         const response: SessionMessage = {
           type: "response",
-          // @ts-ignore
           messageId: message["messageId"] as string,
           payload: data,
         };
@@ -167,7 +164,6 @@ export const createSession = async (
         await transport.send(response);
       }
 
-      // @ts-ignore
       if (message["type"] === "response") {
         messages.emit("message", message);
       }
@@ -273,15 +269,13 @@ export const createSession = async (
         s: server,
       };
     },
-    waitForLink: async () => {
-      return new Promise((resolve) => {
-        emitter.on("state_change", (state) => {
-          if (state?.status === SESSION_STATE.CONNECTED) {
-            resolve();
-          }
-        });
+    waitForLink: async () => new Promise((resolve) => {
+      emitter.on("state_change", (state) => {
+        if (state?.status === SESSION_STATE.CONNECTED) {
+          resolve();
+        }
       });
-    },
+    }),
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
       // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;

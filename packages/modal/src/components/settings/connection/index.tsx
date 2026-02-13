@@ -18,28 +18,28 @@ export const ConnectionPreferences = ({
   return (
     <MenuGroup title={t("settings.connectionPreferences.title")}>
       <MenuLink
-        label={
+        label={(
           <>
             {t("settings.signaling.title")}
             <InfoTooltip variant="icon">
               {t("settings.signaling.description")}
             </InfoTooltip>
           </>
-        }
+        )}
         onClick={() => onNavigate("signaling")}
         value={settings?.signaling?.p}
       />
       <MenuLink
-        label={
+        label={(
           <>
             {t("settings.transport.title")}
             <InfoTooltip variant="icon">
               {t("settings.transport.description")}
             </InfoTooltip>
           </>
-        }
+        )}
         onClick={() => onNavigate("transport")}
-        value={"WebRTC"}
+        value="WebRTC"
       />
       {(
         [

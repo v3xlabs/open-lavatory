@@ -5,7 +5,7 @@ import * as QRCode from "qrcode-generator";
 import { useSession } from "../hooks/useSession.js";
 import { useTranslation } from "../utils/i18n.js";
 
-export const HandshakeOpen: FC<{ onCopy: (uri: string) => void }> = ({
+export const HandshakeOpen: FC<{ onCopy: (uri: string) => void; }> = ({
   onCopy,
 }) => {
   const { t } = useTranslation();

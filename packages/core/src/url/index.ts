@@ -24,7 +24,7 @@ export const decodeConnectionURL = (
 ): SessionHandshakeParameters => {
   // Type check and validation
   if (typeof url !== "string") {
-    throw new Error(`Invalid URL type: expected string, got ${typeof url}`);
+    throw new TypeError(`Invalid URL type: expected string, got ${typeof url}`);
   }
 
   if (!url || url.trim() === "") {
@@ -52,8 +52,8 @@ export const decodeConnectionURL = (
     const k = urlObj.searchParams.get("k") || "";
     const s = urlObj.searchParams.get("s") || undefined;
 
-    const p =
-      (urlObj.searchParams.get("p") as "mqtt" | "waku" | "nostr") || "mqtt";
+    const p
+      = (urlObj.searchParams.get("p") as "mqtt" | "waku" | "nostr") || "mqtt";
 
     if (!sessionId) {
       throw new Error("Session ID is required in URL");
@@ -97,9 +97,10 @@ export const decodeConnectionURL = (
       s: s ? decodeURIComponent(s) : "",
       p,
     };
-  } catch (error) {
-    const errorMessage =
-      error instanceof Error ? error.message : "Unknown error";
+  }
+  catch (error) {
+    const errorMessage
+      = error instanceof Error ? error.message : "Unknown error";
 
     throw new Error(
       `Failed to parse URL: ${url}. Original error: ${errorMessage}`,

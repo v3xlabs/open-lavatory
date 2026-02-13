@@ -1,8 +1,8 @@
 export const toBase64 = (data: Uint8Array): string => {
   let binary = "";
 
-  for (let index = 0; index < data.length; index += 1) {
-    binary += String.fromCharCode(data[index]);
+  for (const datum of data) {
+    binary += String.fromCharCode(datum);
   }
 
   return btoa(binary);

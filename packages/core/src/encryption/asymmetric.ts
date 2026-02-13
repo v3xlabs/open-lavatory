@@ -32,7 +32,7 @@ const decomposePayload = (
   const bytes = new Uint8Array(
     atob(payload)
       .split("")
-      .map((char) => char.charCodeAt(0)),
+      .map(char => char.charCodeAt(0)),
   );
 
   if (bytes.length <= PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH) {
@@ -110,8 +110,8 @@ export const createDecryptionKey = async (
         return "";
       }
 
-      const { ephemeralPublicKey, nonce, ciphertext } =
-        decomposePayload(message);
+      const { ephemeralPublicKey, nonce, ciphertext }
+        = decomposePayload(message);
       const decrypted = nacl.box.open(
         ciphertext,
         nonce,
@@ -148,9 +148,9 @@ export const initEncryptionKeys = async (
   const { encryptionKey, decryptionKey } = await generateKeyPair();
 
   if (
-    initParameters &&
-    "publicKey" in initParameters &&
-    initParameters.publicKey
+    initParameters
+    && "publicKey" in initParameters
+    && initParameters.publicKey
   ) {
     const relyingEncryptionKey = await parseEncryptionKey(
       initParameters.publicKey as string,

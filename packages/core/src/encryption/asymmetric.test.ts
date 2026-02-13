@@ -40,7 +40,8 @@ describe("Asymmetric encryption", () => {
 
   test("should be able to encrypt large blob", async () => {
     const { encryptionKey, decryptionKey } = await generateKeyPair();
-    const message = new Array(1024 * 1024).fill("a").join("");
+    const message = Array.from({ length: 1024 * 1024 }).fill("a")
+      .join("");
 
     console.log("message", message.length);
 

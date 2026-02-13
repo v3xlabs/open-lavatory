@@ -126,32 +126,28 @@ export const convertProviderStorageV0ToV1 = (
 
 export const convertProviderStorageV1ToV2 = (
   settings: ProviderStorageV1,
-): ProviderStorageV2 => {
-  return {
-    version: 2,
-    retainHistory: settings.retainHistory,
-    autoReconnect: settings.autoReconnect,
-    signaling: settings.signaling,
-    language: undefined,
-  };
-};
+): ProviderStorageV2 => ({
+  version: 2,
+  retainHistory: settings.retainHistory,
+  autoReconnect: settings.autoReconnect,
+  signaling: settings.signaling,
+  language: undefined,
+});
 
 export const convertProviderStorageV2ToV3 = (
   settings: ProviderStorageV2,
-): ProviderStorageV3 => {
-  return {
-    version: 3,
-    retainHistory: settings.retainHistory,
-    autoReconnect: settings.autoReconnect,
-    signaling: settings.signaling,
-    language: settings.language,
-    transport: undefined,
-    theme: undefined,
-  };
-};
+): ProviderStorageV3 => ({
+  version: 3,
+  retainHistory: settings.retainHistory,
+  autoReconnect: settings.autoReconnect,
+  signaling: settings.signaling,
+  language: settings.language,
+  transport: undefined,
+  theme: undefined,
+});
 
 export const AnyStorage = z.discriminatedUnion("version", [
-  ProviderStorageV0Schema.transform((v) => ({ version: 0, ...v })),
+  ProviderStorageV0Schema.transform(v => ({ version: 0, ...v })),
   ProviderStorageV1Schema,
   ProviderStorageV2Schema,
   ProviderStorageV3Schema,

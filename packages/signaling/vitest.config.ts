@@ -8,6 +8,6 @@ export default defineConfig({
       provider: "v8",
     },
     exclude: ["dist", "node_modules"],
-    testTimeout: 20000,
+    testTimeout: 20_000,
   },
 });

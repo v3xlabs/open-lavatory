@@ -8,8 +8,8 @@ import { useTranslation } from "../../../utils/i18n.js";
 
 export const ThemeSettings: FC = () => {
   const { t } = useTranslation();
-  const { userThemeMode, isUserConfigurable, updateThemePreference } =
-    useThemeConfig();
+  const { userThemeMode, isUserConfigurable, updateThemePreference }
+    = useThemeConfig();
 
   if (!isUserConfigurable) {
     return null;
@@ -26,9 +26,8 @@ export const ThemeSettings: FC = () => {
       <Select
         options={themeOptions}
         value={userThemeMode}
-        onChange={(value) =>
-          updateThemePreference(value as UserThemePreference)
-        }
+        onChange={value =>
+          updateThemePreference(value as UserThemePreference)}
       />
     </MenuItem>
   );

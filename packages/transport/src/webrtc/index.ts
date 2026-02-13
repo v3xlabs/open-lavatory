@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 import { match } from "ts-pattern";
 
 import {
@@ -32,7 +31,8 @@ export const webrtc: CreateTransportLayerFn = (
   const { iceServers = defaultConfig.iceServers } = config;
 
   console.log("WEBRTC ICE CONFIG", config);
-  const ident = Math.random().toString(36).substring(2, 4) + "#";
+  const ident = Math.random().toString(36)
+    .slice(2, 4) + "#";
 
   return createTransportBase(({ emitter, isHost }) => {
     const rtcConfig: RTCConfiguration = { iceServers };
@@ -60,7 +60,6 @@ export const webrtc: CreateTransportLayerFn = (
       emitter.emit("candidate", JSON.stringify(c.candidate?.toJSON()));
     };
     const onDataChannel = (e: RTCDataChannelEvent) => {
-      // eslint-disable-next-line prefer-destructuring
       channel = e.channel;
       hookChannel(channel);
       log(ident, "onDataChannel", channel);
@@ -85,8 +84,8 @@ export const webrtc: CreateTransportLayerFn = (
     };
 
     const hookChannel = (channel: RTCDataChannel) => {
-      channel.onopen = onDataChannelOpen;
-      channel.onmessage = onDataChannelMessage;
+      channel.addEventListener("open", onDataChannelOpen);
+      channel.addEventListener("message", onDataChannelMessage);
     };
 
     const handle = async (message: TransportMessage) => {

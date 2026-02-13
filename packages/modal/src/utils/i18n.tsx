@@ -42,12 +42,12 @@ export const LANGUAGES: LanguageInfo[] = [
 ];
 
 export const isRtlLanguage = (tag: LanguageTag): boolean => {
-  const language = LANGUAGES.find((l) => l.tag === tag);
+  const language = LANGUAGES.find(l => l.tag === tag);
 
   return language?.rtl ?? false;
 };
 
-const SUPPORTED_LANGUAGE_TAGS = LANGUAGES.map((l) => l.tag);
+const SUPPORTED_LANGUAGE_TAGS = new Set(LANGUAGES.map(l => l.tag));
 
 export const detectBrowserLanguage = (): LanguageTag => {
   if (typeof navigator === "undefined") return "en";
@@ -58,15 +58,15 @@ export const detectBrowserLanguage = (): LanguageTag => {
     const lang = browserLang.toLowerCase();
 
     // Exact match
-    if (SUPPORTED_LANGUAGE_TAGS.includes(lang as LanguageTag)) {
+    if (SUPPORTED_LANGUAGE_TAGS.has(lang as LanguageTag)) {
       return lang as LanguageTag;
     }
 
     // Check for zh-cn variants (zh, zh-hans, zh-cn)
     if (
-      lang === "zh" ||
-      lang.startsWith("zh-hans") ||
-      lang.startsWith("zh-cn")
+      lang === "zh"
+      || lang.startsWith("zh-hans")
+      || lang.startsWith("zh-cn")
     ) {
       return "zh-cn";
     }
@@ -74,7 +74,7 @@ export const detectBrowserLanguage = (): LanguageTag => {
     // Base language match (e.g., "en-US" -> "en")
     const [baseLang] = lang.split("-");
 
-    if (SUPPORTED_LANGUAGE_TAGS.includes(baseLang as LanguageTag)) {
+    if (SUPPORTED_LANGUAGE_TAGS.has(baseLang as LanguageTag)) {
       return baseLang as LanguageTag;
     }
   }
@@ -141,7 +141,7 @@ const interpolate = (
 ): string => {
   if (!params) return template;
 
-  return template.replace(
+  return template.replaceAll(
     /\{(\w+)\}/g,
     (matchText: string, key: string): string => {
       const value = params[key];
@@ -152,7 +152,7 @@ const interpolate = (
 };
 
 export const resolveTranslation = (parameters: {
-  primary: Translations | null;
+  primary: Translations | undefined;
   fallback: Translations;
   key: string;
   params?: Readonly<Record<string, string | number>>;
@@ -180,25 +180,26 @@ export type TranslationContextValue = {
   t: Translate;
 };
 
-export const TranslationContext = createContext<TranslationContextValue | null>(
-  null,
+export const TranslationContext = createContext<TranslationContextValue | undefined>(
+  undefined,
 );
 
 const loadLanguagePack = async (
   languageTag: LanguageTag,
-): Promise<Translations | null> =>
+): Promise<Translations | undefined> =>
   match(languageTag)
-    .with("en", () => Promise.resolve(null))
-    .with("nl", async () => import("../../lang/nl.json").then((m) => m.default))
-    .with("es", async () => import("../../lang/es.json").then((m) => m.default))
-    .with("sv", async () => import("../../lang/sv.json").then((m) => m.default))
-    .with("fr", async () => import("../../lang/fr.json").then((m) => m.default))
+
+    .with("en", () => Promise.resolve(undefined))
+    .with("nl", async () => import("../../lang/nl.json").then(m => m.default))
+    .with("es", async () => import("../../lang/es.json").then(m => m.default))
+    .with("sv", async () => import("../../lang/sv.json").then(m => m.default))
+    .with("fr", async () => import("../../lang/fr.json").then(m => m.default))
     .with("zh-cn", async () =>
-      import("../../lang/zh-cn.json").then((m) => m.default),
+      import("../../lang/zh-cn.json").then(m => m.default),
     )
-    .with("ar", async () => import("../../lang/ar.json").then((m) => m.default))
-    .with("he", async () => import("../../lang/he.json").then((m) => m.default))
-    .with("fa", async () => import("../../lang/fa.json").then((m) => m.default))
+    .with("ar", async () => import("../../lang/ar.json").then(m => m.default))
+    .with("he", async () => import("../../lang/he.json").then(m => m.default))
+    .with("fa", async () => import("../../lang/fa.json").then(m => m.default))
     .exhaustive();
 
 export type TranslationProviderProps = {
@@ -210,9 +211,9 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
   children,
   initialLanguageTag = "en",
 }) => {
-  const [languageTag, setLanguageTag] =
-    useState<LanguageTag>(initialLanguageTag);
-  const [languagePack, setLanguagePack] = useState<Translations | null>(null);
+  const [languageTag, setLanguageTag]
+    = useState<LanguageTag>(initialLanguageTag);
+  const [languagePack, setLanguagePack] = useState<Translations | undefined>(undefined);
   const [isLoadingLanguagePack, setIsLoadingLanguagePack] = useState(false);
 
   useEffect(() => {
@@ -227,7 +228,8 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
         if (cancelled) return;
 
         setLanguagePack(nextPack);
-      } finally {
+      }
+      finally {
         if (!cancelled) setIsLoadingLanguagePack(false);
       }
     };
@@ -249,7 +251,7 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
       })
         .split("\n")
         .map((line, index, array) =>
-          index < array.length - 1 ? [line, <br key={index} />] : [line],
+          (index < array.length - 1 ? [line, <br key={index} />] : [line]),
         ),
     [languagePack],
   );

@@ -33,7 +33,7 @@ const testCases = {
         },
       },
     },
-  ] as { name: string; input: ProviderStorageV0; output: ProviderStorageV1 }[],
+  ] as { name: string; input: ProviderStorageV0; output: ProviderStorageV1; }[],
   v1tov2: [
     {
       name: "basic",
@@ -60,7 +60,7 @@ const testCases = {
         },
       },
     },
-  ] as { name: string; input: ProviderStorageV1; output: ProviderStorageV2 }[],
+  ] as { name: string; input: ProviderStorageV1; output: ProviderStorageV2; }[],
   startToFinish: [
     {
       name: "v0->v1->v2->v3",

@@ -9,7 +9,7 @@ declare global {
   }
 }
 
-const connector = openlv({})({ chains: [] } as any);
+const connector = openlv({})({ chains: [] } as { chains: readonly []; });
 const { uuid, name, icon, rdns } = connector;
 
 // eslint-disable-next-line import/no-default-export
@@ -22,7 +22,7 @@ export default defineUnlistedScript(() => {
   //   }
 
   console.log("OpenLV EIP-6963 Provider Injected");
-  // @ts-ignore
+  // @ts-expect-error
   const provider = createProvider({
     openModal: async (provider) => {
       console.log("openModal", provider);
@@ -38,11 +38,11 @@ export default defineUnlistedScript(() => {
   });
 
   // // Expose provider globally
-  window.openlv = provider;
+  globalThis.openlv = provider;
 
   // // For backwards compatibility, also expose as window.ethereum if not already set
-  if (!window.ethereum) {
-    window.ethereum = provider;
+  if (!globalThis.ethereum) {
+    globalThis.ethereum = provider;
   }
 
   const providerInfo = { uuid, name, icon, rdns };
@@ -54,16 +54,16 @@ export default defineUnlistedScript(() => {
   });
 
   // Announce provider
-  function announceProvider() {
+  const announceProvider = () => {
     const event = new CustomEvent("eip6963:announceProvider", {
       detail: providerDetail,
     });
 
-    window.dispatchEvent(event);
-  }
+    globalThis.dispatchEvent(event);
+  };
 
   // Listen for provider requests
-  window.addEventListener("eip6963:requestProvider", announceProvider);
+  globalThis.addEventListener("eip6963:requestProvider", announceProvider);
 
   // Announce immediately
   announceProvider();

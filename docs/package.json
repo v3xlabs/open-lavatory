@@ -15,7 +15,7 @@
         "@openlv/session": "workspace:*",
         "@openlv/transport": "workspace:*",
         "@tanstack/react-query": "^5.83.0",
-        "mqtt": "^5.14.1",
+        "mqtt": "^5",
         "react": "latest",
         "react-dom": "latest",
         "tailwindcss": "^4",

@@ -2,49 +2,51 @@ import type { Page } from "@playwright/test";
 
 // Type for EIP-6963 discovery results
 export interface EIP6963DiscoveryResult {
-  providers: any[];
+  providers: unknown[];
   hasOpenLV: boolean;
-  openLVProvider: any;
+  openLVProvider: unknown;
 }
+
+type WindowWithOpenLV = Window & { openlv?: unknown; };
 
 /**
  * Wait for OpenLV provider to be injected into the page
  */
-export async function waitForOpenLVProvider(
+export const waitForOpenLVProvider = async (
   page: Page,
-  timeout = 10000,
-): Promise<boolean> {
+  timeout = 10_000,
+): Promise<boolean> => {
   try {
     await page.waitForFunction(
-      () => typeof (window as any).openlv !== "undefined",
+      () => (globalThis as WindowWithOpenLV).openlv !== undefined,
       {
         timeout,
       },
     );
 
     return true;
-  } catch {
+  }
+  catch {
     console.log("OpenLV provider not found within timeout");
 
     return false;
   }
-}
+};
 
 /**
  * Check if OpenLV provider is available on the page
  */
-export async function hasOpenLVProvider(page: Page): Promise<boolean> {
-  return await page.evaluate(() => {
-    return typeof (window as any).openlv !== "undefined";
-  });
-}
+export const hasOpenLVProvider = async (page: Page): Promise<boolean> =>
+  await page.evaluate(
+    () => (globalThis as WindowWithOpenLV).openlv !== undefined,
+  );
 
 /**
  * Get OpenLV provider methods
  */
-export async function getOpenLVMethods(page: Page): Promise<string[]> {
-  return await page.evaluate(() => {
-    const { openlv } = window as any;
+export const getOpenLVMethods = async (page: Page): Promise<string[]> =>
+  await page.evaluate(() => {
+    const { openlv } = globalThis as WindowWithOpenLV;
 
     if (!openlv) return [];
 
@@ -57,10 +59,13 @@ export async function getOpenLVMethods(page: Page): Promise<string[]> {
       const props = Object.getOwnPropertyNames(obj);
 
       for (const prop of props) {
-        if (prop !== "constructor" && typeof openlv[prop] === "function") {
-          if (!methods.includes(prop)) {
-            methods.push(prop);
-          }
+        if (
+          prop !== "constructor"
+          && typeof (openlv as Record<string, unknown>)[prop]
+          === "function"
+          && !methods.includes(prop)
+        ) {
+          methods.push(prop);
         }
       }
       obj = Object.getPrototypeOf(obj);
@@ -68,46 +73,54 @@ export async function getOpenLVMethods(page: Page): Promise<string[]> {
 
     return methods.sort();
   });
-}
 
 /**
  * Test EIP-6963 provider discovery
  */
-export async function testEIP6963Discovery(
+export const testEIP6963Discovery = async (
   page: Page,
-): Promise<EIP6963DiscoveryResult> {
-  return await page.evaluate(() => {
-    return new Promise<EIP6963DiscoveryResult>((resolve) => {
-      const providers: any[] = [];
-      let hasOpenLV = false;
-      let openLVProvider: any = null;
+): Promise<EIP6963DiscoveryResult> =>
+  await page.evaluate(
+    () =>
+      new Promise<EIP6963DiscoveryResult>((resolve) => {
+        const providers: unknown[] = [];
+        let hasOpenLV = false;
+        let openLVProvider: unknown | undefined;
 
-      // Listen for provider announcements
-      window.addEventListener("eip6963:announceProvider", (event: any) => {
-        const { detail } = event;
+        // Listen for provider announcements
+        globalThis.addEventListener(
+          "eip6963:announceProvider",
+          (event: Event) => {
+            const { detail } = event as CustomEvent<
+              { info: { name: string; }; }
+            >;
 
-        providers.push(detail);
+            providers.push(detail);
 
-        if (
-          detail.info.name?.toLowerCase().includes("openlv") ||
-          detail.info.name?.toLowerCase().includes("lavatory")
-        ) {
-          hasOpenLV = true;
-          openLVProvider = detail;
-        }
-      });
+            if (
+              detail.info?.name
+                ?.toLowerCase()
+                .includes("openlv")
+                || detail.info?.name?.toLowerCase().includes("lavatory")
+            ) {
+              hasOpenLV = true;
+              openLVProvider = detail;
+            }
+          },
+        );
 
-      // Request providers
-      window.dispatchEvent(new CustomEvent("eip6963:requestProvider"));
+        // Request providers
+        globalThis.dispatchEvent(
+          new CustomEvent("eip6963:requestProvider"),
+        );
 
-      // Wait for providers to announce
-      setTimeout(() => {
-        resolve({
-          providers,
-          hasOpenLV,
-          openLVProvider,
-        });
-      }, 2000);
-    });
-  });
-}
+        // Wait for providers to announce
+        setTimeout(() => {
+          resolve({
+            providers,
+            hasOpenLV,
+            openLVProvider,
+          });
+        }, 2000);
+      }),
+  );

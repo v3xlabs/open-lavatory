@@ -11,9 +11,9 @@ export const useThemeConfig = () => {
 
   const isUserConfigurable = appThemeMode === "auto";
 
-  const themeMode = !isUserConfigurable
-    ? appThemeMode
-    : (userThemeMode ?? "system");
+  const themeMode = isUserConfigurable
+    ? (userThemeMode ?? "system")
+    : appThemeMode;
 
   return {
     themeMode,

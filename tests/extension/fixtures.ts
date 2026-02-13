@@ -1,4 +1,5 @@
-/* eslint-disable unicorn/prefer-module */
+/* eslint-disable react-hooks/rules-of-hooks */
+
 import path from "node:path";
 
 import { type BrowserContext, chromium, test as base } from "@playwright/test";
@@ -18,7 +19,7 @@ export const test = base.extend<{
     // const uniqueId = randomBytes(8).toString('hex');
     const userDataDir = path.join(
       process.cwd(),
-      `.playwright-extension-user-data`,
+      ".playwright-extension-user-data",
     );
 
     console.log(`Loading extension from: ${extensionPath}`);
@@ -49,7 +50,7 @@ export const test = base.extend<{
 
     if (!serviceWorker) {
       serviceWorker = await context.waitForEvent("serviceworker", {
-        timeout: 10000,
+        timeout: 10_000,
       });
     }
 

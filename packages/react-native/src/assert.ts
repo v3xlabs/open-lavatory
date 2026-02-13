@@ -15,8 +15,8 @@ export const assertOpenLVReady = (
     );
   }
 
-  if (typeof g.RTCPeerConnection === "undefined") {
-    throw new Error(
+  if (g.RTCPeerConnection === undefined) {
+    throw new TypeError(
       "@openlv/react-native: WebRTC globals are missing (RTCPeerConnection). Ensure react-native-webrtc is available and OpenLVGlobals has mounted.",
     );
   }
@@ -32,7 +32,7 @@ export const assertOpenLVReady = (
     );
   }
 
-  if (options.requireCryptoReady && typeof crypto.subtle === "undefined") {
+  if (options.requireCryptoReady && crypto.subtle === undefined) {
     throw new Error(
       "@openlv/react-native: WebCrypto is not ready (crypto.subtle missing). Ensure OpenLVGlobals has mounted; the WebView crypto bridge may still be initializing.",
     );

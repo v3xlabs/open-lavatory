@@ -10,7 +10,7 @@ import { App } from "./App.tsx";
 
 const client = new QueryClient();
 
-createRoot(document.getElementById("root")!).render(
+createRoot(document.querySelector("#root")!).render(
   <StrictMode>
     <QueryClientProvider client={client}>
       <WagmiProvider config={config}>

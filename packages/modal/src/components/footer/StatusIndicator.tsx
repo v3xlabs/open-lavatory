@@ -45,7 +45,7 @@ export const FooterStatus = () => {
       icon: "❌",
       text: t("status.signalError"),
     }))
-    .otherwise(() => undefined);
+    .otherwise(() => {});
 
   if (!status) return <></>;
 

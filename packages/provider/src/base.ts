@@ -1,3 +1,4 @@
+/* eslint-disable unicorn/consistent-function-scoping */
 import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
@@ -72,28 +73,28 @@ export type ProviderBase = {
 };
 
 export type OpenLVProvider = OxProvider.Provider<
-  { schema: RpcSchema },
+  { schema: RpcSchema; },
   ProviderEvents & EventMap
 > &
-  ProviderBase;
+ProviderBase;
 
 type transportInput =
   | {
-      stun?: string[] | undefined;
-      turn?:
-        | {
-            urls: string;
-            username?: string | undefined;
-            credential?: string | undefined;
-          }[]
-        | undefined;
-    }
+    stun?: string[] | undefined;
+    turn?:
+      | {
+        urls: string;
+        username?: string | undefined;
+        credential?: string | undefined;
+      }[]
+      | undefined;
+  }
   | undefined;
 
 const convertTempV1 = (transport: transportInput): WebRTCConfig => {
-  const stun = transport?.stun?.map((url) => ({ urls: url })) || [];
-  const turn =
-    transport?.turn?.map((server) => ({
+  const stun = transport?.stun?.map(url => ({ urls: url })) || [];
+  const turn
+    = transport?.turn?.map(server => ({
       urls: server.urls,
       username: server.username,
       credential: server.credential,
@@ -149,9 +150,9 @@ export const createProvider = (
     },
   ) => {
     updateStatus(PROVIDER_STATUS.CREATING);
-    const transportOptions =
-      convertTempV1(storage.getSettings().transport?.s?.webrtc) ||
-      config?.transport?.s?.webrtc;
+    const transportOptions
+      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
+        || config?.transport?.s?.webrtc;
 
     session = await createSession(
       parameters,
@@ -276,8 +277,8 @@ export const createProvider = (
   const oxProvider = OxProvider.from<
     ProviderConfig,
     OxProvider.from.Value<ProviderConfig> &
-      ProviderBase &
-      OxProvider.Emitter<ProviderEvents & EventMap>
+    ProviderBase &
+    OxProvider.Emitter<ProviderEvents & EventMap>
   >({
     ...oxEmitter,
     storage,

@@ -82,7 +82,7 @@ const trimAddress = (address: Address | undefined | null) => {
   return `${address.slice(0, 5)}...${address.slice(-4)}`;
 };
 
-let session: Session | undefined = undefined;
+let session: Session | undefined;
 
 const TestSign = () => {
   const {
@@ -134,24 +134,29 @@ const TestSign = () => {
       )}
       {signedData && (
         <div className="space-y-2">
-          {isVerifying ? (
-            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
-              Verifying signature...
-            </div>
-          ) : verificationResult !== undefined ? (
-            <div
-              className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
-                verificationResult
-                  ? "text-green-500"
-                  : "text-[var(--vocs-color_text)]"
-              }`}
-            >
-              {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
-            </div>
-          ) : null}
+          {isVerifying
+            ? (
+                <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+                  Verifying signature...
+                </div>
+              )
+            : (verificationResult === undefined
+                ? null
+                : (
+                    <div
+                      className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
+                        verificationResult
+                          ? "text-green-500"
+                          : "text-[var(--vocs-color_text)]"
+                      }`}
+                    >
+                      {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
+                    </div>
+                  ))}
           {verificationError && (
             <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
-              Error:{" "}
+              Error:
+              {" "}
               {verificationError instanceof Error
                 ? verificationError.message
                 : String(verificationError)}
@@ -167,7 +172,7 @@ const ConnectComponent = () => {
   const walletClient = useClient();
   const { data: connectorClient } = useConnectorClient();
   const connections = useConnections();
-  const [url, setUrl] = useState<string | undefined>(undefined);
+  const [url, setUrl] = useState<string | undefined>();
 
   console.log("connectorClient", connectorClient);
   console.log("connections", connections);
@@ -186,7 +191,7 @@ const ConnectComponent = () => {
             type="text"
             value={url}
             className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1 placeholder:text-neutral-500"
-            onChange={(e) => setUrl(e.target.value)}
+            onChange={e => setUrl(e.target.value)}
             placeholder="openlv://..."
           />
         </div>
@@ -194,15 +199,15 @@ const ConnectComponent = () => {
           onClick={async () => {
             if (!url) return;
 
-            console.log("connecting to ", url);
-            const client =
-              (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
+            console.log("connecting to", url);
+            const client
+              = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
 
             session = await connectSession(
               url,
               async (message) => {
                 console.log("received message", message);
-                const { method } = message as { method: string };
+                const { method } = message as { method: string; };
 
                 console.log("wc", walletClient);
 
@@ -269,7 +274,10 @@ const Connected = () => {
               className="h-10 w-10 rounded-md"
             />
           )}
-          <div>Connected to {trimAddress(address)}</div>
+          <div>
+            Connected to
+            {trimAddress(address)}
+          </div>
         </div>
         <button
           onClick={() => {
@@ -288,7 +296,7 @@ const Connected = () => {
   );
 };
 
-const ConnectorPreview = ({ connector }: { connector: Connector }) => {
+const ConnectorPreview = ({ connector }: { connector: Connector; }) => {
   const { connect } = useConnect();
 
   return (
@@ -314,17 +322,17 @@ const Connectors = () => {
   const { connect, connectors } = useConnect();
 
   const openLvConnector = connectors.find(
-    (connector) => connector.type === "openLv",
+    connector => connector.type === "openLv",
   );
   const firstNonOpenLvConnector = connectors.find(
-    (connector) => connector.type !== "openLv",
+    connector => connector.type !== "openLv",
   );
 
   return (
     <>
       <div className="mt-4 space-y-2 p-2">
         <ul className="mx-auto w-full max-w-xs space-y-2">
-          {connectors.map((connector) => (
+          {connectors.map(connector => (
             <li key={connector.id} className="">
               <button
                 onClick={() => {
@@ -340,8 +348,8 @@ const Connectors = () => {
                 <span
                   className={classNames(
                     "font-bold text-sm",
-                    connector.type === "openLv" &&
-                      "text-[var(--vocs-color_codeInlineText)]",
+                    connector.type === "openLv"
+                    && "text-[var(--vocs-color_codeInlineText)]",
                   )}
                 >
                   {connector.name}
@@ -361,24 +369,33 @@ const Connectors = () => {
       <div className="w-full rounded-b-md border-[var(--vocs-color_codeInlineBorder)] border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
         <div>
           The above is a sample wagmi snippet. You can use it to test out openlv
-          right here! <br />
+          right here!
+          {" "}
+          <br />
           <div>
             <div>Steps:</div>
             <ul className="list-inside list-disc">
               <li>
-                Open this page in <span className="font-bold">a new tab</span>
+                Open this page in
+                {" "}
+                <span className="font-bold">a new tab</span>
               </li>
               <li>
                 Click
                 {openLvConnector && (
                   <ConnectorPreview connector={openLvConnector} />
-                )}{" "}
-                on one and{" "}
-                {firstNonOpenLvConnector ? (
-                  <ConnectorPreview connector={firstNonOpenLvConnector} />
-                ) : (
-                  <span className="font-bold">your wallet</span>
-                )}{" "}
+                )}
+                {" "}
+                on one and
+                {" "}
+                {firstNonOpenLvConnector
+                  ? (
+                      <ConnectorPreview connector={firstNonOpenLvConnector} />
+                    )
+                  : (
+                      <span className="font-bold">your wallet</span>
+                    )}
+                {" "}
                 on the other
               </li>
               <li>Copy the connection URL</li>
@@ -404,18 +421,16 @@ export const Inner = () => {
   );
 };
 
-export const Outter = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <WagmiProvider config={config}>
-        <Inner />
-      </WagmiProvider>
-    </QueryClientProvider>
-  );
-};
+export const Outter = () => (
+  <QueryClientProvider client={queryClient}>
+    <WagmiProvider config={config}>
+      <Inner />
+    </WagmiProvider>
+  </QueryClientProvider>
+);
 
 export const TryItOut = () => {
-  const inBrowser = typeof window !== "undefined";
+  const inBrowser = globalThis.window !== undefined;
 
   return (
     <div

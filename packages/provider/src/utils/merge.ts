@@ -20,9 +20,9 @@ type MergeRight<T extends readonly unknown[]> = T extends []
  * Object.assign but fully typed. Creates a new object.
  * Later sources overwrite earlier ones in both runtime and type.
  */
-export function merge<T extends readonly object[]>(
+export const merge = <T extends readonly object[]>(
   ...sources: T
-): Simplify<MergeRight<T>> {
-  // Shallow merge, same semantics as Object.assign({}, ...sources)
-  return Object.assign({}, ...sources) as Simplify<MergeRight<T>>;
-}
+): Simplify<MergeRight<T>> =>
+// Shallow merge, same semantics as Object.assign({}, ...sources)
+  Object.assign({}, ...sources) as Simplify<MergeRight<T>>
+;

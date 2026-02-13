@@ -19,5 +19,5 @@ export const useEventEmitter = <
     return () => {
       emitter?.off(event, fn);
     };
-  }, [emitter, event]);
+  }, [emitter, event, fn]);
 };

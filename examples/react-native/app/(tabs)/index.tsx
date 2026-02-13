@@ -39,12 +39,12 @@ export default function HomeScreen() {
         light: Colors.light.background,
         dark: Colors.dark.background,
       }}
-      headerImage={
+      headerImage={(
         <Image
           source={require("@/assets/images/partial-react-logo.png")}
           style={styles.reactLogo}
         />
-      }
+      )}
     >
       <ThemedView style={styles.page}>
         <ThemedView style={styles.header}>

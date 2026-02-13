@@ -1,6 +1,6 @@
 const labelClasses = "font-semibold text-xs uppercase tracking-wide";
-const inputClasses =
-  "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)";
+const inputClasses
+  = "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)";
 
 type LabelProps = {
   htmlFor?: string;

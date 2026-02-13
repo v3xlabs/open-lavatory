@@ -1,6 +1,7 @@
 import { fileURLToPath } from "node:url";
 
 import tailwindcss from "@tailwindcss/vite";
+import type { PluginOption } from "vite";
 import { defineConfig } from "vocs";
 
 // eslint-disable-next-line import/no-default-export
@@ -8,11 +9,11 @@ export default defineConfig({
   title: "openlv",
   titleTemplate: "%s · openlv",
   description:
-    "Secure peer-to-peer JSON-RPC connectivity between dApps and wallets",
+        "Secure peer-to-peer JSON-RPC connectivity between dApps and wallets",
   rootDir: ".",
   editLink: {
     pattern:
-      "https://github.com/v3xlabs/open-lavatory/edit/master/docs/pages/:path",
+            "https://github.com/v3xlabs/open-lavatory/edit/master/docs/pages/:path",
     text: "Suggest changes to this page",
   },
   sidebar: [
@@ -120,7 +121,7 @@ export default defineConfig({
     {
       text: "Docs",
       link: "/getting-started",
-      match: (path) => !(path.startsWith("specs") || path === "/"),
+      match: path => !(path.startsWith("specs") || path === "/"),
     },
     {
       text: "Specs",
@@ -158,7 +159,7 @@ export default defineConfig({
   ogImageUrl: "https://openlv.sh/openlv_banner.png",
   basePath: process.env.DOCS_BASE_PATH || "/",
   vite: {
-    plugins: [tailwindcss() as unknown as any],
+    plugins: [tailwindcss() as PluginOption],
     ssr: {
       noExternal: [
         "@openlv/connector",

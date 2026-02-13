@@ -5,12 +5,22 @@ import { match } from "ts-pattern";
  *
  * TODO: Make this a built-in feature of session/provider
  */
-export const dynamicSignalingLayer = async (protocol: string) => {
-  return match(protocol)
-    .with("mqtt", async () => (await import("./mqtt/index.js"))["mqtt"])
-    .with("ntfy", async () => (await import("./ntfy/index.js"))["ntfy"])
-    .with("gun", async () => (await import("./gundb/index.js"))["gundb"])
-    .otherwise(() => {
-      throw new Error(`Unknown signaling protocol: ${protocol}`);
-    });
-};
+export const dynamicSignalingLayer = async (protocol: string) => match(protocol)
+  .with("mqtt", async () => {
+    const mod = await import("./mqtt/index.js");
+
+    return mod.mqtt;
+  })
+  .with("ntfy", async () => {
+    const mod = await import("./ntfy/index.js");
+
+    return mod.ntfy;
+  })
+  .with("gun", async () => {
+    const mod = await import("./gundb/index.js");
+
+    return mod.gundb;
+  })
+  .otherwise(() => {
+    throw new Error(`Unknown signaling protocol: ${protocol}`);
+  });

@@ -15,103 +15,132 @@ export default defineContentScript({
   },
 });
 
-function shouldInjectProvider(): boolean {
+const shouldInjectProvider = (): boolean => {
   // Don't inject on extension pages
   if (
-    window.location.protocol === "chrome-extension:" ||
-    window.location.protocol === "moz-extension:"
+    globalThis.location.protocol === "chrome-extension:"
+    || globalThis.location.protocol === "moz-extension:"
   ) {
     return false;
   }
 
   // Don't inject on local file URLs for security
-  if (window.location.protocol === "file:") {
+  if (globalThis.location.protocol === "file:") {
     return false;
   }
 
   return true;
-}
+};
 
-function injectOpenLVProvider() {
+const injectOpenLVProvider = () => {
   // Create script element to inject the provider
   const script = document.createElement("script");
 
   script.src = chrome.runtime.getURL("injected.js");
-  script.onload = () => {
+  script.addEventListener("load", () => {
     script.remove();
-  };
+  });
 
   // Inject before head or body
   const target = document.head || document.documentElement;
 
-  target.appendChild(script);
+  target.append(script);
 
   // Set up communication bridge between injected script and extension
   setupCommunicationBridge();
-}
+};
 
-function setupCommunicationBridge() {
+type ProviderMessage = {
+  source?: string;
+  type?: string;
+  data?: unknown;
+  requestId?: string | number;
+};
+
+type TypedDataPayload = {
+  params: unknown[];
+};
+
+const setupCommunicationBridge = () => {
   // Listen for messages from the injected provider
   window.addEventListener("message", async (event) => {
     // Only accept messages from same origin
-    if (event.source !== window) return;
+    if (event.source !== globalThis) return;
 
-    const message = event.data;
+    const message = event.data as ProviderMessage;
 
     if (!message || message.source !== "openlv-provider") return;
 
     try {
-      let response: any;
+      let response: unknown;
 
       switch (message.type) {
-        case "eth_requestAccounts":
+        case "eth_requestAccounts": {
           response = await handleRequestAccounts();
           break;
+        }
 
-        case "eth_getBalance":
+        case "eth_getBalance": {
           response = await handleGetBalance(message.data);
           break;
+        }
 
-        case "eth_sendTransaction":
+        case "eth_sendTransaction": {
           response = await handleSendTransaction(message.data);
           break;
+        }
 
-        case "personal_sign":
+        case "personal_sign": {
           response = await handlePersonalSign(message.data);
           break;
+        }
 
-        case "eth_sign":
+        case "eth_sign": {
           response = await handleEthSign(message.data);
           break;
+        }
 
         case "eth_signTypedData":
         case "eth_signTypedData_v3":
-        case "eth_signTypedData_v4":
-          response = await handleSignTypedData(message.type, message.data);
+        case "eth_signTypedData_v4": {
+          response = await handleSignTypedData(
+            message.type,
+            message.data,
+          );
           break;
+        }
 
-        case "wallet_switchEthereumChain":
+        case "wallet_switchEthereumChain": {
           response = await handleSwitchChain(message.data);
           break;
+        }
 
-        case "wallet_addEthereumChain":
+        case "wallet_addEthereumChain": {
           response = await handleAddChain(message.data);
           break;
+        }
 
-        case "wallet_getPermissions":
+        case "wallet_getPermissions": {
           response = await handleGetPermissions();
           break;
+        }
 
-        case "wallet_requestPermissions":
+        case "wallet_requestPermissions": {
           response = await handleRequestPermissions(message.data);
           break;
+        }
 
-        case "forward_request":
+        case "forward_request": {
           response = await handleForwardRequest(message.data);
           break;
+        }
 
-        default:
-          response = { success: false, error: "Unknown message type" };
+        default: {
+          response = {
+            success: false,
+            error: "Unknown message type",
+          };
+        }
       }
 
       // Send response back to injected provider
@@ -123,7 +152,8 @@ function setupCommunicationBridge() {
         },
         "*",
       );
-    } catch (error) {
+    }
+    catch (error) {
       // Send error response back to injected provider
       window.postMessage(
         {
@@ -131,7 +161,10 @@ function setupCommunicationBridge() {
           requestId: message.requestId,
           response: {
             success: false,
-            error: error instanceof Error ? error.message : "Unknown error",
+            error:
+                            error instanceof Error
+                              ? error.message
+                              : "Unknown error",
           },
         },
         "*",
@@ -143,10 +176,13 @@ function setupCommunicationBridge() {
   browser.runtime.onMessage.addListener((message) => {
     // Forward relevant messages to injected provider
     if (
-      message.type &&
-      ["accountsChanged", "chainChanged", "connect", "disconnect"].includes(
-        message.type,
-      )
+      message.type
+      && [
+        "accountsChanged",
+        "chainChanged",
+        "connect",
+        "disconnect",
+      ].includes(message.type)
     ) {
       window.postMessage(
         {
@@ -158,11 +194,11 @@ function setupCommunicationBridge() {
       );
     }
   });
-}
+};
 
 // Handler functions for EIP-1193 methods
 
-async function handleRequestAccounts() {
+const handleRequestAccounts = async () => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_requestAccounts",
@@ -173,16 +209,22 @@ async function handleRequestAccounts() {
       success: true,
       data: { accounts: response.accounts || [] },
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to request accounts",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to request accounts",
     };
   }
-}
+};
 
-async function handleGetBalance(data: { address: string; blockTag: string }) {
+const handleGetBalance = async (data: {
+  address: string;
+  blockTag: string;
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_getBalance",
@@ -193,15 +235,21 @@ async function handleGetBalance(data: { address: string; blockTag: string }) {
       success: true,
       data: response.balance,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to get balance",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to get balance",
     };
   }
-}
+};
 
-async function handleSendTransaction(data: { transaction: any }) {
+const handleSendTransaction = async (data: {
+  transaction: Record<string, unknown>;
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_sendTransaction",
@@ -212,16 +260,22 @@ async function handleSendTransaction(data: { transaction: any }) {
       success: true,
       data: response.hash,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to send transaction",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to send transaction",
     };
   }
-}
+};
 
-async function handlePersonalSign(data: { message: string; address: string }) {
+const handlePersonalSign = async (data: {
+  message: string;
+  address: string;
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "personal_sign",
@@ -232,15 +286,19 @@ async function handlePersonalSign(data: { message: string; address: string }) {
       success: true,
       data: response.signature,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to sign message",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to sign message",
     };
   }
-}
+};
 
-async function handleEthSign(data: { address: string; message: string }) {
+const handleEthSign = async (data: { address: string; message: string; }) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "eth_sign",
@@ -251,15 +309,19 @@ async function handleEthSign(data: { address: string; message: string }) {
       success: true,
       data: response.signature,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to sign message",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to sign message",
     };
   }
-}
+};
 
-async function handleSignTypedData(method: string, data: { params: any[] }) {
+const handleSignTypedData = async (method: string, data: TypedDataPayload) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: method,
@@ -270,16 +332,19 @@ async function handleSignTypedData(method: string, data: { params: any[] }) {
       success: true,
       data: response.signature,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to sign typed data",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to sign typed data",
     };
   }
-}
+};
 
-async function handleSwitchChain(data: { chainId?: string }) {
+const handleSwitchChain = async (data: { chainId?: string; }) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_switchEthereumChain",
@@ -290,15 +355,19 @@ async function handleSwitchChain(data: { chainId?: string }) {
       success: true,
       data: { chainId: response.chainId },
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to switch chain",
+      error:
+                error instanceof Error
+                  ? error.message
+                  : "Failed to switch chain",
     };
   }
-}
+};
 
-async function handleAddChain(data: any) {
+const handleAddChain = async (data: Record<string, unknown>) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_addEthereumChain",
@@ -309,15 +378,17 @@ async function handleAddChain(data: any) {
       success: true,
       data: response,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
-      error: error instanceof Error ? error.message : "Failed to add chain",
+      error:
+                error instanceof Error ? error.message : "Failed to add chain",
     };
   }
-}
+};
 
-async function handleGetPermissions() {
+const handleGetPermissions = async () => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_getPermissions",
@@ -328,16 +399,19 @@ async function handleGetPermissions() {
       success: true,
       data: response.permissions || [],
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to get permissions",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to get permissions",
     };
   }
-}
+};
 
-async function handleRequestPermissions(data: { permissions: any }) {
+const handleRequestPermissions = async (data: { permissions: unknown; }) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "wallet_requestPermissions",
@@ -348,18 +422,22 @@ async function handleRequestPermissions(data: { permissions: any }) {
       success: true,
       data: response.permissions || [],
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error:
-        error instanceof Error
-          ? error.message
-          : "Failed to request permissions",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to request permissions",
     };
   }
-}
+};
 
-async function handleForwardRequest(data: { method: string; params: any[] }) {
+const handleForwardRequest = async (data: {
+  method: string;
+  params: unknown[];
+}) => {
   try {
     const response = await browser.runtime.sendMessage({
       type: "forward_request",
@@ -370,20 +448,22 @@ async function handleForwardRequest(data: { method: string; params: any[] }) {
       success: true,
       data: response.result,
     };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       success: false,
       error:
-        error instanceof Error ? error.message : "Failed to forward request",
+                error instanceof Error
+                  ? error.message
+                  : "Failed to forward request",
     };
   }
-}
+};
 
-async function getCurrentTabId(): Promise<number> {
-  return new Promise((resolve) => {
+const getCurrentTabId = async (): Promise<number> =>
+  new Promise((resolve) => {
     browser.tabs.query({ active: true, currentWindow: true }, (tabs) => {
       // eslint-disable-next-line no-restricted-syntax
       resolve(tabs[0]?.id || 0);
     });
   });
-}

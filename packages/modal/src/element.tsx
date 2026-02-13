@@ -14,8 +14,7 @@ export type OpenLVModalElementProps = {
 
 export class OpenLVModalElement
   extends HTMLElement
-  implements ModalConnectionInterface
-{
+  implements ModalConnectionInterface {
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
   private readonly parameters: OpenLVModalElementProps;
@@ -26,8 +25,8 @@ export class OpenLVModalElement
     this.parameters = parameters;
 
     this.shadow = this.attachShadow({ mode: "open" });
-    const initialUserTheme =
-      parameters.provider.storage.getSettings()?.theme ?? "system";
+    const initialUserTheme
+      = parameters.provider.storage.getSettings()?.theme ?? "system";
 
     void updateStyles(this.shadow, parameters.theme, initialUserTheme);
   }
@@ -39,21 +38,21 @@ export class OpenLVModalElement
   }
 
   disconnectedCallback() {
-    render(null, this.shadow);
+    render(undefined, this.shadow);
     this.themeCleanup?.();
   }
 
   private setupThemeListener() {
     const update = () => {
-      const userTheme =
-        this.parameters.provider.storage.getSettings()?.theme ?? "system";
+      const userTheme
+        = this.parameters.provider.storage.getSettings()?.theme ?? "system";
 
       void updateStyles(this.shadow, this.parameters.theme, userTheme);
     };
 
     this.parameters.provider.storage.emitter.on("settings_change", update);
 
-    const mediaQuery = window.matchMedia("(prefers-color-scheme: dark)");
+    const mediaQuery = globalThis.matchMedia("(prefers-color-scheme: dark)");
 
     mediaQuery.addEventListener("change", update);
 

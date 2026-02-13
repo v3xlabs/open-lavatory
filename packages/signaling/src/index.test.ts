@@ -19,29 +19,45 @@ const providersByType: readonly [
       [
         "mqtt-dashboard",
         mqtt,
-        { topic: "mytesttopic1111", url: "wss://mqtt-dashboard.com:8884/mqtt" },
+        {
+          topic: "mytesttopic1111",
+          url: "wss://mqtt-dashboard.com:8884/mqtt",
+        },
       ],
       [
         "broker.emqx.io",
         mqtt,
-        { topic: "mytesttopic1111", url: "ws://broker.emqx.io:8083/mqtt" },
+        {
+          topic: "mytesttopic1111",
+          url: "ws://broker.emqx.io:8083/mqtt",
+        },
       ],
       [
         "test.mosquitto.org",
         mqtt,
-        { topic: "mytesttopic1111", url: "ws://test.mosquitto.org:8080/mqtt" },
+        {
+          topic: "mytesttopic1111",
+          url: "ws://test.mosquitto.org:8080/mqtt",
+        },
       ],
       [
         "broker.itdata.nu",
         mqtt,
-        { topic: "mytesttopic1111", url: "wss://broker.itdata.nu/mqtt" },
+        {
+          topic: "mytesttopic1111",
+          url: "wss://broker.itdata.nu/mqtt",
+        },
       ],
     ],
   ],
   [
     "ntfy",
     [
-      ["ntfy.sh", ntfy, { topic: "mytesttopic1111", url: "https://ntfy.sh/" }],
+      [
+        "ntfy.sh",
+        ntfy,
+        { topic: "mytesttopic1111", url: "https://ntfy.sh/" },
+      ],
       [
         "ntfy.envs.net",
         ntfy,
@@ -61,17 +77,17 @@ const providersByType: readonly [
   ],
 ] as const;
 
-async function testSignalingLayer(
+const testSignalingLayer = async (
   layer: CreateSignalLayerFn,
   props: SignalBaseProperties,
-): Promise<void> {
+): Promise<void> => {
   const { encryptionKey: publicKey, decryptionKey } = await generateKeyPair();
   const h = hKey;
 
   const signalingLayer = await layer(props);
   const signalA = await signalingLayer({
     h,
-    rpDiscovered: (v) => log("rpKey", v),
+    rpDiscovered: v => log("rpKey", v),
     canEncrypt: () => true,
     encrypt: publicKey.encrypt,
     decrypt: decryptionKey.decrypt,
@@ -80,7 +96,7 @@ async function testSignalingLayer(
   });
   const signalB = await signalingLayer({
     h,
-    rpDiscovered: (v) => log("rpKey", v),
+    rpDiscovered: v => log("rpKey", v),
     canEncrypt: () => true,
     encrypt: publicKey.encrypt,
     decrypt: decryptionKey.decrypt,
@@ -118,18 +134,18 @@ async function testSignalingLayer(
 
   await signalA.teardown();
   await signalB.teardown();
-}
+};
 
-const PROVIDER_TIMEOUT_MS = 5_000;
+const PROVIDER_TIMEOUT_MS = 5000;
 
 type ProviderResult =
-  | { url: string; ok: true; duration: number }
-  | { url: string; ok: false; error: string };
+  | { url: string; ok: true; duration: number; }
+  | { url: string; ok: false; error: string; };
 
-async function testProvider(
+const testProvider = async (
   layer: CreateSignalLayerFn,
   props: SignalBaseProperties,
-): Promise<ProviderResult> {
+): Promise<ProviderResult> => {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(
       () => reject(new Error(`Timeout after ${PROVIDER_TIMEOUT_MS}ms`)),
@@ -144,31 +160,32 @@ async function testProvider(
     const duration = Math.round(performance.now() - startTime);
 
     return { url: props.url, ok: true, duration };
-  } catch (error) {
+  }
+  catch (error) {
     return {
       url: props.url,
       ok: false,
       error: (error as Error).message,
     };
   }
-}
+};
 
-function formatResults(typeName: string, results: ProviderResult[]): string {
-  const passed = results.filter((r) => r.ok).length;
+const formatResults = (typeName: string, results: ProviderResult[]): string => {
+  const passed = results.filter(r => r.ok).length;
   const total = results.length;
 
   return [
     `${typeName.toUpperCase()}: ${passed}/${total}`,
-    ...results.map((r) =>
-      r.ok ? `✓ ${r.url} ${r.duration}ms` : `✗ ${r.url} - ${r.error}`,
+    ...results.map(r =>
+      (r.ok ? `✓ ${r.url} ${r.duration}ms` : `✗ ${r.url} - ${r.error}`),
     ),
   ].join("\n");
-}
+};
 
 describe.for(providersByType)("signaling: %s", ([typeName, providers]) => {
   it(
     "should pass signaling messages between peers",
-    { timeout: PROVIDER_TIMEOUT_MS * providers.length + 5_000 },
+    { timeout: PROVIDER_TIMEOUT_MS * providers.length + 5000 },
     async () => {
       const results = await Promise.all(
         providers.map(([, layer, props]) => testProvider(layer, props)),
@@ -178,7 +195,7 @@ describe.for(providersByType)("signaling: %s", ([typeName, providers]) => {
 
       console.log(`\n${summary}`);
 
-      const passed = results.filter((r) => r.ok).length;
+      const passed = results.filter(r => r.ok).length;
 
       expect(passed).toBeGreaterThan(0);
     },

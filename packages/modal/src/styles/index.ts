@@ -19,15 +19,16 @@ export const updateStyles = async (
 
   if (!style) {
     style = document.createElement("style");
-    style.setAttribute("data-openlv-modal", "true");
-    shadowRoot.appendChild(style);
+    style.dataset.openlvModal = "true";
+    shadowRoot.append(style);
   }
 
   if (theme) {
     const themeStr = await buildTheme(theme, userTheme);
 
     style.textContent = `:root, :host {\n${themeStr}\n}\n` + cssContent;
-  } else {
+  }
+  else {
     style.textContent = cssContent;
   }
 };

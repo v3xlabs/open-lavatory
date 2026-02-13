@@ -1,18 +1,18 @@
 import { connectSession, type Session } from "@openlv/react-native";
 import * as React from "react";
 
-const DUMMY_ADDRESS =
-  "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
+const DUMMY_ADDRESS
+    = "0x8F8f07b6D61806Ec38febd15B07528dCF2903Ae7".toLowerCase();
 const DUMMY_SIGNATURE = `0x${"11".repeat(65)}` as const;
 
-export function useWalletSession() {
+export const useWalletSession = () => {
   const [connectionUrl, setConnectionUrl] = React.useState<string>("");
   const [status, setStatus] = React.useState<string>("idle");
   const [logLines, setLogLines] = React.useState<string[]>([]);
   const [session, setSession] = React.useState<Session | null>(null);
 
   const appendLog = React.useCallback((line: string) => {
-    setLogLines((prev) => [line, ...prev].slice(0, 50));
+    setLogLines(prev => [line, ...prev].slice(0, 50));
   }, []);
 
   const startSession = React.useCallback(async () => {
@@ -28,11 +28,14 @@ export function useWalletSession() {
         connectionUrl.trim(),
         async (message) => {
           appendLog(`RPC <= ${JSON.stringify(message)}`);
-          const req = message as { method?: string; params?: unknown };
+          const req = message as {
+            method?: string;
+            params?: unknown;
+          };
 
           if (
-            req.method === "eth_accounts" ||
-            req.method === "eth_requestAccounts"
+            req.method === "eth_accounts"
+            || req.method === "eth_requestAccounts"
           ) {
             return [DUMMY_ADDRESS];
           }
@@ -46,7 +49,7 @@ export function useWalletSession() {
       );
 
       nextSession.emitter.on("state_change", (state) => {
-        if (typeof state !== "undefined") {
+        if (state !== undefined) {
           appendLog(`session state => ${state.status}`);
           setStatus(`session: ${state.status}`);
         }
@@ -60,8 +63,9 @@ export function useWalletSession() {
       void nextSession.waitForLink().then(() => {
         appendLog("Linked! (transport should start)");
       });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+    }
+    catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
 
       appendLog(`ERROR: ${msg}`);
       setStatus("error");
@@ -77,8 +81,9 @@ export function useWalletSession() {
       setSession(null);
       setStatus("idle");
       appendLog("Closed.");
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : String(e);
+    }
+    catch (error) {
+      const msg = error instanceof Error ? error.message : String(error);
 
       appendLog(`ERROR: ${msg}`);
     }
@@ -93,4 +98,4 @@ export function useWalletSession() {
     startSession,
     closeSession,
   };
-}
+};

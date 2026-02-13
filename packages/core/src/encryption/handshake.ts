@@ -36,7 +36,7 @@ export const deriveSymmetricKey = async (k: string): Promise<SymmetricKey> => {
       const combined = new Uint8Array(
         atob(message)
           .split("")
-          .map((char) => char.charCodeAt(0)),
+          .map(char => char.charCodeAt(0)),
       );
       const iv = combined.slice(0, 12);
       const encrypted = combined.slice(12);
@@ -61,7 +61,7 @@ export const generateHandshakeKey = async (): Promise<SymmetricKey> => {
   crypto.getRandomValues(array);
 
   const keyHex = Array.from(array)
-    .map((b) => b.toString(16).padStart(2, "0"))
+    .map(b => b.toString(16).padStart(2, "0"))
     .join("");
 
   return await deriveSymmetricKey(keyHex);

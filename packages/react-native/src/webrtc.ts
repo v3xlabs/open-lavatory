@@ -19,7 +19,7 @@ export const installWebRTCPolyfills = (
 ): boolean => {
   const g = getGlobal();
 
-  if (!options.force && typeof g.RTCPeerConnection !== "undefined") {
+  if (!options.force && g.RTCPeerConnection !== undefined) {
     return false;
   }
 
@@ -32,30 +32,30 @@ export const installWebRTCPolyfills = (
   }
 
   if (
-    typeof g.RTCPeerConnection === "undefined" &&
-    typeof exports.RTCPeerConnection !== "undefined"
+    g.RTCPeerConnection === undefined
+    && exports.RTCPeerConnection !== undefined
   ) {
     g.RTCPeerConnection = exports.RTCPeerConnection;
   }
 
   if (
-    typeof g.RTCSessionDescription === "undefined" &&
-    typeof exports.RTCSessionDescription !== "undefined"
+    g.RTCSessionDescription === undefined
+    && exports.RTCSessionDescription !== undefined
   ) {
     g.RTCSessionDescription = exports.RTCSessionDescription;
   }
 
   if (
-    typeof g.RTCIceCandidate === "undefined" &&
-    typeof exports.RTCIceCandidate !== "undefined"
+    g.RTCIceCandidate === undefined
+    && exports.RTCIceCandidate !== undefined
   ) {
     g.RTCIceCandidate = exports.RTCIceCandidate;
   }
 
-  if (typeof exports.mediaDevices !== "undefined") {
+  if (exports.mediaDevices !== undefined) {
     const nav = (g.navigator ?? {}) as Record<string, unknown>;
 
-    if (typeof nav.mediaDevices === "undefined") {
+    if (nav.mediaDevices === undefined) {
       nav.mediaDevices = exports.mediaDevices;
     }
 

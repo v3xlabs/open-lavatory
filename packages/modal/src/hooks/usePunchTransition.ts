@@ -9,7 +9,7 @@ export const usePunchTransition = <T>(
   { duration = 200 }: PunchTransitionOptions = {},
 ) => {
   const [current, setCurrent] = useState(value);
-  const [previous, setPrevious] = useState<T | null>(null);
+  const [previous, setPrevious] = useState<T | undefined>(undefined);
   const timeoutRef = useRef<number>();
   const lastValueRef = useRef(value);
 
@@ -17,21 +17,21 @@ export const usePunchTransition = <T>(
     if (Object.is(value, lastValueRef.current)) return;
 
     if (timeoutRef.current) {
-      window.clearTimeout(timeoutRef.current);
+      globalThis.clearTimeout(timeoutRef.current);
     }
 
     setPrevious(lastValueRef.current);
     setCurrent(value);
     lastValueRef.current = value;
 
-    timeoutRef.current = window.setTimeout(() => {
-      setPrevious(null);
+    timeoutRef.current = globalThis.setTimeout(() => {
+      setPrevious(undefined);
       timeoutRef.current = undefined;
     }, duration);
 
     return () => {
       if (timeoutRef.current) {
-        window.clearTimeout(timeoutRef.current);
+        globalThis.clearTimeout(timeoutRef.current);
       }
     };
   }, [value, duration]);

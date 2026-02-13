@@ -20,7 +20,7 @@ type SessionCardProps = {
   onClose: () => void;
 };
 
-export function SessionCard({
+export const SessionCard = ({
   connectionUrl,
   setConnectionUrl,
   onScanPress,
@@ -29,7 +29,7 @@ export function SessionCard({
   logLines,
   onConnect,
   onClose,
-}: SessionCardProps) {
+}: SessionCardProps) => {
   const textColor = useThemeColor({}, "text");
   const backgroundColor = useThemeColor({}, "background");
   const surfaceColor = useThemeColor({}, "surface");
@@ -78,7 +78,11 @@ export function SessionCard({
             pressed ? styles.buttonPressed : null,
           ]}
         >
-          <Ionicons name="qr-code-outline" size={20} color={tintColor} />
+          <Ionicons
+            name="qr-code-outline"
+            size={20}
+            color={tintColor}
+          />
         </Pressable>
       </View>
 
@@ -104,30 +108,39 @@ export function SessionCard({
       </View>
 
       <ThemedText style={[styles.status, { color: mutedTextColor }]}>
-        Status: <ThemedText type="defaultSemiBold">{status}</ThemedText>
+        Status:
+        {" "}
+        <ThemedText type="defaultSemiBold">{status}</ThemedText>
       </ThemedText>
 
       <ThemedText type="defaultSemiBold" style={styles.logTitle}>
         Log
       </ThemedText>
       <View
-        style={[styles.logBox, { borderColor, backgroundColor: surfaceColor }]}
+        style={[
+          styles.logBox,
+          { borderColor, backgroundColor: surfaceColor },
+        ]}
       >
-        {logLines.length === 0 ? (
-          <ThemedText style={[styles.logLine, { color: mutedTextColor }]}>
-            No logs yet.
-          </ThemedText>
-        ) : (
-          logLines.map((l, i) => (
-            <ThemedText key={`${i}-${l}`} style={styles.logLine}>
-              {l}
-            </ThemedText>
-          ))
-        )}
+        {logLines.length === 0
+          ? (
+              <ThemedText
+                style={[styles.logLine, { color: mutedTextColor }]}
+              >
+                No logs yet.
+              </ThemedText>
+            )
+          : (
+              logLines.map((l, i) => (
+                <ThemedText key={`${i}-${l}`} style={styles.logLine}>
+                  {l}
+                </ThemedText>
+              ))
+            )}
       </View>
     </ThemedView>
   );
-}
+};
 
 const styles = StyleSheet.create({
   card: {

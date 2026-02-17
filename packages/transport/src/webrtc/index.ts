@@ -148,7 +148,7 @@ export const webrtc: CreateTransportLayerFn = (
     return {
       type: "webrtc",
       async setup() {
-        log("webrtc setup");
+        log("webrtc setupz", rtcConfig);
 
         connection = new RTCPeerConnection(rtcConfig);
         connection.onconnectionstatechange = onConnectionStateChange;

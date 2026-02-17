@@ -1,39 +1,32 @@
-import type { ProviderStorage, TurnServer } from "@openlv/provider/storage";
-import { useState } from "preact/hooks";
+import type {
+  ProviderStorage,
+  TurnServer,
+  UserThemePreference,
+} from "@openlv/provider/storage";
 
+import { useModalContext } from "../context.js";
 import type { LanguageTag } from "../utils/i18n.js";
-import { useEventEmitter } from "./useEventEmitter.js";
-import { useProvider } from "./useProvider.js";
 
 export const useSettings = () => {
-  const { provider } = useProvider();
-  const [settings, setSettings] = useState<ProviderStorage | undefined>(
-    provider?.storage.getSettings(),
-  );
-
-  useEventEmitter(
-    provider?.storage.emitter,
-    "settings_change",
-    (newSettings) => {
-      setSettings(newSettings);
-    },
-  );
+  const { provider, settings, setSettings } = useModalContext();
 
   const persistSettings = (newSettings: ProviderStorage) => {
     setSettings(newSettings);
-    provider?.storage.setSettings(newSettings);
+    provider.storage.setSettings(newSettings);
   };
 
   const updateSignalingProtocol = (update: string) => {
-    if (!settings?.signaling) return;
+    const currentSettings = settings();
 
-    if (settings.signaling.p === update) return;
+    if (!currentSettings.signaling) return;
+
+    if (currentSettings.signaling.p === update) return;
 
     persistSettings({
-      ...settings,
+      ...currentSettings,
       signaling: {
-        ...settings.signaling,
-        p: update as ProviderStorage["signaling"] extends { p: infer P; }
+        ...currentSettings.signaling,
+        p: update as ProviderStorage["signaling"] extends { p: infer P }
           ? P
           : never,
       },
@@ -41,58 +34,63 @@ export const useSettings = () => {
   };
 
   const updateSignalingServer = (server: string) => {
-    if (!settings?.signaling) return;
+    const currentSettings = settings();
 
-    if (settings.signaling.s[settings.signaling.p] === server) return;
+    if (!currentSettings.signaling) return;
+
+    if (currentSettings.signaling.s[currentSettings.signaling.p] === server)
+      return;
 
     persistSettings({
-      ...settings,
+      ...currentSettings,
       signaling: {
-        ...settings.signaling,
+        ...currentSettings.signaling,
         s: {
-          ...settings.signaling.s,
-          [settings.signaling.p]: server,
+          ...currentSettings.signaling.s,
+          [currentSettings.signaling.p]: server,
         },
       },
     });
   };
 
   const updateRetainHistory = (retainHistory: boolean) => {
-    if (!settings) return;
+    const currentSettings = settings();
 
-    persistSettings({ ...settings, retainHistory });
+    persistSettings({ ...currentSettings, retainHistory });
   };
 
   const updateAutoReconnect = (autoReconnect: boolean) => {
-    if (!settings) return;
+    const currentSettings = settings();
 
-    persistSettings({ ...settings, autoReconnect });
+    persistSettings({ ...currentSettings, autoReconnect });
   };
 
   const updateThemePreference = (theme: UserThemePreference) => {
-    if (!settings) return;
+    const currentSettings = settings();
 
-    if (settings.theme === theme) return;
+    if (currentSettings.theme === theme) return;
 
-    setSettings({ ...settings, theme });
-    provider?.storage.setSettings({ ...settings, theme });
+    const nextSettings = { ...currentSettings, theme };
+
+    setSettings(nextSettings);
+    provider.storage.setSettings(nextSettings);
   };
 
   const updateLanguage = (language: LanguageTag) => {
-    if (!settings) return;
+    const currentSettings = settings();
 
-    persistSettings({ ...settings, language });
+    persistSettings({ ...currentSettings, language });
   };
 
   const updateTransportProtocol = (protocol: string) => {
-    if (!settings) return;
+    const currentSettings = settings();
 
-    if (settings.transport?.p === protocol) return;
+    if (currentSettings.transport?.p === protocol) return;
 
     persistSettings({
-      ...settings,
+      ...currentSettings,
       transport: {
-        ...settings.transport,
+        ...currentSettings.transport,
         p: protocol,
       },
     });
@@ -106,17 +104,17 @@ export const useSettings = () => {
       >["webrtc"],
     ) => NonNullable<NonNullable<ProviderStorage["transport"]>["s"]>["webrtc"],
   ) => {
-    if (!settings) return;
+    const currentSettings = settings();
 
-    const currentWebRTC = settings.transport?.s?.webrtc;
+    const currentWebRTC = currentSettings.transport?.s?.webrtc;
     const newWebRTC = updater(currentWebRTC);
 
     persistSettings({
-      ...settings,
+      ...currentSettings,
       transport: {
-        p: settings.transport?.p ?? "webrtc",
+        p: currentSettings.transport?.p ?? "webrtc",
         s: {
-          ...settings.transport?.s,
+          ...currentSettings.transport?.s,
           webrtc: newWebRTC,
         },
       },
@@ -125,7 +123,7 @@ export const useSettings = () => {
 
   // STUN server reducers
   const addStunServer = (url: string) => {
-    updateWebRTCSettings(current => ({
+    updateWebRTCSettings((current) => ({
       ...current,
       stun: [...(current?.stun ?? []), url],
     }));
@@ -157,7 +155,7 @@ export const useSettings = () => {
 
   // TURN server reducers
   const addTurnServer = (server: TurnServer) => {
-    updateWebRTCSettings(current => ({
+    updateWebRTCSettings((current) => ({
       ...current,
       turn: [...(current?.turn ?? []), server],
     }));
@@ -186,8 +184,6 @@ export const useSettings = () => {
       };
     });
   };
-
-  if (!settings) throw new Error("Settings not found");
 
   return {
     settings,

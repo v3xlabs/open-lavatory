@@ -1,30 +1,26 @@
-import type { FC } from "preact/compat";
-import { IoIosSettings } from "react-icons/io";
-
 import { useSessionStart } from "../../hooks/useSession.js";
 import { Button } from "../../ui/Button.js";
+import { IconSettings } from "../../ui/icons.js";
 import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
-export const Disconnected: FC<{ onSettings: () => void; }> = ({
-  onSettings,
-}) => {
+export const Disconnected = ({ onSettings }: { onSettings: () => void; }) => {
   const { t } = useTranslation();
   const { start } = useSessionStart();
 
   return (
-    <div className="flex flex-col items-center gap-4 p-6">
+    <div class="flex flex-col items-center gap-4 p-6">
       <ConnectionGraphic />
-      <div className="text-center">
-        <p className="text-sm text-(--lv-text-secondary)">
+      <div class="text-center">
+        <p class="text-sm text-(--lv-text-secondary)">
           {t("disconnected.prompt")}
         </p>
       </div>
-      <div className="flex items-center">
+      <div class="flex items-center">
         <Button
           type="button"
           onClick={start}
-          className="z-10 px-6 py-3"
+          class="z-10 px-6 py-3"
           $variant="primary"
           $size="lg"
         >
@@ -32,15 +28,15 @@ export const Disconnected: FC<{ onSettings: () => void; }> = ({
         </Button>
         <Button
           type="button"
-          aria-label={t("disconnected.connectionSettings")}
+          aria-label={String(t("disconnected.connectionSettings"))}
           aria-pressed={false}
           onClick={onSettings}
-          className="px-3 ltr:-ml-1 ltr:rounded-l-none rtl:-mr-1 rtl:rounded-r-none"
+          class="px-3 ltr:-ml-1 ltr:rounded-l-none rtl:-mr-1 rtl:rounded-r-none"
           $aspect="square"
           $size="lg"
           $variant="secondary"
         >
-          <IoIosSettings className="h-5 w-5 text-(--lv-text-muted)" />
+          <IconSettings class="h-5 w-5 text-(--lv-text-muted)" />
         </Button>
       </div>
     </div>

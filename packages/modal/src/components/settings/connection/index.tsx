@@ -1,3 +1,5 @@
+import { createMemo, For } from "solid-js";
+
 import { useSettings } from "../../../hooks/useSettings.js";
 import { InfoTooltip } from "../../../ui/InfoTooltip.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
@@ -14,53 +16,56 @@ export const ConnectionPreferences = ({
 }) => {
   const { t } = useTranslation();
   const { settings, updateRetainHistory, updateAutoReconnect } = useSettings();
+  const currentSettings = createMemo(() => settings());
 
   return (
     <MenuGroup title={t("settings.connectionPreferences.title")}>
       <MenuLink
-        label={(
+        label={
           <>
             {t("settings.signaling.title")}
             <InfoTooltip variant="icon">
               {t("settings.signaling.description")}
             </InfoTooltip>
           </>
-        )}
+        }
         onClick={() => onNavigate("signaling")}
-        value={settings?.signaling?.p}
+        value={currentSettings()?.signaling?.p}
       />
       <MenuLink
-        label={(
+        label={
           <>
             {t("settings.transport.title")}
             <InfoTooltip variant="icon">
               {t("settings.transport.description")}
             </InfoTooltip>
           </>
-        )}
+        }
         onClick={() => onNavigate("transport")}
         value="WebRTC"
       />
-      {(
-        [
+      <For
+        each={
           [
-            t("settings.connectionPreferences.retainSessionHistory"),
-            "retainHistory",
-            settings?.retainHistory ?? false,
-            updateRetainHistory,
-          ],
-          [
-            t("settings.connectionPreferences.autoReconnect"),
-            "autoReconnect",
-            settings?.autoReconnect ?? false,
-            updateAutoReconnect,
-          ],
-        ] as const
-      ).map(([label, key, value, onChange]) => (
-        <MenuItem label={label} key={key}>
-          <Toggle label={label} value={value} onChange={onChange} />
-        </MenuItem>
-      ))}
+            [
+              t("settings.connectionPreferences.retainSessionHistory"),
+              currentSettings()?.retainHistory ?? false,
+              updateRetainHistory,
+            ],
+            [
+              t("settings.connectionPreferences.autoReconnect"),
+              currentSettings()?.autoReconnect ?? false,
+              updateAutoReconnect,
+            ],
+          ] as const
+        }
+      >
+        {([label, value, onChange]) => (
+          <MenuItem label={label}>
+            <Toggle label={label} value={value} onChange={onChange} />
+          </MenuItem>
+        )}
+      </For>
     </MenuGroup>
   );
 };

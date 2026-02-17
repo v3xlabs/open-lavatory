@@ -1,20 +1,20 @@
-import type { FC, PropsWithChildren, ReactNode } from "preact/compat";
+import type { JSX, ParentProps } from "solid-js";
 
-export type MenuGroupProps = PropsWithChildren<{
-  title: ReactNode;
-  right?: ReactNode;
+export type MenuGroupProps = ParentProps<{
+  title: JSX.Element;
+  right?: JSX.Element;
 }>;
 
-export const MenuGroup: FC<MenuGroupProps> = ({ title, right, children }) => (
+export const MenuGroup = (props: MenuGroupProps) => (
   <div>
-    <div className="flex items-end justify-between py-1 pl-2">
-      <div className="font-medium text-(--lv-text-primary) text-sm">
-        {title}
+    <div class="flex items-end justify-between py-1 pl-2">
+      <div class="font-medium text-(--lv-text-primary) text-sm">
+        {props.title}
       </div>
-      <div>{right}</div>
+      <div>{props.right}</div>
     </div>
-    <div className="flex flex-col gap-1 rounded-md bg-(--lv-card-background)">
-      {children}
+    <div class="flex flex-col gap-1 rounded-md bg-(--lv-card-background)">
+      {props.children}
     </div>
   </div>
 );

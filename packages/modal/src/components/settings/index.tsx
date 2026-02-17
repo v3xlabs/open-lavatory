@@ -1,5 +1,4 @@
-import type { FC } from "preact/compat";
-import { useEffect, useRef } from "preact/hooks";
+import { createEffect } from "solid-js";
 
 import { useNavigationStack } from "../../hooks/useNavigationStack.js";
 import { TransitionContainer } from "../../ui/TransitionContainer.js";
@@ -17,7 +16,7 @@ export interface SettingsNavigationRef {
 
 export interface ModalSettingsProps {
   onTitleChange?: (titleKey: string) => void;
-  navigationRef?: React.MutableRefObject<SettingsNavigationRef | null>;
+  navigationRef?: { current: SettingsNavigationRef | null; };
 }
 
 const getSettingsTitleKey = (screen: SettingsScreen): string => {
@@ -34,10 +33,10 @@ const getSettingsTitleKey = (screen: SettingsScreen): string => {
   }
 };
 
-export const ModalSettings: FC<ModalSettingsProps> = ({
+export const ModalSettings = ({
   onTitleChange,
   navigationRef,
-}) => {
+}: ModalSettingsProps) => {
   const {
     screen,
     previousScreen,
@@ -47,21 +46,22 @@ export const ModalSettings: FC<ModalSettingsProps> = ({
     isAtRoot,
   } = useNavigationStack<SettingsScreen>("main");
 
-  // Expose navigation methods to parent via ref
-  const internalRef = useRef<SettingsNavigationRef>({ goBack, isAtRoot });
+  const internalRef: SettingsNavigationRef = {
+    goBack,
+    isAtRoot: isAtRoot(),
+  };
 
-  internalRef.current = { goBack, isAtRoot };
+  createEffect(() => {
+    internalRef.isAtRoot = isAtRoot();
 
-  useEffect(() => {
     if (navigationRef) {
-      navigationRef.current = internalRef.current;
+      navigationRef.current = internalRef;
     }
-  }, [navigationRef, goBack, isAtRoot]);
+  });
 
-  // Notify parent of title changes
-  useEffect(() => {
-    onTitleChange?.(getSettingsTitleKey(screen));
-  }, [screen, onTitleChange]);
+  createEffect(() => {
+    onTitleChange?.(getSettingsTitleKey(screen()));
+  });
 
   const renderScreen = (s: SettingsScreen) => {
     switch (s) {
@@ -83,11 +83,11 @@ export const ModalSettings: FC<ModalSettingsProps> = ({
   };
 
   return (
-    <div className="px-4 pb-2">
+    <div class="px-4 pb-2">
       <TransitionContainer
-        current={screen}
-        previous={previousScreen}
-        isTransitioning={isTransitioning}
+        current={screen()}
+        previous={previousScreen()}
+        isTransitioning={isTransitioning()}
         render={renderScreen}
       />
     </div>

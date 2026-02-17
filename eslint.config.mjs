@@ -1,20 +1,24 @@
+/* eslint-disable import/no-default-export */
 import { defineConfig } from "eslint/config";
 import v3xlint from "eslint-plugin-v3xlabs";
 
 export default defineConfig([
-  {
-    ignores: [
-      "**/dist/**",
-      "**/node_modules/**",
-      ".changeset/**",
-      "**/*.js",
-    ],
-  },
-  ...v3xlint.configs["recommended"],
-  ...v3xlint.configs["react"],
-  {
-    rules: {
-      "unicorn/no-useless-undefined": "off",
+    {
+        ignores: [
+            "**/dist/**",
+            "**/node_modules/**",
+            ".changeset/**",
+            "**/*.js",
+        ],
     },
-  },
+    ...v3xlint.configs["recommended"],
+    ...v3xlint.configs["react"],
+    {
+        rules: {
+            "unicorn/no-useless-undefined": "off",
+            // "@stylistic/indent": ["error", 4],
+            "@stylistic/type-named-tuple-spacing": "off",
+            "import/no-default-export": "off",
+        },
+    },
 ]);

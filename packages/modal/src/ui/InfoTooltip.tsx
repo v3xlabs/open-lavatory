@@ -1,8 +1,9 @@
-import type { FC, PropsWithChildren } from "preact/compat";
-import { LuCircleHelp } from "react-icons/lu";
+import type { ParentProps } from "solid-js";
 import type { VariantProps } from "tailwind-variants/lite";
 import { tv } from "tailwind-variants/lite";
 import { match } from "ts-pattern";
+
+import { IconCircleHelp } from "./icons.js";
 
 const styles = tv({
   slots: {
@@ -39,22 +40,22 @@ const styles = tv({
 
 export type InfoTooltipProps = VariantProps<typeof styles>;
 
-export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
+export const InfoTooltip = ({
   variant = "icon",
   children,
   size = "lg",
-}) => {
+}: ParentProps<InfoTooltipProps>) => {
   const { root, box, popover, icon } = styles({ size, variant });
 
   return (
-    <div className={root()}>
-      <div className={box()}>
+    <div class={root()}>
+      <div class={box()}>
         {match(variant)
-          .with("icon", () => <LuCircleHelp className={icon()} />)
+          .with("icon", () => <IconCircleHelp class={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>
-      <div className={popover()}>{children}</div>
+      <div class={popover()}>{children}</div>
     </div>
   );
 };

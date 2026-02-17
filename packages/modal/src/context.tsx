@@ -1,7 +1,17 @@
-import type { OpenLVProvider } from "@openlv/provider";
-import { createContext } from "preact";
-import type { FC } from "preact/compat";
-import { useContext, useMemo } from "preact/hooks";
+import type { OpenLVProvider, ProviderStatus } from "@openlv/provider";
+import {
+  type Accessor,
+  type Component,
+  createContext,
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  useContext,
+} from "solid-js";
+
+import type { Session, SessionStateObject } from "@openlv/session";
+import type { ProviderStorage } from "@openlv/provider/storage";
 
 import { ModalRoot } from "./components/ModalRoot.js";
 import { type OpenLVModalElementProps } from "./element.js";
@@ -10,17 +20,120 @@ import {
   detectBrowserLanguage,
   type LanguageTag,
   TranslationProvider,
-} from "./utils/i18n.jsx";
+  useTranslation,
+} from "./utils/i18n.js";
 
-export type ProviderContextO = {
-  provider: OpenLVProvider | undefined;
+export type ModalContextValue = {
+  provider: OpenLVProvider;
   themeConfig?: ThemeConfig;
+  providerStatus: Accessor<ProviderStatus>;
+  session: Accessor<Session | undefined>;
+  sessionState: Accessor<SessionStateObject | undefined>;
+  settings: Accessor<ProviderStorage>;
+  setSettings: (settings: ProviderStorage) => void;
 };
 
-export const ModalContext = createContext<ProviderContextO>({
-  provider: undefined,
-  themeConfig: undefined,
-});
+export const ModalContext = createContext<ModalContextValue | undefined>(
+  undefined,
+);
+
+const createModalState = (
+  provider: OpenLVProvider,
+  themeConfig?: ThemeConfig,
+): ModalContextValue => {
+  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(
+    provider.getState().status,
+  );
+  const [session, setSession] = createSignal<Session | undefined>(
+    provider.getSession(),
+  );
+  const [sessionState, setSessionState] = createSignal<
+    SessionStateObject | undefined
+  >(session()?.getState());
+  const [settings, setSettings] = createSignal<ProviderStorage>(
+    provider.storage.getSettings(),
+  );
+
+  createEffect(() => {
+    const onStatusChange = (status: ProviderStatus) => {
+      setProviderStatus(status);
+    };
+    const onSessionStarted = (nextSession: Session) => {
+      setSession(nextSession);
+    };
+
+    provider.on("status_change", onStatusChange);
+    provider.on("session_started", onSessionStarted);
+    setProviderStatus(provider.getState().status);
+    setSession(provider.getSession());
+
+    onCleanup(() => {
+      provider.off("status_change", onStatusChange);
+      provider.off("session_started", onSessionStarted);
+    });
+  });
+
+  createEffect(() => {
+    const currentSession = session();
+
+    if (!currentSession) {
+      setSessionState(undefined);
+
+      return;
+    }
+
+    const onStateChange = (state?: SessionStateObject) => {
+      setSessionState(state);
+    };
+
+    setSessionState(currentSession.getState());
+    currentSession.emitter.on("state_change", onStateChange);
+
+    onCleanup(() => {
+      currentSession.emitter.off("state_change", onStateChange);
+    });
+  });
+
+  createEffect(() => {
+    const onSettingsChange = (nextSettings: ProviderStorage) => {
+      setSettings(nextSettings);
+    };
+
+    provider.storage.emitter.on("settings_change", onSettingsChange);
+    setSettings(provider.storage.getSettings());
+
+    onCleanup(() => {
+      provider.storage.emitter.off("settings_change", onSettingsChange);
+    });
+  });
+
+  return {
+    provider,
+    themeConfig,
+    providerStatus,
+    session,
+    sessionState,
+    settings,
+    setSettings,
+  };
+};
+
+const ModalLanguageSync: Component = () => {
+  const { settings } = useModalContext();
+  const { setLanguageTag, languageTag } = useTranslation();
+
+  createEffect(() => {
+    const storedLanguage = settings().language as LanguageTag | undefined;
+
+    if (!storedLanguage || storedLanguage === languageTag()) {
+      return;
+    }
+
+    setLanguageTag(storedLanguage);
+  });
+
+  return undefined;
+};
 
 const getInitialLanguage = (
   provider: OpenLVProvider | undefined,
@@ -34,20 +147,15 @@ const getInitialLanguage = (
   return detectBrowserLanguage();
 };
 
-export const ModalProvider: FC<OpenLVModalElementProps> = ({
-  provider,
-  onClose,
-  theme,
-}) => {
-  const initialLanguage = useMemo(
-    () => getInitialLanguage(provider),
-    [provider],
-  );
+export const ModalProvider: Component<OpenLVModalElementProps> = (props) => {
+  const state = createModalState(props.provider, props.theme);
+  const initialLanguage = createMemo(() => getInitialLanguage(props.provider));
 
   return (
-    <TranslationProvider initialLanguageTag={initialLanguage}>
-      <ModalContext.Provider value={{ provider, themeConfig: theme }}>
-        <ModalRoot onClose={onClose} />
+    <TranslationProvider initialLanguageTag={initialLanguage()}>
+      <ModalContext.Provider value={state}>
+        <ModalLanguageSync />
+        <ModalRoot onClose={props.onClose} />
       </ModalContext.Provider>
     </TranslationProvider>
   );
@@ -56,7 +164,7 @@ export const ModalProvider: FC<OpenLVModalElementProps> = ({
 export const useModalContext = () => {
   const context = useContext(ModalContext);
 
-  if (!context.provider) throw new Error("Provider not found");
+  if (!context) throw new Error("Modal context not found");
 
   return context;
 };

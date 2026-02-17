@@ -1,4 +1,4 @@
-/* eslint-disable import/no-default-export */
+
 /** biome-ignore-all lint/performance/noBarrelFile: package entrypoint */
 /** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
 /** biome-ignore-all lint/suspicious/noConsole: temp */
@@ -57,7 +57,7 @@ export const triggerOpenModal = (props: OpenLVModalElementProps) => {
     });
 
     document.body.append(x);
-    x.showModal();
+    // x.showModal();
   }
 };
 

@@ -47,9 +47,9 @@ const config = createConfig({
       //   theme: simpleTheme,
       //   mode: "light",
       // },
-      theme: {
+      // theme: {
         // Either a predefined theme like such
-        theme: "simple",
+        // theme: "simple",
         // Or a custom theme:
         // theme: {
         //   dark: {
@@ -65,8 +65,8 @@ const config = createConfig({
         //     },
         //   },
         // },
-        mode: "auto",
-      },
+        // mode: "auto",
+      // },
     }),
   ],
   transports: {

@@ -1,18 +1,20 @@
+import { Index, mergeProps, splitProps } from "solid-js";
+
 const labelClasses = "font-semibold text-xs uppercase tracking-wide";
-const inputClasses
-  = "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)";
+const inputClasses =
+  "h-9 w-full rounded-lg border bg-white px-3 text-sm focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-200 text-(--lv-text-primary) bg-(--lv-body-background) border-(--lv-control-input-border)";
 
 type LabelProps = {
   htmlFor?: string;
   children: string;
 };
 
-export const Label = ({ htmlFor, children }: LabelProps) => (
+export const Label = (props: LabelProps) => (
   <label
-    className={`${labelClasses} text-(--lv-text-secondary)`}
-    htmlFor={htmlFor}
+    class={`${labelClasses} text-(--lv-text-secondary)`}
+    for={props.htmlFor}
   >
-    {children}
+    {props.children}
   </label>
 );
 
@@ -26,30 +28,32 @@ type InputProps = {
   onChange?: (value: string) => void;
 };
 
-export const Input = ({
-  // eslint-disable-next-line no-restricted-syntax
-  id,
-  value,
-  placeholder,
-  ariaLabel,
-  readOnly = true,
-  onChange,
-}: InputProps) => (
-  <input
-    // eslint-disable-next-line no-restricted-syntax
-    id={id}
-    className={inputClasses}
-    value={value}
-    placeholder={placeholder}
-    aria-label={ariaLabel}
-    readOnly={readOnly}
-    onChange={(e) => {
-      if (e.target instanceof HTMLInputElement) {
-        onChange?.(e.target.value);
-      }
-    }}
-  />
-);
+export const Input = (props: InputProps) => {
+  const merged = mergeProps({ readOnly: true }, props);
+  const [local] = splitProps(merged, [
+    "id",
+    "value",
+    "placeholder",
+    "ariaLabel",
+    "readOnly",
+    "onChange",
+  ]);
+
+  return (
+    <input
+      // eslint-disable-next-line no-restricted-syntax
+      id={local.id}
+      class={inputClasses}
+      value={local.value}
+      placeholder={local.placeholder}
+      aria-label={local.ariaLabel}
+      readOnly={local.readOnly}
+      onInput={(e) => {
+        local.onChange?.(e.currentTarget.value);
+      }}
+    />
+  );
+};
 
 type InputGroupProps = {
   label: string;
@@ -58,29 +62,27 @@ type InputGroupProps = {
   inputIdPrefix?: string;
 };
 
-export const InputGroup = ({
-  label,
-  values,
-  placeholder,
-  inputIdPrefix,
-}: InputGroupProps) => (
-  <div className="grid gap-2">
-    <Label>{label}</Label>
-    {values.map((value, index) => {
-      // eslint-disable-next-line no-restricted-syntax
-      const id = inputIdPrefix ? `${inputIdPrefix}-${index}` : undefined;
-      const suffix = values.length > 1 ? ` ${index + 1}` : "";
+export const InputGroup = (props: InputGroupProps) => (
+  <div class="grid gap-2">
+    <Label>{props.label}</Label>
+    <Index each={props.values}>
+      {(value, index) => {
+        // eslint-disable-next-line no-restricted-syntax
+        const id = props.inputIdPrefix
+          ? `${props.inputIdPrefix}-${index}`
+          : undefined;
+        const suffix = props.values.length > 1 ? ` ${index + 1}` : "";
 
-      return (
-        <Input
-          key={`${label}-${index}`}
-          // eslint-disable-next-line no-restricted-syntax
-          id={id}
-          value={value}
-          placeholder={placeholder}
-          ariaLabel={`${label}${suffix}`}
-        />
-      );
-    })}
+        return (
+          <Input
+            // eslint-disable-next-line no-restricted-syntax
+            id={id}
+            value={value()}
+            placeholder={props.placeholder}
+            ariaLabel={`${props.label}${suffix}`}
+          />
+        );
+      }}
+    </Index>
   </div>
 );

@@ -1,11 +1,11 @@
-import preact from "@preact/preset-vite";
 import tailwindcss from "@tailwindcss/vite";
 import { defineConfig } from "vite";
 import dts from "vite-plugin-dts";
+import solid from "vite-plugin-solid";
 
 export default defineConfig({
   plugins: [
-    preact(),
+    solid(),
     tailwindcss(),
     dts({
       outDir: "dist",
@@ -26,10 +26,9 @@ export default defineConfig({
     cssCodeSplit: false, // Disable CSS code splitting to bundle CSS with JS
     rollupOptions: {
       external: [
-        "preact",
-        "preact/hooks",
-        "preact/jsx-runtime",
-        "preact-custom-element",
+        "solid-js",
+        "solid-js/web",
+        "solid-js/jsx-runtime",
         "qrcode-generator",
       ],
     },

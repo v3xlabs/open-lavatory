@@ -6,14 +6,12 @@ export const useThemeConfig = () => {
   const { themeConfig } = useModalContext();
   const { settings, updateThemePreference } = useSettings();
 
-  const appThemeMode: ThemeMode = themeConfig?.mode ?? "auto";
-  const userThemeMode: UserThemePreference = settings?.theme ?? "system";
-
-  const isUserConfigurable = appThemeMode === "auto";
-
-  const themeMode = isUserConfigurable
-    ? (userThemeMode ?? "system")
-    : appThemeMode;
+  const appThemeMode = (): ThemeMode => themeConfig?.mode ?? "auto";
+  const userThemeMode = (): UserThemePreference =>
+    settings()?.theme ?? "system";
+  const isUserConfigurable = () => appThemeMode() === "auto";
+  const themeMode = () =>
+    (isUserConfigurable() ? userThemeMode() : appThemeMode());
 
   return {
     themeMode,

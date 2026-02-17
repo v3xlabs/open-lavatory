@@ -1,11 +1,11 @@
 {
   "name": "@openlv/modal",
   "version": "0.0.1-beta.10",
-  "description": "Preact-based modal custom element for Open Lavatory",
+  "description": "SolidJS-based modal custom element for Open Lavatory",
   "keywords": [
     "open-lavatory",
     "modal",
-    "preact",
+    "solid-js",
     "web-component"
   ],
   "homepage": "https://github.com/v3xlabs/open-lavatory",
@@ -53,21 +53,21 @@
     "@openlv/signaling": "workspace:*",
     "classnames": "^2.5.1",
     "eventemitter3": "^5.0.1",
+    "lucide-solid": "^0.574.0",
     "ox": "^0.9.14",
     "qrcode-generator": "^1.5.0",
+    "solid-element": "^1.9.1",
+    "solid-js": "^1.9.9",
     "tailwind-variants": "^3.1.1"
   },
   "devDependencies": {
-    "@preact/preset-vite": "^2.10.2",
     "@tailwindcss/vite": "^4.1.17",
-    "preact": "^10.27.3",
-    "preact-custom-element": "^4.4.3",
-    "react-icons": "^5.5.0",
     "tailwindcss": "^4",
     "ts-pattern": "^5",
     "typescript": "^5",
     "vite": "^7",
-    "vite-plugin-dts": "^4.5.4"
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-solid": "^2.11.8"
   },
   "packageManager": "pnpm@10.10.0",
   "publishConfig": {

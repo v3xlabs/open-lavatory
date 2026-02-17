@@ -23,8 +23,13 @@ export const updateStyles = async (
     shadowRoot.append(style);
   }
 
-  if (theme) {
-    const themeStr = await buildTheme(theme, userTheme);
+  const themeConfig = {
+    ...theme,
+    theme: theme?.theme ?? "simple",
+  };
+
+  if (themeConfig) {
+    const themeStr = await buildTheme(themeConfig, userTheme);
 
     style.textContent = `:root, :host {\n${themeStr}\n}\n` + cssContent;
   }

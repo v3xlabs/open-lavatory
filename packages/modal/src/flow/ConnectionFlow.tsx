@@ -1,6 +1,6 @@
 import { SESSION_STATE, type SessionStateObject } from "@openlv/session";
 import { SIGNAL_STATE } from "@openlv/signaling";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { createEffect, createMemo, createSignal } from "solid-js";
 import { match, P } from "ts-pattern";
 
 import { UnknownState } from "../components/UnknownState.js";
@@ -27,8 +27,8 @@ interface ConnectionFlowProps {
 }
 
 const LoadingSpinner = () => (
-  <div className="flex items-center justify-center">
-    <div className="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
+  <div class="flex items-center justify-center">
+    <div class="h-8 w-8 animate-spin rounded-full border-4 border-blue-500 border-t-transparent" />
   </div>
 );
 
@@ -44,18 +44,21 @@ const FLOW = {
 
 type FlowState = (typeof FLOW)[keyof typeof FLOW];
 
-const useFlowTransition = (currentState: FlowState) => {
-  const [displayState, setDisplayState] = useState(currentState);
-  const previousStateRef = useRef<FlowState>(currentState);
+const useFlowTransition = (currentState: () => FlowState) => {
+  const initialState = currentState();
+  const [displayState, setDisplayState] = createSignal(initialState);
+  let previousStateRef = initialState;
 
-  useEffect(() => {
-    if (currentState === previousStateRef.current) return;
+  createEffect(() => {
+    const nextState = currentState();
+
+    if (nextState === previousStateRef) return;
 
     startViewTransition(() => {
-      setDisplayState(currentState);
-      previousStateRef.current = currentState;
+      setDisplayState(nextState);
+      previousStateRef = nextState;
     });
-  }, [currentState]);
+  });
 
   return {
     displayState,
@@ -89,32 +92,33 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
 export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
   const { t } = useTranslation();
   const { status: sessionStatus } = useSession();
-  const { displayState } = useFlowTransition(reduceState(sessionStatus));
+  const flowState = createMemo(() => reduceState(sessionStatus()));
+  const { displayState } = useFlowTransition(flowState);
 
   return (
-    <div style={{ viewTransitionName: "connection-flow" }} className="w-full">
-      {match(displayState)
+    <div style={{ "view-transition-name": "connection-flow" }} class="w-full">
+      {match(displayState())
         .with(FLOW.CREATING, () => (
-          <div className="flex flex-col items-center gap-4 p-6">
+          <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
-            <div className="text-center">
-              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+            <div class="text-center">
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 {t("connectionFlow.preparingConnection")}
               </h3>
-              <p className="text-(--lv-text-muted) text-sm">
+              <p class="text-(--lv-text-muted) text-sm">
                 {t("connectionFlow.generatingKeys")}
               </p>
             </div>
           </div>
         ))
         .with(FLOW.CONNECTING, () => (
-          <div className="flex flex-col items-center gap-4 p-6">
+          <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
-            <div className="text-center">
-              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+            <div class="text-center">
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 {t("connectionFlow.connecting")}
               </h3>
-              <p className="text-(--lv-text-muted) text-sm">
+              <p class="text-(--lv-text-muted) text-sm">
                 {t("connectionFlow.waitingForNetwork")}
               </p>
             </div>
@@ -122,53 +126,53 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
         ))
         .with(FLOW.READY, () => <HandshakeOpen onCopy={onCopy} />)
         .with(FLOW.LINKING, () => (
-          <div className="flex flex-col items-center gap-4 p-6">
+          <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
-            <div className="text-center">
-              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+            <div class="text-center">
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 {t("connectionFlow.establishingConnection")}
               </h3>
-              <p className="text-(--lv-text-muted) text-sm">
+              <p class="text-(--lv-text-muted) text-sm">
                 {t("connectionFlow.mayTakeFewSeconds")}
               </p>
             </div>
           </div>
         ))
         .with(FLOW.CONNECTED, () => (
-          <div className="flex flex-col items-center gap-4 p-6">
-            <div className="text-center">
-              <div className="mb-4 text-4xl">✅</div>
-              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+          <div class="flex flex-col items-center gap-4 p-6">
+            <div class="text-center">
+              <div class="mb-4 text-4xl">✅</div>
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 {t("connectionFlow.connectedSuccessfully")}
               </h3>
-              <p className="text-(--lv-text-muted) text-sm">
+              <p class="text-(--lv-text-muted) text-sm">
                 {t("connectionFlow.walletConnectedReady")}
               </p>
             </div>
           </div>
         ))
         .with(FLOW.DISCONNECTED, () => (
-          <div className="flex flex-col items-center gap-4 p-6">
-            <div className="text-center">
-              <div className="mb-4 text-4xl">🔌</div>
-              <h3 className="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+          <div class="flex flex-col items-center gap-4 p-6">
+            <div class="text-center">
+              <div class="mb-4 text-4xl">🔌</div>
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
                 {t("connectionFlow.disconnected")}
               </h3>
-              <p className="mb-4 text-(--lv-text-muted) text-sm">
+              <p class="mb-4 text-(--lv-text-muted) text-sm">
                 {t("connectionFlow.connectionClosed")}
               </p>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
+              class="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
             >
               {t("common.close")}
             </button>
           </div>
         ))
         .otherwise(() => (
-          <UnknownState state={sessionStatus} />
+          <UnknownState state={sessionStatus()} />
         ))}
     </div>
   );

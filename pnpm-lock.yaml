@@ -50,6 +50,9 @@ importers:
       '@openlv/modal':
         specifier: workspace:*
         version: link:../packages/modal
+      '@openlv/provider':
+        specifier: workspace:*
+        version: link:../packages/provider
       '@openlv/session':
         specifier: workspace:*
         version: link:../packages/session
@@ -68,6 +71,9 @@ importers:
       react-dom:
         specifier: 19.1.0
         version: 19.1.0(react@19.1.0)
+      shiki:
+        specifier: ^1
+        version: 1.29.2
       tailwindcss:
         specifier: ^4
         version: 4.1.18

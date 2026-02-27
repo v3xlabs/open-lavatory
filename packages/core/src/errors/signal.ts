@@ -1,7 +1,44 @@
-import { BaseError } from "./base.js";
+import { BaseError, type BaseErrorParameters } from "./base.js";
 
-export class SignalNoConnectionError extends BaseError {
+export class SignalError extends BaseError {
+  override name = "SignalError";
+  constructor(
+    shortMessage: string,
+    args: Omit<BaseErrorParameters, "name"> = {},
+  ) {
+    super(shortMessage, args);
+  }
+}
+
+export class SignalNoConnectionError extends SignalError {
+  override name = "SignalNoConnectionError";
   constructor() {
-    super(["Hello", "World"].join("\n"), { name: "SignalConnectionError" });
+    super("No signaling connection is available.");
+  }
+}
+
+export class SignalConnectionLostError extends SignalError {
+  override name = "SignalConnectionLostError";
+  constructor(args: { url?: string; cause?: Error; } = {}) {
+    super("Signaling relay connection was lost.", {
+      cause: args.cause,
+      metaMessages: args.url ? [`Relay URL: ${args.url}`] : undefined,
+    });
+  }
+}
+
+export class SignalHandshakeError extends SignalError {
+  override name = "SignalHandshakeError";
+  constructor(args: { cause?: Error; } = {}) {
+    super("Signaling handshake failed.", { cause: args.cause });
+  }
+}
+
+export class SignalDecryptionError extends SignalError {
+  override name = "SignalDecryptionError";
+  constructor(args: { cause?: Error; } = {}) {
+    super("Failed to decrypt incoming signaling message.", {
+      cause: args.cause,
+    });
   }
 }

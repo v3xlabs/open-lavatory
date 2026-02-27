@@ -13,6 +13,7 @@ import {
   initHash,
   parseEncryptionKey,
 } from "@openlv/core/encryption";
+import type { BaseError } from "@openlv/core/errors";
 import {
   type CreateSignalLayerFn,
   SIGNAL_STATE,
@@ -39,6 +40,8 @@ export const SESSION_STATE = {
   LINKING: "linking",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
+  RECONNECTING: "reconnecting",
+  ERROR: "error",
 } as const;
 export type SessionState = (typeof SESSION_STATE)[keyof typeof SESSION_STATE];
 
@@ -47,6 +50,7 @@ export type SessionStateObject = {
   signaling?: {
     state: SignalState;
   };
+  error?: BaseError;
 };
 
 /**
@@ -150,7 +154,11 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
+    onmessage: async (message: {
+      type: string;
+      payload: object;
+      messageId: string;
+    }) => {
       console.log("Session: received message from transport", message);
 
       if (message["type"] === "request") {
@@ -269,13 +277,14 @@ export const createSession = async (
         s: server,
       };
     },
-    waitForLink: async () => new Promise((resolve) => {
-      emitter.on("state_change", (state) => {
-        if (state?.status === SESSION_STATE.CONNECTED) {
-          resolve();
-        }
-      });
-    }),
+    waitForLink: async () =>
+      new Promise((resolve) => {
+        emitter.on("state_change", (state) => {
+          if (state?.status === SESSION_STATE.CONNECTED) {
+            resolve();
+          }
+        });
+      }),
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
       // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;

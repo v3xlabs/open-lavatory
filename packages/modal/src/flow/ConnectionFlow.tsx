@@ -14,6 +14,7 @@ import { Connecting } from "./connecting.jsx";
 
 interface ConnectionFlowProps {
   onClose: () => void;
+  onBack: () => void;
   onCopy: (uri: string) => void;
 }
 
@@ -79,13 +80,13 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
                 {t("connectionFlow.connectionClosed")}
               </p>
             </div>
-            <button
+            <Button
               type="button"
               onClick={props.onClose}
               class="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
             >
               {t("common.close")}
-            </button>
+            </Button>
           </div>
         </Match>
       </Switch>

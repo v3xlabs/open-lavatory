@@ -21,8 +21,11 @@ export const SESSION_STATE = {
   CREATED: "created",
   SIGNALING: "signaling",
   READY: "ready",
+  LINKING: "linking",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
+  RECONNECTING: "reconnecting",
+  ERROR: "error",
 } as const;
 
 type SessionModule = typeof import("@openlv/session");

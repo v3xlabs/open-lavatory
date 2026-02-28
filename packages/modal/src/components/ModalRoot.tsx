@@ -195,8 +195,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           isInitialMount = false;
         }
       }, 0);
-    }
-    else {
+    } else {
       measureHeight();
     }
 
@@ -322,7 +321,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           <ConnectionFlow onClose={props.onClose} onCopy={handleCopy} />
         ),
       )
-      .otherwise(state => <UnknownState state={state || "unknown status"} />);
+      .otherwise((state) => <UnknownState state={state || "unknown status"} />);
 
   // todo remove this styling approach
   const overlayStyle: JSX.CSSProperties = {

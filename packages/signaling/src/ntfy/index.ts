@@ -1,7 +1,8 @@
+import { SignalConnectionLostError } from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 
-import type { CreateSignalLayerFn } from "../base.js";
+import type { CreateSignalLayerFn, SignalingBaseCallbacks } from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 import { parseNtfyUrl } from "./url.js";
@@ -43,7 +44,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
   return createSignalingLayer({
     type: "ntfy",
-    async setup() {
+    async setup(callbacks: SignalingBaseCallbacks) {
       log("NTFY: Setting up");
 
       const wsUrl
@@ -58,49 +59,72 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       log("NTFY: Connecting to WebSocket", wsUrl);
       connection = new WebSocket(wsUrl);
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      connection?.addEventListener("error", (_event) => {});
+      let setupDone = false;
 
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      connection.addEventListener("close", (_event) => {});
+      const onError = () => {
+        if (!setupDone) return;
 
-      const awaitOpenConfirm = new Promise<void>((resolve) => {
+        log("NTFY: WebSocket error after setup");
+        callbacks.onError(new SignalConnectionLostError({ url }));
+      };
+
+      const onClose = () => {
+        if (!setupDone) return;
+
+        log("NTFY: WebSocket closed after setup");
+        callbacks.onError(new SignalConnectionLostError({ url }));
+      };
+
+      connection.addEventListener("error", onError);
+      connection.addEventListener("close", onClose);
+
+      await new Promise<void>((resolve, reject) => {
+        const onSetupError = () => {
+          reject(new Error("NTFY: WebSocket connection error during setup"));
+        };
+
+        const onSetupClose = () => {
+          reject(new Error("NTFY: WebSocket closed before setup completed"));
+        };
+
+        connection!.addEventListener("error", onSetupError);
+        connection!.addEventListener("close", onSetupClose);
+
         connection!.addEventListener("message", (event) => {
           log("NTFY: Received message:", event.data);
-          const data = JSON.parse(event.data) as NtfyMessage;
+          const data = JSON.parse(event.data as string) as NtfyMessage;
 
           if (data.event === "open") {
+            connection!.removeEventListener("error", onSetupError);
+            connection!.removeEventListener("close", onSetupClose);
+            setupDone = true;
             resolve();
           }
           else if (data.event === "message") {
             events.emit("message", data.message);
           }
         });
-      });
 
-      const awaitOpen = new Promise<void>((resolve) => {
         connection!.addEventListener("open", () => {
-          log("NTFY: Connected to WebSocket");
-          resolve();
+          log("NTFY: WebSocket connected");
         });
       });
-
-      await awaitOpen;
-      await awaitOpenConfirm;
     },
     teardown() {
       connection?.close();
+      connection = undefined;
     },
     async publish(body) {
       const headers = { "Content-Type": "application/json" } as HeadersInit;
 
-      // TODO: Add response handling
-      // @ts-expect-error - TODO: Add response handling
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-      const _response = await fetch(
+      const response = await fetch(
         `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`,
         { method: "POST", body, headers },
       );
+
+      if (!response.ok) {
+        throw new Error(`NTFY: publish failed with HTTP ${response.status}`);
+      }
     },
     subscribe: (handler) => {
       events.on("message", handler);

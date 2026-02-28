@@ -1,7 +1,14 @@
-import { SignalNoConnectionError } from "@openlv/core/errors";
+import {
+  SignalConnectionLostError,
+  SignalNoConnectionError,
+} from "@openlv/core/errors";
 import { createMqtt, type MqttClient } from "websocket-mqtt";
 
-import type { CreateSignalLayerFn, SignalBaseProperties } from "../base.js";
+import type {
+  CreateSignalLayerFn,
+  SignalBaseProperties,
+  SignalingBaseCallbacks,
+} from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 
@@ -15,46 +22,90 @@ export const mqtt: CreateSignalLayerFn = ({
   topic,
 }: SignalBaseProperties) => {
   let connection: MqttClient | undefined;
+  let subscribedHandler: ((payload: string) => void) | undefined;
+  let isTearingDown = false;
 
   return createSignalingLayer({
     type: "mqtt",
-    setup() {
-      return new Promise((resolve, reject) => {
-        connection = createMqtt({
-          url,
-          // reconnectOnConnackError: false,
-          // reconnectPeriod: 5000,
-          // connectTimeout: 5000,
-        });
+    setup(callbacks: SignalingBaseCallbacks) {
+      isTearingDown = false;
 
-        connection.on("connect", () => {
-          resolve();
-        });
-        connection.on("error", (error) => {
-          console.error("MQTT: Error connecting to URL", error);
-          reject(error);
-        });
-
-        connection.on("close", () => {
-          reject(new Error("MQTT: Closed connection to URL"));
-        });
-
-        connection.connect();
+      connection = createMqtt({
+        url,
+        retry: {
+          retries: 5,
+          initialDelayMs: 1000,
+          jitter: true,
+        },
       });
+
+      let setupDone = false;
+
+      connection.on("connect", () => {
+        if (!setupDone) {
+          setupDone = true;
+
+          return;
+        }
+
+        log("MQTT: Reconnected, re-subscribing to topic", topic);
+
+        if (subscribedHandler) {
+          connection!
+            .subscribe(topic)
+            .then(() => {
+              callbacks.onReconnected();
+            })
+            .catch((error: unknown) => {
+              callbacks.onError(
+                new SignalConnectionLostError({
+                  url,
+                  cause: error instanceof Error ? error : new Error(String(error)),
+                }),
+              );
+            });
+        }
+        else {
+          callbacks.onReconnected();
+        }
+      });
+
+      connection.on("offline", () => {
+        if (setupDone) {
+          log("MQTT: Connection went offline, reconnecting…");
+          callbacks.onReconnecting();
+        }
+      });
+
+      connection.on("close", () => {
+        if (setupDone && !isTearingDown) {
+          callbacks.onError(new SignalConnectionLostError({ url }));
+        }
+      });
+
+      connection.on("error", (error) => {
+        console.error("MQTT: error event", error);
+      });
+
+      return connection.connect();
     },
     teardown() {
+      isTearingDown = true;
       connection?.close();
       connection = undefined;
+      subscribedHandler = undefined;
     },
     async publish(payload) {
       if (!connection) {
-        throw new Error("MQTT: No connection to publish to");
+        throw new SignalNoConnectionError();
       }
 
-      connection?.publish(topic, payload, { retain: false });
+      connection.publish(topic, payload, { retain: false });
     },
     async subscribe(handler) {
       if (!connection) throw new SignalNoConnectionError();
+
+      subscribedHandler = handler;
 
       log("MQTT: Subscribing to topic", topic);
 
@@ -68,7 +119,7 @@ export const mqtt: CreateSignalLayerFn = ({
         handler(decoded);
       });
 
-      await connection?.subscribe(topic);
+      await connection.subscribe(topic);
     },
   });
 };

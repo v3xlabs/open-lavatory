@@ -14,6 +14,7 @@ import {
   parseEncryptionKey,
 } from "@openlv/core/encryption";
 import type { BaseError } from "@openlv/core/errors";
+import { SessionSetupError, SessionTimeoutError } from "@openlv/core/errors";
 import {
   type CreateSignalLayerFn,
   SIGNAL_STATE,
@@ -107,10 +108,14 @@ export const createSession = async (
   const protocol = initParameters.p;
   const server = initParameters.s;
 
-  const updateStatus = (newStatus: SessionState) => {
+  const updateStatus = (newStatus: SessionState, error?: BaseError) => {
     log("updateStatus", newStatus);
     status = newStatus;
-    emitter.emit("state_change", { status, signaling: signal.getState() });
+    emitter.emit("state_change", {
+      status,
+      signaling: signal.getState(),
+      error,
+    });
   };
 
   const signaling = await signalLayer({
@@ -196,6 +201,12 @@ export const createSession = async (
     }
   });
 
+  transport.emitter.on("error", (error) => {
+    log("transport error", error);
+    updateStatus(SESSION_STATE.ERROR, error);
+    emitter.emit("error", error);
+  });
+
   const startTransport = async () => {
     await transport.setup();
   };
@@ -230,6 +241,14 @@ export const createSession = async (
       signal.on("state_change", (state) => {
         log("signal state change", state);
 
+        if (state === SIGNAL_STATE.RECONNECTING) {
+          updateStatus(SESSION_STATE.RECONNECTING);
+        }
+
+        if (state === SIGNAL_STATE.ERROR) {
+          updateStatus(SESSION_STATE.ERROR);
+        }
+
         if (state === SIGNAL_STATE.READY) {
           updateStatus(SESSION_STATE.READY);
         }
@@ -252,8 +271,24 @@ export const createSession = async (
         }
       });
 
-      // TODO: handle errors in setup nicely in modal UI
-      await signal.setup();
+      signal.on("error", (error) => {
+        log("signal error", error);
+        updateStatus(SESSION_STATE.ERROR, error);
+        emitter.emit("error", error);
+      });
+
+      try {
+        await signal.setup();
+      }
+      catch (error) {
+        const setupError = new SessionSetupError({
+          cause: error instanceof Error ? error : undefined,
+        });
+
+        updateStatus(SESSION_STATE.ERROR, setupError);
+        emitter.emit("error", setupError);
+        throw setupError;
+      }
     },
     async close() {
       log("session teardown");
@@ -304,20 +339,31 @@ export const createSession = async (
       // await signal.send(sessionMessage);
       await transport.send(sessionMessage);
 
-      return Promise.race([
-        new Promise((resolve) => {
-          messages.on("message", (message) => {
-            if (message.messageId === randomID && message.type === "response") {
-              resolve(message.payload);
-            }
-          });
-        }),
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(new Error("Timeout"));
-          }, timeout);
-        }),
-      ]);
+      return new Promise((resolve, reject) => {
+        let settled = false;
+
+        const onMessage = (msg: SessionMessage) => {
+          if (
+            !settled
+            && msg.messageId === randomID
+            && msg.type === "response"
+          ) {
+            settled = true;
+            messages.off("message", onMessage);
+            resolve(msg.payload);
+          }
+        };
+
+        messages.on("message", onMessage);
+
+        setTimeout(() => {
+          if (!settled) {
+            settled = true;
+            messages.off("message", onMessage);
+            reject(new SessionTimeoutError({ timeout }));
+          }
+        }, timeout);
+      });
     },
     _internal: {
       signal,

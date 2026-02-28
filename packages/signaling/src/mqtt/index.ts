@@ -37,6 +37,7 @@ export const mqtt: CreateSignalLayerFn = ({
           initialDelayMs: 1000,
           jitter: true,
         },
+        keepalive: 2, // seconds
       });
 
       let setupDone = false;

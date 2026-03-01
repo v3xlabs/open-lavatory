@@ -171,7 +171,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         source.addEventListener("error", handleDisconnect, { signal });
 
         source.addEventListener("message", (event) => {
-          const data = JSON.parse(event.data as string) as NtfyMessage;
+          const data = JSON.parse(event.data) as NtfyMessage;
 
           if (data.event === "message") {
             events.emit("message", data.message);
@@ -205,7 +205,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         {
           method: "POST",
           body,
-          headers: { "Content-Type": "application/json" } as HeadersInit,
+          headers: { "Content-Type": "application/json" },
         },
       );
 

@@ -84,7 +84,7 @@
     "reconnecting": "Reconnecting",
     "tryingToRestore": "Trying to restore the connection...",
     "connectionError": "Connection error",
-    "connectionErrorDescription": "Could not reach the wallet. Check your network and try again.",
+    "connectionErrorDescription": "Could not establish a connection. Check your network and try again.",
     "cancel": "Cancel"
   },
   "handshake": {

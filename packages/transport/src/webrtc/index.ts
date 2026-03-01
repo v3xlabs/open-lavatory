@@ -46,12 +46,6 @@ export const webrtc: CreateTransportLayerFn = (
       const state = connection?.connectionState;
 
       match(state)
-        .with("disconnected", () => {
-          emitter.emit(
-            "error",
-            new TransportConnectionFailedError({ state: "disconnected" }),
-          );
-        })
         .with("failed", () => {
           emitter.emit(
             "error",

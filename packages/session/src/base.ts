@@ -313,10 +313,14 @@ export const createSession = async (
       };
     },
     waitForLink: async () =>
-      new Promise((resolve) => {
+      new Promise<void>((resolve, reject) => {
         emitter.on("state_change", (state) => {
           if (state?.status === SESSION_STATE.CONNECTED) {
             resolve();
+          }
+
+          if (state?.status === SESSION_STATE.ERROR) {
+            reject(state.error ?? new SessionSetupError());
           }
         });
       }),
@@ -349,6 +353,7 @@ export const createSession = async (
             && msg.type === "response"
           ) {
             settled = true;
+            clearTimeout(timer);
             messages.off("message", onMessage);
             resolve(msg.payload);
           }
@@ -356,7 +361,7 @@ export const createSession = async (
 
         messages.on("message", onMessage);
 
-        setTimeout(() => {
+        const timer = setTimeout(() => {
           if (!settled) {
             settled = true;
             messages.off("message", onMessage);

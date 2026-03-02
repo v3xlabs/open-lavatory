@@ -50,7 +50,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   const wsUrl
     = `${wsProtocol}://${connectionInfo.host}/${topic}/ws`
       + (connectionInfo.parameters ?? "");
-  const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/`;
+  const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/v1/health`;
 
   let connection: WebSocket | undefined;
   let intentionalClose = false;
@@ -85,8 +85,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
           try {
             await fetch(pingUrl, {
-              method: "HEAD",
-              mode: "no-cors",
               signal: AbortSignal.timeout(NTFY_PING_TIMEOUT_MS),
             });
 

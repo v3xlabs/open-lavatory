@@ -75,7 +75,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     type: "ntfy",
     setup(callbacks: SignalingBaseCallbacks) {
       intentionalClose = false;
-      retryAttempt = 0;
 
       let setupDone = false;
 
@@ -181,6 +180,25 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       };
 
       return new Promise<void>((resolve, reject) => {
+        // If a setup is already in progress (two peers sharing the same layer),
+        // chain onto it instead of opening a second connection.
+        if (setupResolve) {
+          const prev = setupResolve;
+          const prevReject = setupReject;
+
+          setupResolve = () => {
+            prev();
+            resolve();
+          };
+          setupReject = (err) => {
+            prevReject?.(err);
+            reject(err);
+          };
+
+          return;
+        }
+
+        retryAttempt = 0;
         setupResolve = resolve;
         setupReject = reject;
         open();

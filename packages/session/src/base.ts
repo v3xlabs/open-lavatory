@@ -314,15 +314,19 @@ export const createSession = async (
     },
     waitForLink: async () =>
       new Promise<void>((resolve, reject) => {
-        emitter.on("state_change", (state) => {
+        const onStateChange = (state?: SessionStateObject) => {
           if (state?.status === SESSION_STATE.CONNECTED) {
+            emitter.off("state_change", onStateChange);
             resolve();
           }
 
           if (state?.status === SESSION_STATE.ERROR) {
+            emitter.off("state_change", onStateChange);
             reject(state.error ?? new SessionSetupError());
           }
-        });
+        };
+
+        emitter.on("state_change", onStateChange);
       }),
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;

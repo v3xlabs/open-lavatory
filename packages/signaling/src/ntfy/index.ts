@@ -1,4 +1,4 @@
-import { SignalConnectionLostError } from "@openlv/core/errors";
+import { SignalConnectionLostError, SignalNoConnectionError } from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 
@@ -105,7 +105,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             callbacks.onError(new SignalConnectionLostError({ url }));
           }
           else {
-            setupReject?.(new Error("NTFY: WebSocket connection failed"));
+            setupReject?.(new SignalConnectionLostError({ url }));
             setupResolve = undefined;
             setupReject = undefined;
           }
@@ -193,14 +193,18 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       connection = undefined;
 
       if (setupReject) {
-        setupReject(new Error("NTFY: Connection closed"));
+        setupReject(new SignalConnectionLostError({ url }));
         setupResolve = undefined;
         setupReject = undefined;
       }
     },
     async publish(body) {
+      if (!connection) {
+        throw new SignalNoConnectionError();
+      }
+
       const response = await fetch(
-        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`,
+        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}` + (connectionInfo.parameters ?? ""),
         {
           method: "POST",
           body,

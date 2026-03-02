@@ -1,6 +1,12 @@
 import { SESSION_STATE, type SessionStateObject } from "@openlv/session";
 import { SIGNAL_STATE } from "@openlv/signaling";
-import { createEffect, createMemo, createSignal } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  Match,
+  Switch,
+} from "solid-js";
 import { match, P } from "ts-pattern";
 
 import { UnknownState } from "../components/UnknownState.js";
@@ -96,8 +102,8 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
 
   return (
     <div style={{ "view-transition-name": "connection-flow" }} class="w-full">
-      {match(displayState())
-        .with(FLOW.CREATING, () => (
+      <Switch fallback={<UnknownState state={sessionStatus()} />}>
+        <Match when={displayState() === FLOW.CREATING}>
           <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
             <div class="text-center">
@@ -109,8 +115,8 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
               </p>
             </div>
           </div>
-        ))
-        .with(FLOW.CONNECTING, () => (
+        </Match>
+        <Match when={displayState() === FLOW.CONNECTING}>
           <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
             <div class="text-center">
@@ -122,9 +128,11 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
               </p>
             </div>
           </div>
-        ))
-        .with(FLOW.READY, () => <HandshakeOpen onCopy={props.onCopy} />)
-        .with(FLOW.LINKING, () => (
+        </Match>
+        <Match when={displayState() === FLOW.READY}>
+          <HandshakeOpen onCopy={props.onCopy} />
+        </Match>
+        <Match when={displayState() === FLOW.LINKING}>
           <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
             <div class="text-center">
@@ -136,8 +144,8 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
               </p>
             </div>
           </div>
-        ))
-        .with(FLOW.CONNECTED, () => (
+        </Match>
+        <Match when={displayState() === FLOW.CONNECTED}>
           <div class="flex flex-col items-center gap-4 p-6">
             <div class="text-center">
               <div class="mb-4 text-4xl">✅</div>
@@ -149,8 +157,8 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
               </p>
             </div>
           </div>
-        ))
-        .with(FLOW.DISCONNECTED, () => (
+        </Match>
+        <Match when={displayState() === FLOW.DISCONNECTED}>
           <div class="flex flex-col items-center gap-4 p-6">
             <div class="text-center">
               <div class="mb-4 text-4xl">🔌</div>
@@ -169,10 +177,8 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
               {t("common.close")}
             </button>
           </div>
-        ))
-        .otherwise(() => (
-          <UnknownState state={sessionStatus()} />
-        ))}
+        </Match>
+      </Switch>
     </div>
   );
 };

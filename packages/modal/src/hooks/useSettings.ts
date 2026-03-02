@@ -70,10 +70,7 @@ export const useSettings = () => {
 
     if (currentSettings.theme === theme) return;
 
-    const nextSettings = { ...currentSettings, theme };
-
-    setSettings(nextSettings);
-    provider.storage.setSettings(nextSettings);
+    persistSettings({ ...currentSettings, theme });
   };
 
   const updateLanguage = (language: LanguageTag) => {

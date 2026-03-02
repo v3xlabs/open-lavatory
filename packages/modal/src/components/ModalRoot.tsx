@@ -22,7 +22,6 @@ import { usePunchTransition } from "../hooks/usePunchTransition.js";
 import { useSession } from "../hooks/useSession.js";
 import { useThemeConfig } from "../hooks/useThemeConfig.js";
 import { useTranslation } from "../utils/i18n.js";
-import { log } from "../utils/log.js";
 import { Footer } from "./footer/Footer.js";
 import { Header } from "./Header.js";
 import { ModalSettings, type SettingsNavigationRef } from "./settings/index.js";
@@ -128,10 +127,7 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-const ModalRootInner = ({
-  onClose,
-  onCopy,
-}: {
+const ModalRootInner = (props: {
   onClose: () => void;
   onCopy?: (uri: string) => void;
 }) => {
@@ -153,6 +149,8 @@ const ModalRootInner = ({
   const openSettings = () => setView("settings");
   const { t, isRtl, languageTag } = useTranslation();
   const { themeMode } = useThemeConfig();
+  const onClose = () => props.onClose();
+  const onCopy = props.onCopy;
 
   const settingsNavRef: { current: SettingsNavigationRef | null } = {
     current: null,
@@ -258,39 +256,25 @@ const ModalRootInner = ({
   );
 
   const onBack = () => {
-    const currentView = modalView();
-    const currentStatus = status();
-
-    if (currentView === "start" && currentStatus === PROVIDER_STATUS.STANDBY) {
-      return;
-    }
-
-    if (currentView === "start") {
-      closeSessionIfExists();
-
-      return;
-    }
-
-    if (currentView === "settings") {
-      if (settingsNavRef.current && !settingsNavRef.current.isAtRoot) {
-        settingsNavRef.current.goBack();
-
-        return;
-      }
-
-      setView("start");
-
-      return;
-    }
-
-    if (currentView === "info") {
-      setView("start");
-
-      return;
-    }
-
-    closeSessionIfExists();
-    onClose();
+    match({ view: modalView(), status: status() })
+      .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => undefined)
+      .with({ view: "start" }, () => {
+        closeSessionIfExists();
+      })
+      .with({ view: "settings" }, () => {
+        if (settingsNavRef.current && !settingsNavRef.current.isAtRoot) {
+          settingsNavRef.current.goBack();
+        } else {
+          setView("start");
+        }
+      })
+      .with({ view: "info" }, () => {
+        setView("start");
+      })
+      .otherwise(() => {
+        closeSessionIfExists();
+        onClose();
+      });
   };
 
   const renderDisconnectedView = (targetView: ModalView): JSX.Element =>
@@ -341,8 +325,6 @@ const ModalRootInner = ({
         ),
       )
       .otherwise((state) => <UnknownState state={state || "unknown status"} />);
-
-  log("view", modalView());
 
   const overlayStyle: JSX.CSSProperties = {
     background: "var(--lv-overlay-background, rgba(0,0,0,0.3))",

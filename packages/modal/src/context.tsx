@@ -6,7 +6,6 @@ import {
   type Component,
   createContext,
   createEffect,
-  createMemo,
   createSignal,
   onCleanup,
   useContext,
@@ -131,7 +130,7 @@ const ModalLanguageSync: Component = () => {
     setLanguageTag(storedLanguage);
   });
 
-  return undefined;
+  return null;
 };
 
 const getInitialLanguage = (
@@ -148,10 +147,10 @@ const getInitialLanguage = (
 
 export const ModalProvider: Component<OpenLVModalElementProps> = (props) => {
   const state = createModalState(props.provider, props.theme);
-  const initialLanguage = createMemo(() => getInitialLanguage(props.provider));
+  const initialLanguage = getInitialLanguage(props.provider);
 
   return (
-    <TranslationProvider initialLanguageTag={initialLanguage()}>
+    <TranslationProvider initialLanguageTag={initialLanguage}>
       <ModalContext.Provider value={state}>
         <ModalLanguageSync />
         <ModalRoot onClose={props.onClose} />

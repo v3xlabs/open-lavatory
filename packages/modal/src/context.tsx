@@ -1,4 +1,6 @@
 import type { OpenLVProvider, ProviderStatus } from "@openlv/provider";
+import type { ProviderStorage } from "@openlv/provider/storage";
+import type { Session, SessionStateObject } from "@openlv/session";
 import {
   type Accessor,
   type Component,
@@ -9,9 +11,6 @@ import {
   onCleanup,
   useContext,
 } from "solid-js";
-
-import type { Session, SessionStateObject } from "@openlv/session";
-import type { ProviderStorage } from "@openlv/provider/storage";
 
 import { ModalRoot } from "./components/ModalRoot.js";
 import { type OpenLVModalElementProps } from "./element.js";

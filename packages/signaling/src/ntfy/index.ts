@@ -1,5 +1,6 @@
 import { SignalConnectionLostError } from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
+import { match } from "ts-pattern";
 
 import type { CreateSignalLayerFn, SignalingBaseCallbacks } from "../base.js";
 import { createSignalingLayer } from "../index.js";
@@ -20,7 +21,7 @@ export type NtfyMessage = {
  * Ntfy Signaling Layer
  *
  * Uses HTTP POST for publishing
- * Uses SSE (EventSource) for subscribing
+ * Uses WebSocket for subscribing
  *
  * URL format supports the ?auth= parameter
  * example: https://ntfy.sh/mytopic?auth=mytoken
@@ -41,12 +42,17 @@ const NTFY_RETRY_MAX_DELAY_MS = 30_000;
 
 export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   const connectionInfo = parseNtfyUrl(url);
+  const wsProtocol = match(connectionInfo.protocol)
+    .with("https", () => "wss" as const)
+    .with("http", () => "ws" as const)
+    .exhaustive();
   const events = new EventEmitter<{ message: string; }>();
-  const sseUrl = `${connectionInfo.protocol}://${connectionInfo.host}/${topic}/sse${connectionInfo.parameters ?? ""}`;
+  const wsUrl
+    = `${wsProtocol}://${connectionInfo.host}/${topic}/ws`
+      + (connectionInfo.parameters ?? "");
   const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/`;
 
-  let source: EventSource | undefined;
-  let ac: AbortController | undefined;
+  let connection: WebSocket | undefined;
   let intentionalClose = false;
   let retryAttempt = 0;
   let setupResolve: (() => void) | undefined;
@@ -73,13 +79,35 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
       let setupDone = false;
 
+      const schedulePing = () => {
+        timers.ping = setTimeout(async () => {
+          timers.ping = undefined;
+
+          try {
+            await fetch(pingUrl, {
+              method: "HEAD",
+              mode: "no-cors",
+              signal: AbortSignal.timeout(NTFY_PING_TIMEOUT_MS),
+            });
+
+            if (!intentionalClose && connection) schedulePing();
+          }
+          catch {
+            if (!intentionalClose && connection) {
+              log("NTFY: ping failed, closing connection");
+              connection.close();
+            }
+          }
+        }, NTFY_PING_INTERVAL_MS);
+      };
+
       const scheduleRetry = () => {
         if (retryAttempt >= NTFY_MAX_RETRIES) {
           if (setupDone) {
             callbacks.onError(new SignalConnectionLostError({ url }));
           }
           else {
-            setupReject?.(new Error("NTFY: SSE connection failed"));
+            setupReject?.(new Error("NTFY: WebSocket connection failed"));
             setupResolve = undefined;
             setupReject = undefined;
           }
@@ -103,80 +131,55 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       };
 
       const open = () => {
-        if (ac) ac.abort();
+        connection?.close();
+        connection = undefined;
+        timers.clearAll();
 
-        source?.close();
+        log("NTFY: connecting to WebSocket", wsUrl);
+        const ws = new WebSocket(wsUrl);
 
-        ac = new AbortController();
-        const { signal } = ac;
-        let disconnected = false;
+        connection = ws;
 
-        const handleDisconnect = () => {
-          if (disconnected) return;
+        ws.addEventListener("message", (event) => {
+          const data = JSON.parse(event.data as string) as NtfyMessage;
 
-          disconnected = true;
-          ac?.abort();
-          ac = undefined;
-          source?.close();
-          source = undefined;
-          timers.clearAll();
+          if (data.event === "open") {
+            retryAttempt = 0;
+            schedulePing();
 
-          if (!intentionalClose) {
-            if (setupDone) callbacks.onReconnecting();
-
-            scheduleRetry();
-          }
-        };
-
-        const schedulePing = () => {
-          timers.ping = setTimeout(async () => {
-            timers.ping = undefined;
-
-            try {
-              await fetch(pingUrl, {
-                method: "HEAD",
-                mode: "no-cors",
-                signal: AbortSignal.timeout(NTFY_PING_TIMEOUT_MS),
-              });
-
-              if (!disconnected) schedulePing();
+            if (setupDone) {
+              callbacks.onReconnected();
             }
-            catch {
-              if (!intentionalClose && !disconnected) {
-                log("NTFY: ping failed, connection lost");
-                handleDisconnect();
-              }
+            else {
+              setupDone = true;
+              setupResolve?.();
+              setupResolve = undefined;
+              setupReject = undefined;
             }
-          }, NTFY_PING_INTERVAL_MS);
-        };
 
-        log("NTFY: connecting to SSE", sseUrl);
-        source = new EventSource(sseUrl);
-
-        source.addEventListener("open", () => {
-          retryAttempt = 0;
-          schedulePing();
-
-          if (setupDone) {
-            callbacks.onReconnected();
+            return;
           }
-          else {
-            setupDone = true;
-            setupResolve?.();
-            setupResolve = undefined;
-            setupReject = undefined;
-          }
-        }, { signal });
-
-        source.addEventListener("error", handleDisconnect, { signal });
-
-        source.addEventListener("message", (event) => {
-          const data = JSON.parse(event.data) as NtfyMessage;
 
           if (data.event === "message") {
             events.emit("message", data.message);
           }
-        }, { signal });
+        });
+
+        ws.addEventListener("close", () => {
+          timers.clearAll();
+
+          if (intentionalClose) return;
+
+          log("NTFY: WebSocket closed unexpectedly");
+
+          if (setupDone) callbacks.onReconnecting();
+
+          scheduleRetry();
+        });
+
+        ws.addEventListener("error", () => {
+          log("NTFY: WebSocket error");
+        });
       };
 
       return new Promise<void>((resolve, reject) => {
@@ -188,10 +191,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     teardown() {
       intentionalClose = true;
       timers.clearAll();
-      ac?.abort();
-      ac = undefined;
-      source?.close();
-      source = undefined;
+      connection?.close();
+      connection = undefined;
 
       if (setupReject) {
         setupReject(new Error("NTFY: Connection closed"));

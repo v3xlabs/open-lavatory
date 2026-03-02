@@ -42,14 +42,16 @@ const NTFY_RETRY_MAX_DELAY_MS = 30_000;
 
 export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   const connectionInfo = parseNtfyUrl(url);
+
   const wsProtocol = match(connectionInfo.protocol)
     .with("https", () => "wss" as const)
     .with("http", () => "ws" as const)
     .exhaustive();
-  const events = new EventEmitter<{ message: string; }>();
   const wsUrl
-    = `${wsProtocol}://${connectionInfo.host}/${topic}/ws`
-      + (connectionInfo.parameters ?? "");
+      = `${wsProtocol}://${connectionInfo.host}/${topic}/ws`
+        + (connectionInfo.parameters ?? "");
+
+  const events = new EventEmitter<{ message: string; }>();
   const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/v1/health`;
 
   let connection: WebSocket | undefined;
@@ -82,14 +84,21 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         timers.ping = setTimeout(async () => {
           timers.ping = undefined;
 
+          const abortController = new AbortController();
+          const timeoutId = setTimeout(() => abortController.abort(), NTFY_PING_TIMEOUT_MS);
+
           try {
             await fetch(pingUrl, {
-              signal: AbortSignal.timeout(NTFY_PING_TIMEOUT_MS),
+              signal: abortController.signal,
             });
+
+            clearTimeout(timeoutId);
 
             if (!intentionalClose && connection) schedulePing();
           }
           catch {
+            clearTimeout(timeoutId);
+
             if (!intentionalClose && connection) {
               log("NTFY: ping failed, closing connection");
               connection.close();

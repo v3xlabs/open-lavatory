@@ -11,17 +11,15 @@ export const ThemeSettings = () => {
   const { userThemeMode, isUserConfigurable, updateThemePreference } =
     useThemeConfig();
 
-  const themeOptions = (): Array<[UserThemePreference, string]> => [
-    ["light", t("settings.theme.light") as string],
-    ["dark", t("settings.theme.dark") as string],
-    ["system", t("settings.theme.system") as string],
-  ];
-
   return (
     <Show when={isUserConfigurable()}>
       <MenuItem label={t("settings.theme.mode") as string}>
         <Select
-          options={themeOptions()}
+          options={[
+            ["light", t("settings.theme.light") as string],
+            ["dark", t("settings.theme.dark") as string],
+            ["system", t("settings.theme.system") as string],
+          ]}
           value={userThemeMode()}
           onChange={(value) =>
             updateThemePreference(value as UserThemePreference)

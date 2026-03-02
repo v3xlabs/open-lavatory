@@ -1,13 +1,13 @@
 import { useProvider } from "../hooks/useProvider.js";
 import { useSession } from "../hooks/useSession.js";
 
-export const UnknownState = ({ state }: { state: unknown; }) => {
+export const UnknownState = (props: { state: unknown }) => {
   const { status: sessionStatus, uri } = useSession();
   const { status: providerStatus } = useProvider();
 
   // biome-ignore lint/suspicious/noConsole: debug
   console.error("Unknown state:", {
-    state,
+    state: props.state,
     sessionStatus: sessionStatus(),
     providerStatus: providerStatus(),
   });
@@ -16,7 +16,7 @@ export const UnknownState = ({ state }: { state: unknown; }) => {
     <div class="rounded-md bg-(--lv-control-button-secondary-background) p-2 text-(--lv-text-muted)">
       <div>
         Unknown state:
-        {JSON.stringify(state)}
+        {JSON.stringify(props.state)}
       </div>
       <div>
         URI:

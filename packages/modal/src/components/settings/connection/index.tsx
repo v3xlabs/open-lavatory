@@ -1,4 +1,4 @@
-import { createMemo, For } from "solid-js";
+import { For } from "solid-js";
 
 import { useSettings } from "../../../hooks/useSettings.js";
 import { InfoTooltip } from "../../../ui/InfoTooltip.js";
@@ -9,14 +9,11 @@ import { Toggle } from "../../../ui/Toggle.js";
 import { useTranslation } from "../../../utils/i18n.js";
 import type { SettingsScreen } from "../index.js";
 
-export const ConnectionPreferences = ({
-  onNavigate,
-}: {
+export const ConnectionPreferences = (props: {
   onNavigate: (screen: SettingsScreen) => void;
 }) => {
   const { t } = useTranslation();
   const { settings, updateRetainHistory, updateAutoReconnect } = useSettings();
-  const currentSettings = createMemo(() => settings());
 
   return (
     <MenuGroup title={t("settings.connectionPreferences.title")}>
@@ -29,8 +26,8 @@ export const ConnectionPreferences = ({
             </InfoTooltip>
           </>
         }
-        onClick={() => onNavigate("signaling")}
-        value={currentSettings()?.signaling?.p}
+        onClick={() => props.onNavigate("signaling")}
+        value={settings()?.signaling?.p}
       />
       <MenuLink
         label={
@@ -41,7 +38,7 @@ export const ConnectionPreferences = ({
             </InfoTooltip>
           </>
         }
-        onClick={() => onNavigate("transport")}
+        onClick={() => props.onNavigate("transport")}
         value="WebRTC"
       />
       <For
@@ -49,12 +46,12 @@ export const ConnectionPreferences = ({
           [
             [
               t("settings.connectionPreferences.retainSessionHistory"),
-              currentSettings()?.retainHistory ?? false,
+              settings()?.retainHistory ?? false,
               updateRetainHistory,
             ],
             [
               t("settings.connectionPreferences.autoReconnect"),
-              currentSettings()?.autoReconnect ?? false,
+              settings()?.autoReconnect ?? false,
               updateAutoReconnect,
             ],
           ] as const

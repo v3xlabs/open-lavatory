@@ -13,14 +13,13 @@ export const SignalingSettings = () => {
   const { t } = useTranslation();
   const { settings, updateSignalingProtocol, updateSignalingServer } =
     useSettings();
-  const currentSettings = createMemo(() => settings());
-  const signalingProtocol = createMemo(() => currentSettings()?.signaling?.p);
+  const signalingProtocol = createMemo(() => settings()?.signaling?.p);
   const signalingServer = createMemo(() => {
     const activeProtocol = signalingProtocol();
 
     if (!activeProtocol) return "";
 
-    return currentSettings()?.signaling?.s?.[activeProtocol] ?? "";
+    return settings()?.signaling?.s?.[activeProtocol] ?? "";
   });
 
   return (

@@ -4,7 +4,7 @@ import { IconSettings } from "../../ui/icons.js";
 import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
-export const Disconnected = ({ onSettings }: { onSettings: () => void; }) => {
+export const Disconnected = (props: { onSettings: () => void }) => {
   const { t } = useTranslation();
   const { start } = useSessionStart();
 
@@ -30,7 +30,7 @@ export const Disconnected = ({ onSettings }: { onSettings: () => void; }) => {
           type="button"
           aria-label={String(t("disconnected.connectionSettings"))}
           aria-pressed={false}
-          onClick={onSettings}
+          onClick={props.onSettings}
           class="px-3 ltr:-ml-1 ltr:rounded-l-none rtl:-mr-1 rtl:rounded-r-none"
           $aspect="square"
           $size="lg"

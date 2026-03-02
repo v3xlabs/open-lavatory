@@ -16,7 +16,7 @@ export interface SettingsNavigationRef {
 
 export interface ModalSettingsProps {
   onTitleChange?: (titleKey: string) => void;
-  navigationRef?: { current: SettingsNavigationRef | null; };
+  navigationRef?: { current: SettingsNavigationRef | null };
 }
 
 const getSettingsTitleKey = (screen: SettingsScreen): string => {
@@ -33,10 +33,7 @@ const getSettingsTitleKey = (screen: SettingsScreen): string => {
   }
 };
 
-export const ModalSettings = ({
-  onTitleChange,
-  navigationRef,
-}: ModalSettingsProps) => {
+export const ModalSettings = (props: ModalSettingsProps) => {
   const {
     screen,
     previousScreen,
@@ -48,19 +45,19 @@ export const ModalSettings = ({
 
   const internalRef: SettingsNavigationRef = {
     goBack,
-    isAtRoot: isAtRoot(),
+    get isAtRoot() {
+      return isAtRoot();
+    },
   };
 
   createEffect(() => {
-    internalRef.isAtRoot = isAtRoot();
-
-    if (navigationRef) {
-      navigationRef.current = internalRef;
+    if (props.navigationRef) {
+      props.navigationRef.current = internalRef;
     }
   });
 
   createEffect(() => {
-    onTitleChange?.(getSettingsTitleKey(screen()));
+    props.onTitleChange?.(getSettingsTitleKey(screen()));
   });
 
   const renderScreen = (s: SettingsScreen) => {

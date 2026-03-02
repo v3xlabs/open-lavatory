@@ -15,8 +15,7 @@ const startViewTransition = (callback: () => void) => {
   if (supportsViewTransitions()) {
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (document as any).startViewTransition(callback);
-  }
-  else {
+  } else {
     callback();
   }
 };
@@ -72,7 +71,7 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
     .with({ status: SESSION_STATE.CREATED }, () => FLOW.CREATING)
     .with(
       { status: SESSION_STATE.SIGNALING, signaling: P.select() },
-      signaling =>
+      (signaling) =>
         match(signaling)
           .with({ state: SIGNAL_STATE.STANDBY }, () => FLOW.CONNECTING)
           .with({ state: SIGNAL_STATE.CONNECTING }, () => FLOW.CONNECTING)
@@ -89,7 +88,7 @@ const reduceState = (state: SessionStateObject | undefined): FlowState => {
     .otherwise(() => FLOW.ERROR);
 };
 
-export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
+export const ConnectionFlow = (props: ConnectionFlowProps) => {
   const { t } = useTranslation();
   const { status: sessionStatus } = useSession();
   const flowState = createMemo(() => reduceState(sessionStatus()));
@@ -124,7 +123,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             </div>
           </div>
         ))
-        .with(FLOW.READY, () => <HandshakeOpen onCopy={onCopy} />)
+        .with(FLOW.READY, () => <HandshakeOpen onCopy={props.onCopy} />)
         .with(FLOW.LINKING, () => (
           <div class="flex flex-col items-center gap-4 p-6">
             <LoadingSpinner />
@@ -164,7 +163,7 @@ export const ConnectionFlow = ({ onClose, onCopy }: ConnectionFlowProps) => {
             </div>
             <button
               type="button"
-              onClick={onClose}
+              onClick={props.onClose}
               class="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
             >
               {t("common.close")}

@@ -1,4 +1,4 @@
-import type { ParentProps } from "solid-js";
+import { mergeProps, type ParentProps } from "solid-js";
 import type { VariantProps } from "tailwind-variants/lite";
 import { tv } from "tailwind-variants/lite";
 import { match } from "ts-pattern";
@@ -40,22 +40,25 @@ const styles = tv({
 
 export type InfoTooltipProps = VariantProps<typeof styles>;
 
-export const InfoTooltip = ({
-  variant = "icon",
-  children,
-  size = "lg",
-}: ParentProps<InfoTooltipProps>) => {
-  const { root, box, popover, icon } = styles({ size, variant });
+export const InfoTooltip = (rawProps: ParentProps<InfoTooltipProps>) => {
+  const props = mergeProps(
+    { variant: "icon" as const, size: "lg" as const },
+    rawProps,
+  );
+  const { root, box, popover, icon } = styles({
+    size: props.size,
+    variant: props.variant,
+  });
 
   return (
     <div class={root()}>
       <div class={box()}>
-        {match(variant)
+        {match(props.variant)
           .with("icon", () => <IconCircleHelp class={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>
-      <div class={popover()}>{children}</div>
+      <div class={popover()}>{props.children}</div>
     </div>
   );
 };

@@ -1,4 +1,4 @@
-import type { JSX } from "solid-js";
+import { Show, type JSX } from "solid-js";
 
 import { IconChevronRight } from "../icons.js";
 
@@ -18,9 +18,9 @@ export const MenuLink = (props: MenuLinkProps) => (
       {props.label}
     </div>
     <div class="flex items-center gap-1">
-      {props.value && (
+      <Show when={props.value}>
         <span class="text-sm text-(--lv-text-muted)">{props.value}</span>
-      )}
+      </Show>
       <IconChevronRight class="h-4 w-4 text-(--lv-text-muted) rtl:rotate-180" />
     </div>
   </button>

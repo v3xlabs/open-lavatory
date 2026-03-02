@@ -9,35 +9,34 @@ import { Input } from "../../../ui/Input.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
 import { useTranslation } from "../../../utils/i18n.js";
 
-const ServerListItem = ({
-  children,
-  onRemove,
-}: {
+const ServerListItem = (props: {
   children: JSX.Element;
   onRemove: () => void;
 }) => (
   <div class="flex items-center gap-2">
-    <div class="flex-1">{children}</div>
-    <Button onClick={onRemove} $variant="tertiary" $aspect="square" $size="sm">
+    <div class="flex-1">{props.children}</div>
+    <Button
+      onClick={props.onRemove}
+      $variant="tertiary"
+      $aspect="square"
+      $size="sm"
+    >
       <IconTrash2 class="h-4 w-4 text-(--lv-text-muted)" />
     </Button>
   </div>
 );
 
-const AddServerButton = ({
-  label,
-  onClick,
-}: {
+const AddServerButton = (props: {
   label: JSX.Element;
   onClick: () => void;
 }) => (
   <button
     type="button"
-    onClick={onClick}
+    onClick={props.onClick}
     class="flex w-full cursor-pointer items-center justify-center gap-1 rounded-md border border-dashed border-(--lv-control-input-border) py-2 text-sm text-(--lv-text-muted) hover:bg-(--lv-card-background)"
   >
     <IconPlus class="h-4 w-4" />
-    {label}
+    {props.label}
   </button>
 );
 
@@ -52,13 +51,12 @@ export const TransportSettings = () => {
     removeTurnServer,
     updateTurnServer,
   } = useSettings();
-  const currentSettings = createMemo(() => settings());
 
   const stunServers = createMemo(
-    () => currentSettings()?.transport?.s?.webrtc?.stun ?? [],
+    () => settings()?.transport?.s?.webrtc?.stun ?? [],
   );
   const turnServers = createMemo(
-    () => currentSettings()?.transport?.s?.webrtc?.turn ?? [],
+    () => settings()?.transport?.s?.webrtc?.turn ?? [],
   );
 
   const handleStunChange = (index: number, value: string) => {

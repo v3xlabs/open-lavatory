@@ -105,6 +105,9 @@ export const createSession = async (
     encryptionKey,
   );
   let status: SessionState = SESSION_STATE.CREATED;
+  let transportStarted = false;
+  let transportRetries = 0;
+  let transportRetryTimer: ReturnType<typeof setTimeout> | undefined;
   const protocol = initParameters.p;
   const server = initParameters.s;
 
@@ -197,17 +200,35 @@ export const createSession = async (
     log("transport state change", state);
 
     if (state === TRANSPORT_STATE.CONNECTED) {
+      transportRetries = 0;
       updateStatus(SESSION_STATE.CONNECTED);
     }
   });
 
   transport.emitter.on("error", (error) => {
     log("transport error", error);
-    updateStatus(SESSION_STATE.ERROR, error);
-    emitter.emit("error", error);
+    transportStarted = false;
+    transport.teardown();
+
+    if (
+      transportRetries < 5
+      && signal.getState().state === SIGNAL_STATE.ENCRYPTED
+    ) {
+      transportRetries++;
+      const delay = Math.min(1000 * 2 ** (transportRetries - 1), 30_000) * (0.5 + Math.random() * 0.5);
+
+      log(`transport retry ${transportRetries}/5 in ${Math.round(delay)}ms`);
+      updateStatus(SESSION_STATE.RECONNECTING);
+      transportRetryTimer = setTimeout(() => startTransport(), delay);
+    }
+    else {
+      updateStatus(SESSION_STATE.ERROR, error);
+      emitter.emit("error", error);
+    }
   });
 
   const startTransport = async () => {
+    transportStarted = true;
     await transport.setup();
   };
 
@@ -264,9 +285,7 @@ export const createSession = async (
           updateStatus(SESSION_STATE.LINKING);
         }
 
-        if (state === SIGNAL_STATE.ENCRYPTED) {
-          // for now cuz we just use signaling call this a full connection
-          // updateStatus("connected");
+        if (state === SIGNAL_STATE.ENCRYPTED && !transportStarted) {
           startTransport();
         }
       });
@@ -292,7 +311,9 @@ export const createSession = async (
     },
     async close() {
       log("session teardown");
+      clearTimeout(transportRetryTimer);
       await signal?.teardown();
+      transport.teardown();
       updateStatus(SESSION_STATE.DISCONNECTED);
     },
     getState() {

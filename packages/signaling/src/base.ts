@@ -245,6 +245,7 @@ export const createSignalingLayer
         async setup() {
           setState(SIGNAL_STATE.CONNECTING);
           await init.setup(adapterCallbacks);
+          await init.subscribe(handleReceive);
 
           if (!canEncrypt()) {
             if (!isHost) {
@@ -261,8 +262,6 @@ export const createSignalingLayer
               setState(SIGNAL_STATE.READY);
             }
           }
-
-          await init.subscribe(handleReceive);
         },
         async teardown() {
           log("teardown");

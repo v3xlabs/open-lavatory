@@ -29,14 +29,15 @@ const defaultConfig: WebRTCConfig = {
 export const webrtc: CreateTransportLayerFn = (
   config: WebRTCConfig = defaultConfig,
 ) => {
-  const { iceServers = defaultConfig.iceServers } = config;
+  const { iceServers } = config;
+  const resolvedIceServers = iceServers?.length ? iceServers : defaultConfig.iceServers;
 
   console.log("WEBRTC ICE CONFIG", config);
   const ident = Math.random().toString(36)
     .slice(2, 4) + "#";
 
   return createTransportBase(({ emitter, isHost }) => {
-    const rtcConfig: RTCConfiguration = { iceServers };
+    const rtcConfig: RTCConfiguration = { iceServers: resolvedIceServers };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
 
@@ -51,6 +52,9 @@ export const webrtc: CreateTransportLayerFn = (
             "error",
             new TransportConnectionFailedError({ state: "failed" }),
           );
+        })
+        .with("disconnected", () => {
+          log(ident, "onConnectionStateChangeDisconnected");
         })
         .otherwise(() => {
           log(ident, "onConnectionStateChangeUnknown", state);

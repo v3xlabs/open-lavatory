@@ -4,7 +4,7 @@ import { Show } from "solid-js";
 import { useSession } from "../hooks/useSession.js";
 import { useTranslation } from "../utils/i18n.js";
 
-export const HandshakeOpen = (props: { onCopy: (uri: string) => void }) => {
+export const HandshakeOpen = (props: { onCopy: (uri: string) => void; }) => {
   const { t } = useTranslation();
   const { uri } = useSession();
 
@@ -33,7 +33,7 @@ export const HandshakeOpen = (props: { onCopy: (uri: string) => void }) => {
     <div class="flex flex-col items-center gap-4 px-2">
       <div class="w-full space-y-4 rounded-md border border-(--lv-control-button-secondary-border) bg-(--lv-card-background) p-4">
         <Show when={uri()}>
-          {(sessionUri) => (
+          {sessionUri => (
             <div class="relative mx-auto flex w-fit items-center justify-center rounded-lg border border-(--lv-control-button-secondary-border) bg-(--lv-qr-background) p-4">
               <button
                 type="button"

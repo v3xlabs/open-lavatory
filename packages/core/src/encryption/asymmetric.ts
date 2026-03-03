@@ -32,7 +32,7 @@ const decomposePayload = (
   const bytes = new Uint8Array(
     atob(payload)
       .split("")
-      .map(char => char.charCodeAt(0)),
+      .map(char => char.codePointAt(0)!),
   );
 
   if (bytes.length <= PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH) {

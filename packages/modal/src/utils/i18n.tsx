@@ -44,12 +44,12 @@ export const LANGUAGES: LanguageInfo[] = [
 ];
 
 export const isRtlLanguage = (tag: LanguageTag): boolean => {
-  const language = LANGUAGES.find((l) => l.tag === tag);
+  const language = LANGUAGES.find(l => l.tag === tag);
 
   return language?.rtl ?? false;
 };
 
-const SUPPORTED_LANGUAGE_TAGS = new Set(LANGUAGES.map((l) => l.tag));
+const SUPPORTED_LANGUAGE_TAGS = new Set(LANGUAGES.map(l => l.tag));
 
 export const detectBrowserLanguage = (): LanguageTag => {
   if (typeof navigator === "undefined") return "en";
@@ -66,9 +66,9 @@ export const detectBrowserLanguage = (): LanguageTag => {
 
     // Check for zh-cn variants (zh, zh-hans, zh-cn)
     if (
-      lang === "zh" ||
-      lang.startsWith("zh-hans") ||
-      lang.startsWith("zh-cn")
+      lang === "zh"
+      || lang.startsWith("zh-hans")
+      || lang.startsWith("zh-cn")
     ) {
       return "zh-cn";
     }
@@ -191,16 +191,16 @@ const loadLanguagePack = async (
 ): Promise<Translations | undefined> =>
   match(languageTag)
     .with("en", () => Promise.resolve(undefined))
-    .with("nl", async () => import("../../lang/nl.json").then((m) => m.default))
-    .with("es", async () => import("../../lang/es.json").then((m) => m.default))
-    .with("sv", async () => import("../../lang/sv.json").then((m) => m.default))
-    .with("fr", async () => import("../../lang/fr.json").then((m) => m.default))
+    .with("nl", async () => import("../../lang/nl.json").then(m => m.default))
+    .with("es", async () => import("../../lang/es.json").then(m => m.default))
+    .with("sv", async () => import("../../lang/sv.json").then(m => m.default))
+    .with("fr", async () => import("../../lang/fr.json").then(m => m.default))
     .with("zh-cn", async () =>
-      import("../../lang/zh-cn.json").then((m) => m.default),
+      import("../../lang/zh-cn.json").then(m => m.default),
     )
-    .with("ar", async () => import("../../lang/ar.json").then((m) => m.default))
-    .with("he", async () => import("../../lang/he.json").then((m) => m.default))
-    .with("fa", async () => import("../../lang/fa.json").then((m) => m.default))
+    .with("ar", async () => import("../../lang/ar.json").then(m => m.default))
+    .with("he", async () => import("../../lang/he.json").then(m => m.default))
+    .with("fa", async () => import("../../lang/fa.json").then(m => m.default))
     .exhaustive();
 
 export type TranslationProviderProps = {
@@ -230,7 +230,8 @@ export const TranslationProvider = (
         if (cancelled) return;
 
         setLanguagePack(nextPack);
-      } finally {
+      }
+      finally {
         if (!cancelled) setIsLoadingLanguagePack(false);
       }
     };

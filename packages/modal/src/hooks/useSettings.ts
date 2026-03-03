@@ -26,7 +26,7 @@ export const useSettings = () => {
       ...currentSettings,
       signaling: {
         ...currentSettings.signaling,
-        p: update as ProviderStorage["signaling"] extends { p: infer P }
+        p: update as ProviderStorage["signaling"] extends { p: infer P; }
           ? P
           : never,
       },
@@ -120,7 +120,7 @@ export const useSettings = () => {
 
   // STUN server reducers
   const addStunServer = (url: string) => {
-    updateWebRTCSettings((current) => ({
+    updateWebRTCSettings(current => ({
       ...current,
       stun: [...(current?.stun ?? []), url],
     }));
@@ -152,7 +152,7 @@ export const useSettings = () => {
 
   // TURN server reducers
   const addTurnServer = (server: TurnServer) => {
-    updateWebRTCSettings((current) => ({
+    updateWebRTCSettings(current => ({
       ...current,
       turn: [...(current?.turn ?? []), server],
     }));

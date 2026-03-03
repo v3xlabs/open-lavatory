@@ -1,7 +1,7 @@
 import { useProvider } from "../hooks/useProvider.js";
 import { useSession } from "../hooks/useSession.js";
 
-export const UnknownState = (props: { state: unknown }) => {
+export const UnknownState = (props: { state: unknown; }) => {
   const { status: sessionStatus, uri } = useSession();
   const { status: providerStatus } = useProvider();
 

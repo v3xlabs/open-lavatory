@@ -16,7 +16,7 @@ export interface SettingsNavigationRef {
 
 export interface ModalSettingsProps {
   onTitleChange?: (titleKey: string) => void;
-  navigationRef?: { current: SettingsNavigationRef | null };
+  navigationRef?: { current: SettingsNavigationRef | null; };
 }
 
 const getSettingsTitleKey = (screen: SettingsScreen): string => {

@@ -1,5 +1,5 @@
 import classNames from "classnames";
-import { Show, type JSX } from "solid-js";
+import { type JSX, Show } from "solid-js";
 
 export type TransitionContainerProps<T> = {
   current: T;
@@ -9,7 +9,7 @@ export type TransitionContainerProps<T> = {
   class?: string;
 };
 
-export const TransitionContainer = <T = unknown,>(
+export const TransitionContainer = <T = unknown>(
   props: TransitionContainerProps<T>,
 ) => (
   <div class={classNames("modal-transition__container", props.class)}>

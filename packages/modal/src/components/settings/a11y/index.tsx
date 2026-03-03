@@ -36,7 +36,7 @@ export const LanguageSettings = () => {
     <MenuGroup title={t("settings.appearance")}>
       <MenuItem label={t("settings.language")}>
         <Select
-          options={sortedLanguages().map((lang) => [lang.tag, lang.nativeName])}
+          options={sortedLanguages().map(lang => [lang.tag, lang.nativeName])}
           value={
             (settings()?.language as LanguageTag | undefined) || languageTag()
           }

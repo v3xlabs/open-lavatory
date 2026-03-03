@@ -19,7 +19,7 @@ export const Toggle = (props: ToggleProps) => {
         ["false", String(t("common.no"))],
       ]}
       value={props.value ? "true" : "false"}
-      onChange={(value) => props.onChange(value === "true")}
+      onChange={value => props.onChange(value === "true")}
     />
   );
 };

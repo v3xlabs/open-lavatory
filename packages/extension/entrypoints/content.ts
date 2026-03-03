@@ -2,7 +2,6 @@
 // Content script for OpenLV Extension - EIP-6963 Compatible
 // This script runs in the context of web pages and provides EIP-1193 wallet connectivity
 
-// eslint-disable-next-line import/no-default-export
 export default defineContentScript({
   matches: ["<all_urls>"],
   main() {

@@ -1,6 +1,6 @@
 // Button implementation that also supports being an anchor tag
 import classNames from "classnames";
-import { splitProps, type JSX } from "solid-js";
+import { type JSX, splitProps } from "solid-js";
 import { tv, type VariantProps } from "tailwind-variants/lite";
 
 const styles = tv({
@@ -42,13 +42,13 @@ export type ButtonProps = {
   children?: JSX.Element;
   class?: string;
 } & VariantProps<typeof styles> &
-  (
+(
     | ({
-        href: string;
-      } & ButtonLinkProps)
+      href: string;
+    } & ButtonLinkProps)
     | ({
-        href?: undefined;
-      } & ButtonButtonProps)
+      href?: undefined;
+    } & ButtonButtonProps)
   );
 
 export const Button = (rawProps: ButtonProps) => {

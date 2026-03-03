@@ -1,6 +1,6 @@
-import { createMemo, For } from "solid-js";
 import type { TurnServer } from "@openlv/provider/storage";
 import type { JSX } from "solid-js";
+import { createMemo, For } from "solid-js";
 
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Button } from "../../../ui/Button.js";
@@ -96,7 +96,7 @@ export const TransportSettings = () => {
               <ServerListItem onRemove={() => handleRemoveStun(index())}>
                 <Input
                   value={server}
-                  onChange={(value) => handleStunChange(index(), value)}
+                  onChange={value => handleStunChange(index(), value)}
                   placeholder="stun:stun.l.google.com:19302"
                   readOnly={false}
                 />
@@ -118,9 +118,8 @@ export const TransportSettings = () => {
                 <ServerListItem onRemove={() => handleRemoveTurn(index())}>
                   <Input
                     value={server.urls}
-                    onChange={(value) =>
-                      handleTurnChange(index(), "urls", value)
-                    }
+                    onChange={value =>
+                      handleTurnChange(index(), "urls", value)}
                     placeholder="turn:relay.example.com:443"
                     readOnly={false}
                   />
@@ -128,17 +127,15 @@ export const TransportSettings = () => {
                 <div class="grid grid-cols-2 gap-2">
                   <Input
                     value={server.username ?? ""}
-                    onChange={(value) =>
-                      handleTurnChange(index(), "username", value)
-                    }
+                    onChange={value =>
+                      handleTurnChange(index(), "username", value)}
                     placeholder="Username"
                     readOnly={false}
                   />
                   <Input
                     value={server.credential ?? ""}
-                    onChange={(value) =>
-                      handleTurnChange(index(), "credential", value)
-                    }
+                    onChange={value =>
+                      handleTurnChange(index(), "credential", value)}
                     placeholder="Password"
                     readOnly={false}
                   />

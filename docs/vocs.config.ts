@@ -4,7 +4,6 @@ import tailwindcss from "@tailwindcss/vite";
 import type { PluginOption } from "vite";
 import { defineConfig } from "vocs";
 
-// eslint-disable-next-line import/no-default-export
 export default defineConfig({
   title: "openlv",
   titleTemplate: "%s · openlv",

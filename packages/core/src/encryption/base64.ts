@@ -2,7 +2,7 @@ export const toBase64 = (data: Uint8Array): string => {
   let binary = "";
 
   for (const datum of data) {
-    binary += String.fromCharCode(datum);
+    binary += String.fromCodePoint(datum);
   }
 
   return btoa(binary);

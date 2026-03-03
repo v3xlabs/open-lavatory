@@ -7,9 +7,9 @@ import {
   createEffect,
   createMemo,
   createSignal,
-  Show,
   type JSX,
   onCleanup,
+  Show,
 } from "solid-js";
 import { match, P } from "ts-pattern";
 
@@ -84,11 +84,11 @@ const useDynamicDialogHeight = () => {
       : node.getBoundingClientRect().height;
 
     if (nextHeight > 0) {
-      setHeight((previousHeight) =>
-        typeof previousHeight === "number" &&
-        Math.abs(previousHeight - nextHeight) < 0.5
+      setHeight(previousHeight =>
+        (typeof previousHeight === "number"
+          && Math.abs(previousHeight - nextHeight) < 0.5
           ? previousHeight
-          : nextHeight,
+          : nextHeight),
       );
     }
   };
@@ -134,8 +134,8 @@ const ModalRootInner = (props: {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri } = useSession();
   const { status, provider } = useProvider();
-  const { setContentRef, contentNode, height, measureHeight } =
-    useDynamicDialogHeight();
+  const { setContentRef, contentNode, height, measureHeight }
+    = useDynamicDialogHeight();
   const {
     current: displayedModalView,
     previous: previousModalView,
@@ -152,11 +152,11 @@ const ModalRootInner = (props: {
   const onClose = () => props.onClose();
   const onCopy = props.onCopy;
 
-  const settingsNavRef: { current: SettingsNavigationRef | null } = {
+  const settingsNavRef: { current: SettingsNavigationRef | null; } = {
     current: null,
   };
-  const [settingsTitleKey, setSettingsTitleKey] =
-    createSignal("settings.title");
+  const [settingsTitleKey, setSettingsTitleKey]
+    = createSignal("settings.title");
 
   const title = createMemo(() =>
     match(modalView())
@@ -205,7 +205,8 @@ const ModalRootInner = (props: {
           isInitialMount = false;
         }
       }, 0);
-    } else {
+    }
+    else {
       measureHeight();
     }
 
@@ -218,12 +219,12 @@ const ModalRootInner = (props: {
 
   createEffect(() => {
     const currentHeight = height();
-    const isHeightChanging =
-      previousHeight !== undefined &&
-      currentHeight !== previousHeight &&
-      currentHeight > 0 &&
-      previousHeight > 0 &&
-      Math.abs(currentHeight - previousHeight) > 0.5;
+    const isHeightChanging
+      = previousHeight !== undefined
+        && currentHeight !== previousHeight
+        && currentHeight > 0
+        && previousHeight > 0
+        && Math.abs(currentHeight - previousHeight) > 0.5;
 
     if (isHeightChanging) {
       setShouldHideOverflow(true);
@@ -264,7 +265,8 @@ const ModalRootInner = (props: {
       .with({ view: "settings" }, () => {
         if (settingsNavRef.current && !settingsNavRef.current.isAtRoot) {
           settingsNavRef.current.goBack();
-        } else {
+        }
+        else {
           setView("start");
         }
       })
@@ -292,7 +294,7 @@ const ModalRootInner = (props: {
   const renderDisconnectedSection = () => (
     <div class="modal-transition__container">
       <Show when={previousModalView()}>
-        {(previousView) => (
+        {previousView => (
           <div class="modal-transition__layer modal-transition__layer--outgoing">
             {renderDisconnectedView(previousView())}
           </div>
@@ -324,16 +326,16 @@ const ModalRootInner = (props: {
           <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
         ),
       )
-      .otherwise((state) => <UnknownState state={state || "unknown status"} />);
+      .otherwise(state => <UnknownState state={state || "unknown status"} />);
 
   const overlayStyle: JSX.CSSProperties = {
-    background: "var(--lv-overlay-background, rgba(0,0,0,0.3))",
+    "background": "var(--lv-overlay-background, rgba(0,0,0,0.3))",
     "backdrop-filter": "var(--lv-overlay-backdrop-filter, blur(4px))",
   };
 
   const cardStyle: JSX.CSSProperties = {
-    background: "var(--lv-body-background)",
-    color: "var(--lv-body-color, var(--lv-text-primary))",
+    "background": "var(--lv-body-background)",
+    "color": "var(--lv-body-color, var(--lv-text-primary))",
     "border-radius": "var(--lv-border-radius, 16px)",
     "box-shadow": "var(--lv-modal-shadow, 0px 12px 32px rgba(0,0,0,0.25))",
   };
@@ -359,7 +361,7 @@ const ModalRootInner = (props: {
         role="dialog"
         aria-modal="true"
         aria-label={String(title())}
-        onClick={(event) => event.stopPropagation()}
+        onClick={event => event.stopPropagation()}
         style={{
           ...(typeof height() === "number" && height() > 0
             ? { height: `${height()}px` }
@@ -377,7 +379,7 @@ const ModalRootInner = (props: {
           />
           <div class="modal-transition__container">
             <Show when={previousStatus()}>
-              {(previous) => (
+              {previous => (
                 <div class="modal-transition__layer modal-transition__layer--outgoing absolute">
                   <div class="flex flex-col text-center">
                     {renderStatusSection(previous())}

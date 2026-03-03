@@ -2,7 +2,7 @@ import { For } from "solid-js";
 
 const dotCount = (isApple: boolean) => (isApple ? 1 : 3);
 
-const TabletGraphic = (props: { isApple: boolean }) => (
+const TabletGraphic = (props: { isApple: boolean; }) => (
   <div class="flex h-full w-full justify-between">
     <div class="grow py-1 ps-1">
       <div class="h-full rounded-sm border border-gray-300 bg-gray-400"></div>
@@ -17,7 +17,7 @@ const TabletGraphic = (props: { isApple: boolean }) => (
   </div>
 );
 
-const PhoneGraphic = (props: { isApple: boolean }) => (
+const PhoneGraphic = (props: { isApple: boolean; }) => (
   <div class="flex h-full w-full flex-col justify-between">
     <div class="grow px-1 pt-1">
       <div class="h-full rounded-sm border border-gray-200 bg-gray-300"></div>

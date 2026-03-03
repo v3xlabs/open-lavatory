@@ -11,8 +11,8 @@ const AVAILABLE_PROTOCOLS = ["mqtt", "ntfy", "gun"];
 
 export const SignalingSettings = () => {
   const { t } = useTranslation();
-  const { settings, updateSignalingProtocol, updateSignalingServer } =
-    useSettings();
+  const { settings, updateSignalingProtocol, updateSignalingServer }
+    = useSettings();
   const signalingProtocol = createMemo(() => settings()?.signaling?.p);
   const signalingServer = createMemo(() => {
     const activeProtocol = signalingProtocol();
@@ -27,7 +27,7 @@ export const SignalingSettings = () => {
       <MenuGroup title={t("settings.signaling.title")}>
         <MenuItem label={t("common.protocol")}>
           <Select
-            options={AVAILABLE_PROTOCOLS.map((option) => [
+            options={AVAILABLE_PROTOCOLS.map(option => [
               option.toLowerCase(),
               option.toUpperCase(),
             ])}
@@ -39,7 +39,7 @@ export const SignalingSettings = () => {
           <Input
             id="server"
             value={signalingServer()}
-            onChange={(value) => updateSignalingServer(value)}
+            onChange={value => updateSignalingServer(value)}
             placeholder={String(t("settings.signaling.serverUrl"))}
             ariaLabel={String(t("settings.signaling.serverUrl"))}
             readOnly={false}

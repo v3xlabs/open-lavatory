@@ -42,7 +42,7 @@ export const useNavigationStack = <T>(
   };
 
   const goBack = () => {
-    setIndex((currentIndex) => Math.max(0, currentIndex - 1));
+    setIndex(currentIndex => Math.max(0, currentIndex - 1));
   };
 
   return {

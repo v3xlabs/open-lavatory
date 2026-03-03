@@ -3,7 +3,6 @@
 // Background script for OpenLV Extension - EIP-6963 Compatible
 // This script manages wallet operations and communicates with content scripts
 
-// eslint-disable-next-line import/no-default-export
 export default defineBackground(() => {
   console.log("OpenLV EIP-6963 Extension Background Script Started");
 

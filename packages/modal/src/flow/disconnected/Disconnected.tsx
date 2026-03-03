@@ -4,7 +4,7 @@ import { IconSettings } from "../../ui/icons.js";
 import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
-export const Disconnected = (props: { onSettings: () => void }) => {
+export const Disconnected = (props: { onSettings: () => void; }) => {
   const { t } = useTranslation();
   const { start } = useSessionStart();
 

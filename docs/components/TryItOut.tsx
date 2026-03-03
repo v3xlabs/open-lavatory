@@ -48,24 +48,24 @@ const config = createConfig({
       //   mode: "light",
       // },
       // theme: {
-        // Either a predefined theme like such
-        // theme: "simple",
-        // Or a custom theme:
-        // theme: {
-        //   dark: {
-        //     body: {
-        //       background: "orange",
-        //       color: "red",
-        //     },
-        //   },
-        //   light: {
-        //     body: {
-        //       background: "blue",
-        //       color: "white",
-        //     },
-        //   },
-        // },
-        // mode: "auto",
+      // Either a predefined theme like such
+      // theme: "simple",
+      // Or a custom theme:
+      // theme: {
+      //   dark: {
+      //     body: {
+      //       background: "orange",
+      //       color: "red",
+      //     },
+      //   },
+      //   light: {
+      //     body: {
+      //       background: "blue",
+      //       color: "white",
+      //     },
+      //   },
+      // },
+      // mode: "auto",
       // },
     }),
   ],

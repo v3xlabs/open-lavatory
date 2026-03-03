@@ -10,7 +10,6 @@ declare module "react-native-webview-crypto" {
   import * as React from "react";
   const PolyfillCrypto: React.ComponentType<Record<string, unknown>>;
 
-  // eslint-disable-next-line import/no-default-export
   export default PolyfillCrypto;
 }
 

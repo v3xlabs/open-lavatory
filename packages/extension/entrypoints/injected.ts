@@ -12,7 +12,6 @@ declare global {
 const connector = openlv({})({ chains: [] } as { chains: readonly []; });
 const { uuid, name, icon, rdns } = connector;
 
-// eslint-disable-next-line import/no-default-export
 export default defineUnlistedScript(() => {
   console.log("INJECTED HERE");
 

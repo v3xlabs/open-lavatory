@@ -18,26 +18,26 @@ export const ConnectionPreferences = (props: {
   return (
     <MenuGroup title={t("settings.connectionPreferences.title")}>
       <MenuLink
-        label={
+        label={(
           <>
             {t("settings.signaling.title")}
             <InfoTooltip variant="icon">
               {t("settings.signaling.description")}
             </InfoTooltip>
           </>
-        }
+        )}
         onClick={() => props.onNavigate("signaling")}
         value={settings()?.signaling?.p}
       />
       <MenuLink
-        label={
+        label={(
           <>
             {t("settings.transport.title")}
             <InfoTooltip variant="icon">
               {t("settings.transport.description")}
             </InfoTooltip>
           </>
-        }
+        )}
         onClick={() => props.onNavigate("transport")}
         value="WebRTC"
       />

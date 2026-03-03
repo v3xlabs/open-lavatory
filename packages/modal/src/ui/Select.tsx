@@ -39,7 +39,7 @@ export const Select = (props: SelectProps) => {
   return (
     <Show
       when={props.options.length > (props.dropdownThreshold ?? 3)}
-      fallback={
+      fallback={(
         <div class={root()}>
           <For each={props.options}>
             {([slug, label]) => (
@@ -54,12 +54,12 @@ export const Select = (props: SelectProps) => {
             )}
           </For>
         </div>
-      }
+      )}
     >
       <select
         class={dropdown}
         value={props.value}
-        onChange={(event) => props.onChange(event.currentTarget.value)}
+        onChange={event => props.onChange(event.currentTarget.value)}
       >
         <For each={props.options}>
           {([slug, label]) => <option value={slug}>{label}</option>}

@@ -8,8 +8,8 @@ export const usePunchTransition = <T>(
   value: T | Accessor<T>,
   { duration = 200 }: PunchTransitionOptions = {},
 ) => {
-  const readValue: Accessor<T> =
-    typeof value === "function" ? (value as Accessor<T>) : () => value;
+  const readValue: Accessor<T>
+    = typeof value === "function" ? (value as Accessor<T>) : () => value;
   const initialValue = readValue();
   const [current, setCurrent] = createSignal<T>(initialValue);
   const [previous, setPrevious] = createSignal<T | undefined>(undefined);

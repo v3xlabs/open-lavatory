@@ -4,7 +4,6 @@ import { render } from "solid-js/web";
 import { ModalProvider } from "./context.js";
 import { updateStyles } from "./styles/index.js";
 import type { ThemeConfig } from "./theme/types.js";
-import type { ModalConnectionInterface } from "./types/connection.js";
 
 export type OpenLVModalElementProps = {
   provider: OpenLVProvider;
@@ -13,8 +12,7 @@ export type OpenLVModalElementProps = {
 };
 
 export class OpenLVModalElement
-  extends HTMLElement
-  implements ModalConnectionInterface {
+  extends HTMLElement {
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
   private readonly parameters: OpenLVModalElementProps;
@@ -45,6 +43,7 @@ export class OpenLVModalElement
   }
 
   private setupThemeListener() {
+    // eslint-disable-next-line unicorn/consistent-function-scoping
     const update = () => {
       const userTheme
         = this.parameters.provider.storage.getSettings()?.theme ?? "system";

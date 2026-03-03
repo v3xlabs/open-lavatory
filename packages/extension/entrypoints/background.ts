@@ -22,11 +22,6 @@ export default defineBackground(() => {
       to?: string;
     };
 
-    type ForwardRequest = {
-      method: string;
-      params: unknown[];
-    };
-
     // Store for managing wallet state
     interface WalletState {
       accounts: string[];

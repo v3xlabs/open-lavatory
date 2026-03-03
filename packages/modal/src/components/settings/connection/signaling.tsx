@@ -1,5 +1,6 @@
 import { createMemo } from "solid-js";
 
+import type { SignalingProtocol } from "../../../../../provider/dist/storage/version.js";
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Input } from "../../../ui/Input.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
@@ -11,7 +12,7 @@ const AVAILABLE_PROTOCOLS = ["mqtt", "ntfy", "gun"];
 
 export const SignalingSettings = () => {
   const { t } = useTranslation();
-  const { settings, updateSignalingProtocol, updateSignalingServer }
+  const { settings, setSignalingProtocol, setSignalingOptions }
     = useSettings();
   const signalingProtocol = createMemo(() => settings()?.signaling?.p);
   const signalingServer = createMemo(() => {
@@ -32,14 +33,14 @@ export const SignalingSettings = () => {
               option.toUpperCase(),
             ])}
             value={signalingProtocol() ?? ""}
-            onChange={updateSignalingProtocol}
+            onChange={value => setSignalingProtocol(value as SignalingProtocol)}
           />
         </MenuItem>
         <MenuItem label={t("settings.signaling.server")}>
           <Input
             id="server"
             value={signalingServer()}
-            onChange={value => updateSignalingServer(value)}
+            onChange={value => setSignalingOptions({ url: value })}
             placeholder={String(t("settings.signaling.serverUrl"))}
             ariaLabel={String(t("settings.signaling.serverUrl"))}
             readOnly={false}

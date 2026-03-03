@@ -14,7 +14,7 @@ import { ThemeSettings } from "./theme.js";
 
 export const LanguageSettings = () => {
   const { t, languageTag, setLanguageTag } = useTranslation();
-  const { settings, updateLanguage } = useSettings();
+  const { settings, setLanguage } = useSettings();
 
   const sortedLanguages = createMemo(() =>
     [...LANGUAGES].sort((a, b) => {
@@ -29,7 +29,7 @@ export const LanguageSettings = () => {
     const newLang = value as LanguageTag;
 
     setLanguageTag(newLang);
-    updateLanguage(newLang);
+    setLanguage(newLang);
   };
 
   return (

@@ -3,8 +3,22 @@ import { Show } from "solid-js";
 
 import { useSession } from "../hooks/useSession.js";
 import { useTranslation } from "../utils/i18n.js";
+import { copyToClipboard } from "../hooks/useClipboard.js";
 
-export const HandshakeOpen = (props: { onCopy: (uri: string) => void; }) => {
+const generateQRCode = (uriValue: string) => {
+  // qrcode-generator ships a callable export as default, but its types are wrong
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const QR: any = (QRCode as any).default;
+
+  const qr = QR(0, "M");
+
+  qr.addData(uriValue);
+  qr.make();
+
+  return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
+};
+
+export const HandshakeOpen = () => {
   const { t } = useTranslation();
   const { uri } = useSession();
 
@@ -12,21 +26,8 @@ export const HandshakeOpen = (props: { onCopy: (uri: string) => void; }) => {
     const sessionUri = uri();
 
     if (sessionUri) {
-      props.onCopy(sessionUri);
+      copyToClipboard(sessionUri);
     }
-  };
-
-  const generateQRCode = (uriValue: string) => {
-    // qrcode-generator ships a callable export as default, but its types are wrong
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const QR: any = (QRCode as any).default;
-
-    const qr = QR(0, "M");
-
-    qr.addData(uriValue);
-    qr.make();
-
-    return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
   };
 
   return (

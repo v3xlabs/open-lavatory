@@ -13,7 +13,7 @@ export const ConnectionPreferences = (props: {
   onNavigate: (screen: SettingsScreen) => void;
 }) => {
   const { t } = useTranslation();
-  const { settings, updateRetainHistory, updateAutoReconnect } = useSettings();
+  const { settings, setRetainSessionHistory, setAutoReconnect } = useSettings();
 
   return (
     <MenuGroup title={t("settings.connectionPreferences.title")}>
@@ -47,12 +47,12 @@ export const ConnectionPreferences = (props: {
             [
               t("settings.connectionPreferences.retainSessionHistory"),
               settings()?.retainHistory ?? false,
-              updateRetainHistory,
+              setRetainSessionHistory,
             ],
             [
               t("settings.connectionPreferences.autoReconnect"),
               settings()?.autoReconnect ?? false,
-              updateAutoReconnect,
+              setAutoReconnect,
             ],
           ] as const
         }

@@ -1,7 +1,4 @@
-/** biome-ignore-all lint/a11y/noStaticElementInteractions: overlay requires click to close modal */
-/** biome-ignore-all lint/a11y/useKeyWithClickEvents: escape listener handles keyboard interactions */
-
-import { PROVIDER_STATUS } from "@openlv/provider";
+import { PROVIDER_STATUS, type ProviderStatus } from "@openlv/provider";
 import classNames from "classnames";
 import {
   createEffect,
@@ -9,18 +6,19 @@ import {
   createSignal,
   type JSX,
   onCleanup,
+  onMount,
   Show,
 } from "solid-js";
 import { match, P } from "ts-pattern";
 
+import { useModalContext } from "../context.jsx";
 import { ConnectionFlow } from "../flow/ConnectionFlow.js";
 import { Disconnected } from "../flow/disconnected/Disconnected.js";
 import { InfoScreen } from "../flow/InfoScreen.js";
 import { copyToClipboard } from "../hooks/useClipboard.js";
-import { useProvider } from "../hooks/useProvider.js";
 import { usePunchTransition } from "../hooks/usePunchTransition.js";
 import { useSession } from "../hooks/useSession.js";
-import { useThemeConfig } from "../hooks/useThemeConfig.js";
+import { useTheme } from "../hooks/useTheme.js";
 import { useTranslation } from "../utils/i18n.js";
 import { Footer } from "./footer/Footer.js";
 import { Header } from "./Header.js";
@@ -57,6 +55,7 @@ const useModalState = () => {
 
 const useEscapeToClose = (handler: () => void) => {
   createEffect(() => {
+    // eslint-disable-next-line unicorn/consistent-function-scoping
     const keyHandler = (event: KeyboardEvent) => {
       if (event.key === "Escape") handler();
     };
@@ -85,10 +84,10 @@ const useDynamicDialogHeight = () => {
 
     if (nextHeight > 0) {
       setHeight(previousHeight =>
-        (typeof previousHeight === "number"
-          && Math.abs(previousHeight - nextHeight) < 0.5
-          ? previousHeight
-          : nextHeight),
+      (typeof previousHeight === "number"
+        && Math.abs(previousHeight - nextHeight) < 0.5
+        ? previousHeight
+        : nextHeight),
       );
     }
   };
@@ -110,13 +109,9 @@ const useDynamicDialogHeight = () => {
   createEffect(() => {
     if (globalThis.window === undefined) return;
 
-    const handleResize = () => {
-      measureHeight();
-    };
+    window.addEventListener("resize", measureHeight);
 
-    window.addEventListener("resize", handleResize);
-
-    onCleanup(() => window.removeEventListener("resize", handleResize));
+    onCleanup(() => window.removeEventListener("resize", measureHeight));
   });
 
   return {
@@ -127,13 +122,10 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-const ModalRootInner = (props: {
-  onClose: () => void;
-  onCopy?: (uri: string) => void;
-}) => {
+export const ModalRoot = (props: { onClose: () => void; }) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
-  const { uri } = useSession();
-  const { status, provider } = useProvider();
+  const { uri, status } = useSession();
+  const { provider } = useModalContext();
   const { setContentRef, contentNode, height, measureHeight }
     = useDynamicDialogHeight();
   const {
@@ -148,9 +140,7 @@ const ModalRootInner = (props: {
   } = usePunchTransition(status);
   const openSettings = () => setView("settings");
   const { t, isRtl, languageTag } = useTranslation();
-  const { themeMode } = useThemeConfig();
-  const onClose = () => props.onClose();
-  const onCopy = props.onCopy;
+  const theme = useTheme();
 
   const settingsNavRef: { current: SettingsNavigationRef | null; } = {
     current: null,
@@ -166,11 +156,11 @@ const ModalRootInner = (props: {
       .exhaustive(),
   );
 
-  useEscapeToClose(onClose);
+  useEscapeToClose(props.onClose);
 
   createEffect(() => {
-    if (status() === PROVIDER_STATUS.CONNECTED) {
-      onClose();
+    if (status()?.status === PROVIDER_STATUS.CONNECTED) {
+      props.onClose();
     }
   });
 
@@ -221,10 +211,10 @@ const ModalRootInner = (props: {
     const currentHeight = height();
     const isHeightChanging
       = previousHeight !== undefined
-        && currentHeight !== previousHeight
-        && currentHeight > 0
-        && previousHeight > 0
-        && Math.abs(currentHeight - previousHeight) > 0.5;
+      && currentHeight !== previousHeight
+      && currentHeight > 0
+      && previousHeight > 0
+      && Math.abs(currentHeight - previousHeight) > 0.5;
 
     if (isHeightChanging) {
       setShouldHideOverflow(true);
@@ -248,19 +238,25 @@ const ModalRootInner = (props: {
     });
   });
 
-  const closeSessionIfExists = () => {
-    provider.closeSession();
-  };
+  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(provider.getState().status);
+
+  onMount(() => {
+    provider.on("status_change", setProviderStatus);
+  });
+
+  onCleanup(() => {
+    provider.off("status_change", setProviderStatus);
+  });
 
   const shouldShowBack = createMemo(
-    () => !(modalView() === "start" && status() === PROVIDER_STATUS.STANDBY),
+    () => !(modalView() === "start" && providerStatus() === PROVIDER_STATUS.STANDBY),
   );
 
   const onBack = () => {
-    match({ view: modalView(), status: status() })
+    match({ view: modalView(), status: providerStatus() })
       .with({ view: "start", status: PROVIDER_STATUS.STANDBY }, () => undefined)
       .with({ view: "start" }, () => {
-        closeSessionIfExists();
+        provider.closeSession();
       })
       .with({ view: "settings" }, () => {
         if (settingsNavRef.current && !settingsNavRef.current.isAtRoot) {
@@ -274,8 +270,8 @@ const ModalRootInner = (props: {
         setView("start");
       })
       .otherwise(() => {
-        closeSessionIfExists();
-        onClose();
+        provider.closeSession();
+        props.onClose();
       });
   };
 
@@ -312,7 +308,7 @@ const ModalRootInner = (props: {
   );
 
   const renderStatusSection = (
-    targetStatus: ReturnType<typeof status>,
+    targetStatus: ProviderStatus,
   ): JSX.Element =>
     match(targetStatus)
       .with(PROVIDER_STATUS.STANDBY, () => renderDisconnectedSection())
@@ -323,7 +319,7 @@ const ModalRootInner = (props: {
           PROVIDER_STATUS.CONNECTED,
         ),
         () => (
-          <ConnectionFlow onClose={onClose} onCopy={onCopy || handleCopy} />
+          <ConnectionFlow onClose={props.onClose} onCopy={handleCopy} />
         ),
       )
       .otherwise(state => <UnknownState state={state || "unknown status"} />);
@@ -343,10 +339,10 @@ const ModalRootInner = (props: {
   return (
     <div
       class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4"
-      onClick={onClose}
+      onClick={props.onClose}
       role="presentation"
       data-openlv-modal-root
-      data-openlv-theme-mode={themeMode()}
+      data-openlv-theme-mode={theme.mode()}
       lang={languageTag()}
       dir={isRtl() ? "rtl" : "ltr"}
       style={overlayStyle}
@@ -373,20 +369,11 @@ const ModalRootInner = (props: {
           <Header
             title={String(title())}
             view={modalView()}
-            onClose={onClose}
+            onClose={props.onClose}
             onBack={shouldShowBack() ? onBack : undefined}
             setView={setView}
           />
           <div class="modal-transition__container">
-            <Show when={previousStatus()}>
-              {previous => (
-                <div class="modal-transition__layer modal-transition__layer--outgoing absolute">
-                  <div class="flex flex-col text-center">
-                    {renderStatusSection(previous())}
-                  </div>
-                </div>
-              )}
-            </Show>
             <div
               class={classNames(
                 "modal-transition__layer",
@@ -394,7 +381,7 @@ const ModalRootInner = (props: {
               )}
             >
               <div class="flex flex-col text-center">
-                {renderStatusSection(displayedStatus())}
+                {renderStatusSection(providerStatus())}
               </div>
             </div>
           </div>
@@ -414,12 +401,4 @@ const ModalRootInner = (props: {
       </div>
     </div>
   );
-};
-
-export const ModalRoot = (props: ModalRootProps) => {
-  const localOnClose = () => {
-    props.onClose?.();
-  };
-
-  return <ModalRootInner onClose={localOnClose} onCopy={props.onCopy} />;
 };

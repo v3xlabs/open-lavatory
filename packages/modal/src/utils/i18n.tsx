@@ -6,12 +6,13 @@ import {
   createSignal,
   type JSX,
   onCleanup,
-  type ParentProps,
+  type ParentComponent,
   useContext,
 } from "solid-js";
 import { match } from "ts-pattern";
 
 import fallbackEnglish from "../../lang/en.json" with { type: "json" };
+import { useModalContext } from "../context.jsx";
 
 export type LanguageTag =
   | "en"
@@ -203,15 +204,11 @@ const loadLanguagePack = async (
     .with("fa", async () => import("../../lang/fa.json").then(m => m.default))
     .exhaustive();
 
-export type TranslationProviderProps = {
-  initialLanguageTag?: LanguageTag;
-};
-
-export const TranslationProvider = (
-  props: ParentProps<TranslationProviderProps>,
-) => {
+export const TranslationProvider: ParentComponent = (props) => {
+  const { provider } = useModalContext();
+  const initialLanguageTag = provider.storage.getSettings().language as LanguageTag | undefined;
   const [languageTag, setLanguageTag] = createSignal<LanguageTag>(
-    props.initialLanguageTag ?? "en",
+    initialLanguageTag ?? "en",
   );
   const [languagePack, setLanguagePack] = createSignal<
     Translations | undefined

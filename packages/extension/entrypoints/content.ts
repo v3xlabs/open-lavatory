@@ -1,4 +1,3 @@
-/* eslint-disable sonarjs/no-duplicate-string */
 // Content script for OpenLV Extension - EIP-6963 Compatible
 // This script runs in the context of web pages and provides EIP-1193 wallet connectivity
 

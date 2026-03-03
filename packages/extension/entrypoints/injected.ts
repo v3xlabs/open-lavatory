@@ -21,17 +21,18 @@ export default defineUnlistedScript(() => {
   //   }
 
   console.log("OpenLV EIP-6963 Provider Injected");
-  // @ts-expect-error
   const provider = createProvider({
     openModal: async (provider) => {
       console.log("openModal", provider);
-      triggerOpenModal(provider, () => {
-        console.log("injected received modal close");
+      triggerOpenModal({
+        provider,
+        onClose() {
+          console.log("injected received modal close");
 
-        if (provider.getState().status !== "connected") {
-          // cleanup
-          provider.closeSession();
-        }
+          if (provider.getState().status !== "connected") {
+            provider.closeSession();
+          }
+        },
       });
     },
   });

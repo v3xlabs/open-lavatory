@@ -1,15 +1,11 @@
-import { useProvider } from "../hooks/useProvider.js";
 import { useSession } from "../hooks/useSession.js";
 
 export const UnknownState = (props: { state: unknown; }) => {
-  const { status: sessionStatus, uri } = useSession();
-  const { status: providerStatus } = useProvider();
+  const { uri, status } = useSession();
 
   // biome-ignore lint/suspicious/noConsole: debug
   console.error("Unknown state:", {
     state: props.state,
-    sessionStatus: sessionStatus(),
-    providerStatus: providerStatus(),
   });
 
   return (
@@ -24,11 +20,7 @@ export const UnknownState = (props: { state: unknown; }) => {
       </div>
       <div>
         Session Status:
-        {JSON.stringify(sessionStatus())}
-      </div>
-      <div>
-        Provider Status:
-        {JSON.stringify(providerStatus())}
+        {JSON.stringify(status())}
       </div>
     </div>
   );

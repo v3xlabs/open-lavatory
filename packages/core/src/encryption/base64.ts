@@ -13,7 +13,7 @@ export const fromBase64 = (value: string): Uint8Array => {
   const bytes = new Uint8Array(binary.length);
 
   for (let index = 0; index < binary.length; index += 1) {
-    bytes[index] = binary.charCodeAt(index);
+    bytes[index] = binary.codePointAt(index)!;
   }
 
   return bytes;

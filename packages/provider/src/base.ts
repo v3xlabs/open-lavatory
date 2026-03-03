@@ -144,6 +144,7 @@ export const createProvider = (
   };
 
   const start = async (
+    // eslint-disable-next-line unicorn/no-object-as-default-parameter
     parameters: SessionLinkParameters = {
       p: "mqtt",
       s: "wss://mqtt-dashboard.com:8884/mqtt",

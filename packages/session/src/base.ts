@@ -14,7 +14,11 @@ import {
   parseEncryptionKey,
 } from "@openlv/core/encryption";
 import type { BaseError } from "@openlv/core/errors";
-import { SessionSetupError, SessionTimeoutError } from "@openlv/core/errors";
+import {
+  SessionNotReadyError,
+  SessionSetupError,
+  SessionTimeoutError,
+} from "@openlv/core/errors";
 import {
   type CreateSignalLayerFn,
   SIGNAL_STATE,
@@ -215,7 +219,9 @@ export const createSession = async (
       && signal.getState().state === SIGNAL_STATE.ENCRYPTED
     ) {
       transportRetries++;
-      const delay = Math.min(1000 * 2 ** (transportRetries - 1), 30_000) * (0.5 + Math.random() * 0.5);
+      const delay
+        = Math.min(1000 * 2 ** (transportRetries - 1), 30_000)
+          * (0.5 + Math.random() * 0.5);
 
       log(`transport retry ${transportRetries}/5 in ${Math.round(delay)}ms`);
       updateStatus(SESSION_STATE.RECONNECTING);
@@ -229,7 +235,19 @@ export const createSession = async (
 
   const startTransport = async () => {
     transportStarted = true;
-    await transport.setup();
+
+    try {
+      await transport.setup();
+    }
+    catch (error) {
+      const setupError = new SessionSetupError({
+        cause: error instanceof Error ? error : undefined,
+      });
+
+      transportStarted = false;
+      updateStatus(SESSION_STATE.ERROR, setupError);
+      emitter.emit("error", setupError);
+    }
   };
 
   // let transport: TransportLayer | undefined;
@@ -264,10 +282,6 @@ export const createSession = async (
 
         if (state === SIGNAL_STATE.RECONNECTING) {
           updateStatus(SESSION_STATE.RECONNECTING);
-        }
-
-        if (state === SIGNAL_STATE.ERROR) {
-          updateStatus(SESSION_STATE.ERROR);
         }
 
         if (state === SIGNAL_STATE.READY) {
@@ -354,7 +368,7 @@ export const createSession = async (
       // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;
 
       if (!ready) {
-        throw new Error("Session not ready");
+        throw new SessionNotReadyError();
       }
 
       const randomID = crypto.randomUUID();

@@ -1,7 +1,10 @@
 import { make } from "@openlv/core";
 import type { EncryptionKey, SymmetricKey } from "@openlv/core/encryption";
 import type { BaseError } from "@openlv/core/errors";
-import { SignalDecryptionError } from "@openlv/core/errors";
+import {
+  SignalDecryptionError,
+  SignalHandshakeError,
+} from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 import type { MaybePromise } from "viem";
@@ -269,9 +272,7 @@ export const createSignalingLayer
         },
         send(message: object) {
           if (!canEncrypt()) {
-            return Promise.reject(
-              new Error("Cannot encrypt message before keys are exchanged"),
-            );
+            return Promise.reject(new SignalHandshakeError());
           }
 
           const them = isHost ? "c" : "h";

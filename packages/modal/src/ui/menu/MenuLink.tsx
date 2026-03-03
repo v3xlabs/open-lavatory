@@ -1,6 +1,5 @@
+import { LucideChevronRight } from "lucide-solid";
 import { type JSX, Show } from "solid-js";
-
-import { IconChevronRight } from "../icons.js";
 
 export type MenuLinkProps = {
   label: JSX.Element;
@@ -21,7 +20,7 @@ export const MenuLink = (props: MenuLinkProps) => (
       <Show when={props.value}>
         <span class="text-sm text-(--lv-text-muted)">{props.value}</span>
       </Show>
-      <IconChevronRight class="h-4 w-4 text-(--lv-text-muted) rtl:rotate-180" />
+      <LucideChevronRight class="h-4 w-4 text-(--lv-text-muted) rtl:rotate-180" />
     </div>
   </button>
 );

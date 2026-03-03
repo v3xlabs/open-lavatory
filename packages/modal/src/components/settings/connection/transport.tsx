@@ -1,10 +1,10 @@
 import type { TurnServer } from "@openlv/provider/storage";
+import { LucidePlus, LucideTrash2 } from "lucide-solid";
 import type { JSX } from "solid-js";
-import { createMemo, For } from "solid-js";
+import { createEffect, createSignal, For } from "solid-js";
 
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Button } from "../../../ui/Button.js";
-import { IconPlus, IconTrash2 } from "../../../ui/icons.js";
 import { Input } from "../../../ui/Input.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
 import { useTranslation } from "../../../utils/i18n.js";
@@ -21,7 +21,7 @@ const ServerListItem = (props: {
       $aspect="square"
       $size="sm"
     >
-      <IconTrash2 class="h-4 w-4 text-(--lv-text-muted)" />
+      <LucideTrash2 class="h-4 w-4 text-(--lv-text-muted)" />
     </Button>
   </div>
 );
@@ -35,7 +35,7 @@ const AddServerButton = (props: {
     onClick={props.onClick}
     class="flex w-full cursor-pointer items-center justify-center gap-1 rounded-md border border-dashed border-(--lv-control-input-border) py-2 text-sm text-(--lv-text-muted) hover:bg-(--lv-card-background)"
   >
-    <IconPlus class="h-4 w-4" />
+    <LucidePlus class="h-4 w-4" />
     {props.label}
   </button>
 );
@@ -44,48 +44,49 @@ export const TransportSettings = () => {
   const { t } = useTranslation();
   const {
     settings,
-    addStunServer,
-    removeStunServer,
-    updateStunServer,
-    addTurnServer,
-    removeTurnServer,
-    updateTurnServer,
+    setSettings,
   } = useSettings();
 
-  const stunServers = createMemo(
-    () => settings()?.transport?.s?.webrtc?.stun ?? [],
-  );
-  const turnServers = createMemo(
-    () => settings()?.transport?.s?.webrtc?.turn ?? [],
-  );
-
-  const handleStunChange = (index: number, value: string) => {
-    updateStunServer(index, value);
-  };
+  const [turnServers, setTurnServers] = createSignal<TurnServer[]>([]);
+  const [stunServers, setStunServers] = createSignal<string[]>([]);
 
   const handleAddStun = () => {
-    addStunServer("");
+    setStunServers([...stunServers(), ""]);
   };
 
   const handleRemoveStun = (index: number) => {
-    removeStunServer(index);
+    setStunServers(stunServers().filter((_, i) => i !== index));
   };
 
-  const handleTurnChange = (
-    index: number,
-    field: keyof TurnServer,
-    value: string,
-  ) => {
-    updateTurnServer(index, { [field]: value || undefined });
+  const handleStunChange = (index: number, value: string) => {
+    setStunServers(stunServers().map((server, i) => (i === index ? value : server)));
   };
 
   const handleAddTurn = () => {
-    addTurnServer({ urls: "" });
+    setTurnServers([...turnServers(), { urls: "" }]);
   };
 
   const handleRemoveTurn = (index: number) => {
-    removeTurnServer(index);
+    setTurnServers(turnServers().filter((_, i) => i !== index));
   };
+
+  const handleTurnChange = (index: number, field: keyof TurnServer, value: string) => {
+    setTurnServers(turnServers().map((server, i) => (i === index ? { ...server, [field]: value } : server)));
+  };
+
+  // createEffect(() => {
+  //   setSettings({
+  //     ...settings(), transport: {
+  //       p: "webrtc",
+  //       s: {
+  //         webrtc: {
+  //           stun: stunServers(),
+  //           turn: turnServers(),
+  //         },
+  //       },
+  //     },
+  //   });
+  // });
 
   return (
     <>

@@ -1,9 +1,8 @@
+import { LucideCircleQuestionMark } from "lucide-solid";
 import { mergeProps, type ParentProps } from "solid-js";
 import type { VariantProps } from "tailwind-variants/lite";
 import { tv } from "tailwind-variants/lite";
 import { match } from "ts-pattern";
-
-import { IconCircleHelp } from "./icons.js";
 
 const styles = tv({
   slots: {
@@ -54,7 +53,7 @@ export const InfoTooltip = (rawProps: ParentProps<InfoTooltipProps>) => {
     <div class={root()}>
       <div class={box()}>
         {match(props.variant)
-          .with("icon", () => <IconCircleHelp class={icon()} />)
+          .with("icon", () => <LucideCircleQuestionMark class={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>

@@ -1,6 +1,7 @@
+import { LucideSettings } from "lucide-solid";
+
 import { useSessionStart } from "../../hooks/useSession.js";
 import { Button } from "../../ui/Button.js";
-import { IconSettings } from "../../ui/icons.js";
 import { useTranslation } from "../../utils/i18n.js";
 import { ConnectionGraphic } from "./ConnectionGraphic.js";
 
@@ -36,7 +37,7 @@ export const Disconnected = (props: { onSettings: () => void; }) => {
           $size="lg"
           $variant="secondary"
         >
-          <IconSettings class="h-5 w-5 text-(--lv-text-muted)" />
+          <LucideSettings class="h-5 w-5 text-(--lv-text-muted)" />
         </Button>
       </div>
     </div>

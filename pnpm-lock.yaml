@@ -574,6 +574,9 @@ importers:
       solid-element:
         specifier: ^1.9.1
         version: 1.9.1(solid-js@1.9.11)
+      solid-icons:
+        specifier: ^1.2.0
+        version: 1.2.0(solid-js@1.9.11)
       solid-js:
         specifier: ^1.9.9
         version: 1.9.11
@@ -9881,6 +9884,11 @@ packages:
     resolution: {integrity: sha512-baJy6Qz27oAUgkPlqOf3Y+7RsBiuVQrS51Nrh1ddDbrqrNPvJbIvehpUsTzLNFb2ZHIoHuNnDg330go/ZKcRdg==}
     peerDependencies:
       solid-js: ^1.9.3
+
+  solid-icons@1.2.0:
+    resolution: {integrity: sha512-yjQxWQMi9l19P5Af9vjsvalTMDFPDL4XD6etrUdNxNVhFp1bMYF0SFwUa5VYDfJ7u0SF3Qkz/F7BZxqcLUwklw==}
+    peerDependencies:
+      solid-js: '*'
 
   solid-js@1.9.11:
     resolution: {integrity: sha512-WEJtcc5mkh/BnHA6Yrg4whlF8g6QwpmXXRg4P2ztPmcKeHHlH4+djYecBLhSpecZY2RRECXYUwIc/C2r3yzQ4Q==}
@@ -24214,6 +24222,10 @@ snapshots:
   solid-element@1.9.1(solid-js@1.9.11):
     dependencies:
       component-register: 0.8.8
+      solid-js: 1.9.11
+
+  solid-icons@1.2.0(solid-js@1.9.11):
+    dependencies:
       solid-js: 1.9.11
 
   solid-js@1.9.11:

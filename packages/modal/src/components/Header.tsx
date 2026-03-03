@@ -1,5 +1,6 @@
+import { LucideChevronLeft, LucideCircleQuestionMark, LucideX } from "lucide-solid";
+
 import { Button } from "../ui/Button.js";
-import { IconChevronLeft, IconCircleHelp, IconX } from "../ui/icons.js";
 import { useTranslation } from "../utils/i18n.js";
 import type { ModalView } from "./ModalRoot.js";
 
@@ -27,7 +28,7 @@ export const Header = (props: {
               $aspect="square"
               $size="md"
             >
-              <IconChevronLeft class="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
+              <LucideChevronLeft class="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
             </Button>
           )
         : (
@@ -38,7 +39,7 @@ export const Header = (props: {
               $aspect="square"
               $size="md"
             >
-              <IconCircleHelp class="h-5 w-5" />
+              <LucideCircleQuestionMark class="h-5 w-5" />
             </Button>
           )}
       <h2 class="flex items-center justify-center gap-2 font-semibold text-(--lv-text-primary) text-lg">
@@ -53,7 +54,7 @@ export const Header = (props: {
         $aspect="square"
         $size="md"
       >
-        <IconX class="h-6 w-6 text-(--lv-text-muted)" />
+        <LucideX class="h-6 w-6 text-(--lv-text-muted)" />
       </Button>
     </div>
   );

@@ -1,4 +1,4 @@
-import { SignalConnectionLostError, SignalNoConnectionError } from "@openlv/core/errors";
+import { SignalConnectionLostError, SignalError, SignalNoConnectionError } from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 
@@ -88,9 +88,16 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
           const timeoutId = setTimeout(() => abortController.abort(), NTFY_PING_TIMEOUT_MS);
 
           try {
-            await fetch(pingUrl, {
+            const response = (await fetch(pingUrl, {
               signal: abortController.signal,
-            });
+              cache: "no-cache",
+            }));
+
+            const json = await response.json();
+
+            if (!(json as { healthy?: boolean; }).healthy) {
+              throw new SignalError("NTFY: ping failed, server unhealthy");
+            }
 
             clearTimeout(timeoutId);
 

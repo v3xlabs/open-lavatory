@@ -1,5 +1,6 @@
 import type { DecryptionKey, EncryptionKey } from "@openlv/core/encryption";
 import type { BaseError } from "@openlv/core/errors";
+import type { MaybePromise } from "viem";
 
 import type { TransportMessage } from "./base.js";
 
@@ -27,5 +28,5 @@ export type TransportLayerParameters = {
     type: string;
     payload: object;
     messageId: string;
-  }) => void;
+  }) => MaybePromise<void>;
 };

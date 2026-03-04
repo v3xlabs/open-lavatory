@@ -101,7 +101,13 @@ export const webrtc: CreateTransportLayerFn = (
     };
 
     const hookChannel = (channel: RTCDataChannel) => {
-      channel.addEventListener("open", onDataChannelOpen);
+      if (channel.readyState === "open") {
+        onDataChannelOpen();
+      }
+      else {
+        channel.addEventListener("open", onDataChannelOpen);
+      }
+
       channel.addEventListener("message", onDataChannelMessage);
       channel.addEventListener("error", onDataChannelError);
     };

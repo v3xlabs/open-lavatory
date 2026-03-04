@@ -103,16 +103,10 @@ export const createTransportBase
       internalEmitter.on("message", async (message) => {
         console.log("onMessage", message);
 
-        try {
-          const data = await decrypt(message);
+        let data: string;
 
-          onmessage(
-            JSON.parse(data) as {
-              type: string;
-              payload: object;
-              messageId: string;
-            },
-          );
+        try {
+          data = await decrypt(message);
         }
         catch (error) {
           internalEmitter.emit(
@@ -121,6 +115,21 @@ export const createTransportBase
               cause: error instanceof Error ? error : undefined,
             }),
           );
+
+          return;
+        }
+
+        try {
+          await onmessage(
+            JSON.parse(data) as {
+              type: string;
+              payload: object;
+              messageId: string;
+            },
+          );
+        }
+        catch (error) {
+          console.error("onmessage error", error);
         }
       });
 

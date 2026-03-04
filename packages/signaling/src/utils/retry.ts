@@ -2,7 +2,6 @@ export type RetryConfig = {
   maxRetries: number;
   initialDelayMs: number;
   maxDelayMs: number;
-  jitter?: boolean;
 };
 
 export type RetryStep = {
@@ -26,10 +25,7 @@ export const createRetrier = (config: RetryConfig) => {
       config.initialDelayMs * 2 ** (attempt - 1),
       config.maxDelayMs,
     );
-    const delay
-      = config.jitter === false
-        ? baseDelay
-        : baseDelay * (0.5 + Math.random() * 0.5);
+    const delay = baseDelay * (0.5 + Math.random() * 0.5);
 
     return { attempt, delay };
   };

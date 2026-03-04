@@ -144,13 +144,22 @@ export const createTransportBase
         await sendLayer(payload);
       };
 
-      const waitFor = async (state: TransportState) =>
+      const waitFor = async (targetState: TransportState) =>
         new Promise<void>((resolve) => {
-          emitter.on("state_change", (newState) => {
-            if (newState === state) {
+          if (state === targetState) {
+            resolve();
+
+            return;
+          }
+
+          const onChange = (newState: TransportState) => {
+            if (newState === targetState) {
+              emitter.off("state_change", onChange);
               resolve();
             }
-          });
+          };
+
+          emitter.on("state_change", onChange);
         });
 
       return {

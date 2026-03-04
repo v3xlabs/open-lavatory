@@ -214,10 +214,9 @@ export const createSession = async (
     transportStarted = false;
     transport.teardown();
 
-    if (
-      transportRetries < 5
-      && signal.getState().state === SIGNAL_STATE.ENCRYPTED
-    ) {
+    const signalState = signal.getState().state;
+
+    if (transportRetries < 5 && signalState === SIGNAL_STATE.ENCRYPTED) {
       transportRetries++;
       const delay
         = Math.min(1000 * 2 ** (transportRetries - 1), 30_000)
@@ -226,6 +225,10 @@ export const createSession = async (
       log(`transport retry ${transportRetries}/5 in ${Math.round(delay)}ms`);
       updateStatus(SESSION_STATE.RECONNECTING);
       transportRetryTimer = setTimeout(() => startTransport(), delay);
+    }
+    else if (signalState === SIGNAL_STATE.RECONNECTING) {
+      // Signal is reconnecting; transport will restart when signaling is back
+      updateStatus(SESSION_STATE.RECONNECTING);
     }
     else {
       updateStatus(SESSION_STATE.ERROR, error);
@@ -282,6 +285,11 @@ export const createSession = async (
 
         if (state === SIGNAL_STATE.RECONNECTING) {
           updateStatus(SESSION_STATE.RECONNECTING);
+          // Tear down transport so it restarts cleanly when signaling is back
+          clearTimeout(transportRetryTimer);
+          transportRetries = 0;
+          transportStarted = false;
+          transport.teardown();
         }
 
         if (state === SIGNAL_STATE.READY) {

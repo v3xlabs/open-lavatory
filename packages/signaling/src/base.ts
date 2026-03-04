@@ -106,7 +106,12 @@ export const createSignalingLayer
           setState(SIGNAL_STATE.RECONNECTING);
         },
         onReconnected() {
-          setState(SIGNAL_STATE.READY);
+          if (canEncrypt()) {
+            setState(SIGNAL_STATE.ENCRYPTED);
+          }
+          else {
+            setState(SIGNAL_STATE.READY);
+          }
         },
       };
 

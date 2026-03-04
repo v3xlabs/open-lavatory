@@ -1,9 +1,9 @@
 import * as QRCode from "qrcode-generator";
 import { Show } from "solid-js";
 
+import { copyToClipboard } from "../hooks/useClipboard.js";
 import { useSession } from "../hooks/useSession.js";
 import { useTranslation } from "../utils/i18n.js";
-import { copyToClipboard } from "../hooks/useClipboard.js";
 
 const generateQRCode = (uriValue: string) => {
   // qrcode-generator ships a callable export as default, but its types are wrong

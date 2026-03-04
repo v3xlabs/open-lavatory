@@ -324,11 +324,13 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
       )
       .otherwise(state => <UnknownState state={state || "unknown status"} />);
 
+  // todo remove this styling approach
   const overlayStyle: JSX.CSSProperties = {
     "background": "var(--lv-overlay-background, rgba(0,0,0,0.3))",
     "backdrop-filter": "var(--lv-overlay-backdrop-filter, blur(4px))",
   };
 
+  // todo remove this styling approach
   const cardStyle: JSX.CSSProperties = {
     "background": "var(--lv-body-background)",
     "color": "var(--lv-body-color, var(--lv-text-primary))",
@@ -339,7 +341,9 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
   return (
     <div
       class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4"
-      onClick={props.onClose}
+      onMouseUp={(e) => {
+        if (e.target === e.currentTarget) props.onClose();
+      }}
       role="presentation"
       data-openlv-modal-root
       data-openlv-theme-mode={theme.mode()}

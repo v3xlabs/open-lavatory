@@ -11,7 +11,7 @@ import { match } from "ts-pattern";
 import type { CreateSignalLayerFn, SignalingBaseCallbacks } from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
-import { createRetrier } from "../utils/retry.js";
+import { createRetrier } from "@openlv/core";
 import { parseNtfyUrl } from "./url.js";
 
 export type NtfyMessage = {

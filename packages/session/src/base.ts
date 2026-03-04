@@ -26,6 +26,7 @@ import {
   type SignalState,
 } from "@openlv/signaling";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
+import { createRetrier } from "@openlv/core";
 import {
   type TLayer,
   TRANSPORT_STATE,
@@ -110,8 +111,12 @@ export const createSession = async (
   );
   let status: SessionState = SESSION_STATE.CREATED;
   let transportStarted = false;
-  let transportRetries = 0;
   let transportRetryTimer: ReturnType<typeof setTimeout> | undefined;
+  const transportRetrier = createRetrier({
+    maxRetries: 5,
+    initialDelayMs: 1000,
+    maxDelayMs: 30_000,
+  });
   const protocol = initParameters.p;
   const server = initParameters.s;
 
@@ -200,31 +205,32 @@ export const createSession = async (
     },
   });
 
-  transport.emitter.on("state_change", (state) => {
+  const onTransportStateChange = (
+    state: (typeof TRANSPORT_STATE)[keyof typeof TRANSPORT_STATE],
+  ) => {
     log("transport state change", state);
 
     if (state === TRANSPORT_STATE.CONNECTED) {
-      transportRetries = 0;
+      transportRetrier.reset();
       updateStatus(SESSION_STATE.CONNECTED);
     }
-  });
+  };
 
-  transport.emitter.on("error", (error) => {
+  const onTransportError = (error: BaseError) => {
     log("transport error", error);
     transportStarted = false;
     transport.teardown();
 
     const signalState = signal.getState().state;
+    const step
+      = signalState === SIGNAL_STATE.ENCRYPTED
+        ? transportRetrier.nextDelay()
+        : undefined;
 
-    if (transportRetries < 5 && signalState === SIGNAL_STATE.ENCRYPTED) {
-      transportRetries++;
-      const delay
-        = Math.min(1000 * 2 ** (transportRetries - 1), 30_000)
-          * (0.5 + Math.random() * 0.5);
-
-      log(`transport retry ${transportRetries}/5 in ${Math.round(delay)}ms`);
+    if (step) {
+      log(`transport retry ${step.attempt}/5 in ${Math.round(step.delay)}ms`);
       updateStatus(SESSION_STATE.RECONNECTING);
-      transportRetryTimer = setTimeout(() => startTransport(), delay);
+      transportRetryTimer = setTimeout(() => startTransport(), step.delay);
     }
     else if (signalState === SIGNAL_STATE.RECONNECTING) {
       // Signal is reconnecting; transport will restart when signaling is back
@@ -235,7 +241,10 @@ export const createSession = async (
       updateStatus(SESSION_STATE.ERROR, error);
       emitter.emit("error", error);
     }
-  });
+  };
+
+  transport.emitter.on("state_change", onTransportStateChange);
+  transport.emitter.on("error", onTransportError);
 
   const startTransport = async () => {
     transportStarted = true;
@@ -271,6 +280,44 @@ export const createSession = async (
     }
   };
 
+  const onSignalStateChange = (state: SignalState) => {
+    log("signal state change", state);
+
+    if (state === SIGNAL_STATE.RECONNECTING) {
+      updateStatus(SESSION_STATE.RECONNECTING);
+      // Tear down transport so it restarts cleanly when signaling is back
+      clearTimeout(transportRetryTimer);
+      transportRetrier.reset();
+      transportStarted = false;
+      transport.teardown();
+    }
+
+    if (state === SIGNAL_STATE.READY) {
+      updateStatus(SESSION_STATE.READY);
+    }
+
+    if (
+      (
+        [
+          SIGNAL_STATE.HANDSHAKE,
+          SIGNAL_STATE.HANDSHAKE_PARTIAL,
+        ] as SignalState[]
+      ).includes(state)
+    ) {
+      updateStatus(SESSION_STATE.LINKING);
+    }
+
+    if (state === SIGNAL_STATE.ENCRYPTED && !transportStarted) {
+      startTransport();
+    }
+  };
+
+  const onSignalError = (error: BaseError) => {
+    log("signal error", error);
+    updateStatus(SESSION_STATE.ERROR, error);
+    emitter.emit("error", error);
+  };
+
   return {
     connect: async () => {
       updateStatus(SESSION_STATE.SIGNALING);
@@ -278,43 +325,9 @@ export const createSession = async (
 
       signal.on("message", onSignalMessage);
 
-      signal.on("state_change", (state) => {
-        log("signal state change", state);
+      signal.on("state_change", onSignalStateChange);
 
-        if (state === SIGNAL_STATE.RECONNECTING) {
-          updateStatus(SESSION_STATE.RECONNECTING);
-          // Tear down transport so it restarts cleanly when signaling is back
-          clearTimeout(transportRetryTimer);
-          transportRetries = 0;
-          transportStarted = false;
-          transport.teardown();
-        }
-
-        if (state === SIGNAL_STATE.READY) {
-          updateStatus(SESSION_STATE.READY);
-        }
-
-        if (
-          (
-            [
-              SIGNAL_STATE.HANDSHAKE,
-              SIGNAL_STATE.HANDSHAKE_PARTIAL,
-            ] as SignalState[]
-          ).includes(state)
-        ) {
-          updateStatus(SESSION_STATE.LINKING);
-        }
-
-        if (state === SIGNAL_STATE.ENCRYPTED && !transportStarted) {
-          startTransport();
-        }
-      });
-
-      signal.on("error", (error) => {
-        log("signal error", error);
-        updateStatus(SESSION_STATE.ERROR, error);
-        emitter.emit("error", error);
-      });
+      signal.on("error", onSignalError);
 
       try {
         await signal.setup();
@@ -332,6 +345,13 @@ export const createSession = async (
     async close() {
       log("session teardown");
       clearTimeout(transportRetryTimer);
+
+      signal.off("message", onSignalMessage);
+      signal.off("state_change", onSignalStateChange);
+      signal.off("error", onSignalError);
+      transport.emitter.off("state_change", onTransportStateChange);
+      transport.emitter.off("error", onTransportError);
+
       await signal?.teardown();
       transport.teardown();
       updateStatus(SESSION_STATE.DISCONNECTED);

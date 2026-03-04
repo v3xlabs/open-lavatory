@@ -1,6 +1,9 @@
 import {
   SignalConnectionLostError,
   SignalNoConnectionError,
+  SignalPublishError,
+  SignalRetryExhaustedError,
+  SignalTeardownError,
 } from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
@@ -159,7 +162,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             const step = retrier.nextDelay();
 
             if (!step) {
-              throw new SignalConnectionLostError({
+              throw new SignalRetryExhaustedError({
                 url,
                 cause: error instanceof Error ? error : undefined,
               });
@@ -175,7 +178,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
           }
         }
 
-        throw new SignalConnectionLostError({ url });
+        throw new SignalTeardownError({ url });
       };
 
       const open = () => {
@@ -234,7 +237,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
                 await connectWithRetry();
               }
               catch {
-                callbacks.onError(new SignalConnectionLostError({ url }));
+                callbacks.onError(new SignalRetryExhaustedError({ url }));
               }
               finally {
                 reconnectPromise = undefined;
@@ -266,12 +269,14 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     teardown() {
       intentionalClose = true;
       setupDone = false;
+      setupPromise = undefined;
+      reconnectPromise = undefined;
       timers.clearAll();
       connection?.close();
       connection = undefined;
 
       if (openResolver) {
-        openResolver.reject(new SignalConnectionLostError({ url }));
+        openResolver.reject(new SignalTeardownError({ url }));
         openResolver = undefined;
       }
     },
@@ -291,7 +296,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       );
 
       if (!response.ok) {
-        throw new SignalConnectionLostError({
+        throw new SignalPublishError({
           url,
           cause: new Error(`NTFY: publish failed with HTTP ${response.status}`),
         });

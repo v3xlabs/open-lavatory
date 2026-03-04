@@ -27,6 +27,35 @@ export class SignalConnectionLostError extends SignalError {
   }
 }
 
+export class SignalRetryExhaustedError extends SignalError {
+  override name = "SignalRetryExhaustedError";
+  constructor(args: { url?: string; cause?: Error; } = {}) {
+    super("Signaling connection retries exhausted.", {
+      cause: args.cause,
+      metaMessages: args.url ? [`Relay URL: ${args.url}`] : undefined,
+    });
+  }
+}
+
+export class SignalPublishError extends SignalError {
+  override name = "SignalPublishError";
+  constructor(args: { url?: string; cause?: Error; } = {}) {
+    super("Failed to publish signaling message.", {
+      cause: args.cause,
+      metaMessages: args.url ? [`Relay URL: ${args.url}`] : undefined,
+    });
+  }
+}
+
+export class SignalTeardownError extends SignalError {
+  override name = "SignalTeardownError";
+  constructor(args: { url?: string; } = {}) {
+    super("Signaling connection was torn down.", {
+      metaMessages: args.url ? [`Relay URL: ${args.url}`] : undefined,
+    });
+  }
+}
+
 export class SignalHandshakeError extends SignalError {
   override name = "SignalHandshakeError";
   constructor(args: { cause?: Error; } = {}) {

@@ -87,12 +87,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     },
   };
 
-  const stopPing = () => {
-    if (timers.ping) clearTimeout(timers.ping);
-
-    timers.ping = undefined;
-  };
-
   const pingOnce = async () => {
     const abortController = new AbortController();
     const timeoutId = setTimeout(
@@ -187,7 +181,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       const open = () => {
         connection?.close();
         connection = undefined;
-        stopPing();
         timers.clearAll();
 
         log("NTFY: connecting to WebSocket", wsUrl);
@@ -222,7 +215,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         });
 
         ws.addEventListener("close", () => {
-          stopPing();
           timers.clearAll();
 
           if (intentionalClose) return;
@@ -242,7 +234,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
                 await connectWithRetry();
               }
               catch {
-                callbacks.onError(new SignalConnectionLostError());
+                callbacks.onError(new SignalConnectionLostError({ url }));
               }
               finally {
                 reconnectPromise = undefined;
@@ -273,7 +265,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     },
     teardown() {
       intentionalClose = true;
-      stopPing();
+      setupDone = false;
       timers.clearAll();
       connection?.close();
       connection = undefined;

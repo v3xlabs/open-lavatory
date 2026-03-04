@@ -24,6 +24,7 @@ export const mqtt: CreateSignalLayerFn = ({
   let connection: MqttClient | undefined;
   let subscribedHandler: ((payload: string) => void) | undefined;
   let isTearingDown = false;
+  let isReconnecting = false;
 
   return createSignalingLayer({
     type: "mqtt",
@@ -43,6 +44,8 @@ export const mqtt: CreateSignalLayerFn = ({
       let setupDone = false;
 
       connection.on("connect", () => {
+        isReconnecting = false;
+
         if (!setupDone) {
           setupDone = true;
 
@@ -61,7 +64,8 @@ export const mqtt: CreateSignalLayerFn = ({
               callbacks.onError(
                 new SignalConnectionLostError({
                   url,
-                  cause: error instanceof Error ? error : new Error(String(error)),
+                  cause:
+                    error instanceof Error ? error : new Error(String(error)),
                 }),
               );
             });
@@ -73,13 +77,14 @@ export const mqtt: CreateSignalLayerFn = ({
 
       connection.on("offline", () => {
         if (setupDone) {
+          isReconnecting = true;
           log("MQTT: Connection went offline, reconnecting…");
           callbacks.onReconnecting();
         }
       });
 
       connection.on("close", () => {
-        if (setupDone && !isTearingDown) {
+        if (setupDone && !isTearingDown && !isReconnecting) {
           callbacks.onError(new SignalConnectionLostError({ url }));
         }
       });

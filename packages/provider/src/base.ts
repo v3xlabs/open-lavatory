@@ -220,12 +220,6 @@ export const createProvider = (
           throw new ProviderError(
             "Method not implemented: wallet_requestPermissions",
           );
-          // console.log("wallet_requestPermissions", v.params);
-
-          // return [] as ExtractReturnType<
-          //   RpcSchema,
-          //   "wallet_requestPermissions"
-          // >;
         })
         .with({ method: "wallet_revokePermissions" }, async () => {
           await closeSession();

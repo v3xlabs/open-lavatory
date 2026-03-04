@@ -171,7 +171,7 @@ export const createSession = async (
       payload: object;
       messageId: string;
     }) => {
-      console.log("Session: received message from transport", message);
+      log("Session: received message from transport", message);
 
       if (message["type"] === "request") {
         const data = await onMessage(message["payload"] as object);
@@ -189,7 +189,7 @@ export const createSession = async (
       }
     },
     async subsend(message) {
-      console.log("Session: sending trans msg to signal", message);
+      log("Session: sending trans msg to signal", message);
       const sessionMessage: SessionMessage = {
         type: "request",
         messageId: crypto.randomUUID(),
@@ -231,6 +231,7 @@ export const createSession = async (
       updateStatus(SESSION_STATE.RECONNECTING);
     }
     else {
+      clearTimeout(transportRetryTimer);
       updateStatus(SESSION_STATE.ERROR, error);
       emitter.emit("error", error);
     }
@@ -253,7 +254,6 @@ export const createSession = async (
     }
   };
 
-  // let transport: TransportLayer | undefined;
   const onSignalMessage = async (message: object) => {
     log("Session: received message from signaling", message);
 
@@ -275,8 +275,6 @@ export const createSession = async (
     connect: async () => {
       updateStatus(SESSION_STATE.SIGNALING);
       log("connecting to session, isHost:", isHost);
-      // TODO: implement
-      log("connecting to session");
 
       signal.on("message", onSignalMessage);
 
@@ -357,6 +355,18 @@ export const createSession = async (
     },
     waitForLink: async () =>
       new Promise<void>((resolve, reject) => {
+        if (status === SESSION_STATE.CONNECTED) {
+          resolve();
+
+          return;
+        }
+
+        if (status === SESSION_STATE.ERROR) {
+          reject(new SessionSetupError());
+
+          return;
+        }
+
         const onStateChange = (state?: SessionStateObject) => {
           if (state?.status === SESSION_STATE.CONNECTED) {
             emitter.off("state_change", onStateChange);
@@ -373,7 +383,6 @@ export const createSession = async (
       }),
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
-      // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;
 
       if (!ready) {
         throw new SessionNotReadyError();
@@ -386,8 +395,6 @@ export const createSession = async (
         payload: message,
       };
 
-      // for now use signaling
-      // await signal.send(sessionMessage);
       await transport.send(sessionMessage);
 
       return new Promise((resolve, reject) => {

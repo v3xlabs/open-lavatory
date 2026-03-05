@@ -4,6 +4,7 @@ import {
   type SessionHandshakeParameters,
   type SessionLinkParameters,
 } from "@openlv/core";
+import { createRetrier } from "@openlv/core";
 import {
   deriveSymmetricKey,
   type EncryptionKey,
@@ -26,7 +27,6 @@ import {
   type SignalState,
 } from "@openlv/signaling";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
-import { createRetrier } from "@openlv/core";
 import {
   type TLayer,
   TRANSPORT_STATE,
@@ -420,6 +420,12 @@ export const createSession = async (
       return new Promise((resolve, reject) => {
         let settled = false;
 
+        const cleanup = () => {
+          messages.off("message", onMessage);
+          transport.emitter.off("error", onSendTransportError);
+          clearTimeout(timer);
+        };
+
         const onMessage = (msg: SessionMessage) => {
           if (
             !settled
@@ -427,18 +433,26 @@ export const createSession = async (
             && msg.type === "response"
           ) {
             settled = true;
-            clearTimeout(timer);
-            messages.off("message", onMessage);
+            cleanup();
             resolve(msg.payload);
           }
         };
 
+        const onSendTransportError = (error: BaseError) => {
+          if (!settled) {
+            settled = true;
+            cleanup();
+            reject(error);
+          }
+        };
+
         messages.on("message", onMessage);
+        transport.emitter.on("error", onSendTransportError);
 
         const timer = setTimeout(() => {
           if (!settled) {
             settled = true;
-            messages.off("message", onMessage);
+            cleanup();
             reject(new SessionTimeoutError({ timeout }));
           }
         }, timeout);

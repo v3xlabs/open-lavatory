@@ -89,6 +89,15 @@ export const webrtc: CreateTransportLayerFn = (
         }),
       );
     };
+    const onDataChannelClose = (closedChannel: RTCDataChannel) => () => {
+      if (closedChannel !== channel) return;
+
+      log(ident, "onDataChannelClose");
+      emitter.emit(
+        "error",
+        new TransportConnectionFailedError({ state: "channel-closed" }),
+      );
+    };
     const onNegotiationNeeded = async () => {
       log(ident, "onNegotiationNeeded");
 
@@ -100,16 +109,17 @@ export const webrtc: CreateTransportLayerFn = (
       }
     };
 
-    const hookChannel = (channel: RTCDataChannel) => {
-      if (channel.readyState === "open") {
+    const hookChannel = (chan: RTCDataChannel) => {
+      if (chan.readyState === "open") {
         onDataChannelOpen();
       }
       else {
-        channel.addEventListener("open", onDataChannelOpen);
+        chan.addEventListener("open", onDataChannelOpen);
       }
 
-      channel.addEventListener("message", onDataChannelMessage);
-      channel.addEventListener("error", onDataChannelError);
+      chan.addEventListener("message", onDataChannelMessage);
+      chan.addEventListener("error", onDataChannelError);
+      chan.addEventListener("close", onDataChannelClose(chan));
     };
 
     const handle = async (message: TransportMessage) => {

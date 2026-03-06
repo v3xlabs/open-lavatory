@@ -1,7 +1,11 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
 import Gun, { type IGun, type IGunInstance } from "gun";
 
-import { createSignalingLayer, type CreateSignalLayerFn } from "../base.js";
+import {
+  createSignalingLayer,
+  type CreateSignalLayerFn,
+  type SignalingBaseCallbacks,
+} from "../base.js";
 import { log } from "../utils/log.js";
 
 /**
@@ -16,7 +20,7 @@ export const gundb: CreateSignalLayerFn = ({
 
   return createSignalingLayer({
     type: "gundb",
-    async setup() {
+    async setup(_callbacks: SignalingBaseCallbacks) {
       log("GUNDB: Setting up");
       const x = new (Gun as unknown as IGun)({
         peers: [url],

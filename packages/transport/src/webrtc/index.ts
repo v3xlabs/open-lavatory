@@ -30,11 +30,12 @@ export const webrtc: CreateTransportLayerFn = (
   config: WebRTCConfig = defaultConfig,
 ) => {
   const { iceServers } = config;
-  const resolvedIceServers = iceServers?.length ? iceServers : defaultConfig.iceServers;
+  const resolvedIceServers = iceServers?.length
+    ? iceServers
+    : defaultConfig.iceServers;
 
-  console.log("WEBRTC ICE CONFIG", config);
-  const ident = Math.random().toString(36)
-    .slice(2, 4) + "#";
+  log("WEBRTC ICE CONFIG", config);
+  const ident = Math.random().toString(36).slice(2, 4) + "#";
 
   return createTransportBase(({ emitter, isHost }) => {
     const rtcConfig: RTCConfiguration = { iceServers: resolvedIceServers };
@@ -112,8 +113,7 @@ export const webrtc: CreateTransportLayerFn = (
     const hookChannel = (chan: RTCDataChannel) => {
       if (chan.readyState === "open") {
         onDataChannelOpen();
-      }
-      else {
+      } else {
         chan.addEventListener("open", onDataChannelOpen);
       }
 
@@ -123,13 +123,13 @@ export const webrtc: CreateTransportLayerFn = (
     };
 
     const handle = async (message: TransportMessage) => {
-      console.log(ident, "webrtc handle", message);
+      log(ident, "webrtc handle", message);
 
       if (!connection) throw new Error("Connection not found");
 
       match(message)
         .with({ type: "offer" }, async ({ payload }) => {
-          console.log("offer", payload);
+          log("offer", payload);
           // TODO: add zon schema?
           const offer = JSON.parse(payload) as RTCSessionDescriptionInit;
 
@@ -137,7 +137,7 @@ export const webrtc: CreateTransportLayerFn = (
             await connection!.setRemoteDescription(
               new RTCSessionDescription(offer),
             );
-            console.log(
+            log(
               ident,
               "setRemoteDescriptionran",
               connection!.remoteDescription,
@@ -147,8 +147,7 @@ export const webrtc: CreateTransportLayerFn = (
 
             await connection!.setLocalDescription(answer);
             emitter.emit("answer", JSON.stringify(answer));
-          }
-          catch (error) {
+          } catch (error) {
             emitter.emit(
               "error",
               new TransportConnectionFailedError({
@@ -161,15 +160,14 @@ export const webrtc: CreateTransportLayerFn = (
         .with({ type: "answer" }, async ({ payload }) => {
           if (!connection) throw new Error("Connection not found");
 
-          console.log(ident, "answer", payload);
+          log(ident, "answer", payload);
           const answer = JSON.parse(payload) as RTCSessionDescriptionInit;
 
           try {
             await connection.setRemoteDescription(
               new RTCSessionDescription(answer),
             );
-          }
-          catch (error) {
+          } catch (error) {
             emitter.emit(
               "error",
               new TransportConnectionFailedError({
@@ -184,13 +182,12 @@ export const webrtc: CreateTransportLayerFn = (
 
           if (!payload) return;
 
-          console.log(ident, "candidate", payload);
+          log(ident, "candidate", payload);
           const candidate = JSON.parse(payload) as RTCIceCandidateInit;
 
           try {
             await connection.addIceCandidate(new RTCIceCandidate(candidate));
-          }
-          catch (error) {
+          } catch (error) {
             // ICE candidate errors are non-fatal
             log(ident, "addIceCandidate error (non-fatal)", error);
           }

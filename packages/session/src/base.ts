@@ -1,10 +1,10 @@
 import {
+  createRetrier,
   decodeConnectionURL,
   OPENLV_PROTOCOL_VERSION,
   type SessionHandshakeParameters,
   type SessionLinkParameters,
 } from "@openlv/core";
-import { createRetrier } from "@openlv/core";
 import {
   deriveSymmetricKey,
   type EncryptionKey,
@@ -352,7 +352,7 @@ export const createSession = async (
       transport.emitter.off("state_change", onTransportStateChange);
       transport.emitter.off("error", onTransportError);
 
-      await signal?.teardown();
+      await signal.teardown();
       transport.teardown();
       updateStatus(SESSION_STATE.DISCONNECTED);
     },
@@ -387,6 +387,12 @@ export const createSession = async (
           return;
         }
 
+        if (status === SESSION_STATE.DISCONNECTED) {
+          reject(new SessionSetupError());
+
+          return;
+        }
+
         const onStateChange = (state?: SessionStateObject) => {
           if (state?.status === SESSION_STATE.CONNECTED) {
             emitter.off("state_change", onStateChange);
@@ -396,6 +402,11 @@ export const createSession = async (
           if (state?.status === SESSION_STATE.ERROR) {
             emitter.off("state_change", onStateChange);
             reject(state.error ?? new SessionSetupError());
+          }
+
+          if (state?.status === SESSION_STATE.DISCONNECTED) {
+            emitter.off("state_change", onStateChange);
+            reject(new SessionSetupError());
           }
         };
 

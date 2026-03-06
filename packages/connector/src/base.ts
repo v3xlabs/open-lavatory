@@ -65,21 +65,33 @@ export const openlv = ({
         modal?.({ theme, provider, onClose: () => resolve() });
       });
 
+      let resolveConnection!: () => void;
       const connectionCompleted = new Promise<void>((resolve) => {
-        provider.on("status_change", (status) => {
-          log("provider_status_change", status);
-
-          if (status === "connected") {
-            resolve();
-          }
-        });
-
-        provider.on("accountsChanged", () => {
-          log("provider_accountsChanged");
-        });
+        resolveConnection = resolve;
       });
 
-      await Promise.race([modalDismissed, connectionCompleted]);
+      const onStatusChange = (status: string) => {
+        log("provider_status_change", status);
+
+        if (status === "connected") {
+          resolveConnection();
+        }
+      };
+
+      const onAccountsChanged = () => {
+        log("provider_accountsChanged");
+      };
+
+      provider.on("status_change", onStatusChange);
+      provider.on("accountsChanged", onAccountsChanged);
+
+      try {
+        await Promise.race([modalDismissed, connectionCompleted]);
+      }
+      finally {
+        provider.off("status_change", onStatusChange);
+        provider.off("accountsChanged", onAccountsChanged);
+      }
 
       if (
         !provider.getSession()

@@ -14,7 +14,7 @@ export const App = () => {
     <div className="min-h-screen bg-gray-50 p-6">
       <div className="mx-auto max-w-7xl">
         <div className="flex flex-col md:flex-row gap-4">
-          <div className="bg-white border rounded-md max-w-xs mx-auto w-full">
+          <div className="bg-white border rounded-md max-w-xs mx-auto w-full h-fit">
             {!isConnected && <Connectors />}
             {isConnected && <Connected />}
           </div>

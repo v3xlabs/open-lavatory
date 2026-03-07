@@ -1,3 +1,6 @@
+import { createMemo } from "solid-js";
+
+import type { SignalingProtocol } from "../../../../../provider/dist/storage/version.js";
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Input } from "../../../ui/Input.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
@@ -9,8 +12,16 @@ const AVAILABLE_PROTOCOLS = ["mqtt", "ntfy", "gun"];
 
 export const SignalingSettings = () => {
   const { t } = useTranslation();
-  const { settings, updateSignalingProtocol, updateSignalingServer }
+  const { settings, setSignalingProtocol, setSignalingOptions }
     = useSettings();
+  const signalingProtocol = createMemo(() => settings()?.signaling?.p);
+  const signalingServer = createMemo(() => {
+    const activeProtocol = signalingProtocol();
+
+    if (!activeProtocol) return "";
+
+    return settings()?.signaling?.s?.[activeProtocol] ?? "";
+  });
 
   return (
     <div>
@@ -21,22 +32,22 @@ export const SignalingSettings = () => {
               option.toLowerCase(),
               option.toUpperCase(),
             ])}
-            value={settings?.signaling?.p || ""}
-            onChange={updateSignalingProtocol}
+            value={signalingProtocol() ?? ""}
+            onChange={value => setSignalingProtocol(value as SignalingProtocol)}
           />
         </MenuItem>
         <MenuItem label={t("settings.signaling.server")}>
           <Input
             id="server"
-            value={settings?.signaling?.s?.[settings?.signaling?.p ?? ""] ?? ""}
-            onChange={value => updateSignalingServer(value)}
-            placeholder={t("settings.signaling.serverUrl")}
-            ariaLabel={t("settings.signaling.serverUrl")}
+            value={signalingServer()}
+            onChange={value => setSignalingOptions({ url: value })}
+            placeholder={String(t("settings.signaling.serverUrl"))}
+            ariaLabel={String(t("settings.signaling.serverUrl"))}
             readOnly={false}
           />
         </MenuItem>
       </MenuGroup>
-      <div className="p-2 text-sm text-(--lv-text-secondary) text-start">
+      <div class="p-2 text-sm text-(--lv-text-secondary) text-start">
         {t("settings.signaling.description")}
       </div>
     </div>

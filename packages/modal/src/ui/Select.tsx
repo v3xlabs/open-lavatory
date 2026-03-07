@@ -1,4 +1,4 @@
-import type { FC } from "preact/compat";
+import { For, Show } from "solid-js";
 import { tv } from "tailwind-variants/lite";
 
 const buttonGroupStyles = tv({
@@ -32,47 +32,39 @@ export type SelectProps = {
   dropdownThreshold?: number;
 };
 
-export const Select: FC<SelectProps> = ({
-  options,
-  value,
-  onChange,
-  dropdownThreshold = 3,
-}) => {
-  const useDropdown = options.length > dropdownThreshold;
-
-  if (useDropdown) {
-    const dropdown = dropdownStyles();
-
-    return (
-      <select
-        className={dropdown}
-        value={value}
-        onChange={e => onChange((e.target as HTMLSelectElement).value)}
-      >
-        {options.map(([slug, label]) => (
-          <option key={slug} value={slug}>
-            {label}
-          </option>
-        ))}
-      </select>
-    );
-  }
-
+export const Select = (props: SelectProps) => {
+  const dropdown = dropdownStyles();
   const { root, box } = buttonGroupStyles({});
 
   return (
-    <div className={root()}>
-      {options.map(([slug, label]) => (
-        <button
-          key={slug}
-          type="button"
-          onClick={() => onChange(slug)}
-          aria-pressed={slug === value}
-          className={box({ active: slug === value ? "on" : "off" })}
-        >
-          {label}
-        </button>
-      ))}
-    </div>
+    <Show
+      when={props.options.length > (props.dropdownThreshold ?? 3)}
+      fallback={(
+        <div class={root()}>
+          <For each={props.options}>
+            {([slug, label]) => (
+              <button
+                type="button"
+                onClick={() => props.onChange(slug)}
+                aria-pressed={slug === props.value}
+                class={box({ active: slug === props.value ? "on" : "off" })}
+              >
+                {label}
+              </button>
+            )}
+          </For>
+        </div>
+      )}
+    >
+      <select
+        class={dropdown}
+        value={props.value}
+        onChange={event => props.onChange(event.currentTarget.value)}
+      >
+        <For each={props.options}>
+          {([slug, label]) => <option value={slug}>{label}</option>}
+        </For>
+      </select>
+    </Show>
   );
 };

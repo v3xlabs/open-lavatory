@@ -1,4 +1,5 @@
-import { useCallback, useState } from "preact/hooks";
+import type { Accessor } from "solid-js";
+import { createMemo, createSignal } from "solid-js";
 
 import { usePunchTransition } from "./usePunchTransition.js";
 
@@ -7,30 +8,42 @@ export interface UseNavigationStackOptions {
 }
 
 export interface UseNavigationStackReturn<T> {
-  screen: T;
-  previousScreen: T | null;
-  isTransitioning: boolean;
+  screen: Accessor<T>;
+  previousScreen: Accessor<T | undefined>;
+  isTransitioning: Accessor<boolean>;
   navigate: (screen: T) => void;
   goBack: () => void;
-  isAtRoot: boolean;
+  isAtRoot: Accessor<boolean>;
 }
 
 export const useNavigationStack = <T>(
   initialScreen: T,
   { transitionDuration = 200 }: UseNavigationStackOptions = {},
 ): UseNavigationStackReturn<T> => {
-  const [screen, setScreen] = useState<T>(initialScreen);
+  const [stack, setStack] = createSignal<T[]>([initialScreen]);
+  const [index, setIndex] = createSignal(0);
+  const screen = createMemo<T>(() => stack()[index()] ?? initialScreen);
   const { current, previous, isTransitioning } = usePunchTransition(screen, {
     duration: transitionDuration,
   });
 
-  const navigate = useCallback((nextScreen: T) => {
-    setScreen(nextScreen);
-  }, []);
+  const navigate = (nextScreen: T) => {
+    const activeIndex = index();
+    const activeStack = stack();
+    const currentScreen = activeStack[activeIndex];
 
-  const goBack = useCallback(() => {
-    setScreen(initialScreen);
-  }, [initialScreen]);
+    if (Object.is(currentScreen, nextScreen)) return;
+
+    const nextStack = activeStack.slice(0, activeIndex + 1);
+
+    nextStack.push(nextScreen);
+    setStack(nextStack);
+    setIndex(nextStack.length - 1);
+  };
+
+  const goBack = () => {
+    setIndex(currentIndex => Math.max(0, currentIndex - 1));
+  };
 
   return {
     screen: current,
@@ -38,6 +51,6 @@ export const useNavigationStack = <T>(
     isTransitioning,
     navigate,
     goBack,
-    isAtRoot: current === initialScreen,
+    isAtRoot: () => index() === 0,
   };
 };

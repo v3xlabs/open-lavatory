@@ -1,15 +1,15 @@
-import type { FC, ReactNode } from "preact/compat";
+import type { JSX } from "solid-js";
 
 import { useTranslation } from "../utils/i18n.js";
 import { Select } from "./Select.js";
 
 export type ToggleProps = {
-  label: ReactNode;
+  label: JSX.Element;
   value: boolean;
   onChange: (value: boolean) => void;
 };
 
-export const Toggle: FC<ToggleProps> = ({ value, onChange }) => {
+export const Toggle = (props: ToggleProps) => {
   const { t } = useTranslation();
 
   return (
@@ -18,8 +18,8 @@ export const Toggle: FC<ToggleProps> = ({ value, onChange }) => {
         ["true", String(t("common.yes"))],
         ["false", String(t("common.no"))],
       ]}
-      value={value ? "true" : "false"}
-      onChange={value => onChange(value === "true")}
+      value={props.value ? "true" : "false"}
+      onChange={value => props.onChange(value === "true")}
     />
   );
 };

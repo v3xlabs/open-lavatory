@@ -8,13 +8,19 @@ export default defineConfig([
       "**/node_modules/**",
       ".changeset/**",
       "**/*.js",
+      "**/.wxt/**",
+      "**/.expo/**",
     ],
   },
-  ...v3xlint.configs["recommended"],
-  ...v3xlint.configs["react"],
+  ...v3xlint.configs.recommended,
+  // ...v3xlint.configs.react,
   {
     rules: {
       "unicorn/no-useless-undefined": "off",
+      // "@stylistic/indent": ["error", 4],
+      "@stylistic/type-named-tuple-spacing": "off",
+      "import/no-default-export": "off",
+      "unicorn/no-null": "off",
     },
   },
 ]);

@@ -1,11 +1,10 @@
-/* eslint-disable import/no-default-export */
+
 /** biome-ignore-all lint/performance/noBarrelFile: package entrypoint */
 /** biome-ignore-all lint/performance/noReExportAll: package entrypoint */
 /** biome-ignore-all lint/suspicious/noConsole: temp */
 
 export { ModalRoot } from "./components/ModalRoot.js";
 export { default, OpenLVModalElement, type OpenLVModalElementProps } from "./element.js";
-export { useConnectionState } from "./hooks/useConnectionState.js";
 export type { ThemeConfig } from "./theme/index.js";
 
 import OpenLVModalElementDefault, {
@@ -57,7 +56,7 @@ export const triggerOpenModal = (props: OpenLVModalElementProps) => {
     });
 
     document.body.append(x);
-    x.showModal();
+    // x.showModal();
   }
 };
 

@@ -1,10 +1,9 @@
 import type { OpenLVProvider } from "@openlv/provider";
-import { h, render } from "preact";
+import { render } from "solid-js/web";
 
 import { ModalProvider } from "./context.js";
 import { updateStyles } from "./styles/index.js";
 import type { ThemeConfig } from "./theme/types.js";
-import type { ModalConnectionInterface } from "./types/connection.js";
 
 export type OpenLVModalElementProps = {
   provider: OpenLVProvider;
@@ -13,12 +12,12 @@ export type OpenLVModalElementProps = {
 };
 
 export class OpenLVModalElement
-  extends HTMLElement
-  implements ModalConnectionInterface {
+  extends HTMLElement {
   private readonly shadow: ShadowRoot;
   private renderRequested = false;
   private readonly parameters: OpenLVModalElementProps;
   private themeCleanup?: () => void;
+  private disposeRender?: () => void;
 
   constructor(parameters: OpenLVModalElementProps) {
     super();
@@ -38,11 +37,13 @@ export class OpenLVModalElement
   }
 
   disconnectedCallback() {
-    render(undefined, this.shadow);
+    this.disposeRender?.();
+    this.disposeRender = undefined;
     this.themeCleanup?.();
   }
 
   private setupThemeListener() {
+    // eslint-disable-next-line unicorn/consistent-function-scoping
     const update = () => {
       const userTheme
         = this.parameters.provider.storage.getSettings()?.theme ?? "system";
@@ -83,9 +84,12 @@ export class OpenLVModalElement
   }
 
   private performRender() {
-    render(h(ModalProvider, this.parameters), this.shadow);
+    this.disposeRender?.();
+    this.disposeRender = render(
+      () => <ModalProvider {...this.parameters} />,
+      this.shadow,
+    );
   }
 }
 
-// eslint-disable-next-line import/no-default-export
 export default OpenLVModalElement;

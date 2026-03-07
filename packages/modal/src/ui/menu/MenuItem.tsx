@@ -1,12 +1,14 @@
-import type { FC, PropsWithChildren, ReactNode } from "preact/compat";
+import type { JSX, ParentProps } from "solid-js";
 
-export type MenuItemProps = PropsWithChildren<{
-  label: ReactNode;
+export type MenuItemProps = ParentProps<{
+  label: JSX.Element;
 }>;
 
-export const MenuItem: FC<MenuItemProps> = ({ label, children }) => (
-  <div className="flex items-baseline justify-between gap-2 px-2 py-1 first:pt-2 last:pb-2">
-    <div className="text-sm text-(--lv-text-secondary) text-start">{label}</div>
-    <div>{children}</div>
+export const MenuItem = (props: MenuItemProps) => (
+  <div class="flex items-baseline justify-between gap-2 px-2 py-1 first:pt-2 last:pb-2">
+    <div class="text-sm text-(--lv-text-secondary) text-start">
+      {props.label}
+    </div>
+    <div>{props.children}</div>
   </div>
 );

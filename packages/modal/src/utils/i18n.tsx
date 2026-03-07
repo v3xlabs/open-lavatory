@@ -1,15 +1,18 @@
-import { createContext } from "preact";
-import type { FC, ReactNode } from "preact/compat";
 import {
-  useCallback,
+  type Accessor,
+  createContext,
+  createEffect,
+  createMemo,
+  createSignal,
+  type JSX,
+  onCleanup,
+  type ParentComponent,
   useContext,
-  useEffect,
-  useMemo,
-  useState,
-} from "preact/hooks";
+} from "solid-js";
 import { match } from "ts-pattern";
 
 import fallbackEnglish from "../../lang/en.json" with { type: "json" };
+import { useModalContext } from "../context.jsx";
 
 export type LanguageTag =
   | "en"
@@ -110,7 +113,7 @@ export const getLanguageScore = (tag: string): number => {
 export type Translate = (
   key: string,
   params?: Readonly<Record<string, string | number>>,
-) => string | ReactNode;
+) => string | JSX.Element;
 
 export type Translations = Record<string, unknown>;
 
@@ -173,22 +176,21 @@ export const resolveTranslation = (parameters: {
 };
 
 export type TranslationContextValue = {
-  languageTag: LanguageTag;
+  languageTag: Accessor<LanguageTag>;
   setLanguageTag: (languageTag: LanguageTag) => void;
-  isLoadingLanguagePack: boolean;
-  isRtl: boolean;
+  isLoadingLanguagePack: Accessor<boolean>;
+  isRtl: Accessor<boolean>;
   t: Translate;
 };
 
-export const TranslationContext = createContext<TranslationContextValue | undefined>(
-  undefined,
-);
+export const TranslationContext = createContext<
+  TranslationContextValue | undefined
+>(undefined);
 
 const loadLanguagePack = async (
   languageTag: LanguageTag,
 ): Promise<Translations | undefined> =>
   match(languageTag)
-
     .with("en", () => Promise.resolve(undefined))
     .with("nl", async () => import("../../lang/nl.json").then(m => m.default))
     .with("es", async () => import("../../lang/es.json").then(m => m.default))
@@ -202,28 +204,25 @@ const loadLanguagePack = async (
     .with("fa", async () => import("../../lang/fa.json").then(m => m.default))
     .exhaustive();
 
-export type TranslationProviderProps = {
-  children: preact.ComponentChildren;
-  initialLanguageTag?: LanguageTag;
-};
+export const TranslationProvider: ParentComponent = (props) => {
+  const { provider } = useModalContext();
+  const initialLanguageTag = provider.storage.getSettings().language as LanguageTag | undefined;
+  const [languageTag, setLanguageTag] = createSignal<LanguageTag>(
+    initialLanguageTag ?? "en",
+  );
+  const [languagePack, setLanguagePack] = createSignal<
+    Translations | undefined
+  >(undefined);
+  const [isLoadingLanguagePack, setIsLoadingLanguagePack] = createSignal(false);
 
-export const TranslationProvider: FC<TranslationProviderProps> = ({
-  children,
-  initialLanguageTag = "en",
-}) => {
-  const [languageTag, setLanguageTag]
-    = useState<LanguageTag>(initialLanguageTag);
-  const [languagePack, setLanguagePack] = useState<Translations | undefined>(undefined);
-  const [isLoadingLanguagePack, setIsLoadingLanguagePack] = useState(false);
-
-  useEffect(() => {
+  createEffect(() => {
     let cancelled = false;
 
     const run = async () => {
       setIsLoadingLanguagePack(true);
 
       try {
-        const nextPack = await loadLanguagePack(languageTag);
+        const nextPack = await loadLanguagePack(languageTag());
 
         if (cancelled) return;
 
@@ -236,42 +235,52 @@ export const TranslationProvider: FC<TranslationProviderProps> = ({
 
     void run();
 
-    return () => {
+    onCleanup(() => {
       cancelled = true;
-    };
-  }, [languageTag]);
+    });
+  });
 
-  const t: Translate = useCallback(
-    (key, params) =>
-      resolveTranslation({
-        primary: languagePack,
-        fallback: fallbackEnglish as unknown as Translations,
-        key,
-        params,
-      })
-        .split("\n")
-        .map((line, index, array) =>
-          (index < array.length - 1 ? [line, <br key={index} />] : [line]),
-        ),
-    [languagePack],
-  );
+  const t: Translate = (key, params) => {
+    const translated = resolveTranslation({
+      primary: languagePack(),
+      fallback: fallbackEnglish as unknown as Translations,
+      key,
+      params,
+    });
+    const lines = translated.split("\n");
 
-  const isRtl = useMemo(() => isRtlLanguage(languageTag), [languageTag]);
+    if (lines.length <= 1) {
+      return translated;
+    }
 
-  const contextValue = useMemo<TranslationContextValue>(
-    () => ({
-      languageTag,
-      setLanguageTag,
-      isLoadingLanguagePack,
-      isRtl,
-      t,
-    }),
-    [isLoadingLanguagePack, isRtl, languageTag, t],
-  );
+    return (
+      <>
+        {lines.map((line, index) => (
+          <>
+            {line}
+            {index < lines.length - 1 ? <br /> : null}
+          </>
+        ))}
+      </>
+    );
+  };
+
+  const isRtl = createMemo(() => isRtlLanguage(languageTag()));
+  const updateLanguageTag = (nextLanguageTag: LanguageTag) => {
+    setLanguageTag(nextLanguageTag);
+  };
+
+  const contextValue: TranslationContextValue = {
+    languageTag,
+    setLanguageTag: updateLanguageTag,
+    isLoadingLanguagePack,
+    isRtl,
+    t,
+  };
 
   return (
     <TranslationContext.Provider value={contextValue}>
-      {children}
+      {props.children}
     </TranslationContext.Provider>
   );
 };

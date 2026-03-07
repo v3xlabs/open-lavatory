@@ -1,44 +1,49 @@
-import { useEffect, useRef, useState } from "preact/hooks";
+import { type Accessor, createEffect, createSignal, onCleanup } from "solid-js";
 
 export interface PunchTransitionOptions {
   duration?: number;
 }
 
 export const usePunchTransition = <T>(
-  value: T,
+  value: T | Accessor<T>,
   { duration = 200 }: PunchTransitionOptions = {},
 ) => {
-  const [current, setCurrent] = useState(value);
-  const [previous, setPrevious] = useState<T | undefined>(undefined);
-  const timeoutRef = useRef<number>();
-  const lastValueRef = useRef(value);
+  const readValue: Accessor<T>
+    = typeof value === "function" ? (value as Accessor<T>) : () => value;
+  const initialValue = readValue();
+  const [current, setCurrent] = createSignal<T>(initialValue);
+  const [previous, setPrevious] = createSignal<T | undefined>(undefined);
+  let timeoutRef: ReturnType<typeof setTimeout> | undefined;
+  let lastValueRef = initialValue;
 
-  useEffect(() => {
-    if (Object.is(value, lastValueRef.current)) return;
+  createEffect(() => {
+    const nextValue = readValue();
 
-    if (timeoutRef.current) {
-      globalThis.clearTimeout(timeoutRef.current);
+    if (Object.is(nextValue, lastValueRef)) return;
+
+    if (timeoutRef) {
+      globalThis.clearTimeout(timeoutRef);
     }
 
-    setPrevious(lastValueRef.current);
-    setCurrent(value);
-    lastValueRef.current = value;
+    setPrevious(() => lastValueRef);
+    setCurrent(() => nextValue);
+    lastValueRef = nextValue;
 
-    timeoutRef.current = globalThis.setTimeout(() => {
-      setPrevious(undefined);
-      timeoutRef.current = undefined;
+    timeoutRef = globalThis.setTimeout(() => {
+      setPrevious(() => undefined);
+      timeoutRef = undefined;
     }, duration);
 
-    return () => {
-      if (timeoutRef.current) {
-        globalThis.clearTimeout(timeoutRef.current);
+    onCleanup(() => {
+      if (timeoutRef) {
+        globalThis.clearTimeout(timeoutRef);
       }
-    };
-  }, [value, duration]);
+    });
+  });
 
   return {
     current,
     previous,
-    isTransitioning: previous !== null,
+    isTransitioning: () => previous() !== undefined,
   };
 };

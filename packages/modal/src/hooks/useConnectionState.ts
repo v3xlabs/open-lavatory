@@ -1,30 +1,30 @@
-import { useCallback, useState } from "preact/hooks";
+import { createSignal } from "solid-js";
 
 import type { ConnectionInfo, ConnectionState } from "../types/connection.js";
 
 export const useConnectionState = (initialState: ConnectionState = "idle") => {
-  const [connectionInfo, setConnectionInfo] = useState<ConnectionInfo>({
+  const [connectionInfo, setConnectionInfo] = createSignal<ConnectionInfo>({
     state: initialState,
   });
 
-  const updateState = useCallback(
-    (newState: ConnectionState, additionalInfo?: Partial<ConnectionInfo>) => {
-      setConnectionInfo(prev => ({
-        ...prev,
-        state: newState,
-        ...additionalInfo,
-      }));
-    },
-    [],
-  );
+  const updateState = (
+    newState: ConnectionState,
+    additionalInfo?: Partial<ConnectionInfo>,
+  ) => {
+    setConnectionInfo(previous => ({
+      ...previous,
+      state: newState,
+      ...additionalInfo,
+    }));
+  };
 
-  const updateConnectionInfo = useCallback((info: ConnectionInfo) => {
+  const updateConnectionInfo = (info: ConnectionInfo) => {
     setConnectionInfo(info);
-  }, []);
+  };
 
-  const reset = useCallback(() => {
+  const reset = () => {
     setConnectionInfo({ state: "idle" });
-  }, []);
+  };
 
   return {
     connectionInfo,

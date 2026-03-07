@@ -41,21 +41,21 @@ export const openlv = ({
     await provider.closeSession();
   };
 
+  const getAccounts = async () => {
+    log("getAccounts");
+
+    if (provider.getSession() === undefined) {
+      return [];
+    }
+
+    return await provider.getAccounts();
+  };
+
   return createConnector<OpenLVProvider>((wagmiConfig) => {
     const { chains } = wagmiConfig;
 
-    const getAccounts = async () => {
-      log("getAccounts");
-
-      if (provider.getSession() === undefined) {
-        return [];
-      }
-
-      return await provider.getAccounts();
-    };
-
     const connect = async (
-      { withCapabilities } = { withCapabilities: false },
+      { withCapabilities = false },
     ) => {
       log("connect");
 
@@ -124,7 +124,9 @@ export const openlv = ({
       async isAuthorized() {
         log("isAuthorized");
 
-        return (await getAccounts()).length > 0;
+        const accounts = await getAccounts();
+
+        return accounts.length > 0;
       },
       async switchChain({ chainId }) {
         log("switchChain", chainId);

@@ -1,34 +1,30 @@
 import classNames from "classnames";
-import { type ComponentChildren } from "preact";
+import { type JSX, Show } from "solid-js";
 
 export type TransitionContainerProps<T> = {
   current: T;
-  previous: T | null;
+  previous: T | undefined;
   isTransitioning: boolean;
-  render: (value: T) => ComponentChildren;
-  className?: string;
+  render: (value: T) => JSX.Element;
+  class?: string;
 };
 
-export const TransitionContainer = <T = unknown>({
-  current,
-  previous,
-  isTransitioning,
-  render,
-  className,
-}: TransitionContainerProps<T>) => (
-  <div className={classNames("modal-transition__container", className)}>
-    {previous !== null && (
-      <div className="modal-transition__layer modal-transition__layer--outgoing">
-        {render(previous)}
+export const TransitionContainer = <T = unknown>(
+  props: TransitionContainerProps<T>,
+) => (
+  <div class={classNames("modal-transition__container", props.class)}>
+    <Show when={props.previous !== undefined}>
+      <div class="modal-transition__layer modal-transition__layer--outgoing">
+        {props.render(props.previous as T)}
       </div>
-    )}
+    </Show>
     <div
-      className={classNames(
+      class={classNames(
         "modal-transition__layer",
-        isTransitioning && "modal-transition__layer--incoming",
+        props.isTransitioning && "modal-transition__layer--incoming",
       )}
     >
-      {render(current)}
+      {props.render(props.current)}
     </div>
   </div>
 );

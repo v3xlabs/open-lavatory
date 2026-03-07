@@ -1,68 +1,37 @@
 import { encodeConnectionURL } from "@openlv/core";
-import type { Session, SessionStateObject } from "@openlv/session";
-import { useEffect, useState } from "preact/hooks";
+import type { SessionStateObject } from "@openlv/session";
+import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
 
-import { log } from "../utils/log.js";
-import { useEventEmitter } from "./useEventEmitter.js";
-import { useProvider } from "./useProvider.js";
-import { useSettings } from "./useSettings.js";
+import { useModalContext } from "../context.js";
 
 export const useSession = () => {
-  const { provider } = useProvider();
-  const [session, setSession] = useState<Session | undefined>(
-    provider?.getSession(),
-  );
-  const parameters = session?.getHandshakeParameters();
-  const uri = parameters ? encodeConnectionURL(parameters) : undefined;
-  const [status, setStatus] = useState<SessionStateObject | undefined>(
-    session?.getState(),
-  );
+  const { provider } = useModalContext();
+  const session = createMemo(() => provider.getSession(), undefined, { name: "session" });
+  const [status, setStatus] = createSignal<SessionStateObject | undefined>(session()?.getState());
 
-  useEventEmitter(session?.emitter, "state_change", (event) => {
-    log("session state change: ", event);
-    setStatus(event);
+  console.log("session status", status());
+
+  const handleStateChange = (state?: SessionStateObject) => {
+    console.log("session state change", state);
+    setStatus(state);
+  };
+
+  onMount(() => {
+    session()?.emitter.on("state_change", handleStateChange);
   });
 
-  useEffect(() => {
-    const onStatusChange = () => {
-      const session = provider?.getSession();
+  onCleanup(() => {
+    session()?.emitter.off("state_change", handleStateChange);
+  });
 
-      if (session) {
-        setSession(session);
-      }
-    };
+  const parameters = createMemo(() => session()?.getHandshakeParameters());
+  const uri = createMemo(() => {
+    const handshakeParameters = parameters();
 
-    provider?.on("status_change", onStatusChange);
-
-    const currentSession = provider?.getSession();
-
-    if (currentSession) {
-      setSession(currentSession);
-    }
-
-    return () => {
-      provider?.off("status_change", onStatusChange);
-    };
-  }, [provider]);
-
-  useEffect(() => {
-    const onSessionStart = (_session: Session) => {
-      setSession(_session);
-      setStatus(_session.getState());
-    };
-
-    provider?.on("session_started", onSessionStart);
-
-    return () => {
-      provider?.off("session_started", onSessionStart);
-    };
-  }, [provider]);
-
-  useEffect(() => {
-    if (session) {
-      setStatus(session.getState());
-    }
-  }, [session]);
+    return handshakeParameters
+      ? encodeConnectionURL(handshakeParameters)
+      : undefined;
+  });
 
   return {
     uri,
@@ -71,19 +40,19 @@ export const useSession = () => {
 };
 
 export const useSessionStart = () => {
-  const { provider } = useProvider();
-  const { settings } = useSettings();
+  const { provider } = useModalContext();
 
   return {
     start: () => {
-      const p = settings?.signaling?.p;
-      const s = p ? settings?.signaling?.s?.[p] : undefined;
+      const currentSettings = provider.storage.getSettings();
+      const p = currentSettings?.signaling?.p;
+      const s = p ? currentSettings?.signaling?.s?.[p] : undefined;
 
       if (!p || !s) {
         throw new Error("Invalid protocol or server");
       }
 
-      return provider?.createSession({
+      return provider.createSession({
         p,
         s,
       });

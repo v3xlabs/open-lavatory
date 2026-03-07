@@ -1,4 +1,4 @@
-import { useMemo } from "preact/hooks";
+import { createMemo } from "solid-js";
 
 import { useSettings } from "../../../hooks/useSettings.js";
 import { MenuGroup } from "../../../ui/menu/MenuGroup.js";
@@ -14,28 +14,32 @@ import { ThemeSettings } from "./theme.js";
 
 export const LanguageSettings = () => {
   const { t, languageTag, setLanguageTag } = useTranslation();
-  const { settings, updateLanguage } = useSettings();
+  const { settings, setLanguage } = useSettings();
 
-  const sortedLanguages = useMemo(() => [...LANGUAGES].sort((a, b) => {
-    const scoreA = getLanguageScore(a.tag);
-    const scoreB = getLanguageScore(b.tag);
+  const sortedLanguages = createMemo(() =>
+    [...LANGUAGES].sort((a, b) => {
+      const scoreA = getLanguageScore(a.tag);
+      const scoreB = getLanguageScore(b.tag);
 
-    return scoreB - scoreA;
-  }), []);
+      return scoreB - scoreA;
+    }),
+  );
 
   const handleLanguageChange = (value: string) => {
     const newLang = value as LanguageTag;
 
     setLanguageTag(newLang);
-    updateLanguage(newLang);
+    setLanguage(newLang);
   };
 
   return (
     <MenuGroup title={t("settings.appearance")}>
       <MenuItem label={t("settings.language")}>
         <Select
-          options={sortedLanguages.map(lang => [lang.tag, lang.nativeName])}
-          value={(settings?.language as LanguageTag | undefined) || languageTag}
+          options={sortedLanguages().map(lang => [lang.tag, lang.nativeName])}
+          value={
+            (settings()?.language as LanguageTag | undefined) || languageTag()
+          }
           onChange={handleLanguageChange}
         />
       </MenuItem>

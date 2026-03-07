@@ -1,5 +1,5 @@
-import type { FC, PropsWithChildren } from "preact/compat";
-import { LuCircleHelp } from "react-icons/lu";
+import { LucideCircleQuestionMark } from "lucide-solid";
+import { mergeProps, type ParentProps } from "solid-js";
 import type { VariantProps } from "tailwind-variants/lite";
 import { tv } from "tailwind-variants/lite";
 import { match } from "ts-pattern";
@@ -39,22 +39,25 @@ const styles = tv({
 
 export type InfoTooltipProps = VariantProps<typeof styles>;
 
-export const InfoTooltip: FC<PropsWithChildren<InfoTooltipProps>> = ({
-  variant = "icon",
-  children,
-  size = "lg",
-}) => {
-  const { root, box, popover, icon } = styles({ size, variant });
+export const InfoTooltip = (rawProps: ParentProps<InfoTooltipProps>) => {
+  const props = mergeProps(
+    { variant: "icon" as const, size: "lg" as const },
+    rawProps,
+  );
+  const { root, box, popover, icon } = styles({
+    size: props.size,
+    variant: props.variant,
+  });
 
   return (
-    <div className={root()}>
-      <div className={box()}>
-        {match(variant)
-          .with("icon", () => <LuCircleHelp className={icon()} />)
+    <div class={root()}>
+      <div class={box()}>
+        {match(props.variant)
+          .with("icon", () => <LucideCircleQuestionMark class={icon()} />)
           .with("text", () => <div>Text</div>)
           .exhaustive()}
       </div>
-      <div className={popover()}>{children}</div>
+      <div class={popover()}>{props.children}</div>
     </div>
   );
 };

@@ -1,73 +1,60 @@
-import type { Dispatch, StateUpdater } from "preact/hooks";
-import { LuChevronLeft, LuCircleHelp, LuX } from "react-icons/lu";
+import { LucideChevronLeft, LucideCircleQuestionMark, LucideX } from "lucide-solid";
 
 import { Button } from "../ui/Button.js";
 import { useTranslation } from "../utils/i18n.js";
 import type { ModalView } from "./ModalRoot.js";
 
-export const Header = ({
-  title,
-  view,
-  onClose,
-  onBack,
-  setView,
-}: {
+export const Header = (props: {
   title: string;
   view: ModalView;
   onClose: () => void;
   onBack?: () => void;
-  setView: Dispatch<StateUpdater<ModalView>>;
+  setView: (view: ModalView) => void;
 }) => {
   const { t } = useTranslation();
 
   return (
-    <div className="flex items-center justify-between px-2 py-2">
-      {onBack ? (
-        <Button
-          onClick={onBack}
-          aria-label={
-            view === "settings" ? t("modal.backToQr") : t("modal.closeModal")
-          }
-          $variant="tertiary"
-          $aspect="square"
-          $size="md"
-        >
-          <LuChevronLeft className="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
-        </Button>
-      ) : (
-        // <Button
-        //   type="button"
-        //   href="https://openlv.sh"
-        //   target="_blank"
-        //   $variant="tertiary"
-        //   $aspect="square"
-        //   $size="md"
-        // >
-        //   <LuCircleHelp className="h-5 w-5" />
-        // </Button>
-        <Button
-          type="button"
-          onClick={() => setView("info")}
-          $variant="tertiary"
-          $aspect="square"
-          $size="md"
-        >
-          <LuCircleHelp className="h-5 w-5" />
-        </Button>
-      )}
-      <h2 className="flex items-center justify-center gap-2 font-semibold text-(--lv-text-primary) text-lg">
-        {title}
+    <div class="flex items-center justify-between px-2 py-2">
+      {props.onBack
+        ? (
+            <Button
+              onClick={props.onBack}
+              aria-label={String(
+                props.view === "settings"
+                  ? t("modal.backToQr")
+                  : t("modal.closeModal"),
+              )}
+              $variant="tertiary"
+              $aspect="square"
+              $size="md"
+            >
+              <LucideChevronLeft class="h-6 w-6 text-(--lv-text-muted) rtl:rotate-180" />
+            </Button>
+          )
+        : (
+            <Button
+              type="button"
+              onClick={() => props.setView("info")}
+              $variant="tertiary"
+              $aspect="square"
+              $size="md"
+            >
+              <LucideCircleQuestionMark class="h-5 w-5" />
+            </Button>
+          )}
+      <h2 class="flex items-center justify-center gap-2 font-semibold text-(--lv-text-primary) text-lg">
+        {props.title}
       </h2>
       <Button
         type="button"
-        aria-label={t("common.close")}
+        aria-label={String(t("common.close"))}
         aria-pressed={false}
-        onClick={onClose}
+        onClick={props.onClose}
         $variant="tertiary"
         $aspect="square"
         $size="md"
       >
-        <LuX className="h-6 w-6 text-(--lv-text-muted)" />
+        <LucideX class="h-6 w-6 text-(--lv-text-muted)" />
       </Button>
     </div>
   );

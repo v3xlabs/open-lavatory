@@ -1,62 +1,42 @@
 import type { OpenLVProvider } from "@openlv/provider";
-import { createContext } from "preact";
-import type { FC } from "preact/compat";
-import { useContext, useMemo } from "preact/hooks";
+import {
+  type Component,
+  createContext,
+  useContext,
+} from "solid-js";
 
 import { ModalRoot } from "./components/ModalRoot.js";
 import { type OpenLVModalElementProps } from "./element.js";
 import type { ThemeConfig } from "./theme/types.js";
 import {
-  detectBrowserLanguage,
-  type LanguageTag,
   TranslationProvider,
-} from "./utils/i18n.jsx";
+} from "./utils/i18n.js";
 
-export type ProviderContextO = {
-  provider: OpenLVProvider | undefined;
+export type ModalContextValue = {
+  provider: OpenLVProvider;
   themeConfig?: ThemeConfig;
 };
 
-export const ModalContext = createContext<ProviderContextO>({
-  provider: undefined,
-  themeConfig: undefined,
-});
+export const ModalContext = createContext<ModalContextValue | undefined>(
+  undefined,
+);
 
-const getInitialLanguage = (
-  provider: OpenLVProvider | undefined,
-): LanguageTag => {
-  const storedLanguage = provider?.storage.getSettings().language as
-    | LanguageTag
-    | undefined;
-
-  if (storedLanguage) return storedLanguage;
-
-  return detectBrowserLanguage();
-};
-
-export const ModalProvider: FC<OpenLVModalElementProps> = ({
-  provider,
-  onClose,
-  theme,
-}) => {
-  const initialLanguage = useMemo(
-    () => getInitialLanguage(provider),
-    [provider],
-  );
+export const ModalProvider: Component<OpenLVModalElementProps> = (props) => {
+  const { provider, theme } = props;
 
   return (
-    <TranslationProvider initialLanguageTag={initialLanguage}>
-      <ModalContext.Provider value={{ provider, themeConfig: theme }}>
-        <ModalRoot onClose={onClose} />
-      </ModalContext.Provider>
-    </TranslationProvider>
+    <ModalContext.Provider value={{ provider, themeConfig: theme }}>
+      <TranslationProvider>
+        <ModalRoot onClose={props.onClose} />
+      </TranslationProvider>
+    </ModalContext.Provider>
   );
 };
 
 export const useModalContext = () => {
   const context = useContext(ModalContext);
 
-  if (!context.provider) throw new Error("Provider not found");
+  if (!context) throw new Error("Modal context not found");
 
   return context;
 };

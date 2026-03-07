@@ -1,5 +1,3 @@
-/* eslint-disable react-hooks/rules-of-hooks */
-
 import path from "node:path";
 
 import { type BrowserContext, chromium, test as base } from "@playwright/test";

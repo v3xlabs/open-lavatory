@@ -26,31 +26,21 @@ export const mqtt: CreateSignalLayerFn = ({
   let connection: MqttClient | undefined;
   let subscribedHandler: ((payload: string) => void) | undefined;
   let isTearingDown = false;
-  let isReconnecting = false;
 
   return createSignalingLayer({
     type: "mqtt",
     emitter,
     setup() {
       isTearingDown = false;
+      let setupDone = false;
 
       connection = createMqtt({
         url,
-        retry: {
-          retries: 5,
-          initialDelayMs: 1000,
-          jitter: true,
-        },
-        keepalive: 2, // seconds
+        retry: { retries: 5, initialDelayMs: 1000, jitter: true },
+        keepalive: 2,
       });
 
-      let setupDone = false;
-      let pendingReconnect = false;
-
       connection.on("connect", () => {
-        isReconnecting = false;
-        pendingReconnect = false;
-
         if (!setupDone) {
           setupDone = true;
 
@@ -58,54 +48,28 @@ export const mqtt: CreateSignalLayerFn = ({
         }
 
         log("MQTT: Reconnected, re-subscribing to topic", topic);
+        const resubscribe = subscribedHandler
+          ? connection!.subscribe(topic)
+          : Promise.resolve();
 
-        if (subscribedHandler) {
-          connection!
-            .subscribe(topic)
-            .then(() => {
-              emitter.emit("reconnected");
-            })
-            .catch((error: unknown) => {
-              emitter.emit("error",
-                new SignalConnectionLostError({
-                  url,
-                  cause:
-                    error instanceof Error ? error : new Error(String(error)),
-                }),
-              );
-            });
-        }
-        else {
-          emitter.emit("reconnected");
-        }
+        resubscribe
+          .then(() => emitter.emit("reconnected"))
+          .catch((error: unknown) => emitter.emit("error", new SignalConnectionLostError({
+            url,
+            cause: error instanceof Error ? error : new Error(String(error)),
+          })));
       });
 
       connection.on("offline", () => {
         if (setupDone) {
-          isReconnecting = true;
-          pendingReconnect = true;
           log("MQTT: Connection went offline, reconnecting…");
           emitter.emit("reconnecting");
         }
       });
 
-      connection.on("reconnect", () => {
-        pendingReconnect = false;
-      });
-
       connection.on("close", () => {
-        if (!setupDone || isTearingDown) return;
-
-        if (isReconnecting && pendingReconnect) {
-          isReconnecting = false;
+        if (setupDone && !isTearingDown)
           emitter.emit("error", new SignalConnectionLostError({ url }));
-
-          return;
-        }
-
-        if (!isReconnecting) {
-          emitter.emit("error", new SignalConnectionLostError({ url }));
-        }
       });
 
       connection.on("error", (error) => {
@@ -121,9 +85,7 @@ export const mqtt: CreateSignalLayerFn = ({
       subscribedHandler = undefined;
     },
     async publish(payload) {
-      if (!connection) {
-        throw new SignalNoConnectionError();
-      }
+      if (!connection) throw new SignalNoConnectionError();
 
       connection.publish(topic, payload, { retain: false });
     },
@@ -131,19 +93,12 @@ export const mqtt: CreateSignalLayerFn = ({
       if (!connection) throw new SignalNoConnectionError();
 
       subscribedHandler = handler;
-
       log("MQTT: Subscribing to topic", topic);
-
       connection.on("message", (receivedTopic, message) => {
-        log("MQTT: Received message on topic", topic);
-
         if (receivedTopic !== topic) return;
 
-        const decoded = new TextDecoder().decode(message);
-
-        handler(decoded);
+        handler(new TextDecoder().decode(message));
       });
-
       await connection.subscribe(topic);
     },
   });

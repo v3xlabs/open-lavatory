@@ -55,71 +55,43 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     .with("http", () => "ws" as const)
     .exhaustive();
 
-  const wsUrl
-    = `${wsProtocol}://${connectionInfo.host}/${topic}/ws`
-      + (connectionInfo.parameters ?? "");
+  const wsUrl = `${wsProtocol}://${connectionInfo.host}/${topic}/ws` + (connectionInfo.parameters ?? "");
   const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/v1/health`;
 
   const emitter = new EventEmitter<SignalingBaseEvents>();
   const events = new EventEmitter<{ message: string; }>();
+  const retrier = createRetrier({ maxRetries: NTFY_MAX_RETRIES, initialDelayMs: NTFY_RETRY_INITIAL_DELAY_MS, maxDelayMs: NTFY_RETRY_MAX_DELAY_MS });
 
   let connection: WebSocket | undefined;
   let teardownAc: AbortController | undefined;
   let setupDone = false;
   let setupPromise: Promise<void> | undefined;
   let reconnectPromise: Promise<void> | undefined;
-  let openResolver:
-    | { resolve: () => void; reject: (err: Error) => void; }
-    | undefined;
+  let pingTimer: ReturnType<typeof setTimeout> | undefined;
 
-  const retrier = createRetrier({
-    maxRetries: NTFY_MAX_RETRIES,
-    initialDelayMs: NTFY_RETRY_INITIAL_DELAY_MS,
-    maxDelayMs: NTFY_RETRY_MAX_DELAY_MS,
-  });
-
-  const timers = {
-    ping: undefined as ReturnType<typeof setTimeout> | undefined,
-    retry: undefined as ReturnType<typeof setTimeout> | undefined,
-    clearAll() {
-      if (timers.ping) clearTimeout(timers.ping);
-
-      if (timers.retry) clearTimeout(timers.retry);
-
-      timers.ping = undefined;
-      timers.retry = undefined;
-    },
+  const clearPing = () => {
+    clearTimeout(pingTimer);
+    pingTimer = undefined;
   };
 
   const pingOnce = async () => {
-    const abortController = new AbortController();
-    const timeoutId = setTimeout(
-      () => abortController.abort(),
-      NTFY_PING_TIMEOUT_MS,
-    );
+    const ac = new AbortController();
+    const ntfyTimeoutId = setTimeout(() => ac.abort(), NTFY_PING_TIMEOUT_MS);
 
     try {
-      const response = await fetch(pingUrl, {
-        signal: abortController.signal,
-        cache: "no-cache",
-      });
-      const json = await response.json();
+      const r = await fetch(pingUrl, { signal: ac.signal, cache: "no-cache" });
 
-      return (json as { healthy?: boolean; }).healthy === true;
+      return ((await r.json()) as { healthy?: boolean; }).healthy === true;
     }
-    catch {
-      return false;
-    }
-    finally {
-      clearTimeout(timeoutId);
-    }
+    catch { return false; }
+    finally { clearTimeout(ntfyTimeoutId); }
   };
 
   const schedulePing = (ws: WebSocket) => {
-    if (timers.ping || teardownAc?.signal.aborted || ws !== connection) return;
+    if (pingTimer || teardownAc?.signal.aborted || ws !== connection) return;
 
-    timers.ping = setTimeout(async () => {
-      timers.ping = undefined;
+    pingTimer = setTimeout(async () => {
+      pingTimer = undefined;
 
       const healthy = await pingOnce();
 
@@ -136,135 +108,103 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     }, NTFY_PING_INTERVAL_MS);
   };
 
+  // open() calls onOpen on first "open" ntfy event, onFail on close before open
+  const open = (onOpen: () => void, onFail: (err: Error) => void) => {
+    connection?.close();
+    connection = undefined;
+    clearPing();
+
+    log("NTFY: connecting to WebSocket", wsUrl);
+    const ws = (connection = new WebSocket(wsUrl));
+    let settled = false;
+
+    ws.addEventListener("message", (event) => {
+      const data = JSON.parse(event.data as string) as NtfyMessage;
+
+      if (data.event === "open") {
+        schedulePing(ws);
+
+        if (setupDone) {
+          emitter.emit("reconnected");
+        }
+        else { setupDone = true; }
+
+        if (!settled) {
+          settled = true;
+          onOpen();
+        }
+
+        return;
+      }
+
+      if (data.event === "message") {
+        events.emit("message", data.message);
+      }
+    });
+
+    ws.addEventListener("close", () => {
+      clearPing();
+
+      if (teardownAc?.signal.aborted) return;
+
+      if (!settled) {
+        settled = true;
+        onFail(new SignalConnectionLostError({ url }));
+      }
+
+      log("NTFY: WebSocket closed unexpectedly");
+
+      if (setupDone) emitter.emit("reconnecting");
+
+      if (setupDone && !reconnectPromise) {
+        reconnectPromise = connectWithRetry()
+          .catch(() => { emitter.emit("error", new SignalRetryExhaustedError({ url })); })
+          .finally(() => { reconnectPromise = undefined; });
+      }
+    });
+
+    ws.addEventListener("error", () => {
+      log("NTFY: WebSocket error");
+    });
+  };
+
+  const connectWithRetry = async (): Promise<void> => {
+    retrier.reset();
+
+    while (!teardownAc!.signal.aborted) {
+      try {
+        await new Promise<void>((resolve, reject) => open(resolve, reject));
+
+        return;
+      }
+      catch (error) {
+        if (teardownAc!.signal.aborted) break;
+
+        const step = retrier.nextDelay();
+
+        if (!step) {
+          throw new SignalRetryExhaustedError({ url, cause: error instanceof Error ? error : undefined });
+        }
+
+        log(`NTFY: retry #${step.attempt} in ${Math.round(step.delay)}ms`);
+        await new Promise<void>(resolve => setTimeout(resolve, step.delay));
+      }
+    }
+
+    throw new SignalTeardownError({ url });
+  };
+
   return createSignalingLayer({
     type: "ntfy",
     emitter,
     setup() {
       teardownAc = new AbortController();
 
-      const waitForOpen = () =>
-        new Promise<void>((resolve, reject) => {
-          openResolver = { resolve, reject };
-        });
-
-      const connectWithRetry = async () => {
-        retrier.reset();
-
-        while (!teardownAc!.signal.aborted) {
-          open();
-
-          try {
-            await waitForOpen();
-
-            return;
-          }
-          catch (error) {
-            if (teardownAc!.signal.aborted) break;
-
-            const step = retrier.nextDelay();
-
-            if (!step) {
-              throw new SignalRetryExhaustedError({
-                url,
-                cause: error instanceof Error ? error : undefined,
-              });
-            }
-
-            log(`NTFY: retry #${step.attempt} in ${Math.round(step.delay)}ms`);
-            await new Promise<void>((resolve) => {
-              timers.retry = setTimeout(() => {
-                timers.retry = undefined;
-                resolve();
-              }, step.delay);
-            });
-          }
-        }
-
-        throw new SignalTeardownError({ url });
-      };
-
-      const open = () => {
-        connection?.close();
-        connection = undefined;
-        timers.clearAll();
-
-        log("NTFY: connecting to WebSocket", wsUrl);
-        const ws = new WebSocket(wsUrl);
-
-        connection = ws;
-
-        ws.addEventListener("message", (event) => {
-          const data = JSON.parse(event.data as string) as NtfyMessage;
-
-          if (data.event === "open") {
-            schedulePing(ws);
-
-            if (setupDone) {
-              emitter.emit("reconnected");
-            }
-            else {
-              setupDone = true;
-            }
-
-            if (openResolver) {
-              openResolver.resolve();
-              openResolver = undefined;
-            }
-
-            return;
-          }
-
-          if (data.event === "message") {
-            events.emit("message", data.message);
-          }
-        });
-
-        ws.addEventListener("close", () => {
-          timers.clearAll();
-
-          if (teardownAc?.signal.aborted) return;
-
-          if (openResolver) {
-            openResolver.reject(new SignalConnectionLostError({ url }));
-            openResolver = undefined;
-          }
-
-          log("NTFY: WebSocket closed unexpectedly");
-
-          if (setupDone) emitter.emit("reconnecting");
-
-          if (setupDone && !reconnectPromise) {
-            reconnectPromise = (async () => {
-              try {
-                await connectWithRetry();
-              }
-              catch {
-                emitter.emit("error", new SignalRetryExhaustedError({ url }));
-              }
-              finally {
-                reconnectPromise = undefined;
-              }
-            })();
-          }
-        });
-
-        ws.addEventListener("error", () => {
-          log("NTFY: WebSocket error");
-        });
-      };
-
       if (setupDone) return Promise.resolve();
 
-      if (!setupPromise) {
-        setupPromise = (async () => {
-          try {
-            await connectWithRetry();
-          }
-          finally {
-            setupPromise = undefined;
-          }
-        })();
-      }
+      setupPromise ??= connectWithRetry().finally(() => {
+        setupPromise = undefined;
+      });
 
       return setupPromise;
     },
@@ -274,40 +214,23 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       setupDone = false;
       setupPromise = undefined;
       reconnectPromise = undefined;
-      timers.clearAll();
+      clearPing();
       connection?.close();
       connection = undefined;
-
-      if (openResolver) {
-        openResolver.reject(new SignalTeardownError({ url }));
-        openResolver = undefined;
-      }
     },
     async publish(body) {
-      if (!connection) {
-        throw new SignalNoConnectionError();
-      }
+      if (!connection) throw new SignalNoConnectionError();
 
       const response = await fetch(
-        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`
-        + (connectionInfo.parameters ?? ""),
-        {
-          method: "POST",
-          body,
-          headers: { "Content-Type": "application/json" },
-        },
+        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}` + (connectionInfo.parameters ?? ""),
+        { method: "POST", body, headers: { "Content-Type": "application/json" } },
       );
 
       if (!response.ok) {
-        throw new SignalPublishError({
-          url,
-          cause: new Error(`NTFY: publish failed with HTTP ${response.status}`),
-        });
+        throw new SignalPublishError({ url, cause: new Error(`NTFY: publish failed with HTTP ${response.status}`) });
       }
     },
-    subscribe: (handler) => {
-      events.on("message", handler);
-    },
+    subscribe: (handler) => { events.on("message", handler); },
   });
 };
 

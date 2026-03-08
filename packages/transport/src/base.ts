@@ -16,17 +16,17 @@ import type { WebRTCConfig } from "./webrtc/index.js";
 
 export type TransportMessage =
   | {
-      type: "offer";
-      payload: string;
-    }
+    type: "offer";
+    payload: string;
+  }
   | {
-      type: "answer";
-      payload: string;
-    }
+    type: "answer";
+    payload: string;
+  }
   | {
-      type: "candidate";
-      payload: string;
-    };
+    type: "candidate";
+    payload: string;
+  };
 export type TransportLayer = {
   type: string;
   setup: () => MaybePromise<void>;
@@ -68,112 +68,116 @@ export type TransportLayerBaseInit = (
  *
  * https://openlv.sh/api/transport
  */
-export const createTransportBase =
-  (init: TransportLayerBaseInit): TLayer =>
-  ({ encrypt, decrypt, subsend, isHost, onmessage }) => {
-    const emitter = new EventEmitter<TLayerEventMap>();
-    const internalEmitter = new EventEmitter<TransportLayerBaseEventMap>();
-    let state: TransportState = TRANSPORT_STATE.STANDBY;
+export const createTransportBase
+  = (init: TransportLayerBaseInit): TLayer =>
+    ({ encrypt, decrypt, subsend, isHost, onmessage }) => {
+      const emitter = new EventEmitter<TLayerEventMap>();
+      const internalEmitter = new EventEmitter<TransportLayerBaseEventMap>();
+      let state: TransportState = TRANSPORT_STATE.STANDBY;
 
-    const setState = (newState: TransportState) => {
-      state = newState;
-      emitter.emit("state_change", newState);
-    };
+      const setState = (newState: TransportState) => {
+        state = newState;
+        emitter.emit("state_change", newState);
+      };
 
-    internalEmitter.on("offer", (offer) => {
-      subsend({ type: "offer", payload: offer });
-    });
-    internalEmitter.on("answer", (answer) => {
-      subsend({ type: "answer", payload: answer });
-    });
-    internalEmitter.on("candidate", (candidate) => {
-      subsend({ type: "candidate", payload: candidate });
-    });
-    internalEmitter.on("connected", () => {
-      setState(TRANSPORT_STATE.CONNECTED);
-    });
-    internalEmitter.on("error", (error) => {
-      setState(TRANSPORT_STATE.ERROR);
-      emitter.emit("error", error);
-    });
-    internalEmitter.on("message", async (message) => {
-      let data: string;
+      internalEmitter.on("offer", (offer) => {
+        subsend({ type: "offer", payload: offer });
+      });
+      internalEmitter.on("answer", (answer) => {
+        subsend({ type: "answer", payload: answer });
+      });
+      internalEmitter.on("candidate", (candidate) => {
+        subsend({ type: "candidate", payload: candidate });
+      });
+      internalEmitter.on("connected", () => {
+        setState(TRANSPORT_STATE.CONNECTED);
+      });
+      internalEmitter.on("error", (error) => {
+        setState(TRANSPORT_STATE.ERROR);
+        emitter.emit("error", error);
+      });
+      internalEmitter.on("message", async (message) => {
+        let data: string;
 
-      try {
-        data = await decrypt(message);
-      } catch (error) {
-        internalEmitter.emit(
-          "error",
-          new TransportDecryptionError({
-            cause: error instanceof Error ? error : undefined,
-          }),
-        );
-
-        return;
-      }
-
-      try {
-        await onmessage(
-          JSON.parse(data) as {
-            type: string;
-            payload: object;
-            messageId: string;
-          },
-        );
-      } catch (error) {
-        // Ignore parse errors on internal messages
-      }
-    });
-
-    const {
-      setup,
-      teardown,
-      type,
-      send: sendLayer,
-      handle,
-    } = init({
-      emitter: internalEmitter,
-      isHost,
-    });
-
-    const send = async (message: object) => {
-      if (state !== TRANSPORT_STATE.CONNECTED)
-        throw new TransportNotConnectedError();
-
-      const payload = await encrypt(JSON.stringify(message));
-
-      await sendLayer(payload);
-    };
-
-    const waitFor = async (targetState: TransportState) =>
-      new Promise<void>((resolve) => {
-        if (state === targetState) {
-          resolve();
+        try {
+          data = await decrypt(message);
+        }
+        catch (error) {
+          internalEmitter.emit(
+            "error",
+            new TransportDecryptionError({
+              cause: error instanceof Error ? error : undefined,
+            }),
+          );
 
           return;
         }
 
-        const onChange = (newState: TransportState) => {
-          if (newState === targetState) {
-            emitter.off("state_change", onChange);
-            resolve();
-          }
-        };
-
-        emitter.on("state_change", onChange);
+        try {
+          await onmessage(
+            JSON.parse(data) as {
+              type: string;
+              payload: object;
+              messageId: string;
+            },
+          );
+        }
+        catch {
+        // Ignore parse errors on internal messages
+        }
       });
 
-    return {
-      type,
-      async setup() {
-        setState(TRANSPORT_STATE.CONNECTING);
-        await setup();
-        setState(TRANSPORT_STATE.READY);
-      },
-      teardown,
-      handle,
-      send,
-      waitFor,
-      emitter,
+      const {
+        setup,
+        teardown,
+        type,
+        send: sendLayer,
+        handle,
+      } = init({
+        emitter: internalEmitter,
+        isHost,
+      });
+
+      const send = async (message: object) => {
+        if (state !== TRANSPORT_STATE.CONNECTED)
+          throw new TransportNotConnectedError();
+
+        const payload = await encrypt(JSON.stringify(message));
+
+        await sendLayer(payload);
+      };
+
+      const waitFor = async (targetState: TransportState) =>
+        new Promise<void>((resolve) => {
+          if (state === targetState) {
+            resolve();
+
+            return;
+          }
+
+          const ac = new AbortController();
+          const onChange = (newState: TransportState) => {
+            if (newState === targetState) {
+              ac.abort();
+              resolve();
+            }
+          };
+
+          emitter.on("state_change", onChange);
+          ac.signal.addEventListener("abort", () => emitter.off("state_change", onChange), { once: true });
+        });
+
+      return {
+        type,
+        async setup() {
+          setState(TRANSPORT_STATE.CONNECTING);
+          await setup();
+          setState(TRANSPORT_STATE.READY);
+        },
+        teardown,
+        handle,
+        send,
+        waitFor,
+        emitter,
+      };
     };
-  };

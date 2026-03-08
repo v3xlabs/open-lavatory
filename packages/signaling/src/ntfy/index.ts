@@ -63,7 +63,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   const events = new EventEmitter<{ message: string; }>();
 
   let connection: WebSocket | undefined;
-  let intentionalClose = false;
+  let teardownAc: AbortController | undefined;
   let setupDone = false;
   let setupPromise: Promise<void> | undefined;
   let reconnectPromise: Promise<void> | undefined;
@@ -115,14 +115,14 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   };
 
   const schedulePing = (ws: WebSocket) => {
-    if (timers.ping || intentionalClose || ws !== connection) return;
+    if (timers.ping || teardownAc?.signal.aborted || ws !== connection) return;
 
     timers.ping = setTimeout(async () => {
       timers.ping = undefined;
 
       const healthy = await pingOnce();
 
-      if (intentionalClose || ws !== connection) return;
+      if (teardownAc?.signal.aborted || ws !== connection) return;
 
       if (!healthy) {
         log("NTFY: ping failed, closing connection");
@@ -138,7 +138,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   return createSignalingLayer({
     type: "ntfy",
     setup(callbacks: SignalingBaseCallbacks) {
-      intentionalClose = false;
+      teardownAc = new AbortController();
 
       const waitForOpen = () =>
         new Promise<void>((resolve, reject) => {
@@ -148,7 +148,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       const connectWithRetry = async () => {
         retrier.reset();
 
-        while (!intentionalClose) {
+        while (!teardownAc!.signal.aborted) {
           open();
 
           try {
@@ -157,7 +157,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             return;
           }
           catch (error) {
-            if (intentionalClose) break;
+            if (teardownAc!.signal.aborted) break;
 
             const step = retrier.nextDelay();
 
@@ -220,7 +220,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         ws.addEventListener("close", () => {
           timers.clearAll();
 
-          if (intentionalClose) return;
+          if (teardownAc?.signal.aborted) return;
 
           if (openResolver) {
             openResolver.reject(new SignalConnectionLostError({ url }));
@@ -267,7 +267,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       return setupPromise;
     },
     teardown() {
-      intentionalClose = true;
+      teardownAc?.abort();
+      teardownAc = undefined;
       setupDone = false;
       setupPromise = undefined;
       reconnectPromise = undefined;

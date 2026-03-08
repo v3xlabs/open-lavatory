@@ -112,6 +112,7 @@ export const createSession = async (
   let status: SessionState = SESSION_STATE.CREATED;
   let transportStarted = false;
   let transportRetryTimer: ReturnType<typeof setTimeout> | undefined;
+  const sessionAc = new AbortController();
   const transportRetrier = createRetrier({
     maxRetries: 5,
     initialDelayMs: 1000,
@@ -245,6 +246,10 @@ export const createSession = async (
 
   transport.emitter.on("state_change", onTransportStateChange);
   transport.emitter.on("error", onTransportError);
+  sessionAc.signal.addEventListener("abort", () => {
+    transport.emitter.off("state_change", onTransportStateChange);
+    transport.emitter.off("error", onTransportError);
+  }, { once: true });
 
   const startTransport = async () => {
     transportStarted = true;
@@ -324,10 +329,13 @@ export const createSession = async (
       log("connecting to session, isHost:", isHost);
 
       signal.on("message", onSignalMessage);
-
       signal.on("state_change", onSignalStateChange);
-
       signal.on("error", onSignalError);
+      sessionAc.signal.addEventListener("abort", () => {
+        signal.off("message", onSignalMessage);
+        signal.off("state_change", onSignalStateChange);
+        signal.off("error", onSignalError);
+      }, { once: true });
 
       try {
         await signal.setup();
@@ -345,13 +353,7 @@ export const createSession = async (
     async close() {
       log("session teardown");
       clearTimeout(transportRetryTimer);
-
-      signal.off("message", onSignalMessage);
-      signal.off("state_change", onSignalStateChange);
-      signal.off("error", onSignalError);
-      transport.emitter.off("state_change", onTransportStateChange);
-      transport.emitter.off("error", onTransportError);
-
+      sessionAc.abort();
       await signal.teardown();
       transport.teardown();
       updateStatus(SESSION_STATE.DISCONNECTED);
@@ -393,24 +395,32 @@ export const createSession = async (
           return;
         }
 
+        const ac = new AbortController();
         const onStateChange = (state?: SessionStateObject) => {
-          if (state?.status === SESSION_STATE.CONNECTED) {
-            emitter.off("state_change", onStateChange);
-            resolve();
-          }
+          switch (state?.status) {
+            case SESSION_STATE.CONNECTED: {
+              ac.abort();
+              resolve();
 
-          if (state?.status === SESSION_STATE.ERROR) {
-            emitter.off("state_change", onStateChange);
-            reject(state.error ?? new SessionSetupError());
-          }
+              break;
+            }
+            case SESSION_STATE.ERROR: {
+              ac.abort();
+              reject(state.error ?? new SessionSetupError());
 
-          if (state?.status === SESSION_STATE.DISCONNECTED) {
-            emitter.off("state_change", onStateChange);
-            reject(new SessionSetupError());
+              break;
+            }
+            case SESSION_STATE.DISCONNECTED: {
+              ac.abort();
+              reject(new SessionSetupError());
+
+              break;
+            }
           }
         };
 
         emitter.on("state_change", onStateChange);
+        ac.signal.addEventListener("abort", () => emitter.off("state_change", onStateChange), { once: true });
       }),
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
@@ -429,31 +439,32 @@ export const createSession = async (
       await transport.send(sessionMessage);
 
       return new Promise((resolve, reject) => {
+        const ac = new AbortController();
+
         const onMessage = (msg: SessionMessage) => {
           if (msg.messageId === randomID && msg.type === "response") {
-            cleanup();
+            ac.abort();
             resolve(msg.payload);
           }
         };
 
         const onSendTransportError = (error: BaseError) => {
-          cleanup();
+          ac.abort();
           reject(error);
         };
 
-        const cleanup = () => {
-          messages.off("message", onMessage);
-          transport.emitter.off("error", onSendTransportError);
-          clearTimeout(timer);
-        };
+        const timer = setTimeout(() => {
+          ac.abort();
+          reject(new SessionTimeoutError({ timeout }));
+        }, timeout);
 
         messages.on("message", onMessage);
         transport.emitter.on("error", onSendTransportError);
-
-        const timer = setTimeout(() => {
-          cleanup();
-          reject(new SessionTimeoutError({ timeout }));
-        }, timeout);
+        ac.signal.addEventListener("abort", () => {
+          messages.off("message", onMessage);
+          transport.emitter.off("error", onSendTransportError);
+          clearTimeout(timer);
+        }, { once: true });
       });
     },
     _internal: {

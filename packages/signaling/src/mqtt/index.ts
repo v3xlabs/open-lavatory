@@ -2,12 +2,13 @@ import {
   SignalConnectionLostError,
   SignalNoConnectionError,
 } from "@openlv/core/errors";
+import { EventEmitter } from "eventemitter3";
 import { createMqtt, type MqttClient } from "websocket-mqtt";
 
 import type {
   CreateSignalLayerFn,
   SignalBaseProperties,
-  SignalingBaseCallbacks,
+  SignalingBaseEvents,
 } from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
@@ -21,6 +22,7 @@ export const mqtt: CreateSignalLayerFn = ({
   url = "wss://test.mosquitto.org:8081/mqtt",
   topic,
 }: SignalBaseProperties) => {
+  const emitter = new EventEmitter<SignalingBaseEvents>();
   let connection: MqttClient | undefined;
   let subscribedHandler: ((payload: string) => void) | undefined;
   let isTearingDown = false;
@@ -28,7 +30,8 @@ export const mqtt: CreateSignalLayerFn = ({
 
   return createSignalingLayer({
     type: "mqtt",
-    setup(callbacks: SignalingBaseCallbacks) {
+    emitter,
+    setup() {
       isTearingDown = false;
 
       connection = createMqtt({
@@ -60,10 +63,10 @@ export const mqtt: CreateSignalLayerFn = ({
           connection!
             .subscribe(topic)
             .then(() => {
-              callbacks.onReconnected();
+              emitter.emit("reconnected");
             })
             .catch((error: unknown) => {
-              callbacks.onError(
+              emitter.emit("error",
                 new SignalConnectionLostError({
                   url,
                   cause:
@@ -73,7 +76,7 @@ export const mqtt: CreateSignalLayerFn = ({
             });
         }
         else {
-          callbacks.onReconnected();
+          emitter.emit("reconnected");
         }
       });
 
@@ -82,7 +85,7 @@ export const mqtt: CreateSignalLayerFn = ({
           isReconnecting = true;
           pendingReconnect = true;
           log("MQTT: Connection went offline, reconnecting…");
-          callbacks.onReconnecting();
+          emitter.emit("reconnecting");
         }
       });
 
@@ -95,13 +98,13 @@ export const mqtt: CreateSignalLayerFn = ({
 
         if (isReconnecting && pendingReconnect) {
           isReconnecting = false;
-          callbacks.onError(new SignalConnectionLostError({ url }));
+          emitter.emit("error", new SignalConnectionLostError({ url }));
 
           return;
         }
 
         if (!isReconnecting) {
-          callbacks.onError(new SignalConnectionLostError({ url }));
+          emitter.emit("error", new SignalConnectionLostError({ url }));
         }
       });
 

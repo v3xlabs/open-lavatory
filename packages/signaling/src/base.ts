@@ -19,15 +19,16 @@ export type SignalBaseProperties = {
   url: string;
 };
 
-export type SignalingBaseCallbacks = {
-  onError: (error: BaseError) => void;
-  onReconnecting: () => void;
-  onReconnected: () => void;
+export type SignalingBaseEvents = {
+  error: (error: BaseError) => void;
+  reconnecting: () => void;
+  reconnected: () => void;
 };
 
 export type SignalingBaseLayer = {
   type: string;
-  setup: (callbacks: SignalingBaseCallbacks) => MaybePromise<void>;
+  emitter: EventEmitter<SignalingBaseEvents>;
+  setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
   publish: (payload: string) => MaybePromise<void>;
   subscribe: (handler: (payload: string) => void) => MaybePromise<void>;
@@ -97,23 +98,21 @@ export const createSignalingLayer
       };
       const handshakeKey = k || undefined;
 
-      const adapterCallbacks: SignalingBaseCallbacks = {
-        onError(error) {
-          setState(SIGNAL_STATE.ERROR);
-          emitter.emit("error", error);
-        },
-        onReconnecting() {
-          setState(SIGNAL_STATE.RECONNECTING);
-        },
-        onReconnected() {
-          if (canEncrypt()) {
-            setState(SIGNAL_STATE.ENCRYPTED);
-          }
-          else {
-            setState(SIGNAL_STATE.READY);
-          }
-        },
-      };
+      init.emitter.on("error", (error) => {
+        setState(SIGNAL_STATE.ERROR);
+        emitter.emit("error", error);
+      });
+      init.emitter.on("reconnecting", () => {
+        setState(SIGNAL_STATE.RECONNECTING);
+      });
+      init.emitter.on("reconnected", () => {
+        if (canEncrypt()) {
+          setState(SIGNAL_STATE.ENCRYPTED);
+        }
+        else {
+          setState(SIGNAL_STATE.READY);
+        }
+      });
 
       const send = async (
         method: "handshake" | "encrypted",
@@ -252,7 +251,7 @@ export const createSignalingLayer
         type: init.type,
         async setup() {
           setState(SIGNAL_STATE.CONNECTING);
-          await init.setup(adapterCallbacks);
+          await init.setup();
           await init.subscribe(handleReceive);
 
           if (!canEncrypt()) {

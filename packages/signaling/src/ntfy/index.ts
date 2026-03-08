@@ -9,7 +9,7 @@ import {
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 
-import type { CreateSignalLayerFn, SignalingBaseCallbacks } from "../base.js";
+import type { CreateSignalLayerFn, SignalingBaseEvents } from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 import { parseNtfyUrl } from "./url.js";
@@ -60,6 +60,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       + (connectionInfo.parameters ?? "");
   const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/v1/health`;
 
+  const emitter = new EventEmitter<SignalingBaseEvents>();
   const events = new EventEmitter<{ message: string; }>();
 
   let connection: WebSocket | undefined;
@@ -137,7 +138,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
   return createSignalingLayer({
     type: "ntfy",
-    setup(callbacks: SignalingBaseCallbacks) {
+    emitter,
+    setup() {
       teardownAc = new AbortController();
 
       const waitForOpen = () =>
@@ -198,7 +200,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             schedulePing(ws);
 
             if (setupDone) {
-              callbacks.onReconnected();
+              emitter.emit("reconnected");
             }
             else {
               setupDone = true;
@@ -229,7 +231,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
           log("NTFY: WebSocket closed unexpectedly");
 
-          if (setupDone) callbacks.onReconnecting();
+          if (setupDone) emitter.emit("reconnecting");
 
           if (setupDone && !reconnectPromise) {
             reconnectPromise = (async () => {
@@ -237,7 +239,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
                 await connectWithRetry();
               }
               catch {
-                callbacks.onError(new SignalRetryExhaustedError({ url }));
+                emitter.emit("error", new SignalRetryExhaustedError({ url }));
               }
               finally {
                 reconnectPromise = undefined;

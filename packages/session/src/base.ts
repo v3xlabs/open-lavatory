@@ -429,12 +429,6 @@ export const createSession = async (
       await transport.send(sessionMessage);
 
       return new Promise((resolve, reject) => {
-        const cleanup = () => {
-          messages.off("message", onMessage);
-          transport.emitter.off("error", onSendTransportError);
-          clearTimeout(timer);
-        };
-
         const onMessage = (msg: SessionMessage) => {
           if (msg.messageId === randomID && msg.type === "response") {
             cleanup();
@@ -445,6 +439,12 @@ export const createSession = async (
         const onSendTransportError = (error: BaseError) => {
           cleanup();
           reject(error);
+        };
+
+        const cleanup = () => {
+          messages.off("message", onMessage);
+          transport.emitter.off("error", onSendTransportError);
+          clearTimeout(timer);
         };
 
         messages.on("message", onMessage);

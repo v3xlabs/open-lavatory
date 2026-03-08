@@ -1,3 +1,4 @@
+import { createRetrier } from "@openlv/core";
 import {
   SignalConnectionLostError,
   SignalNoConnectionError,
@@ -7,8 +8,6 @@ import {
 } from "@openlv/core/errors";
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
-
-import { createRetrier } from "@openlv/core";
 
 import type { CreateSignalLayerFn, SignalingBaseCallbacks } from "../base.js";
 import { createSignalingLayer } from "../index.js";
@@ -56,12 +55,12 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
     .with("http", () => "ws" as const)
     .exhaustive();
 
-  const wsUrl =
-    `${wsProtocol}://${connectionInfo.host}/${topic}/ws` +
-    (connectionInfo.parameters ?? "");
+  const wsUrl
+    = `${wsProtocol}://${connectionInfo.host}/${topic}/ws`
+      + (connectionInfo.parameters ?? "");
   const pingUrl = `${connectionInfo.protocol}://${connectionInfo.host}/v1/health`;
 
-  const events = new EventEmitter<{ message: string }>();
+  const events = new EventEmitter<{ message: string; }>();
 
   let connection: WebSocket | undefined;
   let intentionalClose = false;
@@ -69,7 +68,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   let setupPromise: Promise<void> | undefined;
   let reconnectPromise: Promise<void> | undefined;
   let openResolver:
-    | { resolve: () => void; reject: (err: Error) => void }
+    | { resolve: () => void; reject: (err: Error) => void; }
     | undefined;
 
   const retrier = createRetrier({
@@ -105,10 +104,12 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       });
       const json = await response.json();
 
-      return (json as { healthy?: boolean }).healthy === true;
-    } catch {
+      return (json as { healthy?: boolean; }).healthy === true;
+    }
+    catch {
       return false;
-    } finally {
+    }
+    finally {
       clearTimeout(timeoutId);
     }
   };
@@ -154,7 +155,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             await waitForOpen();
 
             return;
-          } catch (error) {
+          }
+          catch (error) {
             if (intentionalClose) break;
 
             const step = retrier.nextDelay();
@@ -197,7 +199,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
             if (setupDone) {
               callbacks.onReconnected();
-            } else {
+            }
+            else {
               setupDone = true;
             }
 
@@ -232,9 +235,11 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
             reconnectPromise = (async () => {
               try {
                 await connectWithRetry();
-              } catch {
+              }
+              catch {
                 callbacks.onError(new SignalRetryExhaustedError({ url }));
-              } finally {
+              }
+              finally {
                 reconnectPromise = undefined;
               }
             })();
@@ -252,7 +257,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         setupPromise = (async () => {
           try {
             await connectWithRetry();
-          } finally {
+          }
+          finally {
             setupPromise = undefined;
           }
         })();
@@ -280,8 +286,8 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       }
 
       const response = await fetch(
-        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}` +
-          (connectionInfo.parameters ?? ""),
+        `${connectionInfo.protocol}://${connectionInfo.host}/${topic}`
+        + (connectionInfo.parameters ?? ""),
         {
           method: "POST",
           body,

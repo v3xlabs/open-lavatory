@@ -42,9 +42,11 @@ export const mqtt: CreateSignalLayerFn = ({
       });
 
       let setupDone = false;
+      let pendingReconnect = false;
 
       connection.on("connect", () => {
         isReconnecting = false;
+        pendingReconnect = false;
 
         if (!setupDone) {
           setupDone = true;
@@ -78,13 +80,27 @@ export const mqtt: CreateSignalLayerFn = ({
       connection.on("offline", () => {
         if (setupDone) {
           isReconnecting = true;
+          pendingReconnect = true;
           log("MQTT: Connection went offline, reconnecting…");
           callbacks.onReconnecting();
         }
       });
 
+      connection.on("reconnect", () => {
+        pendingReconnect = false;
+      });
+
       connection.on("close", () => {
-        if (setupDone && !isTearingDown && !isReconnecting) {
+        if (!setupDone || isTearingDown) return;
+
+        if (isReconnecting && pendingReconnect) {
+          isReconnecting = false;
+          callbacks.onError(new SignalConnectionLostError({ url }));
+
+          return;
+        }
+
+        if (!isReconnecting) {
           callbacks.onError(new SignalConnectionLostError({ url }));
         }
       });

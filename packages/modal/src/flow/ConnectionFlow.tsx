@@ -1,4 +1,5 @@
 import { PROVIDER_STATUS, type ProviderStatus } from "@openlv/provider";
+import { SESSION_STATE } from "@openlv/session";
 import {
   createSignal,
   Match,
@@ -9,6 +10,8 @@ import {
 
 import { UnknownState } from "../components/UnknownState.js";
 import { useModalContext } from "../context.jsx";
+import { useSession } from "../hooks/useSession.js";
+import { Button } from "../ui/Button.js";
 import { useTranslation } from "../utils/i18n.js";
 import { Connecting } from "./connecting.jsx";
 
@@ -27,6 +30,7 @@ const LoadingSpinner = () => (
 export const ConnectionFlow = (props: ConnectionFlowProps) => {
   const { t } = useTranslation();
   const { provider } = useModalContext();
+  const { status: sessionStatus } = useSession();
 
   const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(provider.getState().status);
 
@@ -51,6 +55,48 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
                 {t("connectionFlow.generatingKeys")}
               </p>
             </div>
+          </div>
+        </Match>
+        <Match when={sessionStatus()?.status === SESSION_STATE.RECONNECTING}>
+          <div class="flex flex-col items-center gap-4 p-6">
+            <LoadingSpinner />
+            <div class="text-center">
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+                {t("connectionFlow.reconnecting")}
+              </h3>
+              <p class="text-(--lv-text-muted) text-sm">
+                {t("connectionFlow.tryingToRestore")}
+              </p>
+            </div>
+            <Button
+              onClick={props.onBack}
+              $variant="secondary"
+              $size="lg"
+              class="w-full"
+            >
+              {t("connectionFlow.cancel")}
+            </Button>
+          </div>
+        </Match>
+        <Match when={sessionStatus()?.status === SESSION_STATE.ERROR}>
+          <div class="flex flex-col items-center gap-4 p-6">
+            <div class="text-center">
+              <div class="mb-4 text-4xl">⚠️</div>
+              <h3 class="mb-2 font-semibold text-(--lv-text-primary) text-lg">
+                {t("connectionFlow.connectionError")}
+              </h3>
+              <p class="mb-4 text-(--lv-text-muted) text-sm">
+                {t("connectionFlow.connectionErrorDescription")}
+              </p>
+            </div>
+            <Button
+              onClick={props.onBack}
+              $variant="secondary"
+              $size="lg"
+              class="w-full"
+            >
+              {t("connectionFlow.cancel")}
+            </Button>
           </div>
         </Match>
         <Match when={providerStatus() === PROVIDER_STATUS.CONNECTING}>
@@ -81,9 +127,10 @@ export const ConnectionFlow = (props: ConnectionFlowProps) => {
               </p>
             </div>
             <Button
-              type="button"
               onClick={props.onClose}
-              class="w-full rounded-lg bg-(--lv-control-button-secondary-background) px-4 py-2 font-semibold text-(--lv-text-primary) text-sm transition hover:bg-(--lv-control-button-primary-background-hover)"
+              $variant="secondary"
+              $size="lg"
+              class="w-full"
             >
               {t("common.close")}
             </Button>

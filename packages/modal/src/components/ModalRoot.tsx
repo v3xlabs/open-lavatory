@@ -317,9 +317,10 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           PROVIDER_STATUS.CREATING,
           PROVIDER_STATUS.CONNECTING,
           PROVIDER_STATUS.CONNECTED,
+          PROVIDER_STATUS.ERROR,
         ),
         () => (
-          <ConnectionFlow onClose={props.onClose} onCopy={handleCopy} />
+          <ConnectionFlow onClose={props.onClose} onBack={() => provider.closeSession()} onCopy={handleCopy} />
         ),
       )
       .otherwise(state => <UnknownState state={state || "unknown status"} />);

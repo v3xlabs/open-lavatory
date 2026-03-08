@@ -65,7 +65,6 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   let connection: WebSocket | undefined;
   let teardownAc: AbortController | undefined;
   let setupDone = false;
-  let setupPromise: Promise<void> | undefined;
   let reconnectPromise: Promise<void> | undefined;
   let pingTimer: ReturnType<typeof setTimeout> | undefined;
 
@@ -202,17 +201,12 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
       if (setupDone) return Promise.resolve();
 
-      setupPromise ??= connectWithRetry().finally(() => {
-        setupPromise = undefined;
-      });
-
-      return setupPromise;
+      return connectWithRetry();
     },
     teardown() {
       teardownAc?.abort();
       teardownAc = undefined;
       setupDone = false;
-      setupPromise = undefined;
       reconnectPromise = undefined;
       clearPing();
       connection?.close();

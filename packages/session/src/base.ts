@@ -214,6 +214,7 @@ export const createSession = async (
     if (state === TRANSPORT_STATE.CONNECTED) {
       transportRetrier.reset();
       updateStatus(SESSION_STATE.CONNECTED);
+      signal.teardown();
     }
   };
 

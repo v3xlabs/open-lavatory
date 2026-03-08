@@ -84,10 +84,10 @@ const useDynamicDialogHeight = () => {
 
     if (nextHeight > 0) {
       setHeight(previousHeight =>
-      (typeof previousHeight === "number"
-        && Math.abs(previousHeight - nextHeight) < 0.5
-        ? previousHeight
-        : nextHeight),
+        (typeof previousHeight === "number"
+          && Math.abs(previousHeight - nextHeight) < 0.5
+          ? previousHeight
+          : nextHeight),
       );
     }
   };
@@ -211,10 +211,10 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
     const currentHeight = height();
     const isHeightChanging
       = previousHeight !== undefined
-      && currentHeight !== previousHeight
-      && currentHeight > 0
-      && previousHeight > 0
-      && Math.abs(currentHeight - previousHeight) > 0.5;
+        && currentHeight !== previousHeight
+        && currentHeight > 0
+        && previousHeight > 0
+        && Math.abs(currentHeight - previousHeight) > 0.5;
 
     if (isHeightChanging) {
       setShouldHideOverflow(true);

@@ -230,7 +230,9 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         throw new SignalPublishError({ url, cause: new Error(`NTFY: publish failed with HTTP ${response.status}`) });
       }
     },
-    subscribe: (handler) => { events.on("message", handler); },
+    subscribe: (handler) => {
+      events.on("message", handler);
+    },
   });
 };
 

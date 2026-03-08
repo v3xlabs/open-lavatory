@@ -223,23 +223,26 @@ export const createSession = async (
     transportStarted = false;
     transport.teardown();
 
-    const signalState = signal.getState().state;
-    const step
-      = signalState === SIGNAL_STATE.ENCRYPTED
-        ? transportRetrier.nextDelay()
-        : undefined;
+    const step = transportRetrier.nextDelay();
 
     if (step) {
       log(`transport retry ${step.attempt}/5 in ${Math.round(step.delay)}ms`);
       updateStatus(SESSION_STATE.RECONNECTING);
-      transportRetryTimer = setTimeout(() => startTransport(), step.delay);
-    }
-    else if (signalState === SIGNAL_STATE.RECONNECTING) {
-      // Signal is reconnecting; transport will restart when signaling is back
-      updateStatus(SESSION_STATE.RECONNECTING);
+      transportRetryTimer = setTimeout(async () => {
+        try {
+          await signal.setup();
+        }
+        catch (setupError) {
+          const err = new SessionSetupError({
+            cause: setupError instanceof Error ? setupError : undefined,
+          });
+
+          updateStatus(SESSION_STATE.ERROR, err);
+          emitter.emit("error", err);
+        }
+      }, step.delay);
     }
     else {
-      clearTimeout(transportRetryTimer);
       updateStatus(SESSION_STATE.ERROR, error);
       emitter.emit("error", error);
     }

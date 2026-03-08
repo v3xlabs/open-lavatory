@@ -106,7 +106,7 @@ export const mqtt: CreateSignalLayerFn = ({
       });
 
       connection.on("error", (error) => {
-        console.error("MQTT: error event", error);
+        log("MQTT: error event", error);
       });
 
       return connection.connect();

@@ -429,8 +429,6 @@ export const createSession = async (
       await transport.send(sessionMessage);
 
       return new Promise((resolve, reject) => {
-        let settled = false;
-
         const cleanup = () => {
           messages.off("message", onMessage);
           transport.emitter.off("error", onSendTransportError);
@@ -438,34 +436,23 @@ export const createSession = async (
         };
 
         const onMessage = (msg: SessionMessage) => {
-          if (
-            !settled
-            && msg.messageId === randomID
-            && msg.type === "response"
-          ) {
-            settled = true;
+          if (msg.messageId === randomID && msg.type === "response") {
             cleanup();
             resolve(msg.payload);
           }
         };
 
         const onSendTransportError = (error: BaseError) => {
-          if (!settled) {
-            settled = true;
-            cleanup();
-            reject(error);
-          }
+          cleanup();
+          reject(error);
         };
 
         messages.on("message", onMessage);
         transport.emitter.on("error", onSendTransportError);
 
         const timer = setTimeout(() => {
-          if (!settled) {
-            settled = true;
-            cleanup();
-            reject(new SessionTimeoutError({ timeout }));
-          }
+          cleanup();
+          reject(new SessionTimeoutError({ timeout }));
         }, timeout);
       });
     },

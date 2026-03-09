@@ -16,14 +16,7 @@ export type {
   SessionState,
   SessionStateObject,
 } from "@openlv/session";
-
-export const SESSION_STATE = {
-  CREATED: "created",
-  SIGNALING: "signaling",
-  READY: "ready",
-  CONNECTED: "connected",
-  DISCONNECTED: "disconnected",
-} as const;
+export { SESSION_STATE } from "@openlv/session";
 
 type SessionModule = typeof import("@openlv/session");
 

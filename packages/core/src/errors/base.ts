@@ -3,9 +3,7 @@ import packageJson from "../../package.json" with { type: "json" };
 const version = `openlv@${packageJson.version}`;
 
 type ErrorConfig = {
-  getDocsUrl?:
-        | ((args: BaseErrorParameters) => string | undefined)
-        | undefined;
+  getDocsUrl?: ((args: BaseErrorParameters) => string | undefined) | undefined;
   version?: string | undefined;
 };
 
@@ -26,7 +24,7 @@ export const setErrorConfig = (config: ErrorConfig) => {
   errorConfig = config;
 };
 
-type BaseErrorParameters = {
+export type BaseErrorParameters = {
   cause?: BaseError | Error | undefined;
   details?: string | undefined;
   docsBaseUrl?: string | undefined;

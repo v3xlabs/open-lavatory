@@ -1,5 +1,6 @@
 /* eslint-disable unicorn/consistent-function-scoping */
 import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
+import { ProviderError, ProviderNoSessionError } from "@openlv/core/errors";
 import {
   createSession,
   type Session,
@@ -140,7 +141,7 @@ export const createProvider = (
       })) as Address[];
     }
 
-    throw new Error("No session");
+    throw new ProviderNoSessionError();
   };
 
   const start = async (
@@ -216,13 +217,9 @@ export const createProvider = (
           return "0x1";
         })
         .with({ method: "wallet_requestPermissions" }, () => {
-          throw new Error("Not implemented");
-          // console.log("wallet_requestPermissions", v.params);
-
-          // return [] as ExtractReturnType<
-          //   RpcSchema,
-          //   "wallet_requestPermissions"
-          // >;
+          throw new ProviderError(
+            "Method not implemented: wallet_requestPermissions",
+          );
         })
         .with({ method: "wallet_revokePermissions" }, async () => {
           await closeSession();
@@ -271,7 +268,7 @@ export const createProvider = (
             return result;
           }
 
-          throw new Error(`Method ${v.method} not supported`);
+          throw new ProviderError(`Method ${v.method} not supported`);
         }) as unknown as ExtractReturnType<RpcSchema, typeof request.method>
     );
   };

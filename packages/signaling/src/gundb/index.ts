@@ -1,7 +1,10 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
 import Gun, { type IGun, type IGunInstance } from "gun";
 
-import { createSignalingLayer, type CreateSignalLayerFn } from "../base.js";
+import {
+  createSignalingLayer,
+  type CreateSignalLayerFn,
+} from "../base.js";
 import { log } from "../utils/log.js";
 
 /**
@@ -11,10 +14,11 @@ import { log } from "../utils/log.js";
 export const gundb: CreateSignalLayerFn = ({
   topic,
   url = "wss://try.axe.eco/gun",
-}) => {
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+}) => createSignalingLayer(({ emitter: _emitter }) => {
   let connection: IGunInstance | undefined;
 
-  return createSignalingLayer({
+  return {
     type: "gundb",
     async setup() {
       log("GUNDB: Setting up");
@@ -51,8 +55,8 @@ export const gundb: CreateSignalLayerFn = ({
         handler(message);
       });
     },
-  });
-};
+  };
+});
 
 Object.assign(gundb, {
   __name: "gundb",

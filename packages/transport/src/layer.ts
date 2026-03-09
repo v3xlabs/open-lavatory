@@ -1,4 +1,6 @@
 import type { DecryptionKey, EncryptionKey } from "@openlv/core/encryption";
+import type { BaseError } from "@openlv/core/errors";
+import type { MaybePromise } from "viem";
 
 import type { TransportMessage } from "./base.js";
 
@@ -14,6 +16,7 @@ export type TransportState =
 
 export type TLayerEventMap = {
   state_change: (state: TransportState) => void;
+  error: (error: BaseError) => void;
 };
 
 export type TransportLayerParameters = {
@@ -21,5 +24,9 @@ export type TransportLayerParameters = {
   encrypt: EncryptionKey["encrypt"];
   decrypt: DecryptionKey["decrypt"];
   subsend: (message: TransportMessage) => Promise<void>;
-  onmessage: (message: { type: string; payload: object; messageId: string; }) => void;
+  onmessage: (message: {
+    type: string;
+    payload: object;
+    messageId: string;
+  }) => MaybePromise<void>;
 };

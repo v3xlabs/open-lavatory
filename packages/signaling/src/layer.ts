@@ -1,3 +1,5 @@
+import type { BaseError } from "@openlv/core/errors";
+
 export const SIGNAL_STATE = {
   STANDBY: "standby",
   CONNECTING: "connecting",
@@ -5,6 +7,7 @@ export const SIGNAL_STATE = {
   HANDSHAKE: "handshake",
   HANDSHAKE_PARTIAL: "handshake-partial",
   ENCRYPTED: "encrypted",
+  RECONNECTING: "reconnecting",
   ERROR: "error",
 } as const;
 export type SignalState = (typeof SIGNAL_STATE)[keyof typeof SIGNAL_STATE];
@@ -12,4 +15,5 @@ export type SignalState = (typeof SIGNAL_STATE)[keyof typeof SIGNAL_STATE];
 export type SignalEventMap = {
   state_change: (state: SignalState) => void;
   message: (message: object) => void;
+  error: (error: BaseError) => void;
 };

@@ -1,7 +1,13 @@
-import { SignalNoConnectionError } from "@openlv/core/errors";
+import {
+  SignalConnectionLostError,
+  SignalNoConnectionError,
+} from "@openlv/core/errors";
 import { createMqtt, type MqttClient } from "websocket-mqtt";
 
-import type { CreateSignalLayerFn, SignalBaseProperties } from "../base.js";
+import type {
+  CreateSignalLayerFn,
+  SignalBaseProperties,
+} from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 
@@ -13,64 +19,72 @@ import { log } from "../utils/log.js";
 export const mqtt: CreateSignalLayerFn = ({
   url = "wss://test.mosquitto.org:8081/mqtt",
   topic,
-}: SignalBaseProperties) => {
+}: SignalBaseProperties) => createSignalingLayer(({ emitter }) => {
   let connection: MqttClient | undefined;
+  let subscribedHandler: ((payload: string) => void) | undefined;
 
-  return createSignalingLayer({
+  return {
     type: "mqtt",
     setup() {
-      return new Promise((resolve, reject) => {
-        connection = createMqtt({
-          url,
-          // reconnectOnConnackError: false,
-          // reconnectPeriod: 5000,
-          // connectTimeout: 5000,
-        });
-
-        connection.on("connect", () => {
-          resolve();
-        });
-        connection.on("error", (error) => {
-          console.error("MQTT: Error connecting to URL", error);
-          reject(error);
-        });
-
-        connection.on("close", () => {
-          reject(new Error("MQTT: Closed connection to URL"));
-        });
-
-        connection.connect();
+      connection = createMqtt({
+        url,
+        retry: { retries: 5, initialDelayMs: 1000, jitter: true },
+        keepalive: 2,
       });
+
+      connection.on("connect", () => {
+        if (!subscribedHandler) return;
+
+        log("MQTT: Reconnected, re-subscribing to topic", topic);
+        connection!.subscribe(topic)
+          .then(() => emitter.emit("reconnected"))
+          .catch((error: unknown) => emitter.emit("error", new SignalConnectionLostError({
+            url,
+            cause: error instanceof Error ? error : new Error(String(error)),
+          })));
+      });
+
+      connection.on("offline", () => {
+        if (subscribedHandler) {
+          log("MQTT: Connection went offline, reconnecting…");
+          emitter.emit("reconnecting");
+        }
+      });
+
+      connection.on("close", () => {
+        if (subscribedHandler && connection)
+          emitter.emit("error", new SignalConnectionLostError({ url }));
+      });
+
+      connection.on("error", (error) => {
+        log("MQTT: error event", error);
+      });
+
+      return connection.connect();
     },
     teardown() {
+      subscribedHandler = undefined;
       connection?.close();
       connection = undefined;
     },
     async publish(payload) {
-      if (!connection) {
-        throw new Error("MQTT: No connection to publish to");
-      }
+      if (!connection) throw new SignalNoConnectionError();
 
-      connection?.publish(topic, payload, { retain: false });
+      connection.publish(topic, payload, { retain: false });
     },
     async subscribe(handler) {
       if (!connection) throw new SignalNoConnectionError();
 
+      subscribedHandler = handler;
       log("MQTT: Subscribing to topic", topic);
-
       connection.on("message", (receivedTopic, message) => {
-        log("MQTT: Received message on topic", topic);
-
         if (receivedTopic !== topic) return;
 
-        const decoded = new TextDecoder().decode(message);
-
-        handler(decoded);
+        handler(new TextDecoder().decode(message));
       });
-
-      await connection?.subscribe(topic);
+      await connection.subscribe(topic);
     },
-  });
-};
+  };
+});
 
 Object.defineProperty(mqtt, "__name", { value: "mqtt" });

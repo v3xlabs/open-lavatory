@@ -1,3 +1,4 @@
+import { ProviderStorageError } from "@openlv/core/errors";
 import z from "zod";
 
 // Signaling protocol types
@@ -184,9 +185,16 @@ export const migrateStorageToLatest = (
  * Auto upgrades from old storage versions to new ones.
  */
 export const parseProviderStorage = (raw: string): ProviderStorage => {
-  const storage = AnyStorage.parse(JSON.parse(raw));
+  try {
+    const storage = AnyStorage.parse(JSON.parse(raw));
 
-  const migrated = migrateStorageToLatest(storage) as ProviderStorage;
+    const migrated = migrateStorageToLatest(storage) as ProviderStorage;
 
-  return migrated;
+    return migrated;
+  }
+  catch (error) {
+    throw new ProviderStorageError({
+      cause: error instanceof Error ? error : undefined,
+    });
+  }
 };

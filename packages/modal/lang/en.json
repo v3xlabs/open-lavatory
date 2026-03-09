@@ -80,7 +80,12 @@
     "connectedSuccessfully": "Connected Successfully!",
     "walletConnectedReady": "Your wallet is now connected and ready to use.",
     "disconnected": "Disconnected",
-    "connectionClosed": "The connection has been closed."
+    "connectionClosed": "The connection has been closed.",
+    "reconnecting": "Reconnecting",
+    "tryingToRestore": "Trying to restore the connection...",
+    "connectionError": "Connection error",
+    "connectionErrorDescription": "Could not establish a connection. Check your network and try again.",
+    "cancel": "Cancel"
   },
   "handshake": {
     "clickToCopyUrl": "Click to copy connection URL",

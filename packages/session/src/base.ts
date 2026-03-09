@@ -1,4 +1,5 @@
 import {
+  createRetrier,
   decodeConnectionURL,
   OPENLV_PROTOCOL_VERSION,
   type SessionHandshakeParameters,
@@ -13,6 +14,12 @@ import {
   initHash,
   parseEncryptionKey,
 } from "@openlv/core/encryption";
+import type { BaseError } from "@openlv/core/errors";
+import {
+  SessionNotReadyError,
+  SessionSetupError,
+  SessionTimeoutError,
+} from "@openlv/core/errors";
 import {
   type CreateSignalLayerFn,
   SIGNAL_STATE,
@@ -39,6 +46,8 @@ export const SESSION_STATE = {
   LINKING: "linking",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
+  RECONNECTING: "reconnecting",
+  ERROR: "error",
 } as const;
 export type SessionState = (typeof SESSION_STATE)[keyof typeof SESSION_STATE];
 
@@ -47,6 +56,7 @@ export type SessionStateObject = {
   signaling?: {
     state: SignalState;
   };
+  error?: BaseError;
 };
 
 /**
@@ -100,13 +110,24 @@ export const createSession = async (
     encryptionKey,
   );
   let status: SessionState = SESSION_STATE.CREATED;
+  let transportRetryTimer: ReturnType<typeof setTimeout> | undefined;
+  const sessionAc = new AbortController();
+  const transportRetrier = createRetrier({
+    maxRetries: 5,
+    initialDelayMs: 1000,
+    maxDelayMs: 30_000,
+  });
   const protocol = initParameters.p;
   const server = initParameters.s;
 
-  const updateStatus = (newStatus: SessionState) => {
+  const updateStatus = (newStatus: SessionState, error?: BaseError) => {
     log("updateStatus", newStatus);
     status = newStatus;
-    emitter.emit("state_change", { status, signaling: signal.getState() });
+    emitter.emit("state_change", {
+      status,
+      signaling: signal.getState(),
+      error,
+    });
   };
 
   const signaling = await signalLayer({
@@ -150,8 +171,12 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
-      console.log("Session: received message from transport", message);
+    onmessage: async (message: {
+      type: string;
+      payload: object;
+      messageId: string;
+    }) => {
+      log("Session: received message from transport", message);
 
       if (message["type"] === "request") {
         const data = await onMessage(message["payload"] as object);
@@ -169,7 +194,7 @@ export const createSession = async (
       }
     },
     async subsend(message) {
-      console.log("Session: sending trans msg to signal", message);
+      log("Session: sending trans msg to signal", message);
       const sessionMessage: SessionMessage = {
         type: "request",
         messageId: crypto.randomUUID(),
@@ -180,19 +205,68 @@ export const createSession = async (
     },
   });
 
-  transport.emitter.on("state_change", (state) => {
+  const onTransportStateChange = (
+    state: (typeof TRANSPORT_STATE)[keyof typeof TRANSPORT_STATE],
+  ) => {
     log("transport state change", state);
 
     if (state === TRANSPORT_STATE.CONNECTED) {
+      transportRetrier.reset();
       updateStatus(SESSION_STATE.CONNECTED);
+      signal.teardown();
     }
-  });
-
-  const startTransport = async () => {
-    await transport.setup();
   };
 
-  // let transport: TransportLayer | undefined;
+  const onTransportError = (error: BaseError) => {
+    log("transport error", error);
+    transport.teardown();
+
+    const step = transportRetrier.nextDelay();
+
+    if (step) {
+      log(`transport retry ${step.attempt}/5 in ${Math.round(step.delay)}ms`);
+      updateStatus(SESSION_STATE.RECONNECTING);
+      transportRetryTimer = setTimeout(async () => {
+        try {
+          await signal.setup();
+        }
+        catch (setupError) {
+          const err = new SessionSetupError({
+            cause: setupError instanceof Error ? setupError : undefined,
+          });
+
+          updateStatus(SESSION_STATE.ERROR, err);
+          emitter.emit("error", err);
+        }
+      }, step.delay);
+    }
+    else {
+      updateStatus(SESSION_STATE.ERROR, error);
+      emitter.emit("error", error);
+    }
+  };
+
+  transport.emitter.on("state_change", onTransportStateChange);
+  transport.emitter.on("error", onTransportError);
+  sessionAc.signal.addEventListener("abort", () => {
+    transport.emitter.off("state_change", onTransportStateChange);
+    transport.emitter.off("error", onTransportError);
+  }, { once: true });
+
+  const startTransport = async () => {
+    try {
+      await transport.setup();
+    }
+    catch (error) {
+      const setupError = new SessionSetupError({
+        cause: error instanceof Error ? error : undefined,
+      });
+
+      updateStatus(SESSION_STATE.ERROR, setupError);
+      emitter.emit("error", setupError);
+    }
+  };
+
   const onSignalMessage = async (message: object) => {
     log("Session: received message from signaling", message);
 
@@ -210,46 +284,76 @@ export const createSession = async (
     }
   };
 
+  const onSignalStateChange = (state: SignalState) => {
+    log("signal state change", state);
+
+    if (state === SIGNAL_STATE.RECONNECTING) {
+      updateStatus(SESSION_STATE.RECONNECTING);
+      // Tear down transport so it restarts cleanly when signaling is back
+      clearTimeout(transportRetryTimer);
+      transportRetrier.reset();
+      transport.teardown();
+    }
+
+    if (state === SIGNAL_STATE.READY) {
+      updateStatus(SESSION_STATE.READY);
+    }
+
+    if (
+      (
+        [
+          SIGNAL_STATE.HANDSHAKE,
+          SIGNAL_STATE.HANDSHAKE_PARTIAL,
+        ] as SignalState[]
+      ).includes(state)
+    ) {
+      updateStatus(SESSION_STATE.LINKING);
+    }
+
+    if (state === SIGNAL_STATE.ENCRYPTED && transport.getState() === TRANSPORT_STATE.STANDBY) {
+      startTransport();
+    }
+  };
+
+  const onSignalError = (error: BaseError) => {
+    log("signal error", error);
+    updateStatus(SESSION_STATE.ERROR, error);
+    emitter.emit("error", error);
+  };
+
   return {
     connect: async () => {
       updateStatus(SESSION_STATE.SIGNALING);
       log("connecting to session, isHost:", isHost);
-      // TODO: implement
-      log("connecting to session");
 
       signal.on("message", onSignalMessage);
+      signal.on("state_change", onSignalStateChange);
+      signal.on("error", onSignalError);
+      sessionAc.signal.addEventListener("abort", () => {
+        signal.off("message", onSignalMessage);
+        signal.off("state_change", onSignalStateChange);
+        signal.off("error", onSignalError);
+      }, { once: true });
 
-      signal.on("state_change", (state) => {
-        log("signal state change", state);
+      try {
+        await signal.setup();
+      }
+      catch (error) {
+        const setupError = new SessionSetupError({
+          cause: error instanceof Error ? error : undefined,
+        });
 
-        if (state === SIGNAL_STATE.READY) {
-          updateStatus(SESSION_STATE.READY);
-        }
-
-        if (
-          (
-            [
-              SIGNAL_STATE.HANDSHAKE,
-              SIGNAL_STATE.HANDSHAKE_PARTIAL,
-            ] as SignalState[]
-          ).includes(state)
-        ) {
-          updateStatus(SESSION_STATE.LINKING);
-        }
-
-        if (state === SIGNAL_STATE.ENCRYPTED) {
-          // for now cuz we just use signaling call this a full connection
-          // updateStatus("connected");
-          startTransport();
-        }
-      });
-
-      // TODO: handle errors in setup nicely in modal UI
-      await signal.setup();
+        updateStatus(SESSION_STATE.ERROR, setupError);
+        emitter.emit("error", setupError);
+        throw setupError;
+      }
     },
     async close() {
       log("session teardown");
-      await signal?.teardown();
+      clearTimeout(transportRetryTimer);
+      sessionAc.abort();
+      await signal.teardown();
+      transport.teardown();
       updateStatus(SESSION_STATE.DISCONNECTED);
     },
     getState() {
@@ -269,19 +373,58 @@ export const createSession = async (
         s: server,
       };
     },
-    waitForLink: async () => new Promise((resolve) => {
-      emitter.on("state_change", (state) => {
-        if (state?.status === SESSION_STATE.CONNECTED) {
+    waitForLink: async () =>
+      new Promise<void>((resolve, reject) => {
+        if (status === SESSION_STATE.CONNECTED) {
           resolve();
+
+          return;
         }
-      });
-    }),
+
+        if (status === SESSION_STATE.ERROR) {
+          reject(new SessionSetupError());
+
+          return;
+        }
+
+        if (status === SESSION_STATE.DISCONNECTED) {
+          reject(new SessionSetupError());
+
+          return;
+        }
+
+        const ac = new AbortController();
+        const onStateChange = (state?: SessionStateObject) => {
+          switch (state?.status) {
+            case SESSION_STATE.CONNECTED: {
+              ac.abort();
+              resolve();
+
+              break;
+            }
+            case SESSION_STATE.ERROR: {
+              ac.abort();
+              reject(state.error ?? new SessionSetupError());
+
+              break;
+            }
+            case SESSION_STATE.DISCONNECTED: {
+              ac.abort();
+              reject(new SessionSetupError());
+
+              break;
+            }
+          }
+        };
+
+        emitter.on("state_change", onStateChange);
+        ac.signal.addEventListener("abort", () => emitter.off("state_change", onStateChange), { once: true });
+      }),
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
-      // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;
 
       if (!ready) {
-        throw new Error("Session not ready");
+        throw new SessionNotReadyError();
       }
 
       const randomID = crypto.randomUUID();
@@ -291,24 +434,36 @@ export const createSession = async (
         payload: message,
       };
 
-      // for now use signaling
-      // await signal.send(sessionMessage);
       await transport.send(sessionMessage);
 
-      return Promise.race([
-        new Promise((resolve) => {
-          messages.on("message", (message) => {
-            if (message.messageId === randomID && message.type === "response") {
-              resolve(message.payload);
-            }
-          });
-        }),
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(new Error("Timeout"));
-          }, timeout);
-        }),
-      ]);
+      return new Promise((resolve, reject) => {
+        const ac = new AbortController();
+
+        const onMessage = (msg: SessionMessage) => {
+          if (msg.messageId === randomID && msg.type === "response") {
+            ac.abort();
+            resolve(msg.payload);
+          }
+        };
+
+        const onSendTransportError = (error: BaseError) => {
+          ac.abort();
+          reject(error);
+        };
+
+        const timer = setTimeout(() => {
+          ac.abort();
+          reject(new SessionTimeoutError({ timeout }));
+        }, timeout);
+
+        messages.on("message", onMessage);
+        transport.emitter.on("error", onSendTransportError);
+        ac.signal.addEventListener("abort", () => {
+          messages.off("message", onMessage);
+          transport.emitter.off("error", onSendTransportError);
+          clearTimeout(timer);
+        }, { once: true });
+      });
     },
     _internal: {
       signal,

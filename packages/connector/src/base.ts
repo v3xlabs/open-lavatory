@@ -60,26 +60,32 @@ export const openlv = ({
       log("connect");
 
       const modal = await getTriggerModal();
+      const ac = new AbortController();
 
-      const modalDismissed = new Promise<void>((resolve) => {
-        modal?.({ theme, provider, onClose: () => resolve() });
+      const onStatusChange = (status: string) => {
+        log("provider_status_change", status);
+
+        if (status === "connected") {
+          ac.abort();
+        }
+      };
+
+      const onAccountsChanged = () => {
+        log("provider_accountsChanged");
+      };
+
+      provider.on("status_change", onStatusChange);
+      provider.on("accountsChanged", onAccountsChanged);
+
+      ac.signal.addEventListener("abort", () => {
+        provider.off("status_change", onStatusChange);
+        provider.off("accountsChanged", onAccountsChanged);
+      }, { once: true });
+
+      await new Promise<void>((resolve) => {
+        ac.signal.addEventListener("abort", () => resolve(), { once: true });
+        modal?.({ theme, provider, onClose: () => ac.abort() });
       });
-
-      const connectionCompleted = new Promise<void>((resolve) => {
-        provider.on("status_change", (status) => {
-          log("provider_status_change", status);
-
-          if (status === "connected") {
-            resolve();
-          }
-        });
-
-        provider.on("accountsChanged", () => {
-          log("provider_accountsChanged");
-        });
-      });
-
-      await Promise.race([modalDismissed, connectionCompleted]);
 
       if (
         !provider.getSession()

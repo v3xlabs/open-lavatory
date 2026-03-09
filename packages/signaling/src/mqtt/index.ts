@@ -25,15 +25,11 @@ export const mqtt: CreateSignalLayerFn = ({
   const emitter = new EventEmitter<SignalingBaseEvents>();
   let connection: MqttClient | undefined;
   let subscribedHandler: ((payload: string) => void) | undefined;
-  let isTearingDown = false;
 
   return createSignalingLayer({
     type: "mqtt",
     emitter,
     setup() {
-      isTearingDown = false;
-      let setupDone = false;
-
       connection = createMqtt({
         url,
         retry: { retries: 5, initialDelayMs: 1000, jitter: true },
@@ -41,18 +37,10 @@ export const mqtt: CreateSignalLayerFn = ({
       });
 
       connection.on("connect", () => {
-        if (!setupDone) {
-          setupDone = true;
-
-          return;
-        }
+        if (!subscribedHandler) return;
 
         log("MQTT: Reconnected, re-subscribing to topic", topic);
-        const resubscribe = subscribedHandler
-          ? connection!.subscribe(topic)
-          : Promise.resolve();
-
-        resubscribe
+        connection!.subscribe(topic)
           .then(() => emitter.emit("reconnected"))
           .catch((error: unknown) => emitter.emit("error", new SignalConnectionLostError({
             url,
@@ -61,14 +49,14 @@ export const mqtt: CreateSignalLayerFn = ({
       });
 
       connection.on("offline", () => {
-        if (setupDone) {
+        if (subscribedHandler) {
           log("MQTT: Connection went offline, reconnecting…");
           emitter.emit("reconnecting");
         }
       });
 
       connection.on("close", () => {
-        if (setupDone && !isTearingDown)
+        if (subscribedHandler && connection)
           emitter.emit("error", new SignalConnectionLostError({ url }));
       });
 
@@ -79,10 +67,9 @@ export const mqtt: CreateSignalLayerFn = ({
       return connection.connect();
     },
     teardown() {
-      isTearingDown = true;
+      subscribedHandler = undefined;
       connection?.close();
       connection = undefined;
-      subscribedHandler = undefined;
     },
     async publish(payload) {
       if (!connection) throw new SignalNoConnectionError();

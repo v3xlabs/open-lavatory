@@ -82,17 +82,10 @@ export const openlv = ({
         provider.off("accountsChanged", onAccountsChanged);
       }, { once: true });
 
-      await Promise.race([
-        new Promise<void>((resolve) => {
-          modal?.({ theme, provider, onClose: () => {
-            ac.abort();
-            resolve();
-          } });
-        }),
-        new Promise<void>((resolve) => {
-          ac.signal.addEventListener("abort", () => resolve(), { once: true });
-        }),
-      ]);
+      await new Promise<void>((resolve) => {
+        ac.signal.addEventListener("abort", () => resolve(), { once: true });
+        modal?.({ theme, provider, onClose: () => ac.abort() });
+      });
 
       if (
         !provider.getSession()

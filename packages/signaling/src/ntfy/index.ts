@@ -157,7 +157,11 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
       if (setupDone && !reconnectPromise) {
         reconnectPromise = connectWithRetry()
-          .catch(() => { emitter.emit("error", new SignalRetryExhaustedError({ url })); })
+          .catch((error) => {
+            if (error instanceof SignalTeardownError) return;
+
+            emitter.emit("error", new SignalRetryExhaustedError({ url }));
+          })
           .finally(() => { reconnectPromise = undefined; });
       }
     });
@@ -168,16 +172,18 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
   };
 
   const connectWithRetry = async (): Promise<void> => {
+    const ac = teardownAc!;
+
     retrier.reset();
 
-    while (!teardownAc!.signal.aborted) {
+    while (!ac.signal.aborted) {
       try {
         await new Promise<void>((resolve, reject) => open(resolve, reject));
 
         return;
       }
       catch (error) {
-        if (teardownAc!.signal.aborted) break;
+        if (ac.signal.aborted) break;
 
         const step = retrier.nextDelay();
 
@@ -211,6 +217,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       clearPing();
       connection?.close();
       connection = undefined;
+      events.removeAllListeners();
     },
     async publish(body) {
       if (!connection) throw new SignalNoConnectionError();

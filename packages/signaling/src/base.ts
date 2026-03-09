@@ -25,9 +25,12 @@ export type SignalingBaseEvents = {
   reconnected: () => void;
 };
 
+export type BaseSignal = {
+  emitter: EventEmitter<SignalingBaseEvents>;
+};
+
 export type SignalingBaseLayer = {
   type: string;
-  emitter: EventEmitter<SignalingBaseEvents>;
   setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
   publish: (payload: string) => MaybePromise<void>;
@@ -80,7 +83,7 @@ export const XR_H_PREFIX = "h";
  * https://openlv.sh/api/signaling
  */
 export const createSignalingLayer
-  = (init: SignalingBaseLayer): SignalingLayerFn =>
+  = (initFn: (base: BaseSignal) => SignalingBaseLayer): SignalingLayerFn =>
     async ({
       canEncrypt,
       encrypt,
@@ -91,6 +94,8 @@ export const createSignalingLayer
       isHost,
     }: SignalingProperties) => {
       const emitter = new EventEmitter<SignalEventMap>();
+      const baseEmitter = new EventEmitter<SignalingBaseEvents>();
+      const init = initFn({ emitter: baseEmitter });
       let state: SignalState = SIGNAL_STATE.STANDBY;
       const setState = (_state: SignalState) => {
         state = _state;
@@ -98,14 +103,14 @@ export const createSignalingLayer
       };
       const handshakeKey = k || undefined;
 
-      init.emitter.on("error", (error) => {
+      baseEmitter.on("error", (error) => {
         setState(SIGNAL_STATE.ERROR);
         emitter.emit("error", error);
       });
-      init.emitter.on("reconnecting", () => {
+      baseEmitter.on("reconnecting", () => {
         setState(SIGNAL_STATE.RECONNECTING);
       });
-      init.emitter.on("reconnected", () => {
+      baseEmitter.on("reconnected", () => {
         if (canEncrypt()) {
           setState(SIGNAL_STATE.ENCRYPTED);
         }

@@ -2,13 +2,11 @@ import {
   SignalConnectionLostError,
   SignalNoConnectionError,
 } from "@openlv/core/errors";
-import { EventEmitter } from "eventemitter3";
 import { createMqtt, type MqttClient } from "websocket-mqtt";
 
 import type {
   CreateSignalLayerFn,
   SignalBaseProperties,
-  SignalingBaseEvents,
 } from "../base.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
@@ -21,14 +19,12 @@ import { log } from "../utils/log.js";
 export const mqtt: CreateSignalLayerFn = ({
   url = "wss://test.mosquitto.org:8081/mqtt",
   topic,
-}: SignalBaseProperties) => {
-  const emitter = new EventEmitter<SignalingBaseEvents>();
+}: SignalBaseProperties) => createSignalingLayer(({ emitter }) => {
   let connection: MqttClient | undefined;
   let subscribedHandler: ((payload: string) => void) | undefined;
 
-  return createSignalingLayer({
+  return {
     type: "mqtt",
-    emitter,
     setup() {
       connection = createMqtt({
         url,
@@ -88,7 +84,7 @@ export const mqtt: CreateSignalLayerFn = ({
       });
       await connection.subscribe(topic);
     },
-  });
-};
+  };
+});
 
 Object.defineProperty(mqtt, "__name", { value: "mqtt" });

@@ -1,11 +1,9 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
-import { EventEmitter } from "eventemitter3";
 import Gun, { type IGun, type IGunInstance } from "gun";
 
 import {
   createSignalingLayer,
   type CreateSignalLayerFn,
-  type SignalingBaseEvents,
 } from "../base.js";
 import { log } from "../utils/log.js";
 
@@ -16,13 +14,12 @@ import { log } from "../utils/log.js";
 export const gundb: CreateSignalLayerFn = ({
   topic,
   url = "wss://try.axe.eco/gun",
-}) => {
-  const emitter = new EventEmitter<SignalingBaseEvents>();
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
+}) => createSignalingLayer(({ emitter: _emitter }) => {
   let connection: IGunInstance | undefined;
 
-  return createSignalingLayer({
+  return {
     type: "gundb",
-    emitter,
     async setup() {
       log("GUNDB: Setting up");
       const x = new (Gun as unknown as IGun)({
@@ -58,8 +55,8 @@ export const gundb: CreateSignalLayerFn = ({
         handler(message);
       });
     },
-  });
-};
+  };
+});
 
 Object.assign(gundb, {
   __name: "gundb",

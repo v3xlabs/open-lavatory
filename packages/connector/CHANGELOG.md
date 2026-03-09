@@ -1,5 +1,17 @@
 # @openlv/connector
 
+## 0.0.1-beta.12
+
+### Patch Changes
+
+- cbc5942: Reworked modal to solid-js
+- Updated dependencies [8e4dddd]
+- Updated dependencies [cbc5942]
+- Updated dependencies [cbc5942]
+  - @openlv/core@0.0.1-beta.9
+  - @openlv/modal@0.0.1-beta.11
+  - @openlv/provider@0.0.1-beta.11
+
 ## 0.0.1-beta.11
 
 ### Patch Changes

@@ -1,5 +1,15 @@
 # @openlv/session
 
+## 0.0.1-beta.11
+
+### Patch Changes
+
+- 8e4dddd: Linting
+- Updated dependencies [8e4dddd]
+  - @openlv/core@0.0.1-beta.9
+  - @openlv/signaling@0.0.1-beta.8
+  - @openlv/transport@0.0.1-beta.8
+
 ## 0.0.1-beta.10
 
 ### Patch Changes

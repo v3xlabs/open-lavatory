@@ -34,6 +34,7 @@ export type TransportLayer = {
   send: (message: object) => Promise<void>;
   handle: (message: TransportMessage) => Promise<void>;
   waitFor: (state: TransportState) => Promise<void>;
+  getState: () => TransportState;
   emitter: EventEmitter<TLayerEventMap>;
 };
 export type TLayer = (parameters: TransportLayerParameters) => TransportLayer;
@@ -178,6 +179,7 @@ export const createTransportBase
         handle,
         send,
         waitFor,
+        getState: () => state,
         emitter,
       };
     };

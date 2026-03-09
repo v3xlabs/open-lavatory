@@ -110,7 +110,6 @@ export const createSession = async (
     encryptionKey,
   );
   let status: SessionState = SESSION_STATE.CREATED;
-  let transportStarted = false;
   let transportRetryTimer: ReturnType<typeof setTimeout> | undefined;
   const sessionAc = new AbortController();
   const transportRetrier = createRetrier({
@@ -220,7 +219,6 @@ export const createSession = async (
 
   const onTransportError = (error: BaseError) => {
     log("transport error", error);
-    transportStarted = false;
     transport.teardown();
 
     const step = transportRetrier.nextDelay();
@@ -256,8 +254,6 @@ export const createSession = async (
   }, { once: true });
 
   const startTransport = async () => {
-    transportStarted = true;
-
     try {
       await transport.setup();
     }
@@ -266,7 +262,6 @@ export const createSession = async (
         cause: error instanceof Error ? error : undefined,
       });
 
-      transportStarted = false;
       updateStatus(SESSION_STATE.ERROR, setupError);
       emitter.emit("error", setupError);
     }
@@ -297,7 +292,6 @@ export const createSession = async (
       // Tear down transport so it restarts cleanly when signaling is back
       clearTimeout(transportRetryTimer);
       transportRetrier.reset();
-      transportStarted = false;
       transport.teardown();
     }
 
@@ -316,7 +310,7 @@ export const createSession = async (
       updateStatus(SESSION_STATE.LINKING);
     }
 
-    if (state === SIGNAL_STATE.ENCRYPTED && !transportStarted) {
+    if (state === SIGNAL_STATE.ENCRYPTED && transport.getState() === TRANSPORT_STATE.STANDBY) {
       startTransport();
     }
   };

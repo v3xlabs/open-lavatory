@@ -1,10 +1,10 @@
 import { createRetrier } from "@openlv/core";
+import type { BaseError } from "@openlv/core/errors";
 import {
   SignalConnectionLostError,
   SignalNoConnectionError,
   SignalPublishError,
   SignalRetryExhaustedError,
-  SignalTeardownError,
 } from "@openlv/core/errors";
 import { match } from "ts-pattern";
 
@@ -59,31 +59,12 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
 
   return createSignalingLayer(({ emitter }) => {
     const retrier = createRetrier({ maxRetries: NTFY_MAX_RETRIES, initialDelayMs: NTFY_RETRY_INITIAL_DELAY_MS, maxDelayMs: NTFY_RETRY_MAX_DELAY_MS });
-    let messageHandler: ((payload: string) => void) | undefined;
 
     let connection: WebSocket | undefined;
     let teardownAc: AbortController | undefined;
-    let setupDone = false;
-    let reconnectPromise: Promise<void> | undefined;
+    let messageHandler: ((payload: string) => void) | undefined;
     let pingTimer: ReturnType<typeof setTimeout> | undefined;
-
-    const clearPing = () => {
-      clearTimeout(pingTimer);
-      pingTimer = undefined;
-    };
-
-    const pingOnce = async () => {
-      const ac = new AbortController();
-      const ntfyTimeoutId = setTimeout(() => ac.abort(), NTFY_PING_TIMEOUT_MS);
-
-      try {
-        const r = await fetch(pingUrl, { signal: ac.signal, cache: "no-cache" });
-
-        return ((await r.json()) as { healthy?: boolean; }).healthy === true;
-      }
-      catch { return false; }
-      finally { clearTimeout(ntfyTimeoutId); }
-    };
+    let onDisconnect: (() => void) | undefined;
 
     const schedulePing = (ws: WebSocket) => {
       if (pingTimer || teardownAc?.signal.aborted || ws !== connection) return;
@@ -91,7 +72,12 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       pingTimer = setTimeout(async () => {
         pingTimer = undefined;
 
-        const healthy = await pingOnce();
+        const ac = new AbortController();
+        const timeoutId = setTimeout(() => ac.abort(), NTFY_PING_TIMEOUT_MS);
+        const healthy = await fetch(pingUrl, { signal: ac.signal, cache: "no-cache" })
+          .then(r => r.json().then((j: { healthy?: boolean; }) => j.healthy === true))
+          .catch(() => false)
+          .finally(() => clearTimeout(timeoutId));
 
         if (teardownAc?.signal.aborted || ws !== connection) return;
 
@@ -106,15 +92,15 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
       }, NTFY_PING_INTERVAL_MS);
     };
 
-    // open() calls onOpen on first "open" ntfy event, onFail on close before open
-    const open = (onOpen: () => void, onFail: (err: Error) => void) => {
+    // Resolves when the WebSocket receives an "open" event from ntfy.
+    // Rejects if the WebSocket closes before that happens.
+    // Once connected, calls onDisconnect() when the connection later drops.
+    const connect = () => new Promise<void>((resolve, reject) => {
       connection?.close();
-      connection = undefined;
-      clearPing();
-
-      log("NTFY: connecting to WebSocket", wsUrl);
       const ws = (connection = new WebSocket(wsUrl));
       let settled = false;
+
+      log("NTFY: Connecting to WebSocket", wsUrl);
 
       ws.addEventListener("message", (event) => {
         const data = JSON.parse(event.data as string) as NtfyMessage;
@@ -122,99 +108,95 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
         if (data.event === "open") {
           schedulePing(ws);
 
-          if (setupDone) {
-            emitter.emit("reconnected");
-          }
-          else { setupDone = true; }
-
           if (!settled) {
             settled = true;
-            onOpen();
+            resolve();
           }
-
-          return;
         }
-
-        if (data.event === "message") {
+        else if (data.event === "message") {
           messageHandler?.(data.message);
         }
       });
 
       ws.addEventListener("close", () => {
-        clearPing();
+        clearTimeout(pingTimer);
+        pingTimer = undefined;
 
-        if (teardownAc?.signal.aborted) return;
-
-        if (!settled) {
+        if (settled) {
+          onDisconnect?.();
+        }
+        else {
           settled = true;
-          onFail(new SignalConnectionLostError({ url }));
-        }
-
-        log("NTFY: WebSocket closed unexpectedly");
-
-        if (setupDone) emitter.emit("reconnecting");
-
-        if (setupDone && !reconnectPromise) {
-          reconnectPromise = connectWithRetry()
-            .catch((error) => {
-              if (error instanceof SignalTeardownError) return;
-
-              emitter.emit("error", new SignalRetryExhaustedError({ url }));
-            })
-            .finally(() => { reconnectPromise = undefined; });
+          reject(new SignalConnectionLostError({ url }));
         }
       });
 
-      ws.addEventListener("error", () => {
-        log("NTFY: WebSocket error");
-      });
-    };
+      ws.addEventListener("error", () => log("NTFY: WebSocket error"));
+    });
 
-    const connectWithRetry = async (): Promise<void> => {
-      const ac = teardownAc!;
-
-      retrier.reset();
-
+    const connectWithRetry = async (ac: AbortController) => {
       while (!ac.signal.aborted) {
         try {
-          await new Promise<void>((resolve, reject) => open(resolve, reject));
+          await connect();
 
           return;
         }
         catch (error) {
-          if (ac.signal.aborted) break;
+          if (ac.signal.aborted) return;
 
           const step = retrier.nextDelay();
 
-          if (!step) {
-            throw new SignalRetryExhaustedError({ url, cause: error instanceof Error ? error : undefined });
-          }
+          if (!step) throw new SignalRetryExhaustedError({ url, cause: error instanceof Error ? error : undefined });
 
           log(`NTFY: retry #${step.attempt} in ${Math.round(step.delay)}ms`);
-          await new Promise<void>(resolve => setTimeout(resolve, step.delay));
+          await new Promise<void>(r => setTimeout(r, step.delay));
         }
       }
-
-      throw new SignalTeardownError({ url });
     };
 
     return {
       type: "ntfy",
-      setup() {
+      async setup() {
         teardownAc = new AbortController();
+        const ac = teardownAc;
 
-        if (setupDone) return Promise.resolve();
+        retrier.reset();
+        await connectWithRetry(ac);
 
-        return connectWithRetry();
+        void (async () => {
+          while (!ac.signal.aborted) {
+            await new Promise<void>((r) => {
+              onDisconnect = r;
+            });
+            onDisconnect = undefined;
+
+            if (ac.signal.aborted) break;
+
+            emitter.emit("reconnecting");
+            retrier.reset();
+
+            try {
+              await connectWithRetry(ac);
+            }
+            catch (error) {
+              emitter.emit("error", error as BaseError);
+
+              return;
+            }
+
+            emitter.emit("reconnected");
+          }
+        })();
       },
       teardown() {
         teardownAc?.abort();
         teardownAc = undefined;
-        setupDone = false;
-        reconnectPromise = undefined;
-        clearPing();
+        clearTimeout(pingTimer);
+        pingTimer = undefined;
         connection?.close();
         connection = undefined;
+        onDisconnect?.();
+        onDisconnect = undefined;
         messageHandler = undefined;
       },
       async publish(body) {
@@ -229,7 +211,7 @@ export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
           throw new SignalPublishError({ url, cause: new Error(`NTFY: publish failed with HTTP ${response.status}`) });
         }
       },
-      subscribe: (handler) => {
+      subscribe(handler) {
         messageHandler = handler;
       },
     };

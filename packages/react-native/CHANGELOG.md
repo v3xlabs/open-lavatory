@@ -1,5 +1,13 @@
 # @openlv/react-native
 
+## 0.0.1-beta.4
+
+### Patch Changes
+
+- 8e4dddd: Linting
+- Updated dependencies [8e4dddd]
+  - @openlv/session@0.0.1-beta.11
+
 ## 0.0.1-beta.3
 
 ### Patch Changes

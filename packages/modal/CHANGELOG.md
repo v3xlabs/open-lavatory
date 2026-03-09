@@ -1,5 +1,18 @@
 # @openlv/modal
 
+## 0.0.1-beta.11
+
+### Patch Changes
+
+- cbc5942: Reworked modal to solid-js
+- cbc5942: Added custom font support to themes
+- Updated dependencies [8e4dddd]
+- Updated dependencies [cbc5942]
+  - @openlv/core@0.0.1-beta.9
+  - @openlv/session@0.0.1-beta.11
+  - @openlv/signaling@0.0.1-beta.8
+  - @openlv/provider@0.0.1-beta.11
+
 ## 0.0.1-beta.10
 
 ### Patch Changes

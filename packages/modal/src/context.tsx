@@ -1,9 +1,12 @@
 import type { OpenLVProvider } from "@openlv/provider";
+import type { ProviderStorage } from "@openlv/provider/storage";
 import {
   type Component,
   createContext,
+  createEffect,
   useContext,
 } from "solid-js";
+import { createStore, type SetStoreFunction, type Store } from "solid-js/store";
 
 import { ModalRoot } from "./components/ModalRoot.js";
 import { type OpenLVModalElementProps } from "./element.js";
@@ -15,6 +18,7 @@ import {
 export type ModalContextValue = {
   provider: OpenLVProvider;
   themeConfig?: ThemeConfig;
+  settings: [() => Store<ProviderStorage>, SetStoreFunction<ProviderStorage>];
 };
 
 export const ModalContext = createContext<ModalContextValue | undefined>(
@@ -23,11 +27,16 @@ export const ModalContext = createContext<ModalContextValue | undefined>(
 
 export const ModalProvider: Component<OpenLVModalElementProps> = (props) => {
   const { provider, theme } = props;
+  const [settings, setSettings] = createStore<ProviderStorage>(provider.storage.getSettings());
+
+  createEffect(() => {
+    provider.storage.setSettings(settings);
+  });
 
   return (
-    <ModalContext.Provider value={{ provider, themeConfig: theme }}>
+    <ModalContext.Provider value={{ provider, themeConfig: theme, settings: [() => settings, setSettings] }}>
       <TranslationProvider>
-        <ModalRoot onClose={props.onClose} />
+        <ModalRoot onClose={props.onClose ?? (() => {})} />
       </TranslationProvider>
     </ModalContext.Provider>
   );

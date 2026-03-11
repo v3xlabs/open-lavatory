@@ -2,15 +2,13 @@ import type {
   ProviderStorage,
   UserThemePreference,
 } from "@openlv/provider/storage";
-import { createSignal } from "solid-js";
 
 import type { SignalingProtocol } from "../../../provider/dist/storage/version.js";
 import { useModalContext } from "../context.js";
 import type { LanguageTag } from "../utils/i18n.jsx";
 
 export const useSettings = () => {
-  const { provider } = useModalContext();
-  const [settings, setLocalSettings] = createSignal<ProviderStorage>(provider.storage.getSettings());
+  const { provider, settings: [settings, setLocalSettings] } = useModalContext();
 
   const setSettings = (newSettings: ProviderStorage) => {
     setLocalSettings(newSettings);

@@ -5,7 +5,7 @@ import { useSettings } from "./useSettings.js";
 export const useTheme = () => {
   const { settings } = useSettings();
 
-  const theme = createMemo(() => settings().theme);
+  const theme = createMemo(() => settings()?.theme);
   const mode = createMemo(() => "light");
 
   return {

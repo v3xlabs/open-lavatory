@@ -1,0 +1,6 @@
+{
+  "repo": "https://github.com/safe-global/safe-wallet-monorepo",
+  "commit": "046d549eb66c18aad5f43e56bfb8a8920cec18aa",
+  "branch": "release",
+  "setup": "./setup.sh"
+}

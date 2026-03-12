@@ -91,6 +91,12 @@ importers:
         specifier: ^5
         version: 5.9.3
 
+  examples/ecosystem:
+    devDependencies:
+      pillra:
+        specifier: 0.2.1
+        version: 0.2.1
+
   examples/react-dapp:
     dependencies:
       '@openlv/connector':
@@ -8845,6 +8851,10 @@ packages:
   pify@5.0.0:
     resolution: {integrity: sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==}
     engines: {node: '>=10'}
+
+  pillra@0.2.1:
+    resolution: {integrity: sha512-sMGWZCp2nnmPU7HQai3+wJJWXaavNT7A5HbfhZXdNR8vc5kvsX3jYcm63tYLvbVqavS3B11T3226f6aHHLMvfQ==}
+    hasBin: true
 
   pino-abstract-transport@0.5.0:
     resolution: {integrity: sha512-+KAgmVeqXYbTtU2FScx1XS3kNyfZ5TrXY07V96QnUSFqo2gAqlvmaxH67Lj7SWazqsMabf+58ctdTcBgnOLUOQ==}
@@ -22866,6 +22876,8 @@ snapshots:
   pify@4.0.1: {}
 
   pify@5.0.0: {}
+
+  pillra@0.2.1: {}
 
   pino-abstract-transport@0.5.0:
     dependencies:

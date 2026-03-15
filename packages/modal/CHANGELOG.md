@@ -1,5 +1,11 @@
 # @openlv/modal
 
+## 0.0.1-beta.12
+
+### Patch Changes
+
+- e658a4c: Fix bug when resizing the window
+
 ## 0.0.1-beta.11
 
 ### Patch Changes

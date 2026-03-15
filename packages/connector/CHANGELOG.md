@@ -1,5 +1,12 @@
 # @openlv/connector
 
+## 0.0.1-beta.13
+
+### Patch Changes
+
+- Updated dependencies [e658a4c]
+  - @openlv/modal@0.0.1-beta.12
+
 ## 0.0.1-beta.12
 
 ### Patch Changes

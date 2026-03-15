@@ -5,3 +5,11 @@
 html {
     @apply bg-blue-500;
 }
+
+.btn {
+    @apply bg-blue-500 text-white px-4 py-2 rounded-md disabled:bg-gray-300 disabled:text-gray-500 hover:bg-blue-600 active:bg-blue-700;
+}
+
+.btn.btn-secondary {
+    @apply bg-white border text-gray-500 disabled:bg-gray-400 disabled:text-gray-600 hover:bg-neutral-100 active:bg-neutral-200;
+}

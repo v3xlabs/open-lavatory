@@ -7,7 +7,7 @@ export default defineConfig({
     description: "Privacy-first wallet connection for dApps",
     version: "0.0.1",
 
-    permissions: ["storage", "activeTab", "scripting"],
+    permissions: ["storage", "windows"],
 
     host_permissions: [
       "https://*/*",
@@ -32,11 +32,8 @@ export default defineConfig({
       global: "globalThis",
     },
     build: {
-      target: "es2020",
+      target: "esnext",
       sourcemap: "inline",
-      rollupOptions: {
-        external: [],
-      },
     },
   }),
   webExt: {

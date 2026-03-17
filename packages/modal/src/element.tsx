@@ -23,6 +23,14 @@ export class OpenLVModalElement
     super();
     this.parameters = parameters;
 
+    // Establish a stacking context at the host element level so the modal
+    // always renders above any host-app UI (ConnectKit, RainbowKit, etc.)
+    // regardless of what z-index or transforms they apply.
+    this.style.position = "fixed";
+    this.style.inset = "0";
+    this.style.zIndex = "1000000";
+    this.style.pointerEvents = "none";
+
     this.shadow = this.attachShadow({ mode: "open" });
     const initialUserTheme
       = parameters.provider.storage.getSettings()?.theme ?? "system";

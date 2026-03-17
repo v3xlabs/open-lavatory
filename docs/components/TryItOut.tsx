@@ -8,7 +8,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
 import { useState } from "react";
 import { match } from "ts-pattern";
-import { type Address, type EIP1193Provider } from "viem";
+import type { Address, EIP1193Provider } from "viem";
 import {
   type Connector,
   createConfig,
@@ -113,6 +113,7 @@ const TestSign = () => {
           <div>Test a personal sign</div>
         </div>
         <button
+          type="button"
           onClick={() => {
             resetSignature();
             signMessage({ message: "Hello, world!" });
@@ -196,12 +197,12 @@ const ConnectComponent = () => {
           />
         </div>
         <button
+          type="button"
           onClick={async () => {
             if (!url) return;
 
             console.log("connecting to", url);
-            const client
-              = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
+            const client = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
 
             session = await connectSession(
               url,
@@ -213,35 +214,17 @@ const ConnectComponent = () => {
 
                 console.log("method", method);
 
-                if (method === "eth_accounts") {
-                  const result = await client.request({
-                    method: "eth_accounts",
-                    params: [] as never,
-                  });
-
-                  if (result) return result;
-                }
-
-                if (method === "eth_chainId") {
-                  const result = await client.request({
-                    method: "eth_chainId",
-                    params: [] as never,
-                  });
-
-                  console.log("result from calling wallet", result);
-
-                  return result;
-                }
-
-                if (["personal_sign"].includes(method)) {
+                try {
                   const result = await client.request(message as never);
 
                   console.log("result from calling wallet", result);
 
                   return result;
                 }
-
-                return { result: "success" };
+                catch (error) {
+                  console.error("wallet error", error);
+                  throw error;
+                }
               },
               webrtc(),
             );
@@ -280,6 +263,7 @@ const Connected = () => {
           </div>
         </div>
         <button
+          type="button"
           onClick={() => {
             disconnect();
           }}
@@ -301,6 +285,7 @@ const ConnectorPreview = ({ connector }: { connector: Connector; }) => {
 
   return (
     <button
+      type="button"
       className="hover:!bg-[var(--vocs-color_codeHighlightBackground)] inline-flex translate-y-0.5 items-center gap-2 rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-2 py-0.5"
       onClick={() => {
         connect({ connector: connector });
@@ -335,6 +320,7 @@ const Connectors = () => {
           {connectors.map(connector => (
             <li key={connector.id} className="">
               <button
+                type="button"
                 onClick={() => {
                   connect({ connector: connector });
                 }}

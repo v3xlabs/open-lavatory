@@ -16,16 +16,40 @@ export type ProviderStorageParameters = {
   storage?: Storage;
 };
 
-const createPassthrough = () => {
-  const map = new Map<string, string>();
+/**
+ * Creates a synchronous in-memory Storage adapter.
+ * Useful when localStorage is unavailable (e.g. extension injected scripts).
+ *
+ * @param initial - Pre-populated key/value pairs (e.g. from a prior async load).
+ * @param onWrite - Called synchronously after every setItem, useful for
+ *                  persisting writes to an async backing store.
+ */
+export const createSyncStorage = (
+  initial?: Record<string, string>,
+  onWrite?: (key: string, value: string) => void,
+): Storage => {
+  const map = new Map(Object.entries(initial ?? {}));
 
   return {
-    getItem: (key: string) => map.get(key),
-    setItem: (key: string, value: string) => {
+    getItem: key => map.get(key) ?? null,
+    setItem: (key, value) => {
       map.set(key, value);
+      onWrite?.(key, value);
     },
+    removeItem: (key) => {
+      map.delete(key);
+    },
+    clear: () => {
+      map.clear();
+    },
+    get length() {
+      return map.size;
+    },
+    key: n => [...map.keys()][n] ?? null,
   };
 };
+
+const createPassthrough = () => createSyncStorage();
 
 const getStorage = () => {
   if (globalThis.window === undefined) return;
@@ -44,9 +68,9 @@ export type ProviderStorageR = {
 };
 
 export const createProviderStorage = ({
-  storage,
+  storage: storageBackend,
 }: ProviderStorageParameters): ProviderStorageR => {
-  const io = storage ?? getStorage() ?? createPassthrough();
+  const io = storageBackend ?? getStorage() ?? createPassthrough();
   const initialSettings = io.getItem(DEFAULT_STORAGE_KEY);
 
   let settings: ProviderStorage = initialSettings

@@ -4,7 +4,7 @@ A cross-browser extension that provides seamless OpenLV wallet connectivity for 
 
 ## 🌟 Features
 
-- **🔗 Automatic Provider Injection**: Seamlessly injects `window.openlv` into web pages
+- **🔗 Automatic Provider Injection**: Seamlessly injects `window.ethereum` (EIP-1193) into web pages
 - **🌐 Cross-Browser Support**: Works on Chrome, Firefox, Edge, Opera, and other browsers
 - **🔒 Secure P2P Communication**: Handles encrypted peer-to-peer connections in the background
 - **📱 User-Friendly Interface**: Clean popup UI for managing connections
@@ -48,62 +48,62 @@ pnpm zip:firefox        # Firefox zip
 ## 🔧 Architecture
 
 ```
-┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
-│   Web Page      │    │ Content Script  │    │ Background      │
-│                 │    │                 │    │ Service Worker  │
-│ window.openlv   │◄──►│ Message Bridge  │◄──►│ OpenLV Manager  │
-│                 │    │                 │    │                 │
-└─────────────────┘    └─────────────────┘    └─────────────────┘
-         ▲                                              ▲
-         │                                              │
-         ▼                                              ▼
-┌─────────────────┐                        ┌─────────────────┐
-│ Injected Script │                        │ Popup Interface │
-│ (Provider API)  │                        │ (User Controls) │
-└─────────────────┘                        └─────────────────┘
+┌─────────────────────────────────────────────────────┐
+│  Page World (untrusted)                             │
+│  Injected Script — thin EIP-1193 stub only          │
+│  window.ethereum = { request, on, off }             │
+└──────────────────┬──────────────────────────────────┘
+                   │ postMessage (RPC request/response + events)
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│  Content Script (isolated JS world)                 │
+│  Real provider: session, keys, storage live here    │
+│  Unreachable from page JS                           │
+└──────────────────┬──────────────────────────────────┘
+                   │ chrome.runtime.sendMessage
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│  Background Service Worker                          │
+│  Popup window orchestration                         │
+└──────────────────┬──────────────────────────────────┘
+                   │ chrome.runtime.onMessage
+                   ▼
+┌─────────────────────────────────────────────────────┐
+│  Connect Popup (extension page)                     │
+│  Modal UI, reads/writes chrome.storage directly     │
+└─────────────────────────────────────────────────────┘
 ```
 
 ### Components
 
-- **Background Script**: Manages OpenLV connections using the transport layer
-- **Content Script**: Bridges communication between web pages and the extension
-- **Injected Script**: Provides the `window.openlv` API to web applications
-- **Popup Interface**: User-friendly UI for managing connections and viewing status
+- **Background Script**: Orchestrates connect popup windows and relays cancel signals
+- **Content Script**: Owns the real provider — session, encryption keys, and settings storage live here in an isolated JS world the page cannot reach
+- **Injected Script**: Tiny `window.ethereum` stub that forwards EIP-1193 `request()` calls to the content script via `postMessage` and relays events back
+- **Connect Popup**: Extension page that renders the modal UI; communicates with background via `chrome.runtime`
 
 ## 📋 API Reference
 
-The extension injects a `window.openlv` object with the following API:
+The extension injects an EIP-1193 provider at `window.ethereum` and announces
+it via EIP-6963 (`eip6963:announceProvider`).
 
 ```javascript
-// Initialize a new connection (dApp side)
-const { openLVUrl, connectionId } = await window.openlv.initConnection();
-
-// Connect to existing session (wallet side)
-await window.openlv.connectToSession(openLVUrl);
-
-// Send JSON-RPC messages
-await window.openlv.sendMessage({
-  jsonrpc: '2.0',
-  id: 1,
-  method: 'eth_requestAccounts',
-  params: []
+// Request wallet connection
+const accounts = await window.ethereum.request({
+  method: "eth_requestAccounts",
 });
 
-// Listen for events
-window.openlv.onPhaseChange((phase) => {
-  console.log('Connection phase:', phase.state);
-});
+// Standard RPC
+const chainId = await window.ethereum.request({ method: "eth_chainId" });
 
-window.openlv.onMessage((message) => {
-  console.log('Received message:', message);
-});
+// Events
+const onAccountsChanged = (nextAccounts) => {
+  console.log("accountsChanged", nextAccounts);
+};
 
-window.openlv.onError((error) => {
-  console.error('Connection error:', error);
-});
+window.ethereum.on("accountsChanged", onAccountsChanged);
 
-// Disconnect
-await window.openlv.disconnect();
+// Cleanup
+window.ethereum.off("accountsChanged", onAccountsChanged);
 ```
 
 ## 🔒 Security
@@ -115,13 +115,13 @@ await window.openlv.disconnect();
 
 ## 🌐 Browser Compatibility
 
-| Browser | Support | Notes |
-|---------|---------|-------|
-| Chrome | ✅ Full | Manifest V3 |
-| Edge | ✅ Full | Manifest V3 |
-| Opera | ✅ Full | Manifest V3 |
-| Firefox | ✅ Full | Manifest V2 (auto-converted) |
-| Safari | ⚠️ Limited | Not tested |
+| Browser | Support    | Notes                        |
+| ------- | ---------- | ---------------------------- |
+| Chrome  | ✅ Full    | Manifest V3                  |
+| Edge    | ✅ Full    | Manifest V3                  |
+| Opera   | ✅ Full    | Manifest V3                  |
+| Firefox | ✅ Full    | Manifest V2 (auto-converted) |
+| Safari  | ⚠️ Limited | Not tested                   |
 
 ## 🐛 Troubleshooting
 
@@ -137,7 +137,7 @@ Enable debug logging by setting `DEBUG=true` in the extension options or console
 
 ```javascript
 // In browser console
-localStorage.setItem('openlv-debug', 'true');
+localStorage.setItem("openlv-debug", "true");
 ```
 
 ## 🤝 Contributing

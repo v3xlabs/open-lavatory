@@ -1,4 +1,4 @@
-/* eslint-disable unicorn/consistent-function-scoping */
+
 import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
@@ -126,10 +126,44 @@ export const createProvider = (
     oxEmitter.emit("status_change", newStatus);
   };
 
-  const onMessage = async (message: object) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const onMessage = async (message: any) => {
     log("onMessage", message);
 
-    return { result: "success" };
+    if (message && typeof message === "object" && "method" in message) {
+      switch (message.method) {
+        case "accountsChanged": {
+          accounts = (
+            Array.isArray(message.params?.[0])
+              ? message.params[0]
+              : message.params
+          ) as Address[];
+          oxEmitter.emit("accountsChanged", accounts);
+
+          break;
+        }
+        case "chainChanged": {
+          const chainId = Array.isArray(message.params)
+            ? message.params[0]
+            : message.params;
+
+          oxEmitter.emit("chainChanged", chainId);
+
+          break;
+        }
+        case "disconnect": {
+          const error = Array.isArray(message.params)
+            ? message.params[0]
+            : (message.error ?? message.params);
+
+          oxEmitter.emit("disconnect", error);
+
+          break;
+        }
+      }
+    }
+
+    return message;
   };
 
   const getAccounts = async (): Promise<Address[]> => {

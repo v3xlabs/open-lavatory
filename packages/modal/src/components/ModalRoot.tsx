@@ -161,7 +161,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
   useEscapeToClose(props.onClose);
 
   createEffect(() => {
-    if (status()?.status === PROVIDER_STATUS.CONNECTED) {
+    if (providerStatus() === PROVIDER_STATUS.CONNECTED) {
       props.onClose();
     }
   });
@@ -184,7 +184,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
     displayedModalView();
     const node = contentNode();
 
-    if (!node) return;
+    if (!node || !node.getBoundingClientRect) return;
 
     if (isInitialMount) {
       if (initialMeasureTimeout) {
@@ -342,7 +342,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
 
   return (
     <div
-      class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4"
+      class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4 pointer-events-auto"
       onMouseUp={(e) => {
         if (e.target === e.currentTarget) props.onClose();
       }}

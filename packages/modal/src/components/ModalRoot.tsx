@@ -124,7 +124,7 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-export const ModalRoot = (props: { onClose: () => void; }) => {
+export const ModalRoot = (props: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri, status } = useSession();
   const { provider } = useModalContext();
@@ -158,11 +158,21 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
       .exhaustive(),
   );
 
-  useEscapeToClose(props.onClose);
+  useEscapeToClose(() => props.onClose?.());
+
+  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(provider.getState().status);
+
+  onMount(() => {
+    provider.on("status_change", setProviderStatus);
+  });
+
+  onCleanup(() => {
+    provider.off("status_change", setProviderStatus);
+  });
 
   createEffect(() => {
-    if (status()?.status === PROVIDER_STATUS.CONNECTED) {
-      props.onClose();
+    if (providerStatus() === PROVIDER_STATUS.CONNECTED) {
+      props.onClose?.();
     }
   });
 
@@ -240,16 +250,6 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
     });
   });
 
-  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(provider.getState().status);
-
-  onMount(() => {
-    provider.on("status_change", setProviderStatus);
-  });
-
-  onCleanup(() => {
-    provider.off("status_change", setProviderStatus);
-  });
-
   const shouldShowBack = createMemo(
     () => !(modalView() === "start" && providerStatus() === PROVIDER_STATUS.STANDBY),
   );
@@ -273,7 +273,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
       })
       .otherwise(() => {
         provider.closeSession();
-        props.onClose();
+        props.onClose?.();
       });
   };
 
@@ -321,7 +321,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           PROVIDER_STATUS.CONNECTED,
         ),
         () => (
-          <ConnectionFlow onClose={props.onClose} onCopy={handleCopy} />
+          <ConnectionFlow onClose={() => props.onClose?.()} onCopy={handleCopy} />
         ),
       )
       .otherwise(state => <UnknownState state={state || "unknown status"} />);
@@ -344,7 +344,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
     <div
       class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4 pointer-events-auto"
       onMouseUp={(e) => {
-        if (e.target === e.currentTarget) props.onClose();
+        if (e.target === e.currentTarget) props.onClose?.();
       }}
       role="presentation"
       data-openlv-modal-root
@@ -375,7 +375,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           <Header
             title={String(title())}
             view={modalView()}
-            onClose={props.onClose}
+            onClose={() => props.onClose?.()}
             onBack={shouldShowBack() ? onBack : undefined}
             setView={setView}
           />

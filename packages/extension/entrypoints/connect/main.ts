@@ -10,8 +10,18 @@ import { createFakeProvider } from "./fakeProvider.js";
 const uri = new URLSearchParams(location.search).get("uri") ?? "";
 const flowToken = new URLSearchParams(location.search).get("flowToken") ?? "";
 
-if (!flowToken) {
+const closePopup = () => {
   globalThis.close();
+  chrome.windows.getCurrent().then((win) => {
+    if (win?.id !== undefined) {
+      chrome.windows.remove(win.id).catch(() => {});
+    }
+  })
+    .catch(() => {});
+};
+
+if (!flowToken) {
+  closePopup();
   throw new Error("Missing flowToken");
 }
 
@@ -21,7 +31,7 @@ try {
   handshakeParams = decodeConnectionURL(uri);
 }
 catch {
-  globalThis.close();
+  closePopup();
   throw new Error("Invalid connection URL");
 }
 
@@ -32,7 +42,7 @@ const provider = await createFakeProvider(flowToken, handshakeParams);
 registerOpenLVModal();
 const modal = new OpenLVModalElement({
   provider,
-  onClose: () => globalThis.close(),
+  onClose: () => closePopup(),
   theme: {
     theme: {
       common: { border: { radius: "0px" } },
@@ -51,12 +61,17 @@ const { id: windowId } = await chrome.windows.getCurrent();
 const chromeBarHeight = globalThis.outerHeight - globalThis.innerHeight;
 
 const observeCardResize = (card: Element) => {
-  new ResizeObserver(([entry]) => {
+  const ro = new ResizeObserver(([entry]) => {
     if (entry.contentRect.height > 0 && windowId !== undefined)
       chrome.windows.update(windowId, {
         height: Math.round(entry.contentRect.height) + chromeBarHeight,
       });
-  }).observe(card);
+  });
+
+  ro.observe(card);
+
+  // Clean up when the popup closes
+  globalThis.addEventListener("beforeunload", () => ro.disconnect());
 };
 
 const card = modal.shadowRoot?.querySelector("[role=dialog]");
@@ -75,5 +90,10 @@ else {
     }
   });
 
-  mo.observe(modal.shadowRoot!, { childList: true, subtree: true });
+  if (modal.shadowRoot) {
+    mo.observe(modal.shadowRoot, { childList: true, subtree: true });
+  }
+
+  // Clean up if popup closes before card appears
+  globalThis.addEventListener("beforeunload", () => mo.disconnect());
 }

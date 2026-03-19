@@ -1,7 +1,6 @@
 import { encodeConnectionURL } from "@openlv/core";
 import {
   createProvider,
-  createSyncStorage,
   PROVIDER_STATUS,
 } from "@openlv/provider";
 
@@ -14,12 +13,32 @@ import {
 
 const buildStorage = async () => {
   const stored = await chrome.storage.local.get("@openlv/connector/settings");
-  const raw = stored["@openlv/connector/settings"] as string | undefined;
+  let raw = stored["@openlv/connector/settings"] as string | undefined;
 
-  return createSyncStorage(
-    raw ? { "@openlv/connector/settings": raw } : undefined,
-    (key, value) => chrome.storage.local.set({ [key]: value }),
-  );
+  chrome.storage.local.onChanged.addListener((changes: { [x: string]: { newValue: string | undefined; }; }, area: string) => {
+    if (area === "local" && changes["@openlv/connector/settings"]) {
+      raw = changes["@openlv/connector/settings"].newValue as string | undefined;
+    }
+  });
+
+  return {
+    getItem: (key: string) => (key === "@openlv/connector/settings" ? (raw ?? null) : null),
+    setItem: (key: string, value: string) => {
+      if (key === "@openlv/connector/settings") {
+        raw = value;
+        chrome.storage.local.set({ [key]: value }).catch(() => {});
+      }
+    },
+    removeItem: (key: string) => {
+      if (key === "@openlv/connector/settings") {
+        raw = undefined;
+        chrome.storage.local.remove(key).catch(() => {});
+      }
+    },
+    clear: () => {},
+    length: 1,
+    key: () => "@openlv/connector/settings",
+  } as unknown as Storage;
 };
 
 export default defineContentScript({
@@ -57,11 +76,9 @@ export default defineContentScript({
     });
 
     let sessionRef: object | undefined;
-    let sessionStateRelayAttached = false;
 
     const resetConnectFlow = () => {
       sessionRef = undefined;
-      sessionStateRelayAttached = false;
     };
 
     provider.on("status_change", (status) => {
@@ -73,25 +90,35 @@ export default defineContentScript({
         const session = provider.getSession();
 
         if (session && session !== sessionRef) {
+          if (sessionRef) {
+            sessionRef.emitter.removeAllListeners?.("state_change");
+          }
+
           sessionRef = session;
 
+          const handshakeParams = session.getHandshakeParameters();
+
           try {
-            const uri = encodeConnectionURL(session.getHandshakeParameters());
+            const uri = encodeConnectionURL(handshakeParams);
 
             chrome.runtime.sendMessage({ type: "OPEN_POPUP", uri, flowToken }).catch(() => {});
+            chrome.runtime.sendMessage({ type: "UPDATED_SESSION_METADATA", flowToken, handshakeParams }).catch(() => {});
           }
           catch (error) {
             console.error("[openlv] Failed to encode connection URL:", error);
           }
-        }
 
-        if (session && !sessionStateRelayAttached) {
-          sessionStateRelayAttached = true;
+          // We must attach to the newly created session
           session.emitter.on("state_change", (sessionState) => {
             chrome.runtime
               .sendMessage({ type: "SESSION_STATE", state: sessionState?.status, flowToken })
               .catch(() => {});
           });
+
+          // Manually blast the very first state out
+          chrome.runtime
+            .sendMessage({ type: "SESSION_STATE", state: session.getState()?.status, flowToken })
+            .catch(() => {});
         }
       }
 
@@ -103,9 +130,16 @@ export default defineContentScript({
     });
 
     chrome.runtime.onMessage.addListener((message) => {
-      if (message.type === "CANCEL_SESSION" && message.flowToken === flowToken) {
+      if (message.flowToken !== flowToken) return;
+
+      if (message.type === "CANCEL_SESSION") {
         provider.closeSession();
         resetConnectFlow();
+      }
+      else if (message.type === "CREATE_SESSION") {
+        provider.createSession(message.parameters).catch((error) => {
+          console.error("[openlv] Manual session creation failed:", error);
+        });
       }
     });
 

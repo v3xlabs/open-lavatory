@@ -71,11 +71,12 @@ export const createProviderStorage = ({
   storage: storageBackend,
 }: ProviderStorageParameters): ProviderStorageR => {
   const io = storageBackend ?? getStorage() ?? createPassthrough();
-  const initialSettings = io.getItem(DEFAULT_STORAGE_KEY);
 
-  let settings: ProviderStorage = initialSettings
-    ? parseProviderStorage(initialSettings)
-    : DEFAULT_SETTINGS;
+  const getSettings = () => {
+    const raw = io.getItem(DEFAULT_STORAGE_KEY);
+
+    return raw ? parseProviderStorage(raw) : DEFAULT_SETTINGS;
+  };
 
   const emitter = new EventEmitter<{
     settings_change: (settings: ProviderStorage) => void;
@@ -83,9 +84,8 @@ export const createProviderStorage = ({
 
   return {
     emitter,
-    getSettings: () => settings,
+    getSettings,
     setSettings: (update: ProviderStorage) => {
-      settings = update;
       io.setItem(DEFAULT_STORAGE_KEY, JSON.stringify(update));
       emitter.emit("settings_change", update);
     },

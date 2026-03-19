@@ -67,12 +67,29 @@ export default defineUnlistedScript(() => {
     }
   });
 
+  const REQUEST_TIMEOUT_MS = 30_000;
+
   const eip1193 = {
     request: (payload: { method: string; params?: unknown; }) =>
       new Promise((resolve, reject) => {
+        console.log("[injected] eip1193.request", payload.method, payload.params);
         const requestId = ++requestCounter;
 
-        pending.set(requestId, { resolve, reject });
+        const timeout = setTimeout(() => {
+          pending.delete(requestId);
+          reject(new Error("Request timed out"));
+        }, REQUEST_TIMEOUT_MS);
+
+        pending.set(requestId, {
+          resolve: (v: unknown) => {
+            clearTimeout(timeout);
+            resolve(v);
+          },
+          reject: (e: unknown) => {
+            clearTimeout(timeout);
+            reject(e);
+          },
+        });
         globalThis.postMessage(
           {
             source: PAGE_SOURCE,
@@ -169,7 +186,8 @@ export default defineUnlistedScript(() => {
 
   const providerDetail = Object.freeze({
     info: {
-      uuid: crypto.randomUUID(),
+      // EIP-6963 requires a stable UUID per wallet. XKCD 221.
+      uuid: "4a6f6e74-654f-4ece-9e74-68657265756d",
       name: "Open Lavatory",
       icon: OPENLV_ICON_128,
       rdns: "company.v3x.openlv",

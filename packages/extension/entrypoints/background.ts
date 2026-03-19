@@ -11,10 +11,11 @@ const STORAGE_KEY = "@openlv/background/flow";
 export default defineBackground(() => {
   const state: FlowState = { lastStatus: "standby" };
 
+  const sessionStorage = chrome.storage.session;
   const persist = () =>
-    chrome.storage.session.set({ [STORAGE_KEY]: state }).catch(() => {});
+    sessionStorage.set({ [STORAGE_KEY]: state }).catch(() => {});
 
-  chrome.storage.session.get(STORAGE_KEY).then((stored) => {
+  sessionStorage.get(STORAGE_KEY).then((stored) => {
     const saved = stored[STORAGE_KEY] as FlowState | undefined;
 
     if (saved) Object.assign(state, saved);
@@ -79,6 +80,22 @@ export default defineBackground(() => {
         break;
       }
 
+      case "CREATE_SESSION": {
+        if (message.flowToken !== state.activeFlowToken) break;
+
+        if (state.activeTabId !== undefined) {
+          chrome.tabs
+            .sendMessage(state.activeTabId, {
+              type: "CREATE_SESSION",
+              flowToken: state.activeFlowToken,
+              parameters: message.parameters,
+            })
+            .catch(() => {});
+        }
+
+        break;
+      }
+
       case "CANCEL_SESSION": {
         if (message.flowToken !== state.activeFlowToken) break;
 
@@ -101,7 +118,10 @@ export default defineBackground(() => {
 
     state.popupWindowId = undefined;
 
-    if (state.lastStatus !== "connected" && state.activeTabId !== undefined) {
+    if (
+      ["creating", "connecting"].includes(state.lastStatus)
+      && state.activeTabId !== undefined
+    ) {
       chrome.tabs
         .sendMessage(state.activeTabId, {
           type: "CANCEL_SESSION",

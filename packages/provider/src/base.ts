@@ -91,18 +91,20 @@ type transportInput =
   }
   | undefined;
 
-const convertTempV1 = (transport: transportInput): WebRTCConfig => {
-  const stun = transport?.stun?.map(url => ({ urls: url })) || [];
+const convertTempV1 = (transport: transportInput): WebRTCConfig | undefined => {
+  if (!transport) return undefined;
+
+  const stun = transport.stun?.map(url => ({ urls: url })) || [];
   const turn
-    = transport?.turn?.map(server => ({
+    = transport.turn?.map(server => ({
       urls: server.urls,
       username: server.username,
       credential: server.credential,
     })) || [];
 
-  return {
-    iceServers: [...stun, ...turn],
-  };
+  const iceServers = [...stun, ...turn];
+
+  return { iceServers };
 };
 
 /**
@@ -115,7 +117,9 @@ export const createProvider = (
 ): OpenLVProvider => {
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
+  let inFlightRequestAccounts: Promise<Address[]> | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
+  let lastKnownChainId = "0x1";
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
@@ -147,6 +151,10 @@ export const createProvider = (
             ? message.params[0]
             : message.params;
 
+          if (typeof chainId === "string") {
+            lastKnownChainId = chainId;
+          }
+
           oxEmitter.emit("chainChanged", chainId);
 
           break;
@@ -174,24 +182,40 @@ export const createProvider = (
       })) as Address[];
     }
 
-    throw new Error("No session");
+    return [];
   };
 
   const start = async (
-    // eslint-disable-next-line unicorn/no-object-as-default-parameter
-    parameters: SessionLinkParameters = {
-      p: "mqtt",
-      s: "wss://mqtt-dashboard.com:8884/mqtt",
-    },
+    parameters?: SessionLinkParameters,
   ) => {
+    if (session && status !== PROVIDER_STATUS.STANDBY) {
+      return session;
+    }
+
+    const currentSettings = storage.getSettings();
+
+    const p = parameters?.p || currentSettings.signaling?.p || config?.signaling?.p || "mqtt";
+    let s = parameters?.s;
+
+    if (!s) {
+      s = parameters?.p ? currentSettings.signaling?.s?.[parameters.p as keyof NonNullable<typeof currentSettings.signaling>["s"]] || config?.signaling?.s?.[parameters.p as keyof NonNullable<typeof config.signaling>["s"]] : currentSettings.signaling?.s?.[p as keyof NonNullable<typeof currentSettings.signaling>["s"]] || config?.signaling?.s?.[p as keyof NonNullable<typeof config.signaling>["s"]];
+    }
+
+    // Fallback default
+    if (!s) {
+      s = "wss://test.mosquitto.org:8081/mqtt";
+    }
+
+    const resolvedParameters: SessionLinkParameters = { p, s };
+
     updateStatus(PROVIDER_STATUS.CREATING);
     const transportOptions
-      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
+      = convertTempV1(currentSettings.transport?.s?.webrtc)
         || config?.transport?.s?.webrtc;
 
     session = await createSession(
-      parameters,
-      await dynamicSignalingLayer(parameters.p),
+      resolvedParameters,
+      await dynamicSignalingLayer(resolvedParameters.p),
       webrtc(transportOptions),
       onMessage,
     );
@@ -199,6 +223,12 @@ export const createProvider = (
 
     log("session created");
     await session.connect();
+
+    // Session can be closed while connect is in-flight.
+    if (!session) {
+      throw new Error("Session closed during connect");
+    }
+
     log("session connected");
     const handshakeParameters = session.getHandshakeParameters();
     const url = encodeConnectionURL(handshakeParameters);
@@ -207,14 +237,26 @@ export const createProvider = (
     oxEmitter.emit("session_started", session);
 
     await session.waitForLink();
+
+    // Session can be closed while link is in-flight.
+    if (!session) {
+      throw new Error("Session closed during link");
+    }
+
     log("session linked");
 
     accounts = await getAccounts();
+
+    if (!session) {
+      throw new Error("Session closed during eth_accounts");
+    }
 
     const chainIdHex = (await session.send({
       method: "eth_chainId",
       params: [],
     })) as string;
+
+    lastKnownChainId = chainIdHex;
 
     updateStatus(PROVIDER_STATUS.CONNECTED);
     oxEmitter.emit("connect", { chainId: chainIdHex });
@@ -223,7 +265,16 @@ export const createProvider = (
     return session;
   };
   const closeSession = async () => {
-    await session?.close();
+    console.trace("closeSession trace");
+    inFlightRequestAccounts = undefined;
+
+    try {
+      await session?.close();
+    }
+    catch (error) {
+      log("error closing session", error);
+    }
+
     session = undefined;
     updateStatus(PROVIDER_STATUS.STANDBY);
   };
@@ -242,12 +293,16 @@ export const createProvider = (
             log("sending eth_chainId to session");
             const result = await session.send(request);
 
+            if (typeof result === "string") {
+              lastKnownChainId = result;
+            }
+
             log("eth_chainId result from session", result);
 
             return result;
           }
 
-          return "0x1";
+          return lastKnownChainId;
         })
         .with({ method: "wallet_requestPermissions" }, () => {
           throw new Error("Not implemented");
@@ -267,33 +322,65 @@ export const createProvider = (
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
-          let provider: OpenLVProvider | undefined;
-
-          if (oxProvider) {
-            provider = oxProvider as OpenLVProvider;
-          }
-
-          if (openModal && provider) {
-            await openModal(provider);
-
-            await new Promise((resolve) => {
-              provider?.on("connect", resolve);
-              provider?.on("disconnect", resolve);
-            });
-
+          if (status === PROVIDER_STATUS.CONNECTED) {
             return await getAccounts();
           }
 
-          const x = await start();
+          if (inFlightRequestAccounts) {
+            return await inFlightRequestAccounts;
+          }
 
-          log("x", x);
+          inFlightRequestAccounts = (async () => {
+            let provider: OpenLVProvider | undefined;
 
-          return await getAccounts();
+            if (oxProvider) {
+              provider = oxProvider as OpenLVProvider;
+            }
+
+            if (openModal && provider) {
+              await openModal(provider);
+
+              await new Promise((resolve) => {
+                const handler = () => {
+                  provider?.off("connect", handler);
+                  provider?.off("disconnect", handler);
+                  resolve(undefined);
+                };
+
+                provider?.on("connect", handler);
+                provider?.on("disconnect", handler);
+              });
+
+              if (!provider.getSession()) {
+                return [];
+              }
+
+              return await getAccounts();
+            }
+
+            await start();
+
+            return await getAccounts();
+          })();
+
+          try {
+            return await inFlightRequestAccounts;
+          }
+          finally {
+            inFlightRequestAccounts = undefined;
+          }
         })
         .with({ method: "eth_accounts" }, async () => {
           log("eth_accounts");
 
-          return await getAccounts();
+          if (!session) return [];
+
+          try {
+            return await getAccounts();
+          }
+          catch {
+            return [];
+          }
         })
         .otherwise(async (v) => {
           if (session) {

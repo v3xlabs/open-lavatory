@@ -6,7 +6,7 @@ import { connectSession, type Session } from "@openlv/session";
 import { webrtc } from "@openlv/transport/webrtc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { match } from "ts-pattern";
 import type { Address, EIP1193Provider } from "viem";
 import {
@@ -173,7 +173,7 @@ const ConnectComponent = () => {
   const walletClient = useClient();
   const { data: connectorClient } = useConnectorClient();
   const connections = useConnections();
-  const [url, setUrl] = useState<string | undefined>();
+  const [url, setUrl] = useState<string>("");
 
   console.log("connectorClient", connectorClient);
   console.log("connections", connections);
@@ -396,6 +396,13 @@ const Connectors = () => {
 
 export const Inner = () => {
   const { isConnected } = useAccount();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => setMounted(true), []);
+
+  if (!mounted) {
+    return <div className="space-y-2"><Connectors /></div>;
+  }
 
   return (
     <div className="space-y-2">

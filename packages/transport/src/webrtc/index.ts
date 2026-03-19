@@ -28,7 +28,9 @@ const defaultConfig: WebRTCConfig = {
 export const webrtc: CreateTransportLayerFn = (
   config: WebRTCConfig = defaultConfig,
 ) => {
-  const { iceServers = defaultConfig.iceServers } = config;
+  const iceServers = config.iceServers && config.iceServers.length > 0
+    ? config.iceServers
+    : defaultConfig.iceServers;
 
   console.log("WEBRTC ICE CONFIG", config);
   const ident = Math.random().toString(36)
@@ -46,9 +48,11 @@ export const webrtc: CreateTransportLayerFn = (
 
       match(state)
         .with("disconnected", () => {
-          // TODO: implement
+          emitter.emit("error");
         })
-        .with("failed", () => {})
+        .with("failed", () => {
+          emitter.emit("error");
+        })
         .otherwise(() => {
           log(ident, "onConnectionStateChangeUnknown", state);
         });

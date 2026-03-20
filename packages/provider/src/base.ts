@@ -40,6 +40,7 @@ export type OpenLVProviderParameters = Prettify<
   {
     config?: OpenLVProviderConfig;
     openModal?: (provider: OpenLVProvider) => Promise<void>;
+    providerStorage?: ProviderStorageR;
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
@@ -121,7 +122,7 @@ export const createProvider = (
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let lastKnownChainId = "0x1";
   let accounts: Address[] = [];
-  const storage = createProviderStorage({ storage: parameters.storage });
+  const storage = parameters.providerStorage ?? createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {

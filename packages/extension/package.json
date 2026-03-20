@@ -34,7 +34,8 @@
     "@openlv/core": "workspace:*",
     "@openlv/modal": "workspace:*",
     "@openlv/provider": "workspace:*",
-    "@openlv/session": "workspace:*"
+    "@openlv/session": "workspace:*",
+    "eventemitter3": "^5.0.4"
   },
   "devDependencies": {
     "@types/chrome": "^0.0.278",

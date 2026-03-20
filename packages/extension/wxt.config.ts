@@ -2,6 +2,7 @@ import { defineConfig } from "wxt";
 
 // https://wxt.dev/api/config.html
 export default defineConfig({
+  imports: false,
   manifest: {
     name: "Open Lavatory",
     description: "Privacy-first wallet connection for dApps",

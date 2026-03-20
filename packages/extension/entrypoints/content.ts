@@ -1,8 +1,14 @@
-import { encodeConnectionURL } from "@openlv/core";
+import {
+  encodeConnectionURL,
+  type SessionLinkParameters,
+} from "@openlv/core";
 import {
   createProvider,
   PROVIDER_STATUS,
 } from "@openlv/provider";
+import type { Session, SessionStateObject } from "@openlv/session";
+
+import { defineContentScript } from "#imports";
 
 import {
   CONTENT_MSG,
@@ -10,36 +16,7 @@ import {
   PAGE_MSG,
   PAGE_SOURCE,
 } from "../utils/bridge.js";
-
-const buildStorage = async () => {
-  const stored = await chrome.storage.local.get("@openlv/connector/settings");
-  let raw = stored["@openlv/connector/settings"] as string | undefined;
-
-  chrome.storage.local.onChanged.addListener((changes: { [x: string]: { newValue: string | undefined; }; }, area: string) => {
-    if (area === "local" && changes["@openlv/connector/settings"]) {
-      raw = changes["@openlv/connector/settings"].newValue as string | undefined;
-    }
-  });
-
-  return {
-    getItem: (key: string) => (key === "@openlv/connector/settings" ? (raw ?? null) : null),
-    setItem: (key: string, value: string) => {
-      if (key === "@openlv/connector/settings") {
-        raw = value;
-        chrome.storage.local.set({ [key]: value }).catch(() => {});
-      }
-    },
-    removeItem: (key: string) => {
-      if (key === "@openlv/connector/settings") {
-        raw = undefined;
-        chrome.storage.local.remove(key).catch(() => {});
-      }
-    },
-    clear: () => {},
-    length: 1,
-    key: () => "@openlv/connector/settings",
-  } as unknown as Storage;
-};
+import { createWxtProviderStorage } from "../utils/wxt-storage-shim.js";
 
 export default defineContentScript({
   matches: ["<all_urls>"],
@@ -57,25 +34,36 @@ export default defineContentScript({
     script.addEventListener("load", () => script.remove());
     (document.head || document.documentElement).append(script);
 
-    const storage = await buildStorage();
+    const providerStorage = await createWxtProviderStorage();
+
     const provider = createProvider({
-      storage,
+      providerStorage,
       openModal: async (providerRef) => {
         if (providerRef.getState().status !== PROVIDER_STATUS.STANDBY) {
           return;
         }
 
-        const { signaling } = providerRef.storage.getSettings() ?? {};
-        const protocol = signaling?.p;
-        const server = protocol ? signaling?.s?.[protocol] : undefined;
+        // Suppress auto-connect on page load (e.g. after refresh).
+        // hasBeenActive is sticky: false until the user interacts, true after.
+        if (!navigator.userActivation?.hasBeenActive) {
+          const error = new Error("User rejected the request.") as Error & {
+            code: number;
+          };
+
+          error.code = 4001;
+          throw error;
+        }
 
         providerRef
-          .createSession(protocol && server ? { p: protocol, s: server } : undefined)
+          .createSession()
           .catch(error => console.error("[openlv] Session creation failed:", error));
       },
     });
 
-    let sessionRef: object | undefined;
+    let sessionRef: Session | undefined;
+    let sessionStateHandler:
+      | ((state?: SessionStateObject) => void)
+      | undefined;
 
     const resetConnectFlow = () => {
       sessionRef = undefined;
@@ -90,8 +78,8 @@ export default defineContentScript({
         const session = provider.getSession();
 
         if (session && session !== sessionRef) {
-          if (sessionRef) {
-            sessionRef.emitter.removeAllListeners?.("state_change");
+          if (sessionRef && sessionStateHandler) {
+            sessionRef.emitter.off("state_change", sessionStateHandler);
           }
 
           sessionRef = session;
@@ -108,12 +96,13 @@ export default defineContentScript({
             console.error("[openlv] Failed to encode connection URL:", error);
           }
 
-          // We must attach to the newly created session
-          session.emitter.on("state_change", (sessionState) => {
+          sessionStateHandler = (sessionState) => {
             chrome.runtime
               .sendMessage({ type: "SESSION_STATE", state: sessionState?.status, flowToken })
               .catch(() => {});
-          });
+          };
+
+          session.emitter.on("state_change", sessionStateHandler);
 
           // Manually blast the very first state out
           chrome.runtime
@@ -137,14 +126,24 @@ export default defineContentScript({
         resetConnectFlow();
       }
       else if (message.type === "CREATE_SESSION") {
-        provider.createSession(message.parameters).catch((error) => {
-          console.error("[openlv] Manual session creation failed:", error);
-        });
+        const parameters = message.parameters as SessionLinkParameters | undefined;
+
+        provider.closeSession()
+          .then(() => {
+            provider.createSession(parameters).catch((error) => {
+              console.error("[openlv] Manual session creation failed:", error);
+            });
+          })
+          .catch(() => {});
       }
     });
 
     const allowedEvents = new Set(["accountsChanged", "chainChanged", "connect", "disconnect", "message"]);
     const eventHandlers = new Map<string, (data: unknown) => void>();
+    const eventProvider = provider as unknown as {
+      on(event: string, handler: (data: unknown) => void): void;
+      off(event: string, handler: (data: unknown) => void): void;
+    };
 
     globalThis.addEventListener("message", async (event) => {
       if (event.source !== globalThis.window) return;
@@ -171,8 +170,7 @@ export default defineContentScript({
           globalThis.postMessage({ source: CONTENT_SOURCE, type: CONTENT_MSG.EVENT, event: eventName, data }, origin);
 
         eventHandlers.set(eventName, handler);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (provider as any).on(eventName, handler);
+        eventProvider.on(eventName, handler);
 
         return;
       }
@@ -182,8 +180,7 @@ export default defineContentScript({
 
         if (!handler) return;
 
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        (provider as any).off(msg.event as string, handler);
+        eventProvider.off(msg.event as string, handler);
         eventHandlers.delete(msg.event as string);
 
         return;

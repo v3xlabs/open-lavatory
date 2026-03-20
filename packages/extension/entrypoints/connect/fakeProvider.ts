@@ -1,12 +1,14 @@
 /* eslint-disable no-restricted-syntax */
-import type { SessionHandshakeParameters } from "@openlv/core";
+import type {
+  SessionHandshakeParameters,
+  SessionLinkParameters,
+} from "@openlv/core";
 import type { OpenLVProvider, ProviderStatus } from "@openlv/provider";
-import {
-  createProviderStorage,
-  PROVIDER_STATUS,
-} from "@openlv/provider";
+import { PROVIDER_STATUS } from "@openlv/provider";
 import type { Session } from "@openlv/session";
 import { SESSION_STATE } from "@openlv/session";
+
+import { createWxtProviderStorage } from "../../utils/wxt-storage-shim.js";
 
 type Listener = (...args: unknown[]) => void;
 
@@ -38,40 +40,11 @@ export const createFakeProvider = async (
   flowToken: string,
   handshakeParams: SessionHandshakeParameters,
 ): Promise<OpenLVProvider> => {
-  const stored = await chrome.storage.local.get("@openlv/connector/settings");
-  let raw = stored["@openlv/connector/settings"] as string | undefined;
-
-  chrome.storage.local.onChanged.addListener((changes, area) => {
-    if (area === "local" && changes["@openlv/connector/settings"]) {
-      raw = changes["@openlv/connector/settings"].newValue as string | undefined;
-    }
-  });
-
-  const storageBackend = {
-    getItem: (key: string) => (key === "@openlv/connector/settings" ? (raw ?? null) : null),
-    setItem: (key: string, value: string) => {
-      if (key === "@openlv/connector/settings") {
-        raw = value;
-        chrome.storage.local.set({ [key]: value }).catch(() => {});
-      }
-    },
-    removeItem: (key: string) => {
-      if (key === "@openlv/connector/settings") {
-        raw = undefined;
-        chrome.storage.local.remove(key).catch(() => {});
-      }
-    },
-    clear: () => {},
-    length: 1,
-    key: () => "@openlv/connector/settings",
-  } as unknown as Storage;
-
-  const storage = createProviderStorage({
-    storage: storageBackend,
-  });
+  const storage = await createWxtProviderStorage();
 
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let sessionState = { status: SESSION_STATE.READY as string };
+  let pendingRecreate = false;
 
   const providerEmitter = createEmitter();
   let sessionEmitter = createEmitter();
@@ -87,17 +60,27 @@ export const createFakeProvider = async (
 
     switch (message.type) {
       case "PROVIDER_STATUS": {
-        status = message.status as ProviderStatus;
+        const newStatus = message.status as ProviderStatus;
 
+        // During session recreation (close → create), a transient STANDBY
+        // fires before CREATING. Suppress it so the modal doesn't flash.
+        if (newStatus === PROVIDER_STATUS.STANDBY && pendingRecreate) {
+          pendingRecreate = false;
+          break;
+        }
+
+        pendingRecreate = false;
+        status = newStatus;
         providerEmitter.emit("status_change", status);
 
         if (status === PROVIDER_STATUS.ERROR) {
           globalThis.close();
-          chrome.windows.getCurrent().then((win) => {
-            if (win?.id !== undefined) {
-              chrome.windows.remove(win.id).catch(() => {});
-            }
-          })
+          chrome.windows.getCurrent()
+            .then((win) => {
+              if (win?.id !== undefined) {
+                chrome.windows.remove(win.id).catch(() => {});
+              }
+            })
             .catch(() => {});
         }
 
@@ -132,9 +115,8 @@ export const createFakeProvider = async (
     on: providerEmitter.on.bind(providerEmitter),
     off: providerEmitter.off.bind(providerEmitter),
     storage,
-    createSession: (parameters?: any) => {
-      status = PROVIDER_STATUS.CONNECTING;
-      providerEmitter.emit("status_change", status);
+    createSession: (parameters?: SessionLinkParameters) => {
+      pendingRecreate = true;
 
       chrome.runtime
         .sendMessage({ type: "CREATE_SESSION", flowToken, parameters })

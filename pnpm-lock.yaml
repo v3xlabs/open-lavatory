@@ -483,6 +483,9 @@ importers:
       '@openlv/session':
         specifier: workspace:*
         version: link:../session
+      eventemitter3:
+        specifier: ^5.0.4
+        version: 5.0.4
     devDependencies:
       '@types/chrome':
         specifier: ^0.0.278

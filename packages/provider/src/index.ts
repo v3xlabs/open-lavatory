@@ -3,4 +3,4 @@
 
 export * from "./base.js";
 export type { ProviderStorageParameters, ProviderStorageR } from "./storage/index.js";
-export { createProviderStorage, createSyncStorage } from "./storage/index.js";
+export { createProviderStorage } from "./storage/index.js";

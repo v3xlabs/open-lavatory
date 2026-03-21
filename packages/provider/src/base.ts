@@ -92,20 +92,18 @@ type transportInput =
   }
   | undefined;
 
-const convertTempV1 = (transport: transportInput): WebRTCConfig | undefined => {
-  if (!transport) return undefined;
-
-  const stun = transport.stun?.map(url => ({ urls: url })) || [];
+const convertTempV1 = (transport: transportInput): WebRTCConfig => {
+  const stun = transport?.stun?.map(url => ({ urls: url })) || [];
   const turn
-    = transport.turn?.map(server => ({
+    = transport?.turn?.map(server => ({
       urls: server.urls,
       username: server.username,
       credential: server.credential,
     })) || [];
 
-  const iceServers = [...stun, ...turn];
-
-  return { iceServers };
+  return {
+    iceServers: [...stun, ...turn],
+  };
 };
 
 /**
@@ -150,36 +148,20 @@ export const createProvider = (
   };
 
   const start = async (
-    parameters?: SessionLinkParameters,
+    // eslint-disable-next-line unicorn/no-object-as-default-parameter
+    parameters: SessionLinkParameters = {
+      p: "mqtt",
+      s: "wss://mqtt-dashboard.com:8884/mqtt",
+    },
   ) => {
-    if (session && status !== PROVIDER_STATUS.STANDBY) {
-      return session;
-    }
-
-    const currentSettings = storage.getSettings();
-
-    const p = parameters?.p || currentSettings.signaling?.p || config?.signaling?.p || "mqtt";
-    let s = parameters?.s;
-
-    if (!s) {
-      s = parameters?.p ? currentSettings.signaling?.s?.[parameters.p as keyof NonNullable<typeof currentSettings.signaling>["s"]] || config?.signaling?.s?.[parameters.p as keyof NonNullable<typeof config.signaling>["s"]] : currentSettings.signaling?.s?.[p as keyof NonNullable<typeof currentSettings.signaling>["s"]] || config?.signaling?.s?.[p as keyof NonNullable<typeof config.signaling>["s"]];
-    }
-
-    // Fallback default
-    if (!s) {
-      s = "wss://test.mosquitto.org:8081/mqtt";
-    }
-
-    const resolvedParameters: SessionLinkParameters = { p, s };
-
     updateStatus(PROVIDER_STATUS.CREATING);
     const transportOptions
-      = convertTempV1(currentSettings.transport?.s?.webrtc)
+      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
         || config?.transport?.s?.webrtc;
 
     session = await createSession(
-      resolvedParameters,
-      await dynamicSignalingLayer(resolvedParameters.p),
+      parameters,
+      await dynamicSignalingLayer(parameters.p),
       webrtc(transportOptions),
       onMessage,
     );

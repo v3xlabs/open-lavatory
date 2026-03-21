@@ -131,48 +131,11 @@ export const createProvider = (
     oxEmitter.emit("status_change", newStatus);
   };
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const onMessage = async (message: any) => {
+  // eslint-disable-next-line unicorn/consistent-function-scoping
+  const onMessage = async (message: object) => {
     log("onMessage", message);
 
-    if (message && typeof message === "object" && "method" in message) {
-      switch (message.method) {
-        case "accountsChanged": {
-          accounts = (
-            Array.isArray(message.params?.[0])
-              ? message.params[0]
-              : message.params
-          ) as Address[];
-          oxEmitter.emit("accountsChanged", accounts);
-
-          break;
-        }
-        case "chainChanged": {
-          const chainId = Array.isArray(message.params)
-            ? message.params[0]
-            : message.params;
-
-          if (typeof chainId === "string") {
-            lastKnownChainId = chainId;
-          }
-
-          oxEmitter.emit("chainChanged", chainId);
-
-          break;
-        }
-        case "disconnect": {
-          const error = Array.isArray(message.params)
-            ? message.params[0]
-            : (message.error ?? message.params);
-
-          oxEmitter.emit("disconnect", error);
-
-          break;
-        }
-      }
-    }
-
-    return message;
+    return { result: "success" };
   };
 
   const getAccounts = async (): Promise<Address[]> => {
@@ -266,7 +229,6 @@ export const createProvider = (
     return session;
   };
   const closeSession = async () => {
-    console.trace("closeSession trace");
     inFlightRequestAccounts = undefined;
 
     try {

@@ -1,19 +1,10 @@
 #!/bin/bash
 set -e
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-APP="$SCRIPT_DIR/app"
-
-for patch in "$SCRIPT_DIR/patches/"*.patch; do
-  git -C "$APP" apply --check "$patch" 2>/dev/null && git -C "$APP" apply "$patch" || true
-done
-
-cd "$APP/apps/mobile"
+cd apps/mobile
 
 if [ ! -f .env.local ]; then
-  cp .env.example .env.local
-  sed -i 's/APP_VARIANT=production/APP_VARIANT=development/' .env.local
-  sed -i 's/EXPO_PUBLIC_APP_VARIANT=production/EXPO_PUBLIC_APP_VARIANT=development/' .env.local
+  sed 's/APP_VARIANT=production/APP_VARIANT=development/; s/EXPO_PUBLIC_APP_VARIANT=production/EXPO_PUBLIC_APP_VARIANT=development/' .env.example > .env.local
 fi
 
 yarn install
@@ -53,4 +44,4 @@ EOF
 echo "Running expo prebuild for Android..."
 npx expo prebuild --platform android --clean --non-interactive
 
-echo "Setup complete. Run 'yarn android' from app/apps/mobile to build and launch."
+echo "Setup complete. Run 'yarn android' from apps/mobile to build and launch."

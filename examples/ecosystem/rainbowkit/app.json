@@ -1,5 +1,6 @@
 {
   "repo": "https://github.com/rainbow-me/rainbowkit",
   "commit": "8409eaa95545d6b698ee51d4441c2a77718294c7",
-  "branch": "main"
+  "branch": "main",
+  "setup": "pnpm install"
 }

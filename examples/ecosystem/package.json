@@ -2,8 +2,16 @@
     "name": "@openlv/ecosystem",
     "version": "0.0.1",
     "private": true,
+    "scripts": {
+        "init": "pillra init",
+        "clone": "pillra clone",
+        "apply": "pillra apply",
+        "edit": "pillra edit",
+        "save": "pillra save",
+        "bump": "pillra bump"
+    },
     "description": "Ecosystem apps managed with pillra",
     "devDependencies": {
-        "pillra": "0.2.1"
+        "pillra": "0.2.3"
     }
 }

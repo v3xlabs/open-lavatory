@@ -94,8 +94,8 @@ importers:
   examples/ecosystem:
     devDependencies:
       pillra:
-        specifier: 0.2.1
-        version: 0.2.1
+        specifier: 0.2.3
+        version: 0.2.3
 
   examples/react-dapp:
     dependencies:
@@ -9159,8 +9159,8 @@ packages:
     resolution: {integrity: sha512-eW/gHNMlxdSP6dmG6uJip6FXN0EQBwm2clYYd8Wul42Cwu/DK8HEftzsapcNdYe2MfLiIwZqsDk2RDEsTE79hA==}
     engines: {node: '>=10'}
 
-  pillra@0.2.1:
-    resolution: {integrity: sha512-sMGWZCp2nnmPU7HQai3+wJJWXaavNT7A5HbfhZXdNR8vc5kvsX3jYcm63tYLvbVqavS3B11T3226f6aHHLMvfQ==}
+  pillra@0.2.3:
+    resolution: {integrity: sha512-DqK9SYY2kxATYfECJbLpeDa3HinrKT6U/lN9hCRbwxoDYcQi60NCLEsWXS2U8JPHPmCaDmVp/n9WhY2dFqDnMw==}
     hasBin: true
 
   pino-abstract-transport@0.5.0:
@@ -23600,7 +23600,7 @@ snapshots:
 
   pify@5.0.0: {}
 
-  pillra@0.2.1: {}
+  pillra@0.2.3: {}
 
   pino-abstract-transport@0.5.0:
     dependencies:

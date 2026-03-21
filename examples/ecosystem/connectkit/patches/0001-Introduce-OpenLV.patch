@@ -1,0 +1,971 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: Jonatan Holmgren <jonatan@jontes.page>
+Date: Fri, 20 Mar 2026 21:51:00 +0100
+Subject: [PATCH] Introduce OpenLV
+
+---
+ packages/connectkit/package.json              |   1 +
+ .../components/Common/ConnectorList/index.tsx |  27 +-
+ .../ConnectWithInjector/index.tsx             |   6 +-
+ packages/connectkit/src/defaultConfig.ts      |  11 +-
+ packages/connectkit/src/defaultConnectors.ts  |   9 +-
+ .../connectkit/src/hooks/useConnectors.ts     |   3 +
+ packages/connectkit/src/utils/index.ts        |   3 +
+ .../connectkit/src/wallets/useWallets.tsx     |   9 +-
+ .../connectkit/src/wallets/walletConfigs.tsx  |  12 +-
+ yarn.lock                                     | 451 +++++++++++++++++-
+ 10 files changed, 512 insertions(+), 20 deletions(-)
+
+diff --git a/packages/connectkit/package.json b/packages/connectkit/package.json
+index 9374bd1..4277f60 100644
+--- a/packages/connectkit/package.json
++++ b/packages/connectkit/package.json
+@@ -39,6 +39,7 @@
+     "react"
+   ],
+   "dependencies": {
++    "@openlv/connector": "0.0.1-beta.12",
+     "buffer": "^6.0.3",
+     "detect-browser": "^5.3.0",
+     "family": "^0.1.2",
+diff --git a/packages/connectkit/src/components/Common/ConnectorList/index.tsx b/packages/connectkit/src/components/Common/ConnectorList/index.tsx
+index beea9c3..e613d46 100644
+--- a/packages/connectkit/src/components/Common/ConnectorList/index.tsx
++++ b/packages/connectkit/src/components/Common/ConnectorList/index.tsx
+@@ -18,6 +18,7 @@ import { WalletProps, useWallets } from '../../../wallets/useWallets';
+ import {
+   detectBrowser,
+   isCoinbaseWalletConnector,
++  isOpenLVConnector,
+   isWalletConnectConnector,
+ } from '../../../utils';
+ import { useLastConnector } from '../../../hooks/useLastConnector';
+@@ -134,17 +135,23 @@ const ConnectorItem = ({
+       onClick={
+         deeplink
+           ? undefined
+-          : () => {
+-              if (redirectToMoreWallets) {
+-                context.setRoute(routes.MOBILECONNECTORS);
+-              } else {
+-                if (shouldConnectImmediately) {
+-                  connect({ connector: wallet?.connector });
++              : () => {
++                  if (redirectToMoreWallets) {
++                    context.setRoute(routes.MOBILECONNECTORS);
++                  } else {
++                    if (shouldConnectImmediately) {
++                      connect({ connector: wallet?.connector });
++                    }
++
++                    if (isOpenLVConnector(wallet.id)) {
++                      connect({ connector: wallet?.connector });
++                      context.setOpen(false);
++                    } else {
++                      context.setRoute(routes.CONNECT);
++                      context.setConnector({ id: wallet.id });
++                    }
++                  }
+                 }
+-                context.setRoute(routes.CONNECT);
+-                context.setConnector({ id: wallet.id });
+-              }
+-            }
+       }
+     >
+       <ConnectorIcon
+diff --git a/packages/connectkit/src/components/ConnectModal/ConnectWithInjector/index.tsx b/packages/connectkit/src/components/ConnectModal/ConnectWithInjector/index.tsx
+index e8b9347..c3890c5 100644
+--- a/packages/connectkit/src/components/ConnectModal/ConnectWithInjector/index.tsx
++++ b/packages/connectkit/src/components/ConnectModal/ConnectWithInjector/index.tsx
+@@ -31,6 +31,7 @@ import {
+   detectBrowser,
+   isFamilyAccountsConnector,
+   isWalletConnectConnector,
++  isOpenLVConnector,
+ } from '../../../utils';
+ import useLocales from '../../../hooks/useLocales';
+ import { useConnect } from '../../../hooks/useConnect';
+@@ -130,7 +131,7 @@ const ConnectWithInjector: React.FC<{
+     },
+   });
+ 
+-  const { triggerResize, connector: c } = useContext();
++  const { triggerResize, connector: c, setOpen } = useContext();
+   const id = c.id;
+   const wallet = useWallet(id);
+ 
+@@ -177,6 +178,9 @@ const ConnectWithInjector: React.FC<{
+ 
+   const runConnect = async () => {
+     if (wallet?.isInstalled && wallet?.connector) {
++      if (isOpenLVConnector(wallet.connector.id)) {
++        setOpen(false);
++      }
+       connect({ connector: wallet?.connector });
+     } else {
+       setStatus(states.UNAVAILABLE);
+diff --git a/packages/connectkit/src/defaultConfig.ts b/packages/connectkit/src/defaultConfig.ts
+index de68506..1dbf6f3 100644
+--- a/packages/connectkit/src/defaultConfig.ts
++++ b/packages/connectkit/src/defaultConfig.ts
+@@ -3,6 +3,7 @@ import { type CreateConfigParameters } from '@wagmi/core';
+ import { mainnet, polygon, optimism, arbitrum } from 'wagmi/chains';
+ import { CoinbaseWalletParameters } from 'wagmi/connectors';
+ import { EthereumProviderOptions as FamilyOptions } from 'family';
++import { type OpenLVConnectorParameters } from '@openlv/connector';
+ 
+ import defaultConnectors from './defaultConnectors';
+ 
+@@ -25,7 +26,10 @@ type DefaultConfigProps = {
+   // Family options (https://app.family.co)
+   enableFamily?: boolean;
+   familyOptions?: FamilyOptions;
+-} & Partial<CreateConfigParameters>;
++} & (
++  | { enableOpenLV?: true; openlvOptions?: OpenLVConnectorParameters }
++  | { enableOpenLV: false; openlvOptions?: never }
++) & Partial<CreateConfigParameters>;
+ 
+ const defaultConfig = ({
+   appName = 'ConnectKit',
+@@ -38,6 +42,8 @@ const defaultConfig = ({
+   client,
+   enableFamily = true,
+   familyOptions,
++  enableOpenLV,
++  openlvOptions,
+   ...props
+ }: DefaultConfigProps): CreateConfigParameters => {
+   globalAppName = appName;
+@@ -61,6 +67,9 @@ const defaultConfig = ({
+       coinbaseWalletPreference,
+       enableFamily,
+       familyOptions,
++      ...(enableOpenLV === false
++        ? { enableOpenLV: false as const }
++        : { enableOpenLV: true as const, openlvOptions }),
+     });
+ 
+   const config: CreateConfigParameters<any, any> = {
+diff --git a/packages/connectkit/src/defaultConnectors.ts b/packages/connectkit/src/defaultConnectors.ts
+index fd04910..d69ce2b 100644
+--- a/packages/connectkit/src/defaultConnectors.ts
++++ b/packages/connectkit/src/defaultConnectors.ts
+@@ -6,6 +6,7 @@ import {
+   CoinbaseWalletParameters,
+   safe,
+ } from '@wagmi/connectors';
++import { openlv, type OpenLVConnectorParameters } from '@openlv/connector';
+ 
+ import {
+   EthereumProviderOptions as FamilyOptions,
+@@ -23,7 +24,10 @@ type DefaultConnectorsProps = {
+   coinbaseWalletPreference?: CoinbaseWalletParameters<'4'>['preference'];
+   enableFamily?: boolean;
+   familyOptions?: FamilyOptions;
+-};
++} & (
++  | { enableOpenLV?: true; openlvOptions?: OpenLVConnectorParameters }
++  | { enableOpenLV: false; openlvOptions?: never }
++);
+ 
+ const defaultConnectors = ({
+   app,
+@@ -31,6 +35,8 @@ const defaultConnectors = ({
+   coinbaseWalletPreference,
+   enableFamily,
+   familyOptions,
++  enableOpenLV,
++  openlvOptions,
+ }: DefaultConnectorsProps): CreateConnectorFn[] => {
+   const hasAllAppData = app.name && app.icon && app.description && app.url;
+   const shouldUseSafeConnector =
+@@ -50,6 +56,7 @@ const defaultConnectors = ({
+   }
+ 
+   // Add the rest of the connectors
++  if (enableOpenLV) connectors.push(openlv(openlvOptions));
+   connectors.push(
+     injected({ target: 'metaMask' }),
+     coinbaseWallet({
+diff --git a/packages/connectkit/src/hooks/useConnectors.ts b/packages/connectkit/src/hooks/useConnectors.ts
+index 2ab20dc..0b8a354 100644
+--- a/packages/connectkit/src/hooks/useConnectors.ts
++++ b/packages/connectkit/src/hooks/useConnectors.ts
+@@ -50,6 +50,9 @@ export function useWalletConnectConnector() {
+   */
+   return useConnector('walletConnect');
+ }
++export function useOpenLVConnector() {
++  return useConnector('openLv');
++}
+ export function useCoinbaseWalletConnector() {
+   /*
+   options: {
+diff --git a/packages/connectkit/src/utils/index.ts b/packages/connectkit/src/utils/index.ts
+index 4257156..be32560 100644
+--- a/packages/connectkit/src/utils/index.ts
++++ b/packages/connectkit/src/utils/index.ts
+@@ -80,6 +80,9 @@ function flattenChildren(children: React.ReactNode): ReactChildArray {
+ export const isWalletConnectConnector = (connectorId?: string) =>
+   connectorId === 'walletConnect';
+ 
++export const isOpenLVConnector = (connectorId?: string) =>
++  connectorId === 'openLv';
++
+ export const isFamilyAccountsConnector = (connectorId?: string) =>
+   connectorId === 'familyAccountsProvider';
+ 
+diff --git a/packages/connectkit/src/wallets/useWallets.tsx b/packages/connectkit/src/wallets/useWallets.tsx
+index 734f743..af85990 100644
+--- a/packages/connectkit/src/wallets/useWallets.tsx
++++ b/packages/connectkit/src/wallets/useWallets.tsx
+@@ -3,7 +3,7 @@ import { Connector } from 'wagmi';
+ import { useConnectors } from '../hooks/useConnectors';
+ import { walletConfigs, WalletConfigProps } from './walletConfigs';
+ import { useContext } from '../components/ConnectKit';
+-import { isCoinbaseWalletConnector, isInjectedConnector } from '../utils';
++import { isOpenLVConnector, isCoinbaseWalletConnector, isInjectedConnector } from '../utils';
+ 
+ export type WalletProps = {
+   id: string;
+@@ -48,7 +48,8 @@ export const useWallets = (): WalletProps[] => {
+       isInstalled:
+         connector.type === 'mock' ||
+         (connector.type === 'injected' && connector.id !== 'metaMask') ||
+-        isCoinbaseWalletConnector(connector.id), // always run coinbase wallet SDK
++        isCoinbaseWalletConnector(connector.id) || // always run coinbase wallet SDK
++        isOpenLVConnector(connector.id),
+     };
+ 
+     if (walletId) {
+@@ -117,8 +118,10 @@ export const useWallets = (): WalletProps[] => {
+         if (!AisInstalled && BisInstalled) return 1;
+         return 0;
+       })
+-      // move walletConnect to the end
++      // move walletConnect and openLv to the end
+       .sort((a, b) => {
++        if (a.id === 'openLv') return 1;
++        if (b.id === 'openLv') return -1;
+         if (a.id === 'walletConnect') return 1;
+         if (b.id === 'walletConnect') return -1;
+         return 0;
+diff --git a/packages/connectkit/src/wallets/walletConfigs.tsx b/packages/connectkit/src/wallets/walletConfigs.tsx
+index dadf905..bea289b 100644
+--- a/packages/connectkit/src/wallets/walletConfigs.tsx
++++ b/packages/connectkit/src/wallets/walletConfigs.tsx
+@@ -366,6 +366,12 @@ export const walletConfigs: {
+     },
+     shouldDeeplinkDesktop: true,
+   },
++  'company.v3x.openlv, openLv': {
++    name: 'Other Wallets',
++    shortName: 'Other',
++    icon: <Logos.OtherWallets />,
++    iconShape: 'square',
++  },
+   zerion: {
+     name: 'Zerion',
+     icon: <Logos.Zerion />,
+@@ -425,10 +431,10 @@ export const walletConfigs: {
+     },
+   },
+   walletConnect: {
+-    name: 'Other Wallets',
+-    shortName: 'Other',
++    name: 'WalletConnect',
++    shortName: 'WalletConnect',
+     icon: <Logos.WalletConnect background />,
+-    iconConnector: <Logos.OtherWallets />,
++    iconConnector: <Logos.WalletConnect />,
+     iconShape: 'square',
+     getWalletConnectDeeplink: (uri: string) => uri,
+   },
+diff --git a/yarn.lock b/yarn.lock
+index fe62dc4..e949d7c 100644
+--- a/yarn.lock
++++ b/yarn.lock
+@@ -26,6 +26,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@adraffy/ens-normalize@npm:^1.11.0":
++  version: 1.11.1
++  resolution: "@adraffy/ens-normalize@npm:1.11.1"
++  checksum: e8b17fcc730ccc45a956e1fbb09edfe42be41c291079512082e9964f8ef4287e67913183cdd02fff71d2e215340d5b98a9bbbd9be32c5d36fad4ba2c1ec33ff2
++  languageName: node
++  linkType: hard
++
+ "@alloc/quick-lru@npm:^5.2.0":
+   version: 5.2.0
+   resolution: "@alloc/quick-lru@npm:5.2.0"
+@@ -3271,6 +3278,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@noble/ciphers@npm:^1.3.0":
++  version: 1.3.0
++  resolution: "@noble/ciphers@npm:1.3.0"
++  checksum: 19722c35475df9bc78db60d261d0b5ef8a6d722561efc2135453f943eaa421b492195dc666e3e4df2b755bca3739e04f04b9c660198559f5dd05d3cfbf1b9e92
++  languageName: node
++  linkType: hard
++
+ "@noble/curves@npm:1.3.0, @noble/curves@npm:~1.3.0":
+   version: 1.3.0
+   resolution: "@noble/curves@npm:1.3.0"
+@@ -3289,6 +3303,24 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@noble/curves@npm:1.9.1":
++  version: 1.9.1
++  resolution: "@noble/curves@npm:1.9.1"
++  dependencies:
++    "@noble/hashes": 1.8.0
++  checksum: 4f3483a1001538d2f55516cdcb19319d1eaef79550633f670e7d570b989cdbc0129952868b72bb67643329746b8ffefe8e4cd791c8cc35574e05a37f873eef42
++  languageName: node
++  linkType: hard
++
++"@noble/curves@npm:~1.9.0":
++  version: 1.9.7
++  resolution: "@noble/curves@npm:1.9.7"
++  dependencies:
++    "@noble/hashes": 1.8.0
++  checksum: 65acad44ac6944ab96471109087d6cfcbcaa251faad6295961be9a5ace220634f4b7c74a96d1ee2274ad3880ea953d8e8259893ed8c906c831ef29f5c04ec9cc
++  languageName: node
++  linkType: hard
++
+ "@noble/hashes@npm:1.3.3, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:~1.3.2":
+   version: 1.3.3
+   resolution: "@noble/hashes@npm:1.3.3"
+@@ -3303,6 +3335,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@noble/hashes@npm:1.8.0, @noble/hashes@npm:^1.8.0, @noble/hashes@npm:~1.8.0":
++  version: 1.8.0
++  resolution: "@noble/hashes@npm:1.8.0"
++  checksum: c94e98b941963676feaba62475b1ccfa8341e3f572adbb3b684ee38b658df44100187fa0ef4220da580b13f8d27e87d5492623c8a02ecc61f23fb9960c7918f5
++  languageName: node
++  linkType: hard
++
+ "@noble/hashes@npm:^1.1.2":
+   version: 1.4.0
+   resolution: "@noble/hashes@npm:1.4.0"
+@@ -3359,6 +3398,127 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@openlv/connector@npm:0.0.1-beta.12":
++  version: 0.0.1-beta.12
++  resolution: "@openlv/connector@npm:0.0.1-beta.12"
++  dependencies:
++    "@openlv/core": 0.0.1-beta.9
++    "@openlv/modal": 0.0.1-beta.11
++    "@openlv/provider": 0.0.1-beta.11
++    eventemitter3: ^5.0.1
++  peerDependencies:
++    "@wagmi/core": 2
++    viem: 2
++  checksum: 0887f1f250317f3fed3fcba214ab755ef7a10f6e97f897bbc03b93686816d2356fb24e34194a357d4b25073547d9bc27f42ffb97b8744dc767956fcd14fac4ae
++  languageName: node
++  linkType: hard
++
++"@openlv/core@npm:0.0.1-beta.9":
++  version: 0.0.1-beta.9
++  resolution: "@openlv/core@npm:0.0.1-beta.9"
++  dependencies:
++    eventemitter3: ^5.0.1
++    tweetnacl: ^1.0.3
++  peerDependencies:
++    "@wagmi/core": 2
++    viem: 2
++    wagmi: 2
++  checksum: 269a00a1e863a114c72d68d34286b4a388224e19d6f4ce50c43832dd648073c2dc7aa4bb3ee4b8394bcd159c88aa8654dc81d138a7ad9781e07a05ed36312aed
++  languageName: node
++  linkType: hard
++
++"@openlv/modal@npm:0.0.1-beta.11":
++  version: 0.0.1-beta.11
++  resolution: "@openlv/modal@npm:0.0.1-beta.11"
++  dependencies:
++    "@openlv/core": 0.0.1-beta.9
++    "@openlv/provider": 0.0.1-beta.11
++    "@openlv/session": 0.0.1-beta.11
++    "@openlv/signaling": 0.0.1-beta.8
++    classnames: ^2.5.1
++    eventemitter3: ^5.0.1
++    lucide-solid: ^0.574.0
++    ox: ^0.9.14
++    qrcode-generator: ^1.5.0
++    solid-element: ^1.9.1
++    solid-icons: ^1.2.0
++    solid-js: ^1.9.9
++    tailwind-variants: ^3.1.1
++  checksum: fc0f5c49f6bd2b650a358524f5243d5986b96845f2d0379118aac4b8863f0aa4579b2d95440f4854d3cd9e1a4207e2c4516663672c950eacbfabcd616625507f
++  languageName: node
++  linkType: hard
++
++"@openlv/provider@npm:0.0.1-beta.11":
++  version: 0.0.1-beta.11
++  resolution: "@openlv/provider@npm:0.0.1-beta.11"
++  dependencies:
++    "@openlv/core": 0.0.1-beta.9
++    "@openlv/session": 0.0.1-beta.11
++    "@openlv/signaling": 0.0.1-beta.8
++    "@openlv/transport": 0.0.1-beta.8
++    eventemitter3: ^5.0.1
++    ox: ^0.9.14
++    ts-pattern: ^5.9.0
++    zod: ^4.1.12
++  peerDependencies:
++    "@wagmi/core": 2
++    viem: 2
++  checksum: 7c406d1ee8313692efac8b7fce4b89f371ffd3525ab35c2805a8efd41fc7367eb92d020de03de158b90ec1793b048239544ef9ad2a391bd5b048d13e682da9d4
++  languageName: node
++  linkType: hard
++
++"@openlv/session@npm:0.0.1-beta.11":
++  version: 0.0.1-beta.11
++  resolution: "@openlv/session@npm:0.0.1-beta.11"
++  dependencies:
++    "@openlv/core": 0.0.1-beta.9
++    "@openlv/signaling": 0.0.1-beta.8
++    "@openlv/transport": 0.0.1-beta.8
++    eventemitter3: ^5.0.1
++    globals: ^16.2.0
++    ts-pattern: ^5
++  peerDependencies:
++    "@wagmi/core": 2
++    viem: 2
++    wagmi: 2
++  checksum: be751d0a4eb7b47347bd091fe70374d12f6fde52472fbf80a8183425bbb9b8800449f6a957567725c6c67cfe2a4dbbfc59e3dda2ea011c8d4bab9e3e1e12d1c8
++  languageName: node
++  linkType: hard
++
++"@openlv/signaling@npm:0.0.1-beta.8":
++  version: 0.0.1-beta.8
++  resolution: "@openlv/signaling@npm:0.0.1-beta.8"
++  dependencies:
++    "@openlv/core": 0.0.1-beta.9
++    eventemitter3: ^5
++    globals: ^16
++    gun: ^0.2020.1241
++    ts-pattern: ^5
++    websocket-mqtt: 0.0.7
++  peerDependencies:
++    "@wagmi/core": 2
++    viem: 2
++    wagmi: 2
++  checksum: 47cb34b61c5d9fbf3f38485c61a57932bef3dd493a202212e298d8960e53500bf9ab0c810414c5b4a7fede43eaaf469822ce0fc79332e0eca0ffa93ed2063bd1
++  languageName: node
++  linkType: hard
++
++"@openlv/transport@npm:0.0.1-beta.8":
++  version: 0.0.1-beta.8
++  resolution: "@openlv/transport@npm:0.0.1-beta.8"
++  dependencies:
++    "@openlv/core": 0.0.1-beta.9
++    eventemitter3: ^5.0.1
++    globals: ^16.2.0
++    ts-pattern: ^5
++  peerDependencies:
++    "@wagmi/core": 2
++    viem: 2
++    wagmi: 2
++  checksum: b3c4eb85b3ebce1f3a764772b0ae0736e8d08e8c25027351c0601c1008b541ebe0b543236e2369c54887fce1fea95f1d325d484b77b6a83d03ea1a402836cfab
++  languageName: node
++  linkType: hard
++
+ "@parcel/watcher-android-arm64@npm:2.4.0":
+   version: 2.4.0
+   resolution: "@parcel/watcher-android-arm64@npm:2.4.0"
+@@ -3511,6 +3671,17 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@peculiar/asn1-schema@npm:^2.3.13":
++  version: 2.6.0
++  resolution: "@peculiar/asn1-schema@npm:2.6.0"
++  dependencies:
++    asn1js: ^3.0.6
++    pvtsutils: ^1.3.6
++    tslib: ^2.8.1
++  checksum: 1d34d209b8db50ca1431060445fec9ab629d2decc3bcf161847877279c677ac8aa7794a7306950b63dd7535a91611df5464e4721ddb39a2f4c1109bd9a9fff73
++  languageName: node
++  linkType: hard
++
+ "@peculiar/asn1-schema@npm:^2.3.8":
+   version: 2.3.8
+   resolution: "@peculiar/asn1-schema@npm:2.3.8"
+@@ -3531,6 +3702,19 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@peculiar/webcrypto@npm:^1.1.1":
++  version: 1.5.0
++  resolution: "@peculiar/webcrypto@npm:1.5.0"
++  dependencies:
++    "@peculiar/asn1-schema": ^2.3.8
++    "@peculiar/json-schema": ^1.1.12
++    pvtsutils: ^1.3.5
++    tslib: ^2.6.2
++    webcrypto-core: ^1.8.0
++  checksum: 9022d7452d564a5a26fbacf477842be34736f2d9139f2f5026adc47fdeda7033193d727491503f2a829d35ab819bbfa61c82a785c49c999eac535ecd69a3a459
++  languageName: node
++  linkType: hard
++
+ "@peculiar/webcrypto@npm:^1.4.0":
+   version: 1.4.5
+   resolution: "@peculiar/webcrypto@npm:1.4.5"
+@@ -3722,6 +3906,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@scure/base@npm:~1.2.5":
++  version: 1.2.6
++  resolution: "@scure/base@npm:1.2.6"
++  checksum: 1058cb26d5e4c1c46c9cc0ae0b67cc66d306733baf35d6ebdd8ddaba242b80c3807b726e3b48cb0411bb95ec10d37764969063ea62188f86ae9315df8ea6b325
++  languageName: node
++  linkType: hard
++
+ "@scure/bip32@npm:1.3.3":
+   version: 1.3.3
+   resolution: "@scure/bip32@npm:1.3.3"
+@@ -3744,6 +3935,17 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@scure/bip32@npm:^1.7.0":
++  version: 1.7.0
++  resolution: "@scure/bip32@npm:1.7.0"
++  dependencies:
++    "@noble/curves": ~1.9.0
++    "@noble/hashes": ~1.8.0
++    "@scure/base": ~1.2.5
++  checksum: c83adca5a74ec5c4ded8ba93900d0065e4767c4759cf24c2674923aef01d45ba56f171574e3519f2341be99f53a333f01b674eb6cfeb6fa8379607c6d1bc90b5
++  languageName: node
++  linkType: hard
++
+ "@scure/bip39@npm:1.2.2":
+   version: 1.2.2
+   resolution: "@scure/bip39@npm:1.2.2"
+@@ -3764,6 +3966,16 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"@scure/bip39@npm:^1.6.0":
++  version: 1.6.0
++  resolution: "@scure/bip39@npm:1.6.0"
++  dependencies:
++    "@noble/hashes": ~1.8.0
++    "@scure/base": ~1.2.5
++  checksum: 96d46420780473d6c6c9700254a0eceec60302f61d7f9d7f29024e90c7acff3e8e40a5ee52dfaf104db539a10462e531996aaf9e69f082b8540b0a25870545fc
++  languageName: node
++  linkType: hard
++
+ "@sinclair/typebox@npm:^0.24.1":
+   version: 0.24.51
+   resolution: "@sinclair/typebox@npm:0.24.51"
+@@ -5644,6 +5856,21 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"abitype@npm:^1.0.9":
++  version: 1.2.3
++  resolution: "abitype@npm:1.2.3"
++  peerDependencies:
++    typescript: ">=5.0.4"
++    zod: ^3.22.0 || ^4.0.0
++  peerDependenciesMeta:
++    typescript:
++      optional: true
++    zod:
++      optional: true
++  checksum: b5b5620f8e55a6dd7ae829630c0ded02b30f589f0f8f5ca931cdfcf6d7daa8154e30e3fe3593b3f6c4872a955ac55d447ccc2f801fd6a6aa698bdad966e3fe2e
++  languageName: node
++  linkType: hard
++
+ "abort-controller@npm:^3.0.0":
+   version: 3.0.0
+   resolution: "abort-controller@npm:3.0.0"
+@@ -6116,6 +6343,17 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"asn1js@npm:^3.0.6":
++  version: 3.0.7
++  resolution: "asn1js@npm:3.0.7"
++  dependencies:
++    pvtsutils: ^1.3.6
++    pvutils: ^1.1.3
++    tslib: ^2.8.1
++  checksum: 33c4ca5349c8eb706f850ae79dbc30aabf96d6c65fe6ea120d0092e897bfc66d88583be502f995950f7c212ec729af217ba03bc4e16edf6ea27541a68540831d
++  languageName: node
++  linkType: hard
++
+ "ast-types-flow@npm:^0.0.8":
+   version: 0.0.8
+   resolution: "ast-types-flow@npm:0.0.8"
+@@ -6926,6 +7164,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"classnames@npm:^2.5.1":
++  version: 2.5.1
++  resolution: "classnames@npm:2.5.1"
++  checksum: da424a8a6f3a96a2e87d01a432ba19315503294ac7e025f9fece656db6b6a0f7b5003bb1fbb51cbb0d9624d964f1b9bb35a51c73af9b2434c7b292c42231c1e5
++  languageName: node
++  linkType: hard
++
+ "clean-css@npm:^5.2.2":
+   version: 5.3.3
+   resolution: "clean-css@npm:5.3.3"
+@@ -7143,6 +7388,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"component-register@npm:^0.8.7":
++  version: 0.8.8
++  resolution: "component-register@npm:0.8.8"
++  checksum: 4a2b427084ca421c0e6f7756c28764f36ce551392e2cffa28081d43558ec91e998235b6b9bdc7ed49b7507b3b81bed4e6418e0a23bb371bef61ba43d1e8f4de6
++  languageName: node
++  linkType: hard
++
+ "compressible@npm:~2.0.16":
+   version: 2.0.18
+   resolution: "compressible@npm:2.0.18"
+@@ -7211,6 +7463,7 @@ __metadata:
+   version: 0.0.0-use.local
+   resolution: "connectkit@workspace:packages/connectkit"
+   dependencies:
++    "@openlv/connector": 0.0.1-beta.12
+     "@types/node": 18.7.18
+     "@types/qrcode": ^1.4.2
+     "@types/react": ^18.0.6
+@@ -7745,6 +7998,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"csstype@npm:^3.1.0":
++  version: 3.2.3
++  resolution: "csstype@npm:3.2.3"
++  checksum: cb882521b3398958a1ce6ca98c011aec0bde1c77ecaf8a1dd4db3b112a189939beae3b1308243b2fe50fc27eb3edeb0f73a5a4d91d928765dc6d5ecc7bda92ee
++  languageName: node
++  linkType: hard
++
+ "csv-generate@npm:^3.4.3":
+   version: 3.4.3
+   resolution: "csv-generate@npm:3.4.3"
+@@ -9525,6 +9785,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"eventemitter3@npm:^5":
++  version: 5.0.4
++  resolution: "eventemitter3@npm:5.0.4"
++  checksum: bcbd2c3a9d2553c2289623ede8aab474d5c92bcbf18e5fe76f0e550c2b7801afb5a4351c7f11e8ee2379cca1ee48316aeb98fc3b946b7dd1f47a4c1ee8c4dcf2
++  languageName: node
++  linkType: hard
++
+ "events@npm:3.3.0, events@npm:^3.2.0, events@npm:^3.3.0":
+   version: 3.3.0
+   resolution: "events@npm:3.3.0"
+@@ -10352,6 +10619,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"globals@npm:^16, globals@npm:^16.2.0":
++  version: 16.5.0
++  resolution: "globals@npm:16.5.0"
++  checksum: e0363245cfc6e36ac6bf940415160a05d66e7985fa3856d5383ad49292b6d249d80fd03759e09d6491109648a121849b23b77c7391a11862923e6995268a7cd6
++  languageName: node
++  linkType: hard
++
+ "globalthis@npm:^1.0.3":
+   version: 1.0.3
+   resolution: "globalthis@npm:1.0.3"
+@@ -10405,6 +10679,19 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"gun@npm:^0.2020.1241":
++  version: 0.2020.1241
++  resolution: "gun@npm:0.2020.1241"
++  dependencies:
++    "@peculiar/webcrypto": ^1.1.1
++    ws: ^7.2.1
++  dependenciesMeta:
++    "@peculiar/webcrypto":
++      optional: true
++  checksum: f5885187424a01313b7a255938f6c60329a1d70089b5b51b7325ce74f8f180ed630ec2be1e2f86f06cc31b207bb88166cdf39261e16d91b09776df8fafc74e63
++  languageName: node
++  linkType: hard
++
+ "gzip-size@npm:^6.0.0":
+   version: 6.0.0
+   resolution: "gzip-size@npm:6.0.0"
+@@ -12871,6 +13158,15 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"lucide-solid@npm:^0.574.0":
++  version: 0.574.0
++  resolution: "lucide-solid@npm:0.574.0"
++  peerDependencies:
++    solid-js: ^1.4.7
++  checksum: 5075cfa0aa887dffbbca6fe38ff80c943ec6a975d5892739f31e3338803b118581bea92b9454db1d2e145283d972664578b7a27650da86290532f189835c051c
++  languageName: node
++  linkType: hard
++
+ "lz-string@npm:^1.5.0":
+   version: 1.5.0
+   resolution: "lz-string@npm:1.5.0"
+@@ -14087,6 +14383,27 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"ox@npm:^0.9.14":
++  version: 0.9.17
++  resolution: "ox@npm:0.9.17"
++  dependencies:
++    "@adraffy/ens-normalize": ^1.11.0
++    "@noble/ciphers": ^1.3.0
++    "@noble/curves": 1.9.1
++    "@noble/hashes": ^1.8.0
++    "@scure/bip32": ^1.7.0
++    "@scure/bip39": ^1.6.0
++    abitype: ^1.0.9
++    eventemitter3: 5.0.1
++  peerDependencies:
++    typescript: ">=5.4.0"
++  peerDependenciesMeta:
++    typescript:
++      optional: true
++  checksum: d5ec8d0d6f141a5e7b52613050dd95a745dc751b689e4f5a6faf99e16fc9b5193241e92aa1cd127351769968b41db1718c4738b210464bffa0538aa300a50a07
++  languageName: node
++  linkType: hard
++
+ "p-filter@npm:^2.1.0":
+   version: 2.1.0
+   resolution: "p-filter@npm:2.1.0"
+@@ -15546,6 +15863,15 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"pvtsutils@npm:^1.3.6":
++  version: 1.3.6
++  resolution: "pvtsutils@npm:1.3.6"
++  dependencies:
++    tslib: ^2.8.1
++  checksum: 97b023b46d7b95bff004f8340efc465c1d995f35d7e97a2ef2e28d5e160f5ca47b48f42463b6be92b4341452a6b8c555feb2b1eb59ee90b97bd5d6fc86ffb186
++  languageName: node
++  linkType: hard
++
+ "pvutils@npm:^1.1.3":
+   version: 1.1.3
+   resolution: "pvutils@npm:1.1.3"
+@@ -15560,6 +15886,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"qrcode-generator@npm:^1.5.0":
++  version: 1.5.2
++  resolution: "qrcode-generator@npm:1.5.2"
++  checksum: aec3891afddf88054ebdeb3698f24ca30e60a5f3816e3a0812adb50d1efcf571a31909cafdc2c1275f404a0484b1109be917d458ad7f0da058dcdf6f92b95cce
++  languageName: node
++  linkType: hard
++
+ "qrcode@npm:1.5.3, qrcode@npm:^1.5.0":
+   version: 1.5.3
+   resolution: "qrcode@npm:1.5.3"
+@@ -16618,6 +16951,22 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"seroval-plugins@npm:~1.5.0":
++  version: 1.5.1
++  resolution: "seroval-plugins@npm:1.5.1"
++  peerDependencies:
++    seroval: ^1.0
++  checksum: 313687054282f799ecb669a500da1dc2ffe4fde203a003135cc7f90736d95ab39b26dd549d2631f7908b73a246d8c8fd0321ed71051bd1fd6e87f92416cb7416
++  languageName: node
++  linkType: hard
++
++"seroval@npm:~1.5.0":
++  version: 1.5.1
++  resolution: "seroval@npm:1.5.1"
++  checksum: 145b4adede628ff51f9b1db2a6e6278a0f083b91b4137edae5fdbd478b3a83e8e0203b97f9c93239473fa24ac99c762720a129baa3c3be12cb7388a5850128a5
++  languageName: node
++  linkType: hard
++
+ "serve-index@npm:^1.9.1":
+   version: 1.9.1
+   resolution: "serve-index@npm:1.9.1"
+@@ -16885,6 +17234,37 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"solid-element@npm:^1.9.1":
++  version: 1.9.1
++  resolution: "solid-element@npm:1.9.1"
++  dependencies:
++    component-register: ^0.8.7
++  peerDependencies:
++    solid-js: ^1.9.3
++  checksum: f4622befac4522299304e8b159542848c952a4115541da249aa30cc716f17ddaa67cf7808c45ff069bc9ed630aea2436e8cfdc875e71a193daee4df0004cf7e5
++  languageName: node
++  linkType: hard
++
++"solid-icons@npm:^1.2.0":
++  version: 1.2.0
++  resolution: "solid-icons@npm:1.2.0"
++  peerDependencies:
++    solid-js: "*"
++  checksum: bcc58a223d5732338fdc0b26c5293e197ca0d50f390349c98276f595d71a05ae560fd5cce0ce3fefeb5696358e047a84d129204c4d58060f26ee70f7d2c63506
++  languageName: node
++  linkType: hard
++
++"solid-js@npm:^1.9.9":
++  version: 1.9.11
++  resolution: "solid-js@npm:1.9.11"
++  dependencies:
++    csstype: ^3.1.0
++    seroval: ~1.5.0
++    seroval-plugins: ~1.5.0
++  checksum: 11cb95b3920bcb8805727fa3e4de61ccbbf72ff3644de2188c7bee6c046def9a3330174bc10d48b313f6690750ab3d222813b891c3908f8bd98f56576b56a55b
++  languageName: node
++  linkType: hard
++
+ "sonic-boom@npm:^2.2.1":
+   version: 2.8.0
+   resolution: "sonic-boom@npm:2.8.0"
+@@ -17596,6 +17976,19 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"tailwind-variants@npm:^3.1.1":
++  version: 3.2.2
++  resolution: "tailwind-variants@npm:3.2.2"
++  peerDependencies:
++    tailwind-merge: ">=3.0.0"
++    tailwindcss: "*"
++  peerDependenciesMeta:
++    tailwind-merge:
++      optional: true
++  checksum: 6e694427c1bf9c6143936d959b60e8518d42c7ae36eb495024df411c0abc588f644f190a6e5af3e46a160b03a7dbd7cedb270a268adff339dabbffc0e5c30941
++  languageName: node
++  linkType: hard
++
+ "tailwindcss@npm:^3.0.2":
+   version: 3.4.1
+   resolution: "tailwindcss@npm:3.4.1"
+@@ -17916,6 +18309,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"ts-pattern@npm:^5, ts-pattern@npm:^5.9.0":
++  version: 5.9.0
++  resolution: "ts-pattern@npm:5.9.0"
++  checksum: cc2bce3fb99cf20a1b6640b44a086b936c1b366ea59ed700069e9540d2b1b98a103deeb8777a7996f40e461b0bb5abfab613d8423635debf25a294d4cc7d153b
++  languageName: node
++  linkType: hard
++
+ "tsconfig-paths@npm:^3.14.1, tsconfig-paths@npm:^3.15.0":
+   version: 3.15.0
+   resolution: "tsconfig-paths@npm:3.15.0"
+@@ -17942,7 +18342,7 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
+-"tslib@npm:^2.6.0":
++"tslib@npm:^2.6.0, tslib@npm:^2.7.0, tslib@npm:^2.8.1":
+   version: 2.8.1
+   resolution: "tslib@npm:2.8.1"
+   checksum: e4aba30e632b8c8902b47587fd13345e2827fa639e7c3121074d5ee0880723282411a8838f830b55100cbe4517672f84a2472667d355b81e8af165a55dc6203a
+@@ -17977,6 +18377,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"tweetnacl@npm:^1.0.3":
++  version: 1.0.3
++  resolution: "tweetnacl@npm:1.0.3"
++  checksum: e4a57cac188f0c53f24c7a33279e223618a2bfb5fea426231991652a13247bea06b081fd745d71291fcae0f4428d29beba1b984b1f1ce6f66b06a6d1ab90645c
++  languageName: node
++  linkType: hard
++
+ "type-check@npm:^0.4.0, type-check@npm:~0.4.0":
+   version: 0.4.0
+   resolution: "type-check@npm:0.4.0"
+@@ -18754,6 +19161,19 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"webcrypto-core@npm:^1.8.0":
++  version: 1.8.1
++  resolution: "webcrypto-core@npm:1.8.1"
++  dependencies:
++    "@peculiar/asn1-schema": ^2.3.13
++    "@peculiar/json-schema": ^1.1.12
++    asn1js: ^3.0.5
++    pvtsutils: ^1.3.5
++    tslib: ^2.7.0
++  checksum: 5f8d862991bf9b36bfec53a317ceec7de95010c6d16092d2ba62b988acdfca9adfd254ef388036e610c66d0aad506d3f344574f62e06501a8c72ef961c8996b2
++  languageName: node
++  linkType: hard
++
+ "webextension-polyfill@npm:>=0.10.0 <1.0, webextension-polyfill@npm:^0.10.0":
+   version: 0.10.0
+   resolution: "webextension-polyfill@npm:0.10.0"
+@@ -18945,6 +19365,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"websocket-mqtt@npm:0.0.7":
++  version: 0.0.7
++  resolution: "websocket-mqtt@npm:0.0.7"
++  checksum: bfec24792976f73e0d187b04ef2452c4816e5afeaf967e2f843e391a73306a52fefaf07ec71800820c49bd4a2378bdfe7f4c75f7d2dec37d3b24f2cae84af46e
++  languageName: node
++  linkType: hard
++
+ "whatwg-encoding@npm:^1.0.5":
+   version: 1.0.5
+   resolution: "whatwg-encoding@npm:1.0.5"
+@@ -19387,6 +19814,21 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"ws@npm:^7.2.1":
++  version: 7.5.10
++  resolution: "ws@npm:7.5.10"
++  peerDependencies:
++    bufferutil: ^4.0.1
++    utf-8-validate: ^5.0.2
++  peerDependenciesMeta:
++    bufferutil:
++      optional: true
++    utf-8-validate:
++      optional: true
++  checksum: f9bb062abf54cc8f02d94ca86dcd349c3945d63851f5d07a3a61c2fcb755b15a88e943a63cf580cbdb5b74436d67ef6b67f745b8f7c0814e411379138e1863cb
++  languageName: node
++  linkType: hard
++
+ "ws@npm:^7.4.6, ws@npm:^7.5.1":
+   version: 7.5.9
+   resolution: "ws@npm:7.5.9"
+@@ -19589,6 +20031,13 @@ __metadata:
+   languageName: node
+   linkType: hard
+ 
++"zod@npm:^4.1.12":
++  version: 4.3.6
++  resolution: "zod@npm:4.3.6"
++  checksum: 19cec761b46bae4b6e7e861ea740f3f248e50a6671825afc8a5758e27b35d6f20ccde9942422fd5cf6f8b697f18bd05ef8bb33f5f2db112ab25cc628de2fae47
++  languageName: node
++  linkType: hard
++
+ "zustand@npm:5.0.0":
+   version: 5.0.0
+   resolution: "zustand@npm:5.0.0"

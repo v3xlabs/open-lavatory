@@ -7,7 +7,6 @@ import type { OpenLVProvider, ProviderStatus } from "@openlv/provider";
 import { PROVIDER_STATUS } from "@openlv/provider";
 import type { Session } from "@openlv/session";
 import { SESSION_STATE } from "@openlv/session";
-
 import { EventEmitter } from "eventemitter3";
 
 import { createWxtProviderStorage } from "../../utils/wxt-storage-shim.js";
@@ -25,7 +24,6 @@ export const createFakeProvider = async (
 
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let sessionState = { status: SESSION_STATE.READY as string };
-  let pendingRecreate = false;
 
   const providerEmitter = new EventEmitter();
   let sessionEmitter = new EventEmitter();
@@ -39,17 +37,7 @@ export const createFakeProvider = async (
   chrome.runtime.onMessage.addListener((message) => {
     switch (message.type) {
       case "PROVIDER_STATUS": {
-        const newStatus = message.status as ProviderStatus;
-
-        // During session recreation (close → create), a transient STANDBY
-        // fires before CREATING. Suppress it so the modal doesn't flash.
-        if (newStatus === PROVIDER_STATUS.STANDBY && pendingRecreate) {
-          pendingRecreate = false;
-          break;
-        }
-
-        pendingRecreate = false;
-        status = newStatus;
+        status = message.status as ProviderStatus;
         providerEmitter.emit("status_change", status);
 
         if (status === PROVIDER_STATUS.ERROR) {
@@ -95,8 +83,6 @@ export const createFakeProvider = async (
     off: providerEmitter.off.bind(providerEmitter),
     storage,
     createSession: (parameters?: SessionLinkParameters) => {
-      pendingRecreate = true;
-
       chrome.runtime
         .sendMessage({ type: "CREATE_SESSION", parameters })
         .catch(() => {});

@@ -64,7 +64,12 @@ export default defineContentScript({
       | undefined;
 
     const resetConnectFlow = () => {
+      if (sessionRef && sessionStateHandler) {
+        sessionRef.emitter.off("state_change", sessionStateHandler);
+      }
+
       sessionRef = undefined;
+      sessionStateHandler = undefined;
     };
 
     provider.on("status_change", (status) => {

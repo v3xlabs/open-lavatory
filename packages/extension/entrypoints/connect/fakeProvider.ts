@@ -8,27 +8,9 @@ import { PROVIDER_STATUS } from "@openlv/provider";
 import type { Session } from "@openlv/session";
 import { SESSION_STATE } from "@openlv/session";
 
+import { EventEmitter } from "eventemitter3";
+
 import { createWxtProviderStorage } from "../../utils/wxt-storage-shim.js";
-
-type Listener = (...args: unknown[]) => void;
-
-const createEmitter = () => {
-  const map = new Map<string, Set<Listener>>();
-
-  return {
-    on(event: string, fn: Listener) {
-      if (!map.has(event)) map.set(event, new Set());
-
-      map.get(event)!.add(fn);
-    },
-    off(event: string, fn: Listener) {
-      map.get(event)?.delete(fn);
-    },
-    emit(event: string, ...args: unknown[]) {
-      map.get(event)?.forEach(fn => fn(...args));
-    },
-  };
-};
 
 /**
  * Creates a fake OpenLVProvider for the connect popup.
@@ -45,8 +27,8 @@ export const createFakeProvider = async (
   let sessionState = { status: SESSION_STATE.READY as string };
   let pendingRecreate = false;
 
-  const providerEmitter = createEmitter();
-  let sessionEmitter = createEmitter();
+  const providerEmitter = new EventEmitter();
+  let sessionEmitter = new EventEmitter();
 
   let sessionObj = {
     getHandshakeParameters: () => handshakeParams,
@@ -92,7 +74,7 @@ export const createFakeProvider = async (
       case "UPDATED_SESSION_METADATA": {
         handshakeParams = message.handshakeParams;
         sessionState = { status: SESSION_STATE.READY as string };
-        sessionEmitter = createEmitter();
+        sessionEmitter = new EventEmitter();
         sessionObj = {
           getHandshakeParameters: () => handshakeParams,
           getState: () => sessionState,

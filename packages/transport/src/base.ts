@@ -46,7 +46,6 @@ export type TransportLayerBaseEventMap = {
   candidate: (candidate: string) => void;
   connected: () => void;
   message: (message: string) => void;
-  error: () => void;
 };
 export type TransportLayerBaseEmitter =
   EventEmitter<TransportLayerBaseEventMap>;
@@ -88,10 +87,6 @@ export const createTransportBase = (init: TransportLayerBaseInit): TLayer => ({ 
   internalEmitter.on("connected", () => {
     console.log("onConnected");
     setState(TRANSPORT_STATE.CONNECTED);
-  });
-  internalEmitter.on("error", () => {
-    console.log("onError");
-    setState(TRANSPORT_STATE.ERROR);
   });
   internalEmitter.on("message", async (message) => {
     console.log("onMessage", message);

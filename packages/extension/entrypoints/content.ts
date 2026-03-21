@@ -25,8 +25,6 @@ export default defineContentScript({
     if (!["http:", "https:"].includes(globalThis.location.protocol)) return;
 
     const origin = globalThis.location.origin;
-    const flowToken = crypto.randomUUID();
-    let activeTabFlowToken: string | undefined;
 
     const script = document.createElement("script");
 
@@ -89,8 +87,8 @@ export default defineContentScript({
           try {
             const uri = encodeConnectionURL(handshakeParams);
 
-            chrome.runtime.sendMessage({ type: "OPEN_POPUP", uri, flowToken }).catch(() => {});
-            chrome.runtime.sendMessage({ type: "UPDATED_SESSION_METADATA", flowToken, handshakeParams }).catch(() => {});
+            chrome.runtime.sendMessage({ type: "OPEN_POPUP", uri }).catch(() => {});
+            chrome.runtime.sendMessage({ type: "UPDATED_SESSION_METADATA", handshakeParams }).catch(() => {});
           }
           catch (error) {
             console.error("[openlv] Failed to encode connection URL:", error);
@@ -98,7 +96,7 @@ export default defineContentScript({
 
           sessionStateHandler = (sessionState) => {
             chrome.runtime
-              .sendMessage({ type: "SESSION_STATE", state: sessionState?.status, flowToken })
+              .sendMessage({ type: "SESSION_STATE", state: sessionState?.status })
               .catch(() => {});
           };
 
@@ -106,7 +104,7 @@ export default defineContentScript({
 
           // Manually blast the very first state out
           chrome.runtime
-            .sendMessage({ type: "SESSION_STATE", state: session.getState()?.status, flowToken })
+            .sendMessage({ type: "SESSION_STATE", state: session.getState()?.status })
             .catch(() => {});
         }
       }
@@ -115,12 +113,10 @@ export default defineContentScript({
         resetConnectFlow();
       }
 
-      chrome.runtime.sendMessage({ type: "PROVIDER_STATUS", status, flowToken }).catch(() => {});
+      chrome.runtime.sendMessage({ type: "PROVIDER_STATUS", status }).catch(() => {});
     });
 
     chrome.runtime.onMessage.addListener((message) => {
-      if (message.flowToken !== flowToken) return;
-
       if (message.type === "CANCEL_SESSION") {
         provider.closeSession();
         resetConnectFlow();
@@ -138,7 +134,7 @@ export default defineContentScript({
       }
     });
 
-    const allowedEvents = new Set(["accountsChanged", "chainChanged", "connect", "disconnect", "message"]);
+    const internalEvents = new Set(["status_change", "session_started"]);
     const eventHandlers = new Map<string, (data: unknown) => void>();
     const eventProvider = provider as unknown as {
       on(event: string, handler: (data: unknown) => void): void;
@@ -154,17 +150,10 @@ export default defineContentScript({
         return;
       }
 
-      const tabFlowToken = typeof msg.tabFlowToken === "string" ? msg.tabFlowToken : undefined;
-
-      if (!tabFlowToken) return;
-
-      if (!activeTabFlowToken) activeTabFlowToken = tabFlowToken;
-      else if (activeTabFlowToken !== tabFlowToken) return;
-
       if (msg.type === PAGE_MSG.SUBSCRIBE) {
         const eventName = msg.event as string;
 
-        if (!allowedEvents.has(eventName) || eventHandlers.has(eventName)) return;
+        if (internalEvents.has(eventName) || eventHandlers.has(eventName)) return;
 
         const handler = (data: unknown) =>
           globalThis.postMessage({ source: CONTENT_SOURCE, type: CONTENT_MSG.EVENT, event: eventName, data }, origin);

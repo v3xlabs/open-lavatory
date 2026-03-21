@@ -93,10 +93,6 @@ export const createTransportBase = (init: TransportLayerBaseInit): TLayer => ({ 
     console.log("onError");
     setState(TRANSPORT_STATE.ERROR);
   });
-  internalEmitter.on("error", () => {
-    console.log("onError");
-    setState(TRANSPORT_STATE.ERROR);
-  });
   internalEmitter.on("message", async (message) => {
     console.log("onMessage", message);
     const data = await decrypt(message);

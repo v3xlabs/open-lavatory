@@ -18,8 +18,6 @@ export default defineUnlistedScript(() => {
 
   g.__openlv_injected = true;
 
-  const tabFlowToken = crypto.randomUUID();
-
   const origin = globalThis.location.origin;
   let requestCounter = 0;
   const pending = new Map<
@@ -97,7 +95,6 @@ export default defineUnlistedScript(() => {
             type: PAGE_MSG.REQUEST,
             requestId,
             payload,
-            tabFlowToken,
           },
           origin,
         );
@@ -110,7 +107,6 @@ export default defineUnlistedScript(() => {
             source: PAGE_SOURCE,
             type: PAGE_MSG.SUBSCRIBE,
             event,
-            tabFlowToken,
           },
           origin,
         );
@@ -134,7 +130,6 @@ export default defineUnlistedScript(() => {
             source: PAGE_SOURCE,
             type: PAGE_MSG.UNSUBSCRIBE,
             event,
-            tabFlowToken,
           },
           origin,
         );
@@ -157,7 +152,6 @@ export default defineUnlistedScript(() => {
             source: PAGE_SOURCE,
             type: PAGE_MSG.UNSUBSCRIBE,
             event,
-            tabFlowToken,
           },
           origin,
         );
@@ -171,7 +165,6 @@ export default defineUnlistedScript(() => {
             source: PAGE_SOURCE,
             type: PAGE_MSG.UNSUBSCRIBE,
             event: eventName,
-            tabFlowToken,
           },
           origin,
         );

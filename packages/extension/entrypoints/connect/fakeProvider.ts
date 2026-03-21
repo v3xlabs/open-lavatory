@@ -37,7 +37,6 @@ const createEmitter = () => {
  * listening to messages relayed from the background.
  */
 export const createFakeProvider = async (
-  flowToken: string,
   handshakeParams: SessionHandshakeParameters,
 ): Promise<OpenLVProvider> => {
   const storage = await createWxtProviderStorage();
@@ -56,8 +55,6 @@ export const createFakeProvider = async (
   };
 
   chrome.runtime.onMessage.addListener((message) => {
-    if (message.flowToken !== flowToken) return;
-
     switch (message.type) {
       case "PROVIDER_STATUS": {
         const newStatus = message.status as ProviderStatus;
@@ -119,7 +116,7 @@ export const createFakeProvider = async (
       pendingRecreate = true;
 
       chrome.runtime
-        .sendMessage({ type: "CREATE_SESSION", flowToken, parameters })
+        .sendMessage({ type: "CREATE_SESSION", parameters })
         .catch(() => {});
 
       // The real session is created in the content script; this is a no-op
@@ -128,7 +125,7 @@ export const createFakeProvider = async (
     },
     closeSession: async () => {
       chrome.runtime
-        .sendMessage({ type: "CANCEL_SESSION", flowToken })
+        .sendMessage({ type: "CANCEL_SESSION" })
         .catch(() => {});
     },
     getAccounts: async () => [],

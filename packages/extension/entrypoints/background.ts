@@ -4,43 +4,32 @@ import { defineBackground } from "#imports";
 type FlowState = {
   popupWindowId?: number;
   activeTabId?: number;
-  activeFlowToken?: string;
   lastStatus: string;
   pendingCreateSession?: boolean;
 };
 
-const STORAGE_KEY = "@openlv/background/flow";
-
 export default defineBackground(() => {
   const state: FlowState = { lastStatus: "standby" };
 
-  const sessionStorage = chrome.storage.session;
-  const persist = () =>
-    sessionStorage.set({ [STORAGE_KEY]: state }).catch(() => {});
-
-  sessionStorage.get(STORAGE_KEY).then((stored) => {
-    const saved = stored[STORAGE_KEY] as FlowState | undefined;
-
-    if (saved) Object.assign(state, saved);
-  });
-
   chrome.runtime.onMessage.addListener((message, sender) => {
+    const senderTabId = sender.tab?.id;
+
     switch (message.type as string) {
       case "OPEN_POPUP": {
+        // During session recreation, reuse the existing popup.
         if (state.pendingCreateSession && state.popupWindowId !== undefined) {
           state.pendingCreateSession = false;
-          state.activeFlowToken = message.flowToken as string;
-          state.activeTabId = sender.tab?.id;
-          persist();
+          state.activeTabId = senderTabId;
           chrome.windows.update(state.popupWindowId, { focused: true }).catch(() => {});
           break;
         }
 
         state.pendingCreateSession = false;
 
+        // Same tab requesting again, just focus the existing popup.
         if (
           state.popupWindowId !== undefined
-          && message.flowToken === state.activeFlowToken
+          && senderTabId === state.activeTabId
         ) {
           chrome.windows
             .update(state.popupWindowId, { focused: true })
@@ -48,33 +37,27 @@ export default defineBackground(() => {
           break;
         }
 
+        // Different tab, close old popup and cancel old session.
         if (state.popupWindowId !== undefined) {
           chrome.windows.remove(state.popupWindowId).catch(() => {});
 
           if (state.activeTabId !== undefined) {
             chrome.tabs
-              .sendMessage(state.activeTabId, {
-                type: "CANCEL_SESSION",
-                flowToken: state.activeFlowToken,
-              })
+              .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
               .catch(() => {});
           }
         }
 
         state.popupWindowId = undefined;
-        state.activeTabId = sender.tab?.id;
-        state.activeFlowToken = message.flowToken as string;
+        state.activeTabId = senderTabId;
         state.lastStatus = "standby";
-        persist();
 
         chrome.windows
           .create({
             url:
               chrome.runtime.getURL("connect.html")
               + "?uri="
-              + encodeURIComponent(message.uri as string)
-              + "&flowToken="
-              + encodeURIComponent(state.activeFlowToken),
+              + encodeURIComponent(message.uri as string),
             type: "popup",
             width: 420,
             height: 600,
@@ -82,14 +65,13 @@ export default defineBackground(() => {
           })
           .then((win) => {
             state.popupWindowId = win?.id;
-            persist();
           });
 
         break;
       }
 
       case "PROVIDER_STATUS": {
-        if (message.flowToken !== state.activeFlowToken) break;
+        if (senderTabId !== state.activeTabId) break;
 
         state.lastStatus = message.status as string;
 
@@ -100,23 +82,18 @@ export default defineBackground(() => {
           }
 
           state.activeTabId = undefined;
-          state.activeFlowToken = undefined;
         }
 
-        persist();
         break;
       }
 
       case "CREATE_SESSION": {
-        if (message.flowToken !== state.activeFlowToken) break;
-
         state.pendingCreateSession = true;
 
         if (state.activeTabId !== undefined) {
           chrome.tabs
             .sendMessage(state.activeTabId, {
               type: "CREATE_SESSION",
-              flowToken: state.activeFlowToken,
               parameters: message.parameters,
             })
             .catch(() => {});
@@ -126,16 +103,11 @@ export default defineBackground(() => {
       }
 
       case "CANCEL_SESSION": {
-        if (message.flowToken !== state.activeFlowToken) break;
-
         state.pendingCreateSession = false;
 
         if (state.activeTabId !== undefined) {
           chrome.tabs
-            .sendMessage(state.activeTabId, {
-              type: "CANCEL_SESSION",
-              flowToken: state.activeFlowToken,
-            })
+            .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
             .catch(() => {});
         }
 
@@ -155,17 +127,12 @@ export default defineBackground(() => {
       && state.activeTabId !== undefined
     ) {
       chrome.tabs
-        .sendMessage(state.activeTabId, {
-          type: "CANCEL_SESSION",
-          flowToken: state.activeFlowToken,
-        })
+        .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
         .catch(() => {});
 
       state.activeTabId = undefined;
     }
 
-    state.activeFlowToken = undefined;
     state.lastStatus = "standby";
-    persist();
   });
 });

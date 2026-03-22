@@ -180,11 +180,10 @@ export default defineUnlistedScript(() => {
 
   const providerDetail = Object.freeze({
     info: {
-      // EIP-6963 requires a stable UUID per wallet. XKCD 221.
-      uuid: "4a6f6e74-654f-4ece-9e74-68657265756d",
+      uuid: crypto.randomUUID(),
       name: "Open Lavatory",
       icon: OPENLV_ICON_128,
-      rdns: "company.v3x.openlv",
+      rdns: "company.v3x.openlv.extension",
     },
     provider: eip1193,
   });

@@ -18,7 +18,7 @@ import { createWxtProviderStorage } from "../../utils/wxt-storage-shim.js";
  * listening to messages relayed from the background.
  */
 export const createFakeProvider = async (
-  handshakeParams: SessionHandshakeParameters,
+  handshakeParams?: SessionHandshakeParameters,
 ): Promise<OpenLVProvider> => {
   const storage = await createWxtProviderStorage();
 
@@ -28,11 +28,14 @@ export const createFakeProvider = async (
   const providerEmitter = new EventEmitter();
   let sessionEmitter = new EventEmitter();
 
-  let sessionObj = {
-    getHandshakeParameters: () => handshakeParams,
+  const makeSessionObj = (params: SessionHandshakeParameters) => ({
+    getHandshakeParameters: () => params,
     getState: () => sessionState,
     get emitter() { return sessionEmitter; },
-  };
+  });
+
+  let sessionObj: ReturnType<typeof makeSessionObj> | undefined
+    = handshakeParams ? makeSessionObj(handshakeParams) : undefined;
 
   chrome.runtime.onMessage.addListener((message) => {
     switch (message.type) {
@@ -60,14 +63,10 @@ export const createFakeProvider = async (
         break;
       }
       case "UPDATED_SESSION_METADATA": {
-        handshakeParams = message.handshakeParams;
+        handshakeParams = message.handshakeParams as SessionHandshakeParameters;
         sessionState = { status: SESSION_STATE.READY as string };
         sessionEmitter = new EventEmitter();
-        sessionObj = {
-          getHandshakeParameters: () => handshakeParams,
-          getState: () => sessionState,
-          get emitter() { return sessionEmitter; },
-        };
+        sessionObj = makeSessionObj(handshakeParams);
         providerEmitter.emit("session_started", sessionObj);
 
         break;

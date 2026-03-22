@@ -52,12 +52,13 @@ export default defineBackground(() => {
         state.activeTabId = senderTabId;
         state.lastStatus = "standby";
 
+        const popupUrl = message.uri
+          ? chrome.runtime.getURL("connect.html") + "?uri=" + encodeURIComponent(message.uri as string)
+          : chrome.runtime.getURL("connect.html");
+
         chrome.windows
           .create({
-            url:
-              chrome.runtime.getURL("connect.html")
-              + "?uri="
-              + encodeURIComponent(message.uri as string),
+            url: popupUrl,
             type: "popup",
             width: 420,
             height: 600,

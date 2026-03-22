@@ -52,9 +52,9 @@ export default defineContentScript({
           throw error;
         }
 
-        providerRef
-          .createSession()
-          .catch(error => console.error("[openlv] Session creation failed:", error));
+        // Open the popup without creating a session yet.
+        // The modal UI will create the session when the user clicks connect.
+        chrome.runtime.sendMessage({ type: "OPEN_POPUP" }).catch(() => {});
       },
     });
 

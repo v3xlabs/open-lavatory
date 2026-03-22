@@ -19,12 +19,14 @@ const closePopup = () => {
 
 let handshakeParams;
 
-try {
-  handshakeParams = decodeConnectionURL(uri);
-}
-catch {
-  closePopup();
-  throw new Error("Invalid connection URL");
+if (uri) {
+  try {
+    handshakeParams = decodeConnectionURL(uri);
+  }
+  catch {
+    closePopup();
+    throw new Error("Invalid connection URL");
+  }
 }
 
 const provider = await createFakeProvider(handshakeParams);

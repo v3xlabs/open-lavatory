@@ -19,6 +19,7 @@ export default defineUnlistedScript(() => {
   g.__openlv_injected = true;
 
   const origin = globalThis.location.origin;
+
   let requestCounter = 0;
   const pending = new Map<
     number,
@@ -95,6 +96,7 @@ export default defineUnlistedScript(() => {
             type: PAGE_MSG.REQUEST,
             requestId,
             payload,
+            userActivated: navigator.userActivation.hasBeenActive,
           },
           origin,
         );

@@ -39,7 +39,6 @@ export type OpenLVProviderConfig = {
 export type OpenLVProviderParameters = Prettify<
   {
     config?: OpenLVProviderConfig;
-    openModal?: (provider: OpenLVProvider) => Promise<void>;
     providerStorage?: ProviderStorageR;
   } & Pick<ProviderStorageParameters, "storage">
 >;
@@ -121,7 +120,7 @@ export const createProvider = (
   let lastKnownChainId = "0x1";
   let accounts: Address[] = [];
   const storage = parameters.providerStorage ?? createProviderStorage({ storage: parameters.storage });
-  const { openModal, config } = parameters;
+  const { config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -263,7 +262,6 @@ export const createProvider = (
 
           return;
         })
-        // TODO: if modal is enabled explicitly toggle the modal to show.
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
@@ -276,33 +274,6 @@ export const createProvider = (
           }
 
           inFlightRequestAccounts = (async () => {
-            let provider: OpenLVProvider | undefined;
-
-            if (oxProvider) {
-              provider = oxProvider as OpenLVProvider;
-            }
-
-            if (openModal && provider) {
-              await openModal(provider);
-
-              await new Promise((resolve) => {
-                const handler = () => {
-                  provider?.off("connect", handler);
-                  provider?.off("disconnect", handler);
-                  resolve(undefined);
-                };
-
-                provider?.on("connect", handler);
-                provider?.on("disconnect", handler);
-              });
-
-              if (!provider.getSession()) {
-                return [];
-              }
-
-              return await getAccounts();
-            }
-
             await start();
 
             return await getAccounts();

@@ -34,29 +34,9 @@ export default defineContentScript({
 
     const providerStorage = await createWxtProviderStorage();
 
-    const provider = createProvider({
-      providerStorage,
-      openModal: async (providerRef) => {
-        if (providerRef.getState().status !== PROVIDER_STATUS.STANDBY) {
-          return;
-        }
+    let lastRequestUserActivated = false;
 
-        // Suppress auto-connect on page load (e.g. after refresh).
-        // hasBeenActive is sticky: false until the user interacts, true after.
-        if (!navigator.userActivation?.hasBeenActive) {
-          const error = new Error("User rejected the request.") as Error & {
-            code: number;
-          };
-
-          error.code = 4001;
-          throw error;
-        }
-
-        // Open the popup without creating a session yet.
-        // The modal UI will create the session when the user clicks connect.
-        chrome.runtime.sendMessage({ type: "OPEN_POPUP" }).catch(() => {});
-      },
-    });
+    const provider = createProvider({ providerStorage });
 
     let sessionRef: Session | undefined;
     let sessionStateHandler:
@@ -182,7 +162,54 @@ export default defineContentScript({
 
       if (msg.type !== PAGE_MSG.REQUEST) return;
 
-      const { requestId, payload } = msg as { requestId: number; payload: { method: string; params?: unknown; }; };
+      const { requestId, payload, userActivated } = msg as { requestId: number; payload: { method: string; params?: unknown; }; userActivated?: boolean; };
+
+      lastRequestUserActivated = !!userActivated;
+
+      if (payload.method === "eth_requestAccounts") {
+        // Close any existing session so we always go through the popup.
+        if (provider.getSession()) {
+          await provider.closeSession();
+        }
+
+        // Block auto-reconnect on page load. The injected script sends
+        // hasBeenActive from the page context — false on a fresh page
+        // before any user interaction.
+        if (!lastRequestUserActivated) {
+          globalThis.postMessage(
+            { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, error: { message: "User rejected the request.", code: 4001 } },
+            origin,
+          );
+
+          return;
+        }
+
+        // Open popup and wait for the user to connect or dismiss.
+        chrome.runtime.sendMessage({ type: "OPEN_POPUP" }).catch(() => {});
+
+        await new Promise<void>((resolve) => {
+          const done = () => {
+            provider.off("connect", done);
+            provider.off("disconnect", done);
+            resolve();
+          };
+
+          provider.on("connect", done);
+          provider.on("disconnect", done);
+        });
+
+        if (!provider.getSession()) {
+          globalThis.postMessage(
+            { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, result: [] },
+            origin,
+          );
+
+          return;
+        }
+
+        // Session is now connected — fall through to provider.request()
+        // which will return accounts.
+      }
 
       if (payload.method === "wallet_requestPermissions" && !provider.getSession()) {
         globalThis.postMessage(

@@ -124,22 +124,14 @@ export default defineContentScript({
           return;
         }
 
-        provider
-          .closeSession()
-          .then(() => {
-            provider.createSession(parameters).catch((error) => {
-              const message
-                = error instanceof Error ? error.message : String(error);
+        provider.createSession(parameters).catch((error) => {
+          const message
+            = error instanceof Error ? error.message : String(error);
 
-              if (!/session closed/i.test(message)) {
-                console.error(
-                  "[openlv] Manual session creation failed:",
-                  error,
-                );
-              }
-            });
-          })
-          .catch(() => {});
+          if (!/session closed/i.test(message)) {
+            console.error("[openlv] Manual session creation failed:", error);
+          }
+        });
       }
     });
 

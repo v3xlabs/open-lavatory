@@ -73,28 +73,28 @@ export type ProviderBase = {
 };
 
 export type OpenLVProvider = OxProvider.Provider<
-  { schema: RpcSchema },
+  { schema: RpcSchema; },
   ProviderEvents & EventMap
 > &
-  ProviderBase;
+ProviderBase;
 
 type transportInput =
   | {
-      stun?: string[] | undefined;
-      turn?:
-        | {
-            urls: string;
-            username?: string | undefined;
-            credential?: string | undefined;
-          }[]
-        | undefined;
-    }
+    stun?: string[] | undefined;
+    turn?:
+      | {
+        urls: string;
+        username?: string | undefined;
+        credential?: string | undefined;
+      }[]
+      | undefined;
+  }
   | undefined;
 
 const convertTempV1 = (transport: transportInput): WebRTCConfig => {
-  const stun = transport?.stun?.map((url) => ({ urls: url })) || [];
-  const turn =
-    transport?.turn?.map((server) => ({
+  const stun = transport?.stun?.map(url => ({ urls: url })) || [];
+  const turn
+    = transport?.turn?.map(server => ({
       urls: server.urls,
       username: server.username,
       credential: server.credential,
@@ -119,9 +119,9 @@ export const createProvider = (
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let lastKnownChainId = "0x1";
   let accounts: Address[] = [];
-  const storage =
-    parameters.providerStorage ??
-    createProviderStorage({ storage: parameters.storage });
+  const storage
+    = parameters.providerStorage
+      ?? createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
@@ -156,9 +156,9 @@ export const createProvider = (
     },
   ) => {
     updateStatus(PROVIDER_STATUS.CREATING);
-    const transportOptions =
-      convertTempV1(storage.getSettings().transport?.s?.webrtc) ||
-      config?.transport?.s?.webrtc;
+    const transportOptions
+      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
+        || config?.transport?.s?.webrtc;
 
     session = await createSession(
       parameters,
@@ -214,18 +214,18 @@ export const createProvider = (
   const closeSession = async () => {
     inFlightRequestAccounts = undefined;
     const oldSession = session;
+
     session = undefined;
 
     try {
       await oldSession?.close();
-    } catch (error) {
+    }
+    catch (error) {
       log("error closing session", error);
     }
 
     updateStatus(PROVIDER_STATUS.STANDBY);
-    oxEmitter.emit("disconnect", {
-      error: { code: 4900, message: "Disconnected" },
-    });
+    oxEmitter.emit("disconnect", new OxProvider.ProviderRpcError(4900, "Disconnected"));
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (
@@ -314,7 +314,8 @@ export const createProvider = (
 
           try {
             return await inFlightRequestAccounts;
-          } finally {
+          }
+          finally {
             inFlightRequestAccounts = undefined;
           }
         })
@@ -325,7 +326,8 @@ export const createProvider = (
 
           try {
             return await getAccounts();
-          } catch {
+          }
+          catch {
             return [];
           }
         })
@@ -346,8 +348,8 @@ export const createProvider = (
   const oxProvider = OxProvider.from<
     ProviderConfig,
     OxProvider.from.Value<ProviderConfig> &
-      ProviderBase &
-      OxProvider.Emitter<ProviderEvents & EventMap>
+    ProviderBase &
+    OxProvider.Emitter<ProviderEvents & EventMap>
   >({
     ...oxEmitter,
     storage,

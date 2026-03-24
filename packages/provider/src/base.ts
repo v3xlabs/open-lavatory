@@ -1,4 +1,3 @@
-
 import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
@@ -39,6 +38,7 @@ export type OpenLVProviderConfig = {
 export type OpenLVProviderParameters = Prettify<
   {
     config?: OpenLVProviderConfig;
+    openModal?: (provider: OpenLVProvider) => Promise<void>;
     providerStorage?: ProviderStorageR;
   } & Pick<ProviderStorageParameters, "storage">
 >;
@@ -73,28 +73,28 @@ export type ProviderBase = {
 };
 
 export type OpenLVProvider = OxProvider.Provider<
-  { schema: RpcSchema; },
+  { schema: RpcSchema },
   ProviderEvents & EventMap
 > &
-ProviderBase;
+  ProviderBase;
 
 type transportInput =
   | {
-    stun?: string[] | undefined;
-    turn?:
-      | {
-        urls: string;
-        username?: string | undefined;
-        credential?: string | undefined;
-      }[]
-      | undefined;
-  }
+      stun?: string[] | undefined;
+      turn?:
+        | {
+            urls: string;
+            username?: string | undefined;
+            credential?: string | undefined;
+          }[]
+        | undefined;
+    }
   | undefined;
 
 const convertTempV1 = (transport: transportInput): WebRTCConfig => {
-  const stun = transport?.stun?.map(url => ({ urls: url })) || [];
-  const turn
-    = transport?.turn?.map(server => ({
+  const stun = transport?.stun?.map((url) => ({ urls: url })) || [];
+  const turn =
+    transport?.turn?.map((server) => ({
       urls: server.urls,
       username: server.username,
       credential: server.credential,
@@ -119,8 +119,10 @@ export const createProvider = (
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let lastKnownChainId = "0x1";
   let accounts: Address[] = [];
-  const storage = parameters.providerStorage ?? createProviderStorage({ storage: parameters.storage });
-  const { config } = parameters;
+  const storage =
+    parameters.providerStorage ??
+    createProviderStorage({ storage: parameters.storage });
+  const { openModal, config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
     status = newStatus;
@@ -154,9 +156,9 @@ export const createProvider = (
     },
   ) => {
     updateStatus(PROVIDER_STATUS.CREATING);
-    const transportOptions
-      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
-        || config?.transport?.s?.webrtc;
+    const transportOptions =
+      convertTempV1(storage.getSettings().transport?.s?.webrtc) ||
+      config?.transport?.s?.webrtc;
 
     session = await createSession(
       parameters,
@@ -211,16 +213,19 @@ export const createProvider = (
   };
   const closeSession = async () => {
     inFlightRequestAccounts = undefined;
+    const oldSession = session;
+    session = undefined;
 
     try {
-      await session?.close();
-    }
-    catch (error) {
+      await oldSession?.close();
+    } catch (error) {
       log("error closing session", error);
     }
 
-    session = undefined;
     updateStatus(PROVIDER_STATUS.STANDBY);
+    oxEmitter.emit("disconnect", {
+      error: { code: 4900, message: "Disconnected" },
+    });
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (
@@ -262,6 +267,7 @@ export const createProvider = (
 
           return;
         })
+        // TODO: if modal is enabled explicitly toggle the modal to show.
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
@@ -274,6 +280,33 @@ export const createProvider = (
           }
 
           inFlightRequestAccounts = (async () => {
+            let provider: OpenLVProvider | undefined;
+
+            if (oxProvider) {
+              provider = oxProvider as OpenLVProvider;
+            }
+
+            if (openModal && provider) {
+              await openModal(provider);
+
+              await new Promise((resolve) => {
+                const handler = () => {
+                  provider?.off("connect", handler);
+                  provider?.off("disconnect", handler);
+                  resolve(undefined);
+                };
+
+                provider?.on("connect", handler);
+                provider?.on("disconnect", handler);
+              });
+
+              if (!provider.getSession()) {
+                return [];
+              }
+
+              return await getAccounts();
+            }
+
             await start();
 
             return await getAccounts();
@@ -281,8 +314,7 @@ export const createProvider = (
 
           try {
             return await inFlightRequestAccounts;
-          }
-          finally {
+          } finally {
             inFlightRequestAccounts = undefined;
           }
         })
@@ -293,8 +325,7 @@ export const createProvider = (
 
           try {
             return await getAccounts();
-          }
-          catch {
+          } catch {
             return [];
           }
         })
@@ -315,8 +346,8 @@ export const createProvider = (
   const oxProvider = OxProvider.from<
     ProviderConfig,
     OxProvider.from.Value<ProviderConfig> &
-    ProviderBase &
-    OxProvider.Emitter<ProviderEvents & EventMap>
+      ProviderBase &
+      OxProvider.Emitter<ProviderEvents & EventMap>
   >({
     ...oxEmitter,
     storage,

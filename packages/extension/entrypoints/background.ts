@@ -20,7 +20,9 @@ export default defineBackground(() => {
         if (state.pendingCreateSession && state.popupWindowId !== undefined) {
           state.pendingCreateSession = false;
           state.activeTabId = senderTabId;
-          chrome.windows.update(state.popupWindowId, { focused: true }).catch(() => {});
+          chrome.windows
+            .update(state.popupWindowId, { focused: true })
+            .catch(() => {});
           break;
         }
 
@@ -53,7 +55,9 @@ export default defineBackground(() => {
         state.lastStatus = "standby";
 
         const popupUrl = message.uri
-          ? chrome.runtime.getURL("connect.html") + "?uri=" + encodeURIComponent(message.uri as string)
+          ? chrome.runtime.getURL("connect.html")
+          + "?uri="
+          + encodeURIComponent(message.uri as string)
           : chrome.runtime.getURL("connect.html");
 
         chrome.windows
@@ -76,8 +80,12 @@ export default defineBackground(() => {
 
         state.lastStatus = message.status as string;
 
-        if (message.status === "standby") {
-          if (!state.pendingCreateSession && state.popupWindowId !== undefined) {
+        if (message.status === "connected" || message.status === "error") {
+          state.pendingCreateSession = false;
+        }
+
+        if (message.status === "standby" && !state.pendingCreateSession) {
+          if (state.popupWindowId !== undefined) {
             chrome.windows.remove(state.popupWindowId).catch(() => {});
             state.popupWindowId = undefined;
           }
@@ -123,15 +131,10 @@ export default defineBackground(() => {
     state.popupWindowId = undefined;
     state.pendingCreateSession = false;
 
-    if (
-      ["creating", "connecting"].includes(state.lastStatus)
-      && state.activeTabId !== undefined
-    ) {
+    if (state.activeTabId !== undefined) {
       chrome.tabs
         .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
         .catch(() => {});
-
-      state.activeTabId = undefined;
     }
 
     state.lastStatus = "standby";

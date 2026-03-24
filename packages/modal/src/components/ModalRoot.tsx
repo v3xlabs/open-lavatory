@@ -158,9 +158,21 @@ export const ModalRoot = (props: ModalRootProps) => {
       .exhaustive(),
   );
 
-  useEscapeToClose(() => props.onClose?.());
+  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(
+    provider.getState().status,
+  );
 
-  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(provider.getState().status);
+  const dismissModal = () => {
+    const currentStatus = providerStatus();
+
+    if (currentStatus !== PROVIDER_STATUS.CONNECTED) {
+      void provider.closeSession();
+    }
+
+    props.onClose?.();
+  };
+
+  useEscapeToClose(dismissModal);
 
   onMount(() => {
     provider.on("status_change", setProviderStatus);
@@ -251,7 +263,10 @@ export const ModalRoot = (props: ModalRootProps) => {
   });
 
   const shouldShowBack = createMemo(
-    () => !(modalView() === "start" && providerStatus() === PROVIDER_STATUS.STANDBY),
+    () =>
+      !(
+        modalView() === "start" && providerStatus() === PROVIDER_STATUS.STANDBY
+      ),
   );
 
   const onBack = () => {
@@ -309,9 +324,7 @@ export const ModalRoot = (props: ModalRootProps) => {
     </div>
   );
 
-  const renderStatusSection = (
-    targetStatus: ProviderStatus,
-  ): JSX.Element =>
+  const renderStatusSection = (targetStatus: ProviderStatus): JSX.Element =>
     match(targetStatus)
       .with(PROVIDER_STATUS.STANDBY, () => renderDisconnectedSection())
       .with(
@@ -320,9 +333,7 @@ export const ModalRoot = (props: ModalRootProps) => {
           PROVIDER_STATUS.CONNECTING,
           PROVIDER_STATUS.CONNECTED,
         ),
-        () => (
-          <ConnectionFlow onClose={() => props.onClose?.()} onCopy={handleCopy} />
-        ),
+        () => <ConnectionFlow onClose={dismissModal} onCopy={handleCopy} />,
       )
       .otherwise(state => <UnknownState state={state || "unknown status"} />);
 
@@ -343,9 +354,6 @@ export const ModalRoot = (props: ModalRootProps) => {
   return (
     <div
       class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4 pointer-events-auto"
-      onMouseUp={(e) => {
-        if (e.target === e.currentTarget) props.onClose?.();
-      }}
       role="presentation"
       data-openlv-modal-root
       data-openlv-theme-mode={theme.mode()}
@@ -353,9 +361,15 @@ export const ModalRoot = (props: ModalRootProps) => {
       dir={isRtl() ? "rtl" : "ltr"}
       style={overlayStyle}
     >
+      <button
+        type="button"
+        aria-label={String(t("common.close"))}
+        class="absolute inset-0 z-0 m-0 border-0 bg-transparent p-0"
+        onClick={dismissModal}
+      />
       <div
         class={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-200 ease-out",
+          "relative z-10 w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-200 ease-out",
           shouldHideOverflow() || previousStatus()
             ? "overflow-hidden"
             : undefined,
@@ -363,7 +377,6 @@ export const ModalRoot = (props: ModalRootProps) => {
         role="dialog"
         aria-modal="true"
         aria-label={String(title())}
-        onClick={event => event.stopPropagation()}
         style={{
           ...(typeof height() === "number" && height() > 0
             ? { height: `${height()}px` }
@@ -375,7 +388,7 @@ export const ModalRoot = (props: ModalRootProps) => {
           <Header
             title={String(title())}
             view={modalView()}
-            onClose={() => props.onClose?.()}
+            onClose={dismissModal}
             onBack={shouldShowBack() ? onBack : undefined}
             setView={setView}
           />

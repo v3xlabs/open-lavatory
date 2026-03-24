@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-syntax */
-import { decodeConnectionURL } from "@openlv/core";
+import { decodeConnectionURL, type SessionHandshakeParameters } from "@openlv/core";
 import { OpenLVModalElement, registerOpenLVModal } from "@openlv/modal";
 import { simpleTheme } from "@openlv/modal/theme";
 
@@ -9,19 +9,25 @@ const uri = new URLSearchParams(location.search).get("uri") ?? "";
 
 const closePopup = () => {
   globalThis.close();
-  chrome.windows.getCurrent().then((win) => {
-    if (win?.id !== undefined) {
-      chrome.windows.remove(win.id).catch(() => {});
-    }
-  })
+  chrome.windows
+    .getCurrent()
+    .then((win) => {
+      if (win?.id !== undefined) {
+        chrome.windows.remove(win.id).catch(() => {});
+      }
+    })
     .catch(() => {});
 };
 
-let handshakeParams;
+let handshakeParams: SessionHandshakeParameters | undefined;
 
 if (uri) {
   try {
-    handshakeParams = decodeConnectionURL(uri);
+    const params = decodeConnectionURL(uri);
+
+    if ("sessionId" in params) {
+      handshakeParams = params as SessionHandshakeParameters;
+    }
   }
   catch {
     closePopup();

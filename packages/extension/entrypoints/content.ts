@@ -1,11 +1,5 @@
-import {
-  encodeConnectionURL,
-  type SessionLinkParameters,
-} from "@openlv/core";
-import {
-  createProvider,
-  PROVIDER_STATUS,
-} from "@openlv/provider";
+import type { SessionLinkParameters } from "@openlv/core";
+import { createProvider, PROVIDER_STATUS } from "@openlv/provider";
 import type { Session, SessionStateObject } from "@openlv/session";
 
 import { defineContentScript } from "#imports";
@@ -33,15 +27,10 @@ export default defineContentScript({
     (document.head || document.documentElement).append(script);
 
     const providerStorage = await createWxtProviderStorage();
-
-    let lastRequestUserActivated = false;
-
     const provider = createProvider({ providerStorage });
 
     let sessionRef: Session | undefined;
-    let sessionStateHandler:
-      | ((state?: SessionStateObject) => void)
-      | undefined;
+    let sessionStateHandler: ((state?: SessionStateObject) => void) | undefined;
 
     const resetConnectFlow = () => {
       if (sessionRef && sessionStateHandler) {
@@ -56,7 +45,6 @@ export default defineContentScript({
       if (
         status === PROVIDER_STATUS.CREATING
         || status === PROVIDER_STATUS.CONNECTING
-        || status === PROVIDER_STATUS.CONNECTED
       ) {
         const session = provider.getSession();
 
@@ -69,19 +57,19 @@ export default defineContentScript({
 
           const handshakeParams = session.getHandshakeParameters();
 
-          try {
-            const uri = encodeConnectionURL(handshakeParams);
-
-            chrome.runtime.sendMessage({ type: "OPEN_POPUP", uri }).catch(() => {});
-            chrome.runtime.sendMessage({ type: "UPDATED_SESSION_METADATA", handshakeParams }).catch(() => {});
-          }
-          catch (error) {
-            console.error("[openlv] Failed to encode connection URL:", error);
-          }
+          chrome.runtime
+            .sendMessage({
+              type: "UPDATED_SESSION_METADATA",
+              handshakeParams,
+            })
+            .catch(() => {});
 
           sessionStateHandler = (sessionState) => {
             chrome.runtime
-              .sendMessage({ type: "SESSION_STATE", state: sessionState?.status })
+              .sendMessage({
+                type: "SESSION_STATE",
+                state: sessionState?.status,
+              })
               .catch(() => {});
           };
 
@@ -89,30 +77,66 @@ export default defineContentScript({
 
           // Manually blast the very first state out
           chrome.runtime
-            .sendMessage({ type: "SESSION_STATE", state: session.getState()?.status })
+            .sendMessage({
+              type: "SESSION_STATE",
+              state: session.getState()?.status,
+            })
             .catch(() => {});
         }
       }
 
-      if (status === PROVIDER_STATUS.STANDBY || status === PROVIDER_STATUS.ERROR) {
+      if (
+        status === PROVIDER_STATUS.STANDBY
+        || status === PROVIDER_STATUS.ERROR
+      ) {
         resetConnectFlow();
       }
 
-      chrome.runtime.sendMessage({ type: "PROVIDER_STATUS", status }).catch(() => {});
+      chrome.runtime
+        .sendMessage({ type: "PROVIDER_STATUS", status })
+        .catch(() => {});
     });
 
     chrome.runtime.onMessage.addListener((message) => {
       if (message.type === "CANCEL_SESSION") {
-        provider.closeSession();
+        const currentStatus = provider.getState().status;
+
         resetConnectFlow();
+
+        if (currentStatus !== PROVIDER_STATUS.CONNECTED) {
+          provider.closeSession();
+        }
       }
       else if (message.type === "CREATE_SESSION") {
-        const parameters = message.parameters as SessionLinkParameters | undefined;
+        const parameters = message.parameters as
+          | SessionLinkParameters
+          | undefined;
+        const currentStatus = provider.getState().status;
 
-        provider.closeSession()
+        if (currentStatus === PROVIDER_STATUS.CONNECTED) {
+          return;
+        }
+
+        if (
+          currentStatus === PROVIDER_STATUS.CREATING
+          || currentStatus === PROVIDER_STATUS.CONNECTING
+        ) {
+          return;
+        }
+
+        provider
+          .closeSession()
           .then(() => {
             provider.createSession(parameters).catch((error) => {
-              console.error("[openlv] Manual session creation failed:", error);
+              const message
+                = error instanceof Error ? error.message : String(error);
+
+              if (!/session closed/i.test(message)) {
+                console.error(
+                  "[openlv] Manual session creation failed:",
+                  error,
+                );
+              }
             });
           })
           .catch(() => {});
@@ -131,17 +155,30 @@ export default defineContentScript({
 
       const msg = event.data as Record<string, unknown>;
 
-      if (!msg || msg.source !== PAGE_SOURCE || !Object.values(PAGE_MSG).includes(msg.type as never)) {
+      if (
+        !msg
+        || msg.source !== PAGE_SOURCE
+        || !Object.values(PAGE_MSG).includes(msg.type as never)
+      ) {
         return;
       }
 
       if (msg.type === PAGE_MSG.SUBSCRIBE) {
         const eventName = msg.event as string;
 
-        if (internalEvents.has(eventName) || eventHandlers.has(eventName)) return;
+        if (internalEvents.has(eventName) || eventHandlers.has(eventName))
+          return;
 
         const handler = (data: unknown) =>
-          globalThis.postMessage({ source: CONTENT_SOURCE, type: CONTENT_MSG.EVENT, event: eventName, data }, origin);
+          globalThis.postMessage(
+            {
+              source: CONTENT_SOURCE,
+              type: CONTENT_MSG.EVENT,
+              event: eventName,
+              data,
+            },
+            origin,
+          );
 
         eventHandlers.set(eventName, handler);
         eventProvider.on(eventName, handler);
@@ -162,58 +199,90 @@ export default defineContentScript({
 
       if (msg.type !== PAGE_MSG.REQUEST) return;
 
-      const { requestId, payload, userActivated } = msg as { requestId: number; payload: { method: string; params?: unknown; }; userActivated?: boolean; };
-
-      lastRequestUserActivated = !!userActivated;
+      const { requestId, payload, userActivated } = msg as {
+        requestId: number;
+        payload: { method: string; params?: unknown; };
+        userActivated?: boolean;
+      };
 
       if (payload.method === "eth_requestAccounts") {
-        // Close any existing session so we always go through the popup.
-        if (provider.getSession()) {
-          await provider.closeSession();
-        }
+        try {
+          if (!provider.getSession()) {
+            if (!userActivated) {
+              throw { message: "User rejected the request.", code: 4001 };
+            }
 
-        // Block auto-reconnect on page load. The injected script sends
-        // hasBeenActive from the page context — false on a fresh page
-        // before any user interaction.
-        if (!lastRequestUserActivated) {
+            await new Promise<void>((resolve) => {
+              const complete = () => {
+                provider.off("connect", complete);
+                provider.off("status_change", checkStatus);
+                resolve();
+              };
+
+              const checkStatus = (status: string) => {
+                if (
+                  status === PROVIDER_STATUS.STANDBY
+                  || status === PROVIDER_STATUS.ERROR
+                ) {
+                  complete();
+                }
+              };
+
+              provider.on("connect", complete);
+              provider.on("status_change", checkStatus);
+
+              chrome.runtime
+                .sendMessage({ type: "OPEN_POPUP" })
+                .catch(() => complete());
+            });
+
+            if (!provider.getSession()) {
+              throw { message: "User rejected the request.", code: 4001 };
+            }
+          }
+
+          const result = await provider.request(payload);
+
           globalThis.postMessage(
-            { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, error: { message: "User rejected the request.", code: 4001 } },
+            {
+              source: CONTENT_SOURCE,
+              type: CONTENT_MSG.RESPONSE,
+              requestId,
+              result,
+            },
             origin,
           );
-
-          return;
         }
-
-        // Open popup and wait for the user to connect or dismiss.
-        chrome.runtime.sendMessage({ type: "OPEN_POPUP" }).catch(() => {});
-
-        await new Promise<void>((resolve) => {
-          const done = () => {
-            provider.off("connect", done);
-            provider.off("disconnect", done);
-            resolve();
-          };
-
-          provider.on("connect", done);
-          provider.on("disconnect", done);
-        });
-
-        if (!provider.getSession()) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        catch (error: any) {
           globalThis.postMessage(
-            { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, result: [] },
+            {
+              source: CONTENT_SOURCE,
+              type: CONTENT_MSG.RESPONSE,
+              requestId,
+              error: {
+                message: error?.message || "Internal error",
+                code: error?.code || -32_603,
+              },
+            },
             origin,
           );
-
-          return;
         }
 
-        // Session is now connected — fall through to provider.request()
-        // which will return accounts.
+        return;
       }
 
-      if (payload.method === "wallet_requestPermissions" && !provider.getSession()) {
+      if (
+        payload.method === "wallet_requestPermissions"
+        && !provider.getSession()
+      ) {
         globalThis.postMessage(
-          { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, result: [] },
+          {
+            source: CONTENT_SOURCE,
+            type: CONTENT_MSG.RESPONSE,
+            requestId,
+            result: [],
+          },
           origin,
         );
 
@@ -224,7 +293,12 @@ export default defineContentScript({
         const result = await provider.request(payload);
 
         globalThis.postMessage(
-          { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, result },
+          {
+            source: CONTENT_SOURCE,
+            type: CONTENT_MSG.RESPONSE,
+            requestId,
+            result,
+          },
           origin,
         );
       }
@@ -232,7 +306,12 @@ export default defineContentScript({
         const { message, code } = error as { message?: string; code?: number; };
 
         globalThis.postMessage(
-          { source: CONTENT_SOURCE, type: CONTENT_MSG.RESPONSE, requestId, error: { message, code } },
+          {
+            source: CONTENT_SOURCE,
+            type: CONTENT_MSG.RESPONSE,
+            requestId,
+            error: { message, code },
+          },
           origin,
         );
       }

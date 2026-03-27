@@ -1,4 +1,3 @@
-/* eslint-disable unicorn/consistent-function-scoping */
 import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
@@ -40,6 +39,7 @@ export type OpenLVProviderParameters = Prettify<
   {
     config?: OpenLVProviderConfig;
     openModal?: (provider: OpenLVProvider) => Promise<void>;
+    providerStorage?: ProviderStorageR;
   } & Pick<ProviderStorageParameters, "storage">
 >;
 
@@ -115,9 +115,13 @@ export const createProvider = (
 ): OpenLVProvider => {
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
+  let inFlightRequestAccounts: Promise<Address[]> | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
+  let lastKnownChainId = "0x1";
   let accounts: Address[] = [];
-  const storage = createProviderStorage({ storage: parameters.storage });
+  const storage
+    = parameters.providerStorage
+      ?? createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
@@ -126,6 +130,13 @@ export const createProvider = (
     oxEmitter.emit("status_change", newStatus);
   };
 
+  const ensureCurrentSession = (activeSession: Session, phase: string) => {
+    if (session !== activeSession) {
+      throw new Error(`Session closed during ${phase}`);
+    }
+  };
+
+  // eslint-disable-next-line unicorn/consistent-function-scoping
   const onMessage = async (message: object) => {
     log("onMessage", message);
 
@@ -155,43 +166,70 @@ export const createProvider = (
       = convertTempV1(storage.getSettings().transport?.s?.webrtc)
         || config?.transport?.s?.webrtc;
 
-    session = await createSession(
+    const activeSession = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
       webrtc(transportOptions),
       onMessage,
     );
+
+    session = activeSession;
     updateStatus(PROVIDER_STATUS.CONNECTING);
 
     log("session created");
-    await session.connect();
+    await activeSession.connect();
+    ensureCurrentSession(activeSession, "connect");
+
     log("session connected");
-    const handshakeParameters = session.getHandshakeParameters();
+    const handshakeParameters = activeSession.getHandshakeParameters();
     const url = encodeConnectionURL(handshakeParameters);
 
     log("session url", url);
-    oxEmitter.emit("session_started", session);
+    oxEmitter.emit("session_started", activeSession);
 
-    await session.waitForLink();
+    await activeSession.waitForLink();
+    ensureCurrentSession(activeSession, "link");
+
     log("session linked");
 
-    accounts = await getAccounts();
+    accounts = (await activeSession.send({
+      method: "eth_accounts",
+      params: [],
+    })) as Address[];
+    ensureCurrentSession(activeSession, "eth_accounts");
 
-    const chainIdHex = (await session.send({
+    const chainIdHex = (await activeSession.send({
       method: "eth_chainId",
       params: [],
     })) as string;
+
+    ensureCurrentSession(activeSession, "eth_chainId");
+
+    lastKnownChainId = chainIdHex;
 
     updateStatus(PROVIDER_STATUS.CONNECTED);
     oxEmitter.emit("connect", { chainId: chainIdHex });
     oxEmitter.emit("accountsChanged", accounts);
 
-    return session;
+    return activeSession;
   };
   const closeSession = async () => {
-    await session?.close();
+    inFlightRequestAccounts = undefined;
+    const oldSession = session;
+
     session = undefined;
-    updateStatus(PROVIDER_STATUS.STANDBY);
+    accounts = [];
+
+    try {
+      await oldSession?.close();
+    }
+    catch (error) {
+      log("error closing session", error);
+    }
+
+    if (!session) {
+      updateStatus(PROVIDER_STATUS.STANDBY);
+    }
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (
@@ -208,12 +246,16 @@ export const createProvider = (
             log("sending eth_chainId to session");
             const result = await session.send(request);
 
+            if (typeof result === "string") {
+              lastKnownChainId = result;
+            }
+
             log("eth_chainId result from session", result);
 
             return result;
           }
 
-          return "0x1";
+          return lastKnownChainId;
         })
         .with({ method: "wallet_requestPermissions" }, () => {
           throw new Error("Not implemented");
@@ -233,28 +275,82 @@ export const createProvider = (
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
-          let provider: OpenLVProvider | undefined;
-
-          if (oxProvider) {
-            provider = oxProvider as OpenLVProvider;
-          }
-
-          if (openModal && provider) {
-            await openModal(provider);
-
-            await new Promise((resolve) => {
-              provider?.on("connect", resolve);
-              provider?.on("disconnect", resolve);
-            });
-
+          if (status === PROVIDER_STATUS.CONNECTED) {
             return await getAccounts();
           }
 
-          const x = await start();
+          if (inFlightRequestAccounts) {
+            return await inFlightRequestAccounts;
+          }
 
-          log("x", x);
+          inFlightRequestAccounts = (async () => {
+            let provider: OpenLVProvider | undefined;
 
-          return await getAccounts();
+            if (oxProvider) {
+              provider = oxProvider as OpenLVProvider;
+            }
+
+            if (openModal && provider) {
+              let resolveWait: (() => void) | undefined;
+              const waitForCompletion = new Promise<void>((resolve) => {
+                resolveWait = resolve;
+              });
+
+              const finish = () => {
+                provider.off("connect", onConnect);
+                provider.off("status_change", onStatusChange);
+                resolveWait?.();
+              };
+
+              const onConnect = () => {
+                finish();
+              };
+
+              const onStatusChange = (nextStatus: ProviderStatus) => {
+                if (
+                  nextStatus === PROVIDER_STATUS.STANDBY
+                  || nextStatus === PROVIDER_STATUS.ERROR
+                ) {
+                  finish();
+                }
+              };
+
+              provider.on("connect", onConnect);
+              provider.on("status_change", onStatusChange);
+
+              try {
+                await openModal(provider);
+                await waitForCompletion;
+              }
+              catch (error) {
+                finish();
+                throw error;
+              }
+
+              if (
+                provider.getState().status !== PROVIDER_STATUS.CONNECTED
+                || !provider.getSession()
+              ) {
+                throw new OxProvider.ProviderRpcError(
+                  4001,
+                  "User rejected the request",
+                );
+              }
+
+              return await getAccounts();
+            }
+
+            await start();
+
+            return await getAccounts();
+          })();
+
+          try {
+            return await inFlightRequestAccounts;
+          }
+          finally {
+            inFlightRequestAccounts = undefined;
+          }
         })
         .with({ method: "eth_accounts" }, async () => {
           log("eth_accounts");

@@ -1,13 +1,32 @@
 import { encodeConnectionURL } from "@openlv/core";
 import type { SessionStateObject } from "@openlv/session";
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 import { useModalContext } from "../context.js";
 
 export const useSession = () => {
   const { provider } = useModalContext();
-  const session = createMemo(() => provider.getSession(), undefined, { name: "session" });
-  const [status, setStatus] = createSignal<SessionStateObject | undefined>(session()?.getState());
+  const [session, setSession] = createSignal(provider.getSession());
+
+  onMount(() => {
+    const handleSessionStarted = () => {
+      setSession(provider.getSession());
+    };
+
+    provider.on("session_started", handleSessionStarted);
+    onCleanup(() => {
+      provider.off("session_started", handleSessionStarted);
+    });
+  });
+  const [status, setStatus] = createSignal<SessionStateObject | undefined>(
+    session()?.getState(),
+  );
 
   console.log("session status", status());
 
@@ -16,12 +35,14 @@ export const useSession = () => {
     setStatus(state);
   };
 
-  onMount(() => {
-    session()?.emitter.on("state_change", handleStateChange);
-  });
+  createEffect(() => {
+    const s = session();
 
-  onCleanup(() => {
-    session()?.emitter.off("state_change", handleStateChange);
+    setStatus(s?.getState());
+    s?.emitter.on("state_change", handleStateChange);
+    onCleanup(() => {
+      s?.emitter.off("state_change", handleStateChange);
+    });
   });
 
   const parameters = createMemo(() => session()?.getHandshakeParameters());

@@ -5,11 +5,13 @@ import { parseProviderStorage, type ProviderStorage } from "./version.js";
 
 const DEFAULT_STORAGE_KEY = "@openlv/connector/settings";
 
+export { DEFAULT_SETTINGS } from "./default.js";
 export type {
   ProviderStorage,
   TurnServer,
   UserThemePreference,
 } from "./version.js";
+export { parseProviderStorage } from "./version.js";
 
 export type ProviderStorageParameters = {
   // Defaults to localStorage
@@ -44,14 +46,15 @@ export type ProviderStorageR = {
 };
 
 export const createProviderStorage = ({
-  storage,
+  storage: storageBackend,
 }: ProviderStorageParameters): ProviderStorageR => {
-  const io = storage ?? getStorage() ?? createPassthrough();
-  const initialSettings = io.getItem(DEFAULT_STORAGE_KEY);
+  const io = storageBackend ?? getStorage() ?? createPassthrough();
 
-  let settings: ProviderStorage = initialSettings
-    ? parseProviderStorage(initialSettings)
-    : DEFAULT_SETTINGS;
+  const getSettings = () => {
+    const raw = io.getItem(DEFAULT_STORAGE_KEY);
+
+    return raw ? parseProviderStorage(raw) : DEFAULT_SETTINGS;
+  };
 
   const emitter = new EventEmitter<{
     settings_change: (settings: ProviderStorage) => void;
@@ -59,9 +62,8 @@ export const createProviderStorage = ({
 
   return {
     emitter,
-    getSettings: () => settings,
+    getSettings,
     setSettings: (update: ProviderStorage) => {
-      settings = update;
       io.setItem(DEFAULT_STORAGE_KEY, JSON.stringify(update));
       emitter.emit("settings_change", update);
     },

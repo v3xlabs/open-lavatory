@@ -471,73 +471,31 @@ importers:
 
   packages/extension:
     dependencies:
-      '@openlv/connector':
+      '@openlv/core':
         specifier: workspace:*
-        version: link:../connector
+        version: link:../core
       '@openlv/modal':
         specifier: workspace:*
         version: link:../modal
       '@openlv/provider':
         specifier: workspace:*
         version: link:../provider
-      '@openlv/transport':
+      '@openlv/session':
         specifier: workspace:*
-        version: link:../transport
+        version: link:../session
       eventemitter3:
-        specifier: ^5.0.1
+        specifier: ^5.0.4
         version: 5.0.4
-      globals:
-        specifier: ^16.2.0
-        version: 16.5.0
-      mqtt:
-        specifier: ^5.13.1
-        version: 5.15.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
     devDependencies:
-      '@eslint/js':
-        specifier: ^9.23.0
-        version: 9.39.4
       '@types/chrome':
         specifier: ^0.0.278
         version: 0.0.278
       '@types/webextension-polyfill':
         specifier: ^0.12.0
         version: 0.12.5
-      eslint:
-        specifier: ^9.25.0
-        version: 9.39.4(jiti@2.6.1)
-      eslint-config-prettier:
-        specifier: ^10.1.2
-        version: 10.1.8(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-import:
-        specifier: ^2.31.0
-        version: 2.32.0(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-prettier:
-        specifier: ^5.2.6
-        version: 5.5.5(eslint-config-prettier@10.1.8(eslint@9.39.4(jiti@2.6.1)))(eslint@9.39.4(jiti@2.6.1))(prettier@3.8.1)
-      eslint-plugin-simple-import-sort:
-        specifier: ^12.1.1
-        version: 12.1.1(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-sonarjs:
-        specifier: ^3.0.2
-        version: 3.0.7(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-unicorn:
-        specifier: ^58.0.0
-        version: 58.0.0(eslint@9.39.4(jiti@2.6.1))
-      eslint-plugin-unused-imports:
-        specifier: ^4.1.4
-        version: 4.4.1(@typescript-eslint/eslint-plugin@8.57.0(@typescript-eslint/parser@8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3))(eslint@9.39.4(jiti@2.6.1))
-      prettier:
-        specifier: ^3.5.3
-        version: 3.8.1
       typescript:
         specifier: ^5
         version: 5.9.3
-      typescript-eslint:
-        specifier: ^8.28.0
-        version: 8.57.0(eslint@9.39.4(jiti@2.6.1))(typescript@5.9.3)
-      webextension-polyfill:
-        specifier: ^0.12.0
-        version: 0.12.0
       wxt:
         specifier: ^0.20.17
         version: 0.20.18(@types/node@25.5.0)(eslint@9.39.4(jiti@2.6.1))(jiti@2.6.1)(lightningcss@1.31.1)(rollup@4.45.1)(terser@5.44.1)(tsx@4.21.0)(yaml@2.8.2)

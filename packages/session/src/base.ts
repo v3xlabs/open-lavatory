@@ -150,7 +150,11 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
+    onmessage: async (message: {
+      type: string;
+      payload: object;
+      messageId: string;
+    }) => {
       console.log("Session: received message from transport", message);
 
       if (message["type"] === "request") {
@@ -185,6 +189,10 @@ export const createSession = async (
 
     if (state === TRANSPORT_STATE.CONNECTED) {
       updateStatus(SESSION_STATE.CONNECTED);
+    }
+
+    if (state === TRANSPORT_STATE.ERROR) {
+      updateStatus(SESSION_STATE.DISCONNECTED);
     }
   });
 
@@ -269,13 +277,30 @@ export const createSession = async (
         s: server,
       };
     },
-    waitForLink: async () => new Promise((resolve) => {
-      emitter.on("state_change", (state) => {
-        if (state?.status === SESSION_STATE.CONNECTED) {
-          resolve();
-        }
+    waitForLink: async () => {
+      if (status === SESSION_STATE.CONNECTED) {
+        return;
+      }
+
+      if (status === SESSION_STATE.DISCONNECTED) {
+        throw new Error("Session closed");
+      }
+
+      return new Promise((resolve, reject) => {
+        const handler = (state: any) => {
+          if (state?.status === SESSION_STATE.CONNECTED) {
+            emitter.off("state_change", handler);
+            resolve();
+          }
+          else if (state?.status === SESSION_STATE.DISCONNECTED) {
+            emitter.off("state_change", handler);
+            reject(new Error("Session closed while waiting for link"));
+          }
+        };
+
+        emitter.on("state_change", handler);
       });
-    }),
+    },
     async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
       // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;
@@ -297,17 +322,16 @@ export const createSession = async (
 
       return Promise.race([
         new Promise((resolve) => {
-          messages.on("message", (message) => {
-            if (message.messageId === randomID && message.type === "response") {
-              resolve(message.payload);
+          const handler = (msg: any) => {
+            if (msg.messageId === randomID && msg.type === "response") {
+              messages.off("message", handler);
+              resolve(msg.payload);
             }
-          });
+          };
+
+          messages.on("message", handler);
         }),
-        new Promise((resolve) => {
-          setTimeout(() => {
-            resolve(new Error("Timeout"));
-          }, timeout);
-        }),
+        new Promise(resolve => setTimeout(() => resolve(new Error("Timeout")), timeout)),
       ]);
     },
     _internal: {

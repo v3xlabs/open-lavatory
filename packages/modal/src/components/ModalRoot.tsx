@@ -124,7 +124,7 @@ const useDynamicDialogHeight = () => {
   };
 };
 
-export const ModalRoot = (props: { onClose: () => void; }) => {
+export const ModalRoot = (props: ModalRootProps) => {
   const { view: modalView, setView, copied, setCopied } = useModalState();
   const { uri, status } = useSession();
   const { provider } = useModalContext();
@@ -158,11 +158,33 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
       .exhaustive(),
   );
 
-  useEscapeToClose(props.onClose);
+  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(
+    provider.getState().status,
+  );
+
+  const dismissModal = () => {
+    const currentStatus = providerStatus();
+
+    if (currentStatus !== PROVIDER_STATUS.CONNECTED) {
+      void provider.closeSession();
+    }
+
+    props.onClose?.();
+  };
+
+  useEscapeToClose(dismissModal);
+
+  onMount(() => {
+    provider.on("status_change", setProviderStatus);
+  });
+
+  onCleanup(() => {
+    provider.off("status_change", setProviderStatus);
+  });
 
   createEffect(() => {
-    if (status()?.status === PROVIDER_STATUS.CONNECTED) {
-      props.onClose();
+    if (providerStatus() === PROVIDER_STATUS.CONNECTED) {
+      props.onClose?.();
     }
   });
 
@@ -240,18 +262,11 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
     });
   });
 
-  const [providerStatus, setProviderStatus] = createSignal<ProviderStatus>(provider.getState().status);
-
-  onMount(() => {
-    provider.on("status_change", setProviderStatus);
-  });
-
-  onCleanup(() => {
-    provider.off("status_change", setProviderStatus);
-  });
-
   const shouldShowBack = createMemo(
-    () => !(modalView() === "start" && providerStatus() === PROVIDER_STATUS.STANDBY),
+    () =>
+      !(
+        modalView() === "start" && providerStatus() === PROVIDER_STATUS.STANDBY
+      ),
   );
 
   const onBack = () => {
@@ -273,7 +288,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
       })
       .otherwise(() => {
         provider.closeSession();
-        props.onClose();
+        props.onClose?.();
       });
   };
 
@@ -309,9 +324,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
     </div>
   );
 
-  const renderStatusSection = (
-    targetStatus: ProviderStatus,
-  ): JSX.Element =>
+  const renderStatusSection = (targetStatus: ProviderStatus): JSX.Element =>
     match(targetStatus)
       .with(PROVIDER_STATUS.STANDBY, () => renderDisconnectedSection())
       .with(
@@ -320,9 +333,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           PROVIDER_STATUS.CONNECTING,
           PROVIDER_STATUS.CONNECTED,
         ),
-        () => (
-          <ConnectionFlow onClose={props.onClose} onCopy={handleCopy} />
-        ),
+        () => <ConnectionFlow onClose={dismissModal} onCopy={handleCopy} />,
       )
       .otherwise(state => <UnknownState state={state || "unknown status"} />);
 
@@ -342,10 +353,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
 
   return (
     <div
-      class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4"
-      onMouseUp={(e) => {
-        if (e.target === e.currentTarget) props.onClose();
-      }}
+      class="fixed inset-0 z-10000 flex animate-[bg-in_0.15s_ease-in-out] items-end justify-center md:items-center lg:p-4 pointer-events-auto"
       role="presentation"
       data-openlv-modal-root
       data-openlv-theme-mode={theme.mode()}
@@ -353,9 +361,15 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
       dir={isRtl() ? "rtl" : "ltr"}
       style={overlayStyle}
     >
+      <button
+        type="button"
+        aria-label={String(t("common.close"))}
+        class="absolute inset-0 z-0 m-0 border-0 bg-transparent p-0"
+        onClick={dismissModal}
+      />
       <div
         class={classNames(
-          "relative w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-200 ease-out",
+          "relative z-10 w-full max-w-[400px] animate-[fade-in_0.15s_ease-in-out] transition-[height] duration-200 ease-out",
           shouldHideOverflow() || previousStatus()
             ? "overflow-hidden"
             : undefined,
@@ -363,7 +377,6 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
         role="dialog"
         aria-modal="true"
         aria-label={String(title())}
-        onClick={event => event.stopPropagation()}
         style={{
           ...(typeof height() === "number" && height() > 0
             ? { height: `${height()}px` }
@@ -375,7 +388,7 @@ export const ModalRoot = (props: { onClose: () => void; }) => {
           <Header
             title={String(title())}
             view={modalView()}
-            onClose={props.onClose}
+            onClose={dismissModal}
             onBack={shouldShowBack() ? onBack : undefined}
             setView={setView}
           />

@@ -320,25 +320,19 @@ export const createSession = async (
       // await signal.send(sessionMessage);
       await transport.send(sessionMessage);
 
-      return new Promise((resolve) => {
-        // eslint-disable-next-line prefer-const
-        let timer: ReturnType<typeof setTimeout>;
+      return Promise.race([
+        new Promise((resolve) => {
+          const handler = (msg: any) => {
+            if (msg.messageId === randomID && msg.type === "response") {
+              messages.off("message", handler);
+              resolve(msg.payload);
+            }
+          };
 
-        const handler = (msg: any) => {
-          if (msg.messageId === randomID && msg.type === "response") {
-            messages.off("message", handler);
-            clearTimeout(timer);
-            resolve(msg.payload);
-          }
-        };
-
-        messages.on("message", handler);
-
-        timer = setTimeout(() => {
-          messages.off("message", handler);
-          resolve(new Error("Timeout"));
-        }, timeout);
-      });
+          messages.on("message", handler);
+        }),
+        new Promise(resolve => setTimeout(() => resolve(new Error("Timeout")), timeout)),
+      ]);
     },
     _internal: {
       signal,

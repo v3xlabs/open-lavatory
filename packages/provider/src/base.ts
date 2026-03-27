@@ -350,14 +350,7 @@ export const createProvider = (
         .with({ method: "eth_accounts" }, async () => {
           log("eth_accounts");
 
-          if (!session) return [];
-
-          try {
-            return await getAccounts();
-          }
-          catch {
-            return [];
-          }
+          return await getAccounts();
         })
         .otherwise(async (v) => {
           if (session) {

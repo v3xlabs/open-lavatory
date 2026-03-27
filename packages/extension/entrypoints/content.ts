@@ -236,7 +236,9 @@ export default defineContentScript({
             throw { message: "User rejected the request.", code: 4001 };
           }
 
-          const result = await provider.request(payload);
+          const result = await provider.request({ method: "eth_accounts", params: [] });
+
+          if (result instanceof Error) throw result;
 
           globalThis.postMessage(
             {
@@ -269,8 +271,9 @@ export default defineContentScript({
       }
 
       if (
-        payload.method === "wallet_requestPermissions"
-        && !provider.getSession()
+        !provider.getSession()
+        && (payload.method === "eth_accounts"
+          || payload.method === "wallet_requestPermissions")
       ) {
         globalThis.postMessage(
           {
@@ -286,14 +289,18 @@ export default defineContentScript({
       }
 
       try {
-        const result = await provider.request(payload);
+        const rawResult = await provider.request(payload);
+
+        if (rawResult instanceof Error) {
+          throw rawResult;
+        }
 
         globalThis.postMessage(
           {
             source: CONTENT_SOURCE,
             type: CONTENT_MSG.RESPONSE,
             requestId,
-            result,
+            result: rawResult,
           },
           origin,
         );

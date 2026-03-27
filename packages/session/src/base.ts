@@ -150,7 +150,11 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
+    onmessage: async (message: {
+      type: string;
+      payload: object;
+      messageId: string;
+    }) => {
       console.log("Session: received message from transport", message);
 
       if (message["type"] === "request") {
@@ -297,7 +301,7 @@ export const createSession = async (
         emitter.on("state_change", handler);
       });
     },
-    async send(message: object, timeout: number = 30_000) {
+    async send(message: object, timeout: number = 5000) {
       const ready = signal.getState().state === SIGNAL_STATE.ENCRYPTED;
       // const transportReady = transport.getState() === TRANSPORT_STATE.CONNECTED;
 
@@ -316,8 +320,9 @@ export const createSession = async (
       // await signal.send(sessionMessage);
       await transport.send(sessionMessage);
 
-      return new Promise((resolve, reject) => {
-        let timer: any;
+      return new Promise((resolve) => {
+        // eslint-disable-next-line prefer-const
+        let timer: ReturnType<typeof setTimeout>;
 
         const handler = (msg: any) => {
           if (msg.messageId === randomID && msg.type === "response") {
@@ -331,7 +336,7 @@ export const createSession = async (
 
         timer = setTimeout(() => {
           messages.off("message", handler);
-          reject(new Error("Timeout"));
+          resolve(new Error("Timeout"));
         }, timeout);
       });
     },

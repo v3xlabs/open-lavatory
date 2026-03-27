@@ -145,7 +145,7 @@ export const createProvider = (
       })) as Address[];
     }
 
-    return [];
+    throw new Error("No session");
   };
 
   const start = async (
@@ -225,7 +225,6 @@ export const createProvider = (
     }
 
     updateStatus(PROVIDER_STATUS.STANDBY);
-    oxEmitter.emit("disconnect", new OxProvider.ProviderRpcError(4900, "Disconnected"));
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (
@@ -287,21 +286,50 @@ export const createProvider = (
             }
 
             if (openModal && provider) {
-              await openModal(provider);
-
-              await new Promise((resolve) => {
-                const handler = () => {
-                  provider?.off("connect", handler);
-                  provider?.off("disconnect", handler);
-                  resolve(undefined);
-                };
-
-                provider?.on("connect", handler);
-                provider?.on("disconnect", handler);
+              let resolveWait: (() => void) | undefined;
+              const waitForCompletion = new Promise<void>((resolve) => {
+                resolveWait = resolve;
               });
 
-              if (!provider.getSession()) {
-                return [];
+              const finish = () => {
+                provider.off("connect", onConnect);
+                provider.off("status_change", onStatusChange);
+                resolveWait?.();
+              };
+
+              const onConnect = () => {
+                finish();
+              };
+
+              const onStatusChange = (nextStatus: ProviderStatus) => {
+                if (
+                  nextStatus === PROVIDER_STATUS.STANDBY
+                  || nextStatus === PROVIDER_STATUS.ERROR
+                ) {
+                  finish();
+                }
+              };
+
+              provider.on("connect", onConnect);
+              provider.on("status_change", onStatusChange);
+
+              try {
+                await openModal(provider);
+                await waitForCompletion;
+              }
+              catch (error) {
+                finish();
+                throw error;
+              }
+
+              if (
+                provider.getState().status !== PROVIDER_STATUS.CONNECTED
+                || !provider.getSession()
+              ) {
+                throw new OxProvider.ProviderRpcError(
+                  4001,
+                  "User rejected the request",
+                );
               }
 
               return await getAccounts();

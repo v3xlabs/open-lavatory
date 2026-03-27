@@ -4,12 +4,11 @@ import { defineBackground } from "#imports";
 type FlowState = {
   popupWindowId?: number;
   activeTabId?: number;
-  lastStatus: string;
   pendingCreateSession?: boolean;
 };
 
 export default defineBackground(() => {
-  const state: FlowState = { lastStatus: "standby" };
+  const state: FlowState = {};
 
   chrome.runtime.onMessage.addListener((message, sender) => {
     const senderTabId = sender.tab?.id;
@@ -28,11 +27,10 @@ export default defineBackground(() => {
 
         state.pendingCreateSession = false;
 
+        const isSameTabRequest = senderTabId === state.activeTabId;
+
         // Same tab requesting again, just focus the existing popup.
-        if (
-          state.popupWindowId !== undefined
-          && senderTabId === state.activeTabId
-        ) {
+        if (state.popupWindowId !== undefined && isSameTabRequest) {
           chrome.windows
             .update(state.popupWindowId, { focused: true })
             .catch(() => {});
@@ -52,13 +50,19 @@ export default defineBackground(() => {
 
         state.popupWindowId = undefined;
         state.activeTabId = senderTabId;
-        state.lastStatus = "standby";
+        const popupPath = chrome.runtime.getURL("connect.html");
+        const popupParams = new URLSearchParams();
 
-        const popupUrl = message.uri
-          ? chrome.runtime.getURL("connect.html")
-          + "?uri="
-          + encodeURIComponent(message.uri as string)
-          : chrome.runtime.getURL("connect.html");
+        if (senderTabId !== undefined) {
+          popupParams.set("tabId", String(senderTabId));
+        }
+
+        if (message.uri) {
+          popupParams.set("uri", String(message.uri));
+        }
+
+        const popupQuery = popupParams.toString();
+        const popupUrl = popupQuery ? `${popupPath}?${popupQuery}` : popupPath;
 
         chrome.windows
           .create({
@@ -77,8 +81,6 @@ export default defineBackground(() => {
 
       case "PROVIDER_STATUS": {
         if (senderTabId !== state.activeTabId) break;
-
-        state.lastStatus = message.status as string;
 
         if (message.status === "connected" || message.status === "error") {
           state.pendingCreateSession = false;
@@ -136,7 +138,5 @@ export default defineBackground(() => {
         .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
         .catch(() => {});
     }
-
-    state.lastStatus = "standby";
   });
 });

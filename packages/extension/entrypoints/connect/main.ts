@@ -1,11 +1,18 @@
 /* eslint-disable no-restricted-syntax */
-import { decodeConnectionURL, type SessionHandshakeParameters } from "@openlv/core";
+import {
+  decodeConnectionURL,
+  type SessionHandshakeParameters,
+} from "@openlv/core";
 import { OpenLVModalElement, registerOpenLVModal } from "@openlv/modal";
 import { simpleTheme } from "@openlv/modal/theme";
 
 import { createFakeProvider } from "./fakeProvider.js";
 
-const uri = new URLSearchParams(location.search).get("uri") ?? "";
+const searchParams = new URLSearchParams(location.search);
+const uri = searchParams.get("uri") ?? "";
+const tabIdParam = searchParams.get("tabId");
+const parsedTabId = tabIdParam ? Number.parseInt(tabIdParam, 10) : Number.NaN;
+const expectedTabId = Number.isInteger(parsedTabId) ? parsedTabId : undefined;
 
 const closePopup = () => {
   globalThis.close();
@@ -35,7 +42,7 @@ if (uri) {
   }
 }
 
-const provider = await createFakeProvider(handshakeParams);
+const provider = await createFakeProvider(handshakeParams, expectedTabId);
 
 registerOpenLVModal();
 const modal = new OpenLVModalElement({

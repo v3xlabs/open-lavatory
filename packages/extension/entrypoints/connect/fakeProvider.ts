@@ -19,6 +19,7 @@ import { createWxtProviderStorage } from "../../utils/wxt-storage-shim.js";
  */
 export const createFakeProvider = async (
   handshakeParams?: SessionHandshakeParameters,
+  expectedTabId?: number,
 ): Promise<OpenLVProvider> => {
   const storage = await createWxtProviderStorage();
 
@@ -31,13 +32,23 @@ export const createFakeProvider = async (
   const makeSessionObj = (params: SessionHandshakeParameters) => ({
     getHandshakeParameters: () => params,
     getState: () => sessionState,
-    get emitter() { return sessionEmitter; },
+    get emitter() {
+      return sessionEmitter;
+    },
   });
 
-  let sessionObj: ReturnType<typeof makeSessionObj> | undefined
-    = handshakeParams ? makeSessionObj(handshakeParams) : undefined;
+  const initialSession = handshakeParams
+    ? makeSessionObj(handshakeParams)
+    : undefined;
 
-  chrome.runtime.onMessage.addListener((message) => {
+  let sessionObj: ReturnType<typeof makeSessionObj> | undefined
+    = initialSession;
+
+  chrome.runtime.onMessage.addListener((message, sender) => {
+    if (expectedTabId !== undefined && sender.tab?.id !== expectedTabId) {
+      return;
+    }
+
     switch (message.type) {
       case "PROVIDER_STATUS": {
         status = message.status as ProviderStatus;
@@ -45,7 +56,8 @@ export const createFakeProvider = async (
 
         if (status === PROVIDER_STATUS.ERROR) {
           globalThis.close();
-          chrome.windows.getCurrent()
+          chrome.windows
+            .getCurrent()
             .then((win) => {
               if (win?.id !== undefined) {
                 chrome.windows.remove(win.id).catch(() => {});
@@ -71,7 +83,7 @@ export const createFakeProvider = async (
 
         break;
       }
-    // No default
+      // No default
     }
   });
 
@@ -91,9 +103,7 @@ export const createFakeProvider = async (
       return Promise.resolve({} as Session);
     },
     closeSession: async () => {
-      chrome.runtime
-        .sendMessage({ type: "CANCEL_SESSION" })
-        .catch(() => {});
+      chrome.runtime.sendMessage({ type: "CANCEL_SESSION" }).catch(() => {});
     },
     getAccounts: async () => [],
   } as unknown as OpenLVProvider;

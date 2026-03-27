@@ -199,38 +199,41 @@ export default defineContentScript({
 
       if (payload.method === "eth_requestAccounts") {
         try {
+          if (provider.getSession()) {
+            resetConnectFlow();
+            await provider.closeSession();
+          }
+
+          if (!userActivated) {
+            throw { message: "User rejected the request.", code: 4001 };
+          }
+
+          await new Promise<void>((resolve) => {
+            const complete = () => {
+              provider.off("connect", complete);
+              provider.off("status_change", checkStatus);
+              resolve();
+            };
+
+            const checkStatus = (status: string) => {
+              if (
+                status === PROVIDER_STATUS.STANDBY
+                || status === PROVIDER_STATUS.ERROR
+              ) {
+                complete();
+              }
+            };
+
+            provider.on("connect", complete);
+            provider.on("status_change", checkStatus);
+
+            chrome.runtime
+              .sendMessage({ type: "OPEN_POPUP" })
+              .catch(() => complete());
+          });
+
           if (!provider.getSession()) {
-            if (!userActivated) {
-              throw { message: "User rejected the request.", code: 4001 };
-            }
-
-            await new Promise<void>((resolve) => {
-              const complete = () => {
-                provider.off("connect", complete);
-                provider.off("status_change", checkStatus);
-                resolve();
-              };
-
-              const checkStatus = (status: string) => {
-                if (
-                  status === PROVIDER_STATUS.STANDBY
-                  || status === PROVIDER_STATUS.ERROR
-                ) {
-                  complete();
-                }
-              };
-
-              provider.on("connect", complete);
-              provider.on("status_change", checkStatus);
-
-              chrome.runtime
-                .sendMessage({ type: "OPEN_POPUP" })
-                .catch(() => complete());
-            });
-
-            if (!provider.getSession()) {
-              throw { message: "User rejected the request.", code: 4001 };
-            }
+            throw { message: "User rejected the request.", code: 4001 };
           }
 
           const result = await provider.request(payload);
@@ -245,16 +248,17 @@ export default defineContentScript({
             origin,
           );
         }
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        catch (error: any) {
+        catch (error: unknown) {
+          const typedError = error as { message?: string; code?: number; };
+
           globalThis.postMessage(
             {
               source: CONTENT_SOURCE,
               type: CONTENT_MSG.RESPONSE,
               requestId,
               error: {
-                message: error?.message || "Internal error",
-                code: error?.code || -32_603,
+                message: typedError.message || "Internal error",
+                code: typedError.code || -32_603,
               },
             },
             origin,

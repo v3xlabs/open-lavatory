@@ -1,6 +1,12 @@
 import { encodeConnectionURL } from "@openlv/core";
 import type { SessionStateObject } from "@openlv/session";
-import { createMemo, createSignal, onCleanup, onMount } from "solid-js";
+import {
+  createEffect,
+  createMemo,
+  createSignal,
+  onCleanup,
+  onMount,
+} from "solid-js";
 
 import { useModalContext } from "../context.js";
 
@@ -9,8 +15,8 @@ export const useSession = () => {
   const [session, setSession] = createSignal(provider.getSession());
 
   onMount(() => {
-    const handleSessionStarted = (newSession: any) => {
-      setSession(newSession);
+    const handleSessionStarted = () => {
+      setSession(provider.getSession());
     };
 
     provider.on("session_started", handleSessionStarted);
@@ -18,7 +24,9 @@ export const useSession = () => {
       provider.off("session_started", handleSessionStarted);
     });
   });
-  const [status, setStatus] = createSignal<SessionStateObject | undefined>(session()?.getState());
+  const [status, setStatus] = createSignal<SessionStateObject | undefined>(
+    session()?.getState(),
+  );
 
   console.log("session status", status());
 
@@ -27,7 +35,7 @@ export const useSession = () => {
     setStatus(state);
   };
 
-  createMemo(() => {
+  createEffect(() => {
     const s = session();
 
     setStatus(s?.getState());

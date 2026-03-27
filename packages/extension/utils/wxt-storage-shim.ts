@@ -4,8 +4,7 @@ import {
   parseProviderStorage,
 } from "@openlv/provider/storage";
 import { EventEmitter } from "eventemitter3";
-
-import { storage } from "#imports";
+import { storage } from "wxt/utils/storage";
 
 const STORAGE_KEY = "@openlv/connector/settings";
 const settingsItem = storage.defineItem<string>(`local:${STORAGE_KEY}`);

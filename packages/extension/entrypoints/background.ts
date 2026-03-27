@@ -1,4 +1,5 @@
-import { defineBackground } from "#imports";
+import { browser } from "wxt/browser";
+import { defineBackground } from "wxt/utils/define-background";
 
 /* eslint-disable no-restricted-syntax */
 type FlowState = {
@@ -10,7 +11,7 @@ type FlowState = {
 export default defineBackground(() => {
   const state: FlowState = {};
 
-  chrome.runtime.onMessage.addListener((message, sender) => {
+  browser.runtime.onMessage.addListener((message, sender) => {
     const senderTabId = sender.tab?.id;
 
     switch (message.type as string) {
@@ -19,7 +20,7 @@ export default defineBackground(() => {
         if (state.pendingCreateSession && state.popupWindowId !== undefined) {
           state.pendingCreateSession = false;
           state.activeTabId = senderTabId;
-          chrome.windows
+          browser.windows
             .update(state.popupWindowId, { focused: true })
             .catch(() => {});
           break;
@@ -31,7 +32,7 @@ export default defineBackground(() => {
 
         // Same tab requesting again, just focus the existing popup.
         if (state.popupWindowId !== undefined && isSameTabRequest) {
-          chrome.windows
+          browser.windows
             .update(state.popupWindowId, { focused: true })
             .catch(() => {});
           break;
@@ -39,10 +40,10 @@ export default defineBackground(() => {
 
         // Different tab, close old popup and cancel old session.
         if (state.popupWindowId !== undefined) {
-          chrome.windows.remove(state.popupWindowId).catch(() => {});
+          browser.windows.remove(state.popupWindowId).catch(() => {});
 
           if (state.activeTabId !== undefined) {
-            chrome.tabs
+            browser.tabs
               .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
               .catch(() => {});
           }
@@ -50,7 +51,7 @@ export default defineBackground(() => {
 
         state.popupWindowId = undefined;
         state.activeTabId = senderTabId;
-        const popupPath = chrome.runtime.getURL("connect.html");
+        const popupPath = browser.runtime.getURL("connect.html");
         const popupParams = new URLSearchParams();
 
         if (senderTabId !== undefined) {
@@ -64,7 +65,7 @@ export default defineBackground(() => {
         const popupQuery = popupParams.toString();
         const popupUrl = popupQuery ? `${popupPath}?${popupQuery}` : popupPath;
 
-        chrome.windows
+        browser.windows
           .create({
             url: popupUrl,
             type: "popup",
@@ -88,7 +89,7 @@ export default defineBackground(() => {
 
         if (message.status === "standby" && !state.pendingCreateSession) {
           if (state.popupWindowId !== undefined) {
-            chrome.windows.remove(state.popupWindowId).catch(() => {});
+            browser.windows.remove(state.popupWindowId).catch(() => {});
             state.popupWindowId = undefined;
           }
 
@@ -102,7 +103,7 @@ export default defineBackground(() => {
         state.pendingCreateSession = true;
 
         if (state.activeTabId !== undefined) {
-          chrome.tabs
+          browser.tabs
             .sendMessage(state.activeTabId, {
               type: "CREATE_SESSION",
               parameters: message.parameters,
@@ -117,7 +118,7 @@ export default defineBackground(() => {
         state.pendingCreateSession = false;
 
         if (state.activeTabId !== undefined) {
-          chrome.tabs
+          browser.tabs
             .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
             .catch(() => {});
         }
@@ -127,14 +128,14 @@ export default defineBackground(() => {
     }
   });
 
-  chrome.windows.onRemoved.addListener((windowId) => {
+  browser.windows.onRemoved.addListener((windowId) => {
     if (windowId !== state.popupWindowId) return;
 
     state.popupWindowId = undefined;
     state.pendingCreateSession = false;
 
     if (state.activeTabId !== undefined) {
-      chrome.tabs
+      browser.tabs
         .sendMessage(state.activeTabId, { type: "CANCEL_SESSION" })
         .catch(() => {});
     }

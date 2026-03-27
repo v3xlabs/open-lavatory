@@ -8,6 +8,7 @@ import { PROVIDER_STATUS } from "@openlv/provider";
 import type { Session } from "@openlv/session";
 import { SESSION_STATE } from "@openlv/session";
 import { EventEmitter } from "eventemitter3";
+import { browser } from "wxt/browser";
 
 import { createWxtProviderStorage } from "../../utils/wxt-storage-shim.js";
 
@@ -44,7 +45,7 @@ export const createFakeProvider = async (
   let sessionObj: ReturnType<typeof makeSessionObj> | undefined
     = initialSession;
 
-  chrome.runtime.onMessage.addListener((message, sender) => {
+  browser.runtime.onMessage.addListener((message, sender) => {
     if (expectedTabId !== undefined && sender.tab?.id !== expectedTabId) {
       return;
     }
@@ -56,11 +57,11 @@ export const createFakeProvider = async (
 
         if (status === PROVIDER_STATUS.ERROR) {
           globalThis.close();
-          chrome.windows
+          browser.windows
             .getCurrent()
             .then((win) => {
               if (win?.id !== undefined) {
-                chrome.windows.remove(win.id).catch(() => {});
+                browser.windows.remove(win.id).catch(() => {});
               }
             })
             .catch(() => {});
@@ -94,7 +95,7 @@ export const createFakeProvider = async (
     off: providerEmitter.off.bind(providerEmitter),
     storage,
     createSession: (parameters?: SessionLinkParameters) => {
-      chrome.runtime
+      browser.runtime
         .sendMessage({ type: "CREATE_SESSION", parameters })
         .catch(() => {});
 
@@ -103,7 +104,7 @@ export const createFakeProvider = async (
       return Promise.resolve({} as Session);
     },
     closeSession: async () => {
-      chrome.runtime.sendMessage({ type: "CANCEL_SESSION" }).catch(() => {});
+      browser.runtime.sendMessage({ type: "CANCEL_SESSION" }).catch(() => {});
     },
     getAccounts: async () => [],
   } as unknown as OpenLVProvider;

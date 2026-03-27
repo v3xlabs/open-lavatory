@@ -5,6 +5,7 @@ import {
 } from "@openlv/core";
 import { OpenLVModalElement, registerOpenLVModal } from "@openlv/modal";
 import { simpleTheme } from "@openlv/modal/theme";
+import { browser } from "wxt/browser";
 
 import { createFakeProvider } from "./fakeProvider.js";
 
@@ -16,11 +17,11 @@ const expectedTabId = Number.isInteger(parsedTabId) ? parsedTabId : undefined;
 
 const closePopup = () => {
   globalThis.close();
-  chrome.windows
+  browser.windows
     .getCurrent()
     .then((win) => {
       if (win?.id !== undefined) {
-        chrome.windows.remove(win.id).catch(() => {});
+        browser.windows.remove(win.id).catch(() => {});
       }
     })
     .catch(() => {});
@@ -58,13 +59,13 @@ const modal = new OpenLVModalElement({
 
 document.body.append(modal);
 
-const { id: windowId } = await chrome.windows.getCurrent();
+const { id: windowId } = await browser.windows.getCurrent();
 const chromeBarHeight = globalThis.outerHeight - globalThis.innerHeight;
 
 const observeCardResize = (card: Element) => {
   const ro = new ResizeObserver(([entry]) => {
     if (entry.contentRect.height > 0 && windowId !== undefined)
-      chrome.windows.update(windowId, {
+      browser.windows.update(windowId, {
         height: Math.round(entry.contentRect.height) + chromeBarHeight,
       });
   });
@@ -80,7 +81,7 @@ if (card) {
   observeCardResize(card);
 }
 else {
-  // Card isn't in the DOM yet (shadow render is async) — wait for it
+  // Card isn't in the DOM yet (shadow render is async)
   const mo = new MutationObserver(() => {
     const found = modal.shadowRoot?.querySelector("[role=dialog]");
 

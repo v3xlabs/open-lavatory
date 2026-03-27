@@ -1,8 +1,8 @@
 import type { SessionLinkParameters } from "@openlv/core";
 import { createProvider, PROVIDER_STATUS } from "@openlv/provider";
 import type { Session, SessionStateObject } from "@openlv/session";
-
-import { defineContentScript } from "#imports";
+import { browser } from "wxt/browser";
+import { defineContentScript } from "wxt/utils/define-content-script";
 
 import {
   CONTENT_MSG,
@@ -22,7 +22,7 @@ export default defineContentScript({
 
     const script = document.createElement("script");
 
-    script.src = chrome.runtime.getURL("injected.js");
+    script.src = browser.runtime.getURL("injected.js");
     script.addEventListener("load", () => script.remove());
     (document.head || document.documentElement).append(script);
 
@@ -57,7 +57,7 @@ export default defineContentScript({
 
           const handshakeParams = session.getHandshakeParameters();
 
-          chrome.runtime
+          browser.runtime
             .sendMessage({
               type: "UPDATED_SESSION_METADATA",
               handshakeParams,
@@ -65,7 +65,7 @@ export default defineContentScript({
             .catch(() => {});
 
           sessionStateHandler = (sessionState) => {
-            chrome.runtime
+            browser.runtime
               .sendMessage({
                 type: "SESSION_STATE",
                 state: sessionState?.status,
@@ -76,7 +76,7 @@ export default defineContentScript({
           session.emitter.on("state_change", sessionStateHandler);
 
           // Manually blast the very first state out
-          chrome.runtime
+          browser.runtime
             .sendMessage({
               type: "SESSION_STATE",
               state: session.getState()?.status,
@@ -92,12 +92,12 @@ export default defineContentScript({
         resetConnectFlow();
       }
 
-      chrome.runtime
+      browser.runtime
         .sendMessage({ type: "PROVIDER_STATUS", status })
         .catch(() => {});
     });
 
-    chrome.runtime.onMessage.addListener((message) => {
+    browser.runtime.onMessage.addListener((message) => {
       if (message.type === "CANCEL_SESSION") {
         const currentStatus = provider.getState().status;
 
@@ -227,7 +227,7 @@ export default defineContentScript({
             provider.on("connect", complete);
             provider.on("status_change", checkStatus);
 
-            chrome.runtime
+            browser.runtime
               .sendMessage({ type: "OPEN_POPUP" })
               .catch(() => complete());
           });

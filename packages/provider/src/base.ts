@@ -130,6 +130,12 @@ export const createProvider = (
     oxEmitter.emit("status_change", newStatus);
   };
 
+  const ensureCurrentSession = (activeSession: Session, phase: string) => {
+    if (session !== activeSession) {
+      throw new Error(`Session closed during ${phase}`);
+    }
+  };
+
   // eslint-disable-next-line unicorn/consistent-function-scoping
   const onMessage = async (message: object) => {
     log("onMessage", message);
@@ -160,48 +166,44 @@ export const createProvider = (
       = convertTempV1(storage.getSettings().transport?.s?.webrtc)
         || config?.transport?.s?.webrtc;
 
-    session = await createSession(
+    const activeSession = await createSession(
       parameters,
       await dynamicSignalingLayer(parameters.p),
       webrtc(transportOptions),
       onMessage,
     );
+
+    session = activeSession;
     updateStatus(PROVIDER_STATUS.CONNECTING);
 
     log("session created");
-    await session.connect();
-
-    // Session can be closed while connect is in-flight.
-    if (!session) {
-      throw new Error("Session closed during connect");
-    }
+    await activeSession.connect();
+    ensureCurrentSession(activeSession, "connect");
 
     log("session connected");
-    const handshakeParameters = session.getHandshakeParameters();
+    const handshakeParameters = activeSession.getHandshakeParameters();
     const url = encodeConnectionURL(handshakeParameters);
 
     log("session url", url);
-    oxEmitter.emit("session_started", session);
+    oxEmitter.emit("session_started", activeSession);
 
-    await session.waitForLink();
-
-    // Session can be closed while link is in-flight.
-    if (!session) {
-      throw new Error("Session closed during link");
-    }
+    await activeSession.waitForLink();
+    ensureCurrentSession(activeSession, "link");
 
     log("session linked");
 
-    accounts = await getAccounts();
+    accounts = (await activeSession.send({
+      method: "eth_accounts",
+      params: [],
+    })) as Address[];
+    ensureCurrentSession(activeSession, "eth_accounts");
 
-    if (!session) {
-      throw new Error("Session closed during eth_accounts");
-    }
-
-    const chainIdHex = (await session.send({
+    const chainIdHex = (await activeSession.send({
       method: "eth_chainId",
       params: [],
     })) as string;
+
+    ensureCurrentSession(activeSession, "eth_chainId");
 
     lastKnownChainId = chainIdHex;
 
@@ -209,13 +211,14 @@ export const createProvider = (
     oxEmitter.emit("connect", { chainId: chainIdHex });
     oxEmitter.emit("accountsChanged", accounts);
 
-    return session;
+    return activeSession;
   };
   const closeSession = async () => {
     inFlightRequestAccounts = undefined;
     const oldSession = session;
 
     session = undefined;
+    accounts = [];
 
     try {
       await oldSession?.close();
@@ -224,7 +227,9 @@ export const createProvider = (
       log("error closing session", error);
     }
 
-    updateStatus(PROVIDER_STATUS.STANDBY);
+    if (!session) {
+      updateStatus(PROVIDER_STATUS.STANDBY);
+    }
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (

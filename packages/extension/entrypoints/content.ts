@@ -236,7 +236,7 @@ export default defineContentScript({
             throw { message: "User rejected the request.", code: 4001 };
           }
 
-          const result = await provider.request({ method: "eth_accounts", params: [] });
+          const result = await provider.request({ method: "eth_accounts" });
 
           if (result instanceof Error) throw result;
 

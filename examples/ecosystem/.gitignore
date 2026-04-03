@@ -1,2 +1,3 @@
-**/app/
-**/app-edit/
+**/.edit/
+node_modules/
+**/.repo/

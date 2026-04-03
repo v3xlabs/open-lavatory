@@ -11,8 +11,8 @@ Subject: [PATCH] feat(rainbowkit): add OpenLV wallet connector
  .../src/wallets/walletConnectors/index.ts     |    2 +
  .../openLvWallet/openLvWallet.svg             |    1 +
  .../openLvWallet/openLvWallet.ts              |   17 +
- pnpm-lock.yaml                                | 1028 ++++++++++-------
- 8 files changed, 630 insertions(+), 441 deletions(-)
+ pnpm-lock.yaml                                | 1030 ++++++++++-------
+ 8 files changed, 631 insertions(+), 442 deletions(-)
  create mode 100644 packages/rainbowkit/src/wallets/walletConnectors/openLvWallet/openLvWallet.svg
  create mode 100644 packages/rainbowkit/src/wallets/walletConnectors/openLvWallet/openLvWallet.ts
 
@@ -141,9 +141,18 @@ index 00000000..058ed9a8
 +    })),
 +});
 diff --git a/pnpm-lock.yaml b/pnpm-lock.yaml
-index 76a74eef..ce61e4fc 100644
+index 76a74eef..d6596cc1 100644
 --- a/pnpm-lock.yaml
 +++ b/pnpm-lock.yaml
+@@ -1,7 +1,7 @@
+ lockfileVersion: '9.0'
+ 
+ settings:
+-  autoInstallPeers: true
++  autoInstallPeers: false
+   excludeLinksFromLockfile: false
+ 
+ overrides:
 @@ -80,10 +80,10 @@ importers:
          version: 25.0.0(bufferutil@4.0.9)(utf-8-validate@5.0.10)
        next:

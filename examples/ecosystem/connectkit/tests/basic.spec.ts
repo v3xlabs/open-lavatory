@@ -1,18 +1,20 @@
 import { expect, test } from "@playwright/test";
 
-test("OpenLV wallet appears in the wallet list", async ({ page }) => {
+test.beforeEach(async ({ page }) => {
   await page.goto("/");
+  await page.evaluate(() => {
+    // @ts-expect-error: Dumb
+    document.querySelector("#webpack-dev-server-client-overlay")?.remove();
+  });
 
   await page.getByRole("button", { name: /connect wallet/i }).click();
+});
 
+test("OpenLV wallet appears in the wallet list", async ({ page }) => {
   await expect(page.getByText("Other Wallets")).toBeVisible();
 });
 
 test("clicking OpenLV wallet opens the OpenLV modal", async ({ page }) => {
-  await page.goto("/");
-
-  await page.getByRole("button", { name: /connect wallet/i }).click();
-
   await page.getByText("Other Wallets").click();
 
   await expect(page.locator("openlv-modal")).toBeAttached();

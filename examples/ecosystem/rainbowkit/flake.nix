@@ -15,7 +15,7 @@
       pkgs = nixpkgs.legacyPackages.${system};
     in {
       devShells.default = pkgs.mkShell {
-        packages = [ pkgs.git pkgs.nodejs_20 pkgs.pnpm ];
+        packages = [ pkgs.git pkgs.nodejs_24 pkgs.pnpm ];
         shellHook = ''
           if [ -n "$CI" ] && [ -d .repo ]; then
             rm -rf .repo

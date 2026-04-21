@@ -11,7 +11,7 @@ import {
 } from "solid-js";
 import { match } from "ts-pattern";
 
-import fallbackEnglish from "../../lang/en.json" with { type: "json" };
+import fallbackEnglish from "../../lang/en.json";
 import { useModalContext } from "../context.jsx";
 
 export type LanguageTag =

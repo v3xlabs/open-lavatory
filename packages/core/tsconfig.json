@@ -1,8 +1,9 @@
 {
     "extends": "../../tsconfig.base.json",
     "compilerOptions": {
-        "module": "nodenext",
-        "moduleResolution": "nodenext",
+        "module": "ESNext",
+        "moduleResolution": "bundler",
+        "allowSyntheticDefaultImports": true,
         "outDir": "dist",
         "rootDir": "src"
     },

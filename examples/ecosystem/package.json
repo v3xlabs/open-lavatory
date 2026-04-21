@@ -1,0 +1,13 @@
+{
+    "name": "@openlv/ecosystem",
+    "version": "0.0.1",
+    "private": true,
+    "dependencies": {
+        "pillra": "1.1.0"
+    },
+    "devDependencies": {
+        "@playwright/test": "1.58.1",
+        "@types/node": "^22.0.0",
+        "playwright": "1.58.1"
+    }
+}

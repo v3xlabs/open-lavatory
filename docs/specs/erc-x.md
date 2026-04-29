@@ -1,6 +1,6 @@
 ---
 title: open-lavatory Wallet-Dapp Transport Layer
-description: A wire protocol for establishing wallet-dapp sessions and transporting EIP-1193 messages.
+description: A wire protocol for establishing wallet-dapp EIP-1193-compatible transport.
 author: TBD
 discussions-to: TBD
 status: Draft
@@ -39,29 +39,12 @@ It offers an open and interoperable approach to wallet connectivity while keepin
 Peers are asymmetric only during bootstrap and signaling.
 After transport establishment, both parties are simply peers and may send requests and responses bidirectionally.
 
-### Bootstrap Transfer
-
-Session establishment begins with out-of-band transfer of a session URI from the advertising peer to the joining peer.
-
-Desktop implementations MUST support copy-paste of the `openlv://` URI.
-Mobile implementations SHOULD support QR scanning, deep-link handling, or both.
-
 ### Roles
 
 - **Advertising peer**: the peer that creates and shares the session URI. In common deployments, the dapp.
 - **Joining peer**: the peer that receives the session URI and joins the session. In common deployments, the wallet.
 
 These roles apply only to bootstrap and signaling behavior.
-
-### Signaling Infrastructure
-
-Peers MUST connect to shared signaling infrastructure derived from `sessionId`.
-This signaling infrastructure is untrusted and is used only for encrypted signaling messages and transport negotiation payloads.
-
-This specification does not mandate a single signaling protocol or a purpose-built openlv service.
-A conforming signaling server MUST carry byte-equivalent text payloads between peers within a shared namespace.
-
-This specification is designed to operate over general-purpose signaling services, including publicly available or self-hosted MQTT, NTFY, or similar systems, without requiring those services to implement openlv-specific logic, registration, or prior session setup.
 
 ### Protocol Phases
 
@@ -101,6 +84,16 @@ Implementations MAY expose local defaults, but interoperable peers MUST NOT assu
 In version 1, `h` is derived by serializing the advertising peer encryption public key as a string, hashing the bytes with SHA-256, lower-hex encoding the digest, and truncating to the first 16 hexadecimal characters.
 
 In the current interoperable behavior, `k` is hex-decoded and imported as symmetric handshake key material.
+
+### Signaling Infrastructure
+
+Peers MUST connect to shared signaling infrastructure derived from `p` and `s`.
+This signaling infrastructure is untrusted and is used only for encrypted signaling messages and transport negotiation payloads.
+
+This specification does not mandate a single signaling protocol or a purpose-built openlv service.
+A conforming signaling server MUST carry byte-equivalent text payloads between peers within a shared session.
+
+This specification is designed to operate over general-purpose signaling services, including publicly available or self-hosted MQTT, NTFY, or similar systems, without requiring those services to implement protocol-specific logic or prior setup.
 
 ### Signaling Model
 

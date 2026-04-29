@@ -12,27 +12,14 @@ requires: 1193
 
 ## Abstract
 
-This specification defines `open-lavatory`, hereafter `openlv`, an
-Ethereum wallet-dapp wire protocol for session establishment and
-transport of EIP-1193 request and response messages. `openlv`
-standardizes a bootstrap URI, encrypted signaling frames, transport
-negotiation carriage, a correlated session message envelope, and an
-optional session resumption model.
+This specification defines `open-lavatory`, hereafter `openlv`, an Ethereum wallet-dapp wire protocol for session establishment and transport of EIP-1193 messages. `openlv` standardizes a bootstrap URI, encrypted signaling frames, transport
+negotiation carriage, a correlated session message envelope, and an optional session resumption model. It builds upon the wallet pairing flow introduced by [EIP-1328](./eip-1328.md).
 
 ## Motivation
 
-Ethereum wallet connectivity benefits from protocols that are portable,
-open, and easy for wallets and dapps to adopt without depending on a
-single service provider or control plane. The ecosystem benefits when
-users and implementers can choose their own infrastructure, self-host
-when desired, and preserve compatibility across independent
-implementations.
+Ethereum wallet connectivity benefits from protocols that are portable, open, and easy for wallets and dapps to adopt without depending on a single service provider or control plane. The ecosystem benefits when users and implementers can choose their own infrastructure, self-host when desired, and preserve compatibility across independent implementations.
 
-`openlv` preserves the familiar wallet-pairing model while allowing
-wallets and dapps to exchange standard EIP-1193 messages over
-user-chosen relay infrastructure and a direct peer transport. It offers
-a simple FOSS-friendly path for interoperable wallet connectivity while
-keeping the transport of Ethereum wallet messages straightforward.
+`openlv` preserves the familiar wallet-pairing model while allowing wallets and dapps to exchange standard EIP-1193 messages over user-chosen relay infrastructure and a direct peer transport. It offers a simple FOSS-friendly path for interoperable wallet connectivity while keeping the transport of Ethereum wallet messages straightforward.
 
 ## Specification
 
@@ -42,56 +29,40 @@ keeping the transport of Ethereum wallet messages straightforward.
 
 1. An advertising peer creates a session URI.
 2. That URI is transferred out-of-band to a joining peer.
-3. Both peers use a shared signaling relay to exchange encrypted
-   bootstrap messages and negotiate transport.
+3. Both peers use a shared signaling relay to exchange encrypted bootstrap messages and negotiate transport.
 4. The peers establish a direct transport.
-5. EIP-1193 request and response messages flow over the established
-   transport.
+5. EIP-1193 request and response messages flow over the established transport.
 
-Peers are asymmetric only during bootstrap and signaling. After
-transport establishment, both parties are simply peers and may send
-requests and responses bidirectionally.
+Peers are asymmetric only during bootstrap and signaling. After transport establishment, both parties are simply peers and may send requests and responses bidirectionally.
 
 ### Bootstrap Transfer
 
-Session establishment begins with out-of-band transfer of a session URI
-from the advertising peer to the joining peer.
+Session establishment begins with out-of-band transfer of a session URI from the advertising peer to the joining peer.
 
 Desktop implementations MUST support copy-paste of the `openlv://` URI.
-Mobile implementations SHOULD support QR scanning, deep-link handling,
-or both.
+Mobile implementations SHOULD support QR scanning, deep-link handling, or both.
 
 ### Roles
 
-- **Advertising peer**: the peer that creates and shares the session
-  URI. In common deployments, the dapp.
-- **Joining peer**: the peer that receives the session URI and joins the
-  session. In common deployments, the wallet.
+- **Advertising peer**: the peer that creates and shares the session URI. In common deployments, the dapp.
+- **Joining peer**: the peer that receives the session URI and joins the session. In common deployments, the wallet.
 
 These roles apply only to bootstrap and signaling behavior.
 
 ### Relay Model
 
-Peers MUST connect to a shared relay namespace derived from
-`sessionId`. The relay is untrusted and is used only for encrypted
-signaling messages and transport negotiation payloads.
+Peers MUST connect to a shared relay namespace derived from `sessionId`. The relay is untrusted and is used only for encrypted signaling messages and transport negotiation payloads.
 
-This specification does not mandate a single relay protocol. A
-conforming relay MUST carry byte-equivalent text payloads between peers
-within a shared namespace.
+This specification does not mandate a single relay protocol. A conforming relay MUST carry byte-equivalent text payloads between peers within a shared namespace.
 
 ### Protocol Phases
 
 Version 1 has two communication layers.
 
-- **Signaling layer**: used to bootstrap the session, exchange peer key
-  material, and carry transport negotiation payloads.
-- **Transport layer**: used after negotiation for ordinary application
-  traffic.
+- **Signaling layer**: used to bootstrap the session, exchange peer key material, and carry transport negotiation payloads.
+- **Transport layer**: used after negotiation for ordinary application traffic.
 
-The signaling layer exists only to establish secure peer communication.
-After the transport layer is established, EIP-1193 messages are carried
-using the session envelope described below.
+The signaling layer exists only to establish secure peer communication. After the transport layer is established, EIP-1193 messages are carried using the session envelope described below.
 
 ### Session URI
 
@@ -112,27 +83,17 @@ All fields are REQUIRED for deterministic interoperability.
 
 `sessionId` identifies the shared relay namespace.
 
-`p` and `s` identify how the peers reach the signaling relay. At the
-protocol level, `p` and `s` are REQUIRED. Implementations MAY expose
-local defaults, but interoperable peers MUST NOT assume them.
+`p` and `s` identify how the peers reach the signaling relay. At the protocol level, `p` and `s` are REQUIRED. Implementations MAY expose local defaults, but interoperable peers MUST NOT assume them.
 
-`k` provides the shared symmetric key material used for the initial
-signaling stage before peer public keys have been exchanged.
+`k` provides the shared symmetric key material used for the initial signaling stage before peer public keys have been exchanged.
 
-`h` provides a short hash hint for the advertising peer public key. In
-version 1, `h` is derived by serializing the advertising peer
-encryption public key as a string, hashing the bytes with SHA-256,
-lower-hex encoding the digest, and truncating to the first 16
-hexadecimal characters.
+`h` provides a short hash hint for the advertising peer public key. In version 1, `h` is derived by serializing the advertising peer encryption public key as a string, hashing the bytes with SHA-256, lower-hex encoding the digest, and truncating to the first 16 hexadecimal characters.
 
-In version 1, `k` is imported as symmetric handshake key material from
-the literal UTF-8 bytes of the 32-character string.
+In version 1, `k` is imported as symmetric handshake key material from the literal UTF-8 bytes of the 32-character string.
 
 ### Signaling Model
 
-The signaling layer begins with messages encrypted under `k`. Once the
-peers have exchanged public keys, signaling continues using peer public
-key encryption.
+The signaling layer begins with messages encrypted under `k`. Once the peers have exchanged public keys, signaling continues using peer public key encryption.
 
 Version 1 therefore uses two signaling encryption modes:
 
@@ -148,8 +109,7 @@ Each signaling frame is serialized as:
 ```
 
 - `prefix`: one ASCII character identifying the encryption mode
-- `recipient`: one ASCII character identifying the intended role during
-  signaling
+- `recipient`: one ASCII character identifying the intended role during signaling
 - `ciphertext`: base64 text of the encrypted JSON payload
 
 Version 1 defines:
@@ -159,12 +119,9 @@ Version 1 defines:
 - `h` as the advertising-peer recipient marker
 - `c` as the joining-peer recipient marker
 
-In version 1, the character `h` is reused in two different positions:
-once as a frame prefix and once as a recipient marker. These meanings
-are distinguished by position within the frame.
+In version 1, the character `h` is reused in two different positions: once as a frame prefix and once as a recipient marker. These meanings are distinguished by position within the frame.
 
-Receivers MUST ignore frames where `recipient` does not match the local
-role.
+Receivers MUST ignore frames where `recipient` does not match the local role.
 
 ### Signaling Messages
 
@@ -182,42 +139,32 @@ Version 1 defines the following signaling message types:
 - `data`: carries post-handshake signaling payloads, including transport
   negotiation objects
 
-`pubkey.payload.publicKey` MUST contain the sender public key
-serialization used by the active peer-encryption scheme.
+`pubkey.payload.publicKey` MUST contain the sender public key serialization used by the active peer-encryption scheme.
 
 ### Handshake Sequence
 
 The version 1 handshake sequence is:
 
-1. The joining peer sends `flash` to the advertising peer using a
-   handshake-key encrypted frame.
-2. The advertising peer sends `pubkey` to the joining peer using a
-   handshake-key encrypted frame.
-3. The joining peer records the advertising peer public key and sends
-   `pubkey` using a peer-key encrypted frame.
-4. The advertising peer records the joining peer public key and sends
-   `ack` using a peer-key encrypted frame.
+1. The joining peer sends `flash` to the advertising peer using a handshake-key encrypted frame.
+2. The advertising peer sends `pubkey` to the joining peer using a handshake-key encrypted frame.
+3. The joining peer records the advertising peer public key and sends `pubkey` using a peer-key encrypted frame.
+4. The advertising peer records the joining peer public key and sends `ack` using a peer-key encrypted frame.
 5. The joining peer sends `ack` using a peer-key encrypted frame.
 6. Both peers treat subsequent signaling data as peer-key encrypted.
 
-After the handshake, signaling application payloads MUST be carried in
-`data` messages inside peer-key encrypted frames.
+After the handshake, signaling application payloads MUST be carried in `data` messages inside peer-key encrypted frames.
 
 ### Cryptographic Behavior
 
-Version 1 cryptographic behavior is normative for version 1
-interoperability.
+Version 1 cryptographic behavior is normative for version 1 interoperability.
 
-Handshake encryption uses AES-GCM with a fresh 12-byte random IV per
-message. The serialized encrypted payload is:
+Handshake encryption uses AES-GCM with a fresh 12-byte random IV per message. The serialized encrypted payload is:
 
 ```text
 base64(iv || ciphertext)
 ```
 
-Peer-encrypted frames use NaCl box-compatible authenticated encryption,
-with an ephemeral sender key per message. The serialized encrypted
-payload is:
+Peer-encrypted frames use NaCl box-compatible authenticated encryption, with an ephemeral sender key per message. The serialized encrypted payload is:
 
 ```text
 base64(ephemeralPublicKey || nonce || ciphertext)
@@ -227,12 +174,9 @@ Future revisions SHOULD define explicit cryptographic suite negotiation.
 
 ### Transport Negotiation
 
-After peer key exchange, peers negotiate a direct transport through the
-signaling layer. These negotiation objects are carried over signaling
-before the direct transport exists.
+After peer key exchange, peers negotiate a direct transport through the signaling layer. These negotiation objects are carried over signaling before the direct transport exists.
 
-Version 1 standardizes carriage of WebRTC negotiation payloads as
-signaling `data` messages whose payload is one of:
+Version 1 standardizes carriage of WebRTC negotiation payloads as signaling `data` messages whose payload is one of:
 
 ```json
 { "type": "offer", "payload": "<sdp-json-string>" }
@@ -248,8 +192,7 @@ signaling `data` messages whose payload is one of:
 
 ### Session Envelope
 
-Once transport is established, ordinary application traffic uses the
-following envelope:
+Once transport is established, ordinary application traffic uses the following envelope:
 
 ```json
 { "type": "request", "messageId": "<id>", "payload": {} }
@@ -259,13 +202,11 @@ following envelope:
 { "type": "response", "messageId": "<id>", "payload": {} }
 ```
 
-`messageId` MUST uniquely identify a request within the active session.
-A `response.messageId` MUST match a prior request.
+`messageId` MUST uniquely identify a request within the active session. A `response.messageId` MUST match a prior request.
 
 ### EIP-1193 Transport
 
-`openlv` transports EIP-1193 messages as the `payload` field of the
-session envelope.
+`openlv` transports EIP-1193 messages as the `payload` field of the session envelope.
 
 Example request:
 
@@ -296,42 +237,27 @@ This specification does not redefine EIP-1193 semantics.
 
 ### Session Resumption
 
-Wallets and dapps MAY persist session state locally to support later
-resumption.
+Wallets and dapps MAY persist session state locally to support later resumption.
 
-Persisted state MAY include `sessionId`, `p`, `s`, `k`, local key
-material, peer public key, and transport configuration.
+Persisted state MAY include `sessionId`, `p`, `s`, `k`, local key material, peer public key, and transport configuration.
 
-Resumption in version 1 means re-invoking communication using prior
-local session material. It does not guarantee transport continuity.
-Implementations MAY need to reconnect to the relay, re-establish
-peer-key signaling, and renegotiate transport.
+Resumption in version 1 means re-invoking communication using prior local session material. It does not guarantee transport continuity.
+Implementations MAY need to reconnect to the relay, re-establish peer-key signaling, and renegotiate transport.
 
 ## Rationale
 
-The protocol uses an out-of-band URI because it is easy to transfer,
-inspect, and encode in both desktop and mobile wallet flows. It uses
-relays only for bootstrap and negotiation so ordinary wallet-dapp
-traffic does not remain dependent on relay infrastructure. It carries
-EIP-1193 messages unchanged to preserve compatibility with existing
-Ethereum wallet and dapp interfaces.
+The protocol uses an out-of-band URI because it is easy to transfer, inspect, and encode in both desktop and mobile wallet flows. It uses relays only for bootstrap and negotiation so ordinary wallet-dapp traffic does not remain dependent on relay infrastructure. It carries EIP-1193 messages unchanged to preserve compatibility with existing Ethereum wallet and dapp interfaces.
 
-The specification requires explicit `p` and `s` fields so
-interoperability does not depend on hidden assumptions about a default
-relay provider.
+The specification requires explicit `p` and `s` fields so interoperability does not depend on hidden assumptions about a default relay provider.
 
-The peer model is intentionally asymmetric only during bootstrap and
-signaling. Once a transport is established, both peers operate
-symmetrically and may initiate request/response traffic.
+The peer model is intentionally asymmetric only during bootstrap and signaling. Once a transport is established, both peers operate symmetrically and may initiate request/response traffic.
 
 ## Backwards Compatibility
 
 This is a new protocol and does not change existing EIP-1193 semantics.
 Wallets and dapps that do not implement `openlv` remain unaffected.
 
-Version 1 compatibility depends on the `openlv://` URI shape, URI
-version `@1`, the `sessionId`/`h`/`k` constraints, signaling frame
-markers, signaling message types, and the session envelope.
+Version 1 compatibility depends on the `openlv://` URI shape, URI version `@1`, the `sessionId`/`h`/`k` constraints, signaling frame markers, signaling message types, and the session envelope.
 
 ## Test Cases
 
@@ -344,35 +270,13 @@ Version 1 test vectors SHOULD cover:
 - WebRTC offer, answer, and candidate carriage
 - request/response correlation by `messageId`
 
-## Reference Implementation
-
-The `open-lavatory` codebase is the reference implementation for this
-draft. The current implementation of version 1 behavior is in
-`packages/*/src`, including:
-
-- `packages/core/src/url/index.ts`
-- `packages/core/src/session.ts`
-- `packages/signaling/src/base.ts`
-- `packages/session/src/base.ts`
-- `packages/transport/src/webrtc/index.ts`
-
 ## Security Considerations
 
-The session URI contains sensitive bootstrap material and MUST be
-handled as a secret until the handshake completes. Implementations MUST
-use fresh randomness for IVs, nonces, ephemeral keys, and generated
-session identifiers.
+The session URI contains sensitive bootstrap material and MUST be handled as a secret until the handshake completes. Implementations MUST use fresh randomness for IVs, nonces, ephemeral keys, and generated session identifiers.
 
-Relays are untrusted and can observe metadata such as timing, size, and
-namespace. Implementations SHOULD validate decrypted JSON structure and
-expected message types before acting on payloads. Implementations SHOULD
-apply request timeouts and resource limits. Replay protection is not
-fully standardized in version 1 and SHOULD be improved in future
-revisions.
+Relays are untrusted and can observe metadata such as timing, size, and namespace. Implementations SHOULD validate decrypted JSON structure and expected message types before acting on payloads. Implementations SHOULD apply request timeouts and resource limits. Replay protection is not fully standardized in version 1 and SHOULD be improved in future revisions.
 
-Persisted session state is sensitive and SHOULD be stored using the
-strongest platform protections available. Implementations SHOULD allow
-users to disconnect and delete saved session state.
+Persisted session state is sensitive and SHOULD be stored using the strongest platform protections available. Implementations SHOULD allow users to disconnect and delete saved session state.
 
 ## Copyright
 

@@ -13,7 +13,7 @@ requires: 1193
 ## Abstract
 
 This specification defines `open-lavatory`, hereafter `openlv`, an Ethereum wallet-dapp wire protocol for session establishment and transport of EIP-1193 messages.
-`openlv` standardizes a bootstrap URI, encrypted signaling frames, transport negotiation carriage, a correlated session message envelope, and an optional session resumption model.
+`openlv` standardizes a bootstrap URI, encrypted signaling frames, transport negotiation messages, a correlated session message envelope, and an optional session resumption model.
 It builds upon the wallet pairing flow introduced by [EIP-1328](./eip-1328.md).
 
 ## Motivation
@@ -22,7 +22,7 @@ Ethereum wallet connectivity benefits from protocols that are portable, open, an
 The ecosystem benefits when users and implementers can choose their own infrastructure, self-host when desired, and preserve compatibility across independent implementations.
 
 `openlv` preserves the familiar wallet-pairing model while allowing wallets and dapps to exchange standard EIP-1193 messages over user-chosen signaling infrastructure and a direct peer transport.
-It offers a simple FOSS-friendly path for interoperable wallet connectivity while keeping the transport of Ethereum wallet messages straightforward.
+It offers an open and interoperable approach to wallet connectivity while keeping the transport of Ethereum wallet messages straightforward.
 
 ## Specification
 
@@ -105,12 +105,12 @@ In the current interoperable behavior, `k` is imported as symmetric handshake ke
 ### Signaling Model
 
 The signaling layer begins with messages encrypted under `k`.
-Once the peers have exchanged public keys, signaling continues using peer public key encryption.
+Once the peers have exchanged public keys, signaling continues using peer public-key encryption.
 
 Version 1 therefore uses two signaling encryption modes:
 
 - handshake-key encryption for early bootstrap messages
-- peer-key encryption after public key exchange
+- peer public-key encryption after public key exchange
 
 ### Signaling Frame Format
 
@@ -148,7 +148,7 @@ The signaling message types have the following meanings:
 
 - `flash`: sent by the joining peer to begin the handshake
 - `pubkey`: carries a peer public key and optional descriptive metadata
-- `ack`: confirms transition into peer-key signaling
+- `ack`: confirms transition into peer public-key signaling
 - `data`: carries post-handshake signaling payloads, including transport negotiation objects
 
 ### Handshake Sequence
@@ -157,12 +157,12 @@ The version 1 handshake sequence is:
 
 1. The joining peer sends `flash` to the advertising peer using a handshake-key encrypted frame.
 2. The advertising peer sends `pubkey` to the joining peer using a handshake-key encrypted frame.
-3. The joining peer records the advertising peer public key and sends `pubkey` using a peer-key encrypted frame.
-4. The advertising peer records the joining peer public key and sends `ack` using a peer-key encrypted frame.
-5. The joining peer sends `ack` using a peer-key encrypted frame.
-6. Both peers treat subsequent signaling data as peer-key encrypted.
+3. The joining peer records the advertising peer public key and sends `pubkey` using a peer public-key encrypted frame.
+4. The advertising peer records the joining peer public key and sends `ack` using a peer public-key encrypted frame.
+5. The joining peer sends `ack` using a peer public-key encrypted frame.
+6. Both peers treat subsequent signaling data as peer public-key encrypted.
 
-After the handshake, signaling application payloads MUST be carried in `data` messages inside peer-key encrypted frames.
+After the handshake, signaling application payloads MUST be carried in `data` messages inside peer public-key encrypted frames.
 
 ### Cryptography
 
@@ -170,7 +170,7 @@ After the handshake, signaling application payloads MUST be carried in `data` me
 
 The initial signaling stage uses the pre-shared key `k` from the session URI.
 This key is used only before peers have exchanged public keys, and allows the first bootstrap messages to be encrypted over untrusted signaling infrastructure.
-In the current implementation, the literal UTF-8 bytes of the 32-character hexadecimal `k` value are imported as an AES-GCM key.
+For current interoperability, the literal UTF-8 bytes of the 32-character hexadecimal `k` value are imported as an AES-GCM key.
 
 Handshake encryption uses the Web Crypto API AES-GCM implementation with a fresh 12-byte random IV per message.
 The serialized encrypted payload is:
@@ -179,7 +179,7 @@ The serialized encrypted payload is:
 base64(iv || ciphertext)
 ```
 
-After public keys are exchanged, signaling switches to peer-key encryption.
+After public keys are exchanged, signaling switches to peer public-key encryption.
 Each peer generates an asymmetric encryption keypair and encrypts to the other peer's public key.
 In the current implementation, this mechanism is provided by the `tweetnacl` library using NaCl `box` semantics, with an ephemeral sender key for each encrypted message.
 
@@ -266,7 +266,7 @@ Persisted state MAY include `sessionId`, `p`, `s`, `k`, local key material, peer
 
 Resumption in version 1 means re-invoking communication using prior local session material.
 It does not guarantee transport continuity.
-Implementations MAY need to reconnect to the signaling infrastructure, re-establish peer-key signaling, and renegotiate transport.
+Implementations MAY need to reconnect to the signaling infrastructure, re-establish peer public-key signaling, and renegotiate transport.
 
 ## Rationale
 

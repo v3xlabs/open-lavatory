@@ -1,12 +1,15 @@
 export type SymmetricKey = {
-  // TODO
   toString: () => string;
   encrypt: (message: string) => Promise<string>;
   decrypt: (message: string) => Promise<string>;
 };
 
+const decodeHex = (value: string): Uint8Array<ArrayBuffer> => new Uint8Array(
+  value.match(/.{2}/g)!.map(byte => Number.parseInt(byte, 16)),
+);
+
 export const deriveSymmetricKey = async (k: string): Promise<SymmetricKey> => {
-  const baseKey = new TextEncoder().encode(k);
+  const baseKey = decodeHex(k);
 
   const sharedSecret = await crypto.subtle.importKey(
     "raw",

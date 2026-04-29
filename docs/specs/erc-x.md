@@ -1,5 +1,5 @@
 ---
-title: open-lavatory wallet-dapp transport layer
+title: open-lavatory Wallet-Dapp Transport Layer
 description: A wire protocol for establishing wallet-dapp sessions and transporting EIP-1193 messages.
 author: TBD
 discussions-to: TBD
@@ -61,7 +61,7 @@ This signaling infrastructure is untrusted and is used only for encrypted signal
 This specification does not mandate a single signaling protocol or a purpose-built openlv service.
 A conforming signaling server MUST carry byte-equivalent text payloads between peers within a shared namespace.
 
-Version 1 is designed to operate over general-purpose signaling services, including publicly available or self-hosted MQTT, NTFY, or similar systems, without requiring those services to implement openlv-specific logic, registration, or prior session setup.
+This specification is designed to operate over general-purpose signaling services, including publicly available or self-hosted MQTT, NTFY, or similar systems, without requiring those services to implement openlv-specific logic, registration, or prior session setup.
 
 ### Protocol Phases
 
@@ -100,7 +100,7 @@ Implementations MAY expose local defaults, but interoperable peers MUST NOT assu
 `h` provides a short hash hint for the advertising peer public key.
 In version 1, `h` is derived by serializing the advertising peer encryption public key as a string, hashing the bytes with SHA-256, lower-hex encoding the digest, and truncating to the first 16 hexadecimal characters.
 
-In version 1, `k` is imported as symmetric handshake key material from the literal UTF-8 bytes of the 32-character string.
+In the current interoperable behavior, `k` is imported as symmetric handshake key material from the literal UTF-8 bytes of the 32-character string.
 
 ### Signaling Model
 
@@ -140,13 +140,16 @@ Receivers MUST ignore frames where `recipient` does not match the local role.
 
 After decryption, a signaling payload MUST be valid JSON containing:
 
-- `type`, one of:
-  - `flash`: sent by the joining peer to begin the handshake
-  - `pubkey`: carries a peer public key and optional descriptive metadata
-  - `ack`: confirms transition into peer-key signaling
-  - `data`: carries post-handshake signaling payloads, including transport negotiation objects
+- `type`: one of `flash`, `pubkey`, `ack`, or `data`
 - `payload`
 - `timestamp`
+
+The signaling message types have the following meanings:
+
+- `flash`: sent by the joining peer to begin the handshake
+- `pubkey`: carries a peer public key and optional descriptive metadata
+- `ack`: confirms transition into peer-key signaling
+- `data`: carries post-handshake signaling payloads, including transport negotiation objects
 
 ### Handshake Sequence
 
@@ -188,7 +191,7 @@ base64(ephemeralPublicKey || nonce || ciphertext)
 
 This same peer-key mechanism is also used to protect payloads exchanged through the negotiated transport layer.
 
-These cryptographic mechanisms are the current interoperable behavior, but future revisions MAY define alternative suites or explicit cryptographic negotiation.
+These cryptographic mechanisms define the current interoperable behavior, but future revisions MAY define alternative suites or explicit cryptographic negotiation.
 
 ### Transport Negotiation
 
@@ -288,7 +291,7 @@ Version 1 compatibility depends on the `openlv://` URI shape, URI version `@1`, 
 
 ## Reference Implementation
 
-An initial implementation of version 1 is available under `@openlv/` `connector`, `session`, and `transport` packages on npm.
+An initial implementation is available under the `@openlv/connector`, `@openlv/session`, and `@openlv/transport` packages on npm.
 
 ### dApp Implementation
 

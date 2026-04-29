@@ -282,16 +282,40 @@ Wallets and dapps that do not implement `openlv` remain unaffected.
 
 Version 1 compatibility depends on the `openlv://` URI shape, URI version `@1`, the `sessionId`/`h`/`k` constraints, signaling frame markers, signaling message types, and the session envelope.
 
-## Test Cases
+## Reference Implementation
 
-Version 1 test vectors SHOULD cover:
+An initial implementation of version 1 is available under `@openlv/` `connector`, `session`, and `transport` packages on npm.
 
-- URI encode/decode round-trips
-- signaling frame parsing for `h` and `x`
-- handshake transcript validation
-- encrypted envelope round-trips
-- WebRTC offer, answer, and candidate carriage
-- request/response correlation by `messageId`
+### dApp Implementation
+
+```typescript
+import { openlv } from "@openlv/connector";
+import { createConfig, http } from "wagmi";
+import { mainnet } from "wagmi/chains";
+
+export const wagmiConfig = createConfig({
+  chains: [mainnet],
+  connectors: [openlv()],
+  transports: {
+    [mainnet.id]: http(),
+  },
+});
+```
+
+### Wallet Implementation
+
+```typescript
+import { connectSession } from "@openlv/session";
+import { webrtc } from "@openlv/transport/webrtc";
+
+const session = await connectSession(
+  "openlv://...",
+  async (message) => {
+    return { result: "ok" };
+  },
+  webrtc(),
+);
+```
 
 ## Security Considerations
 

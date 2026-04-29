@@ -100,7 +100,7 @@ Implementations MAY expose local defaults, but interoperable peers MUST NOT assu
 `h` provides a short hash hint for the advertising peer public key.
 In version 1, `h` is derived by serializing the advertising peer encryption public key as a string, hashing the bytes with SHA-256, lower-hex encoding the digest, and truncating to the first 16 hexadecimal characters.
 
-In the current interoperable behavior, `k` is imported as symmetric handshake key material from the literal UTF-8 bytes of the 32-character string.
+In the current interoperable behavior, `k` is hex-decoded and imported as symmetric handshake key material.
 
 ### Signaling Model
 
@@ -170,7 +170,7 @@ After the handshake, signaling application payloads MUST be carried in `data` me
 
 The initial signaling stage uses the pre-shared key `k` from the session URI.
 This key is used only before peers have exchanged public keys, and allows the first bootstrap messages to be encrypted over untrusted signaling infrastructure.
-For current interoperability, the literal UTF-8 bytes of the 32-character hexadecimal `k` value are imported as an AES-GCM key.
+For current interoperability, the 32-character hexadecimal `k` value is hex-decoded to 16 bytes and imported as an AES-GCM key.
 
 Handshake encryption uses the Web Crypto API AES-GCM implementation with a fresh 12-byte random IV per message.
 The serialized encrypted payload is:

@@ -1,6 +1,6 @@
 import { describe, expect, test } from "vitest";
 
-import { generateHandshakeKey } from "./handshake.js";
+import { deriveSymmetricKey, generateHandshakeKey } from "./handshake.js";
 
 describe("Handshake", async () => {
   const key = await generateHandshakeKey();
@@ -16,5 +16,13 @@ describe("Handshake", async () => {
     const decrypted = await key.decrypt(encrypted);
 
     expect(decrypted).toBe(message);
+  });
+
+  test("should derive symmetric key from decoded hex bytes", async () => {
+    const key = await deriveSymmetricKey("000102030405060708090a0b0c0d0e0f");
+    const encrypted = await key.encrypt("hello");
+    const rederived = await deriveSymmetricKey("000102030405060708090a0b0c0d0e0f");
+
+    await expect(rederived.decrypt(encrypted)).resolves.toBe("hello");
   });
 });

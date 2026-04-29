@@ -21,35 +21,36 @@ optional session resumption model.
 
 ## Motivation
 
-Ethereum wallet connectivity should not require dependence on a single
-hosted relay service, account portal, API key, or billing relationship.
-Existing connection flows are widely deployed, but often tie session
-establishment to centralized infrastructure in ways that reduce
-portability and user autonomy.
+Ethereum wallet connectivity benefits from protocols that are portable,
+open, and easy for wallets and dapps to adopt without depending on a
+single service provider or control plane. The ecosystem benefits when
+users and implementers can choose their own infrastructure, self-host
+when desired, and preserve compatibility across independent
+implementations.
 
 `openlv` preserves the familiar wallet-pairing model while allowing
 wallets and dapps to exchange standard EIP-1193 messages over
-user-chosen relay infrastructure and a direct peer transport.
+user-chosen relay infrastructure and a direct peer transport. It offers
+a simple FOSS-friendly path for interoperable wallet connectivity while
+keeping the transport of Ethereum wallet messages straightforward.
 
 ## Specification
 
-The key words "MUST", "MUST NOT", "REQUIRED", "SHALL", "SHALL NOT",
-"SHOULD", "SHOULD NOT", "RECOMMENDED", "NOT RECOMMENDED", "MAY", and
-"OPTIONAL" in this document are to be interpreted as described in [RFC
-2119](https://www.rfc-editor.org/rfc/rfc2119) and [RFC
-8174](https://www.rfc-editor.org/rfc/rfc8174).
-
 ### Roles
 
-- **Host**: the peer that creates the session URI. In common
-  deployments, the dapp.
-- **Client**: the peer that joins using the session URI. In common
-  deployments, the wallet.
+- **Advertising peer**: the peer that creates and shares the session
+  URI. In common deployments, the dapp.
+- **Joining peer**: the peer that receives the session URI and joins the
+  session. In common deployments, the wallet.
+
+These roles are used only for bootstrap and signaling. After transport
+establishment, both parties are simply peers and may send requests and
+responses bidirectionally.
 
 ### Bootstrap Transfer
 
 Session establishment begins with out-of-band transfer of a session URI
-from host to client.
+from the advertising peer to the joining peer.
 
 Desktop implementations MUST support copy-paste of the `openlv://` URI.
 Mobile implementations SHOULD support QR scanning, deep-link handling,
@@ -108,8 +109,8 @@ Version 1 defines:
 
 - `h`: handshake-key encrypted frame
 - `x`: peer-key encrypted frame
-- `h`: host recipient
-- `c`: client recipient
+- `h`: advertising-peer recipient marker
+- `c`: joining-peer recipient marker
 
 Receivers MUST ignore frames where `recipient` does not match the local
 role.
@@ -137,13 +138,15 @@ payloads MAY include descriptive metadata.
 
 The version 1 handshake sequence is:
 
-1. The client sends `flash` to the host using an `h` frame.
-2. The host sends `pubkey` to the client using an `h` frame.
-3. The client records the host public key and sends `pubkey` to the host
-   using an `x` frame.
-4. The host records the client public key and sends `ack` to the client
-   using an `x` frame.
-5. The client sends `ack` to the host using an `x` frame.
+1. The joining peer sends `flash` to the advertising peer using an `h`
+   frame.
+2. The advertising peer sends `pubkey` to the joining peer using an `h`
+   frame.
+3. The joining peer records the advertising peer public key and sends
+   `pubkey` using an `x` frame.
+4. The advertising peer records the joining peer public key and sends
+   `ack` using an `x` frame.
+5. The joining peer sends `ack` using an `x` frame.
 6. Both peers treat subsequent signaling data as peer-encrypted.
 
 After the handshake, signaling application payloads MUST be carried in
@@ -263,6 +266,10 @@ Ethereum wallet and dapp interfaces.
 The specification requires explicit `p` and `s` fields so
 interoperability does not depend on hidden assumptions about a default
 relay provider.
+
+The peer model is intentionally asymmetric only during bootstrap and
+signaling. Once a transport is established, both peers operate
+symmetrically and may initiate request/response traffic.
 
 ## Backwards Compatibility
 

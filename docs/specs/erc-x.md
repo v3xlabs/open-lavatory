@@ -140,18 +140,13 @@ Receivers MUST ignore frames where `recipient` does not match the local role.
 
 After decryption, a signaling payload MUST be valid JSON containing:
 
-- `type`
+- `type`, one of:
+  - `flash`: sent by the joining peer to begin the handshake
+  - `pubkey`: carries a peer public key and optional descriptive metadata
+  - `ack`: confirms transition into peer-key signaling
+  - `data`: carries post-handshake signaling payloads, including transport negotiation objects
 - `payload`
 - `timestamp`
-
-Version 1 defines the following signaling message types:
-
-- `flash`: sent by the joining peer to begin the handshake
-- `pubkey`: carries a peer public key and optional descriptive metadata
-- `ack`: confirms transition into peer-key signaling
-- `data`: carries post-handshake signaling payloads, including transport negotiation objects
-
-`pubkey.payload.publicKey` MUST contain the sender public key serialization used by the active peer-encryption scheme.
 
 ### Handshake Sequence
 
@@ -166,25 +161,34 @@ The version 1 handshake sequence is:
 
 After the handshake, signaling application payloads MUST be carried in `data` messages inside peer-key encrypted frames.
 
-### Cryptographic Behavior
+### Cryptography
 
-Version 1 cryptographic behavior is normative for version 1 interoperability.
+`openlv` uses a two-stage encryption model during session establishment.
 
-Handshake encryption uses AES-GCM with a fresh 12-byte random IV per message.
+The initial signaling stage uses the pre-shared key `k` from the session URI.
+This key is used only before peers have exchanged public keys, and allows the first bootstrap messages to be encrypted over untrusted signaling infrastructure.
+In the current implementation, the literal UTF-8 bytes of the 32-character hexadecimal `k` value are imported as an AES-GCM key.
+
+Handshake encryption uses the Web Crypto API AES-GCM implementation with a fresh 12-byte random IV per message.
 The serialized encrypted payload is:
 
 ```text
 base64(iv || ciphertext)
 ```
 
-Peer-encrypted frames use NaCl box-compatible authenticated encryption, with an ephemeral sender key per message.
-The serialized encrypted payload is:
+After public keys are exchanged, signaling switches to peer-key encryption.
+Each peer generates an asymmetric encryption keypair and encrypts to the other peer's public key.
+In the current implementation, this mechanism is provided by the `tweetnacl` library using NaCl `box` semantics, with an ephemeral sender key for each encrypted message.
+
+Peer-encrypted payloads are serialized as:
 
 ```text
 base64(ephemeralPublicKey || nonce || ciphertext)
 ```
 
-Future revisions SHOULD define explicit cryptographic suite negotiation.
+This same peer-key mechanism is also used to protect payloads exchanged through the negotiated transport layer.
+
+These cryptographic mechanisms are the current interoperable behavior, but future revisions MAY define alternative suites or explicit cryptographic negotiation.
 
 ### Transport Negotiation
 

@@ -1,7 +1,7 @@
 import type { TurnServer } from "@openlv/provider/storage";
 import { LucidePlus, LucideTrash2 } from "lucide-solid";
 import type { JSX } from "solid-js";
-import { createEffect, createSignal, For } from "solid-js";
+import { createSignal, For } from "solid-js";
 
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Button } from "../../../ui/Button.js";

@@ -217,46 +217,17 @@ Version 1 standardizes carriage of WebRTC negotiation payloads as signaling `dat
 Once transport is established, ordinary application traffic uses the following envelope:
 
 ```json
-{ "type": "request", "messageId": "<id>", "payload": {} }
+{ "type": "request", "messageId": "<id>", "payload": { "method": "eth_requestAccounts", "params": [] } }
 ```
 
 ```json
-{ "type": "response", "messageId": "<id>", "payload": {} }
+{ "type": "response", "messageId": "<id>", "payload": ["0x1234567890abcdef1234567890abcdef12345678"] }
 ```
 
 `messageId` MUST uniquely identify a request within the active session.
 A `response.messageId` MUST match a prior request.
-
-### EIP-1193 Transport
-
-`openlv` transports EIP-1193 messages as the `payload` field of the session envelope.
-
-Example request:
-
-```json
-{
-  "type": "request",
-  "messageId": "550e8400-e29b-41d4-a716-446655440000",
-  "payload": {
-    "method": "eth_requestAccounts",
-    "params": []
-  }
-}
-```
-
-Example response:
-
-```json
-{
-  "type": "response",
-  "messageId": "550e8400-e29b-41d4-a716-446655440000",
-  "payload": [
-    "0x1234567890abcdef1234567890abcdef12345678"
-  ]
-}
-```
-
-This specification does not redefine EIP-1193 semantics.
+All session `payload` values are EIP-1193 request or response payloads.
+This specification transports those payloads, and does not redefine its semantics.
 
 ### Session Resumption
 

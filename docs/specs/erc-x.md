@@ -1,5 +1,5 @@
 ---
-title: openlv Wallet-Dapp Session Transport
+title: open-lavatory wallet-dapp transport layer
 description: A wire protocol for establishing wallet-dapp sessions and transporting EIP-1193 messages.
 author: TBD
 discussions-to: TBD

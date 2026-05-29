@@ -117,18 +117,18 @@ const TestSign = () => {
             resetSignature();
             signMessage({ message: "Hello, world!" });
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1"
         >
           Sign Message
         </button>
       </div>
       {isPending && (
-        <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+        <div className="rounded-md vocs:border-primary vocs:bg-primary p-2 text-[var(--vocs-color_text)] text-sm">
           ⏳ Waiting for signature... (Check your wallet)
         </div>
       )}
       {error && (
-        <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
+        <div className="rounded-md vocs:border-primary vocs:bg-primary p-2 text-[var(--vocs-color_text)] text-sm">
           Signature request cancelled or failed
         </div>
       )}
@@ -180,7 +180,7 @@ const ConnectComponent = () => {
   if (!walletClient) return <div>No walletclient found</div>;
 
   return (
-    <div className="space-y-1 border-[var(--vocs-color_codeInlineBorder)] border-b pb-2">
+    <div className="space-y-1 vocs:border-primary border-b pb-2">
       <div>
         You can connect to a dApp by entering its connection URL and hitting
         connect.
@@ -264,8 +264,8 @@ const Connected = () => {
   const { address, connector } = useAccount();
 
   return (
-    <div className="rounded-lg border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] px-4 py-4">
-      <div className="mb-2 flex items-center justify-between gap-2 border-[var(--vocs-color_codeInlineBorder)] border-b pb-2">
+    <div className="rounded-lg vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-4 py-4">
+      <div className="mb-2 flex items-center justify-between gap-2 vocs:border-primary border-b pb-2">
         <div className="flex items-center gap-2">
           {connector?.icon && (
             <img
@@ -283,7 +283,7 @@ const Connected = () => {
           onClick={() => {
             disconnect();
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1"
         >
           Disconnect
         </button>
@@ -301,7 +301,7 @@ const ConnectorPreview = ({ connector }: { connector: Connector; }) => {
 
   return (
     <button
-      className="hover:!bg-[var(--vocs-color_codeHighlightBackground)] inline-flex translate-y-0.5 items-center gap-2 rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-2 py-0.5"
+      className="hover:!bg-[var(--vocs-color_codeHighlightBackground)] inline-flex translate-y-0.5 items-center gap-2 rounded-lg border vocs:border-primary px-2 py-0.5"
       onClick={() => {
         connect({ connector: connector });
       }}
@@ -341,7 +341,7 @@ const Connectors = () => {
                 className={classNames(
                   "!bg-[var(--vocs-color_codeBlockBackground)] flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm",
                   connector.type === "openLv"
-                    ? "hover:!bg-[var(--vocs-color_backgroundAccent)]/10 border border-[var(--vocs-color_codeInlineText)]"
+                    ? "hover:!bg-[var(--vocs-color_backgroundAccent)]/10 border vocs:border-primary"
                     : "hover:!bg-[var(--vocs-color_codeHighlightBackground)]",
                 )}
               >
@@ -366,7 +366,7 @@ const Connectors = () => {
           ))}
         </ul>
       </div>
-      <div className="w-full rounded-b-md border-[var(--vocs-color_codeInlineBorder)] border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
+      <div className="w-full rounded-b-md vocs:border-primary border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
         <div>
           The above is a sample wagmi snippet. You can use it to test out openlv
           right here!
@@ -434,7 +434,7 @@ export const TryItOut = () => {
 
   return (
     <div
-      className="rounded-lg border border-[var(--vocs-color_codeInlineBorder)]"
+      className="rounded-lg border vocs:border-primary"
       suppressHydrationWarning
     >
       {inBrowser && <Outter />}

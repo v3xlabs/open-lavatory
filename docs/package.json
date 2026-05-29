@@ -5,9 +5,9 @@
     "license": "LGPL-3.0-only",
     "type": "module",
     "scripts": {
-        "build": "tsx scripts/vocs.ts build",
-        "dev": "tsx scripts/vocs.ts dev",
-        "preview": "vocs preview"
+        "build": "vite build && node scripts/prepare-static-dist.mjs",
+        "dev": "vite",
+        "preview": "vite preview"
     },
     "dependencies": {
         "@openlv/connector": "workspace:*",
@@ -18,6 +18,7 @@
         "mqtt": "^5",
         "react": "latest",
         "react-dom": "latest",
+        "react-icons": "^5.6.0",
         "react-server-dom-webpack": "~19.2.4",
         "solid-js": "^1.9.0",
         "tailwindcss": "^4",
@@ -30,7 +31,6 @@
         "@types/react": "latest",
         "@vitejs/plugin-react": "^6.0.2",
         "classnames": "^2.5.1",
-        "tsx": "^4.21.0",
         "typescript": "^5",
         "vite": "^8"
     },

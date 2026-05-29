@@ -1,7 +1,20 @@
 @import "tailwindcss";
 @source "../**/*.{ts,tsx,mdx}";
 
-[data-layout=landing] {
+/*
+ * Vocs 2 derives accent UI from top-level `accentColor` in vocs.config.ts.
+ * Link color uses --vocs-text-color-link (defaults to body text without this).
+ */
+:root {
+    --vocs-text-color-link: var(--vocs-color-accent8);
+}
+
+:root[style*="color-scheme: dark"],
+:root[style*="color-scheme:dark"] {
+    --vocs-text-color-link: var(--vocs-color-accent7);
+}
+
+[data-layout=minimal] {
     --vocs-content_width: calc(957px + var(--vocs-space_16) * 2);
     --vocs-content_horizontalPadding: var(--vocs-space_16);
     --vocs-content_verticalPadding: var(--vocs-space_32);

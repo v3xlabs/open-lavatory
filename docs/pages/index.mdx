@@ -1,37 +1,61 @@
 ---
-layout: landing
+layout: minimal
 showLogo: false
 showAskAi: false
 ---
 
 import { HomePage } from 'vocs'
 import { TryItOut } from '../components/TryItOut'
+import { FiBook, FiLock, FiServer, FiUser } from 'react-icons/fi';
 
 <HomePage.Root>
-  <div className="flex flex-col md:grid grid-cols-2 gap-8 w-full text-start">
+  <div className="flex flex-col gap-8 w-full text-start">
     <div className="flex flex-col items-start gap-4">
       <HomePage.Logo />
       <HomePage.Tagline>Secure peer-to-peer JSON-RPC connectivity between dApps and wallets</HomePage.Tagline>
       <HomePage.Description>Because the defacto way to connect your wallet should be private, transparent, and permissionless</HomePage.Description>
-      <div className="w-full">
-        <HomePage.InstallPackage name="@openlv/connector@beta" type="install" />
-      </div>
-      <div className="w-full flex flex-col gap-2 md:grid grid-cols-2">
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Open Specification</div>
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Privacy-first</div>
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Self-hostable</div>
-        <div className="border rounded-lg border-[var(--vocs-color_border)] p-4">Permissionless</div>
-      </div>
-      <div className="w-full flex gap-4 text-sm items-center text-nowrap"><div className="w-full h-[1px] bg-[var(--vocs-color_border)]" /><span>Ready to get started?</span></div>
+      <div className="w-full flex gap-4 text-sm items-center text-nowrap"><div className="w-full h-[1px] vocs:bg-primary" /><span>Ready to get started?</span></div>
       <div className="w-full flex justify-end">
       <HomePage.Buttons>
-        <HomePage.Button href="https://github.com/v3xlabs/open-lavatory">GitHub</HomePage.Button>
-        <HomePage.Button href="/getting-started" variant="accent">Read docs</HomePage.Button>
+        <HomePage.Button href="/try" variant="accent">Try it out</HomePage.Button>
+        <HomePage.Button href="/getting-started">Integrate</HomePage.Button>
       </HomePage.Buttons>
       </div>
-    </div>
-    <div className="w-full h-full space-y-4">
-      <TryItOut />
+      <div className="w-full flex flex-col gap-2 md:grid grid-cols-2 pt-8">
+        <div className="border rounded-lg vocs:border-primary p-4">
+          <div className="flex items-center gap-2">
+            <FiBook />
+            <span>Open Specification</span>
+          </div>
+          <span className="text-sm text-muted">The protocol specification for openlv</span>
+        </div>
+        <div className="border rounded-lg vocs:border-primary p-4">
+          <div className="flex items-center gap-2">
+            <FiLock />
+            <span>Privacy-first</span>
+          </div>
+          <span className="text-sm text-muted">Encryption, ephemeral keys, security by design</span>
+        </div>
+        <div className="border rounded-lg vocs:border-primary p-4">
+          <div className="flex items-center gap-2">
+            <FiServer />
+            <span>Self-hostable</span>
+          </div>
+          <span className="text-sm text-muted">Leverage public infrastructure, or easily host your own</span>
+        </div>
+        <div className="border rounded-lg vocs:border-primary p-4">
+          <div className="flex items-center gap-2">
+            <FiUser />
+            <span>Permissionless</span>
+          </div>
+          <span className="text-sm text-muted">No cloud, no api keys, no credit card</span>
+        </div>
+      </div>
+      <div className="w-full flex justify-center items-center">
+        <div className="flex justify-center items-center w-fit mx-auto">
+          <HomePage.InstallPackage name="@openlv/connector@beta" type="install" />
+        </div>
+      </div>
     </div>
   </div>
 </HomePage.Root>

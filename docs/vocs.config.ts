@@ -26,7 +26,7 @@ export default defineConfig({
       link: "/faq",
     },
     {
-      text: "Guides",
+      text: "Apps",
       items: [
         {
           text: "Getting Started",
@@ -134,12 +134,6 @@ export default defineConfig({
       link: "https://github.com/v3xlabs/open-lavatory",
     },
   ],
-  theme: {
-    accentColor: {
-      light: "#fe7d37",
-      dark: "#fe7d37",
-    },
-  },
   banner: {
     content: "OpenLV is still under active development.",
     dismissable: false,
@@ -153,7 +147,9 @@ export default defineConfig({
     light: "/openlv_logo_light.svg",
   },
   ogImageUrl: "https://openlv.sh/openlv_banner.png",
+  accentColor: "#fe7d37",
   basePath: process.env.DOCS_BASE_PATH || "/",
+  renderStrategy: "full-static",
   showAskAi: false,
   mcp: {
     enabled: false,

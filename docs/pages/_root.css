@@ -6,3 +6,9 @@
     --vocs-content_horizontalPadding: var(--vocs-space_16);
     --vocs-content_verticalPadding: var(--vocs-space_32);
 }
+
+/* Site-wide: hide vocs 2 Ask AI + "Copy page for AI" UI */
+[data-v-ask-ai-container],
+[data-v-copy-for-ai] {
+    display: none !important;
+}

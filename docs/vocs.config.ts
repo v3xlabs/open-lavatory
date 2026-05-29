@@ -1,18 +1,15 @@
-import { fileURLToPath } from "node:url";
-
-import tailwindcss from "@tailwindcss/vite";
-import type { PluginOption } from "vite";
-import { defineConfig } from "vocs";
+import { defineConfig } from "vocs/config";
 
 export default defineConfig({
   title: "openlv",
   titleTemplate: "%s · openlv",
   description:
-        "Secure peer-to-peer JSON-RPC connectivity between dApps and wallets",
+    "Secure peer-to-peer JSON-RPC connectivity between dApps and wallets",
   rootDir: ".",
+  srcDir: ".",
   editLink: {
     pattern:
-            "https://github.com/v3xlabs/open-lavatory/edit/master/docs/pages/:path",
+      "https://github.com/v3xlabs/open-lavatory/edit/master/docs/pages/:path",
     text: "Suggest changes to this page",
   },
   sidebar: [
@@ -157,20 +154,8 @@ export default defineConfig({
   },
   ogImageUrl: "https://openlv.sh/openlv_banner.png",
   basePath: process.env.DOCS_BASE_PATH || "/",
-  vite: {
-    plugins: [tailwindcss() as PluginOption],
-    ssr: {
-      noExternal: [
-        "@openlv/connector",
-        "@openlv/session",
-        "@openlv/transport",
-        "@openlv/modal",
-      ],
-    },
-    server: {
-      fs: {
-        allow: [fileURLToPath(new URL("..", import.meta.url))],
-      },
-    },
+  showAskAi: false,
+  mcp: {
+    enabled: false,
   },
 });

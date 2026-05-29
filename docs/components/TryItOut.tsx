@@ -1,6 +1,6 @@
-/* eslint-disable no-restricted-syntax */
-import "../styles.css";
+"use client";
 
+/* eslint-disable no-restricted-syntax */
 import { openlv } from "@openlv/connector";
 import { connectSession, type Session } from "@openlv/session";
 import { webrtc } from "@openlv/transport/webrtc";

@@ -7,7 +7,7 @@ We ship with sensible defaults for most use cases, however allow for full custom
 
 If you just want to get started you can simply use `openlv()`
 
-```ts [wagmi.ts] twoslash
+```ts [wagmi-config.ts] twoslash
 import { http, createConfig } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
 import { openlv } from '@openlv/connector'
@@ -25,7 +25,7 @@ export const wagmiConfig = createConfig({
 
 If you want your app to customize what signaling servers are used by default, you can pass a `config` object when initializing.
 
-```ts [wagmi.ts] twoslash
+```ts [wagmi-config.ts] twoslash
 import { http, createConfig } from 'wagmi'
 import { mainnet } from 'wagmi/chains'
 import { openlv } from '@openlv/connector'

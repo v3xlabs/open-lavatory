@@ -5,8 +5,8 @@
     "license": "LGPL-3.0-only",
     "type": "module",
     "scripts": {
-        "build": "vocs build",
-        "dev": "vocs dev",
+        "build": "tsx scripts/vocs.ts build",
+        "dev": "tsx scripts/vocs.ts dev",
         "preview": "vocs preview"
     },
     "dependencies": {
@@ -18,15 +18,21 @@
         "mqtt": "^5",
         "react": "latest",
         "react-dom": "latest",
+        "react-server-dom-webpack": "~19.2.4",
+        "solid-js": "^1.9.0",
         "tailwindcss": "^4",
         "ts-pattern": "^5",
-        "vocs": "latest"
+        "vocs": "2.0.4",
+        "waku": "^1.0.0-beta.0"
     },
     "devDependencies": {
-        "@tailwindcss/vite": "^4.1.16",
+        "@tailwindcss/vite": "^4.3.0",
         "@types/react": "latest",
+        "@vitejs/plugin-react": "^6.0.2",
         "classnames": "^2.5.1",
-        "typescript": "^5"
+        "tsx": "^4.21.0",
+        "typescript": "^5",
+        "vite": "^8"
     },
     "peerDependencies": {
         "@wagmi/core": "2",

@@ -174,7 +174,7 @@ base64(iv || ciphertext)
 
 After public keys are exchanged, signaling switches to peer public-key encryption.
 Each peer generates an asymmetric encryption keypair and encrypts to the other peer's public key.
-In the current implementation, this mechanism is provided by the `tweetnacl` library using NaCl `box` semantics, with an ephemeral sender key for each encrypted message.
+In the current implementation, this mechanism uses X25519 key agreement (`@noble/curves`) and XSalsa20-Poly1305 authenticated encryption (`@noble/ciphers`), with an ephemeral sender key for each encrypted message.
 
 Peer-encrypted payloads are serialized as:
 

@@ -30,10 +30,7 @@ describe("Asymmetric encryption", () => {
     const parsedKey = await parseEncryptionKey(key);
     const parsedEncrypted = await parsedKey.encrypt(message);
 
-    console.log("parsedEncrypted", parsedEncrypted);
     const decodedParsedEncrypted = await decryptionKey.decrypt(parsedEncrypted);
-
-    console.log("decodedParsedEncrypted", decodedParsedEncrypted);
 
     expect(decodedParsedEncrypted).toBe(message);
   });
@@ -42,8 +39,6 @@ describe("Asymmetric encryption", () => {
     const { encryptionKey, decryptionKey } = await generateKeyPair();
     const message = Array.from({ length: 1024 * 1024 }).fill("a")
       .join("");
-
-    console.log("message", message.length);
 
     const encrypted = await encryptionKey.encrypt(message);
     const decrypted = await decryptionKey.decrypt(encrypted);

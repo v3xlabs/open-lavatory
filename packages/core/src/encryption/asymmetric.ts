@@ -1,10 +1,11 @@
-import nacl from "tweetnacl";
+import { secretbox } from "@noble/ciphers/salsa.js";
+import { x25519 } from "@noble/curves/ed25519.js";
 
 import type { SessionLinkParameters } from "../session.js";
 import { fromBase64, toBase64 } from "./base64.js";
 
-const PUBLIC_KEY_BYTE_LENGTH = nacl.box.publicKeyLength;
-const NONCE_BYTE_LENGTH = nacl.box.nonceLength;
+const PUBLIC_KEY_BYTES = 32;
+const NONCE_BYTES = 24;
 
 const composePayload = (
   ephemeralPublicKey: Uint8Array,
@@ -29,22 +30,15 @@ const decomposePayload = (
   nonce: Uint8Array;
   ciphertext: Uint8Array;
 } => {
-  const bytes = new Uint8Array(
-    atob(payload)
-      .split("")
-      .map(char => char.codePointAt(0)!),
-  );
+  const bytes = fromBase64(payload);
 
-  if (bytes.length <= PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH) {
+  if (bytes.length <= PUBLIC_KEY_BYTES + NONCE_BYTES) {
     throw new Error("Encrypted payload is malformed.");
   }
 
-  const ephemeralPublicKey = bytes.slice(0, PUBLIC_KEY_BYTE_LENGTH);
-  const nonce = bytes.slice(
-    PUBLIC_KEY_BYTE_LENGTH,
-    PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH,
-  );
-  const ciphertext = bytes.slice(PUBLIC_KEY_BYTE_LENGTH + NONCE_BYTE_LENGTH);
+  const ephemeralPublicKey = bytes.slice(0, PUBLIC_KEY_BYTES);
+  const nonce = bytes.slice(PUBLIC_KEY_BYTES, PUBLIC_KEY_BYTES + NONCE_BYTES);
+  const ciphertext = bytes.slice(PUBLIC_KEY_BYTES + NONCE_BYTES);
 
   return {
     ephemeralPublicKey,
@@ -64,44 +58,35 @@ export type DecryptionKey = {
 };
 
 export const createEncryptionKey = async (
-  key: Uint8Array,
+  publicKey: Uint8Array,
 ): Promise<EncryptionKey> => {
-  const serializedPublicKey = toBase64(key);
+  const serializedPublicKey = toBase64(publicKey);
 
   return {
     toString: () => serializedPublicKey,
     encrypt: async (message: string) => {
-      const messageBytes = new TextEncoder().encode(message);
-      const ephemeralKeyPair = nacl.box.keyPair();
-      const nonce = nacl.randomBytes(NONCE_BYTE_LENGTH);
-      const ciphertext = nacl.box(
-        messageBytes,
+      const ephemeralSecret = x25519.utils.randomSecretKey();
+      const ephemeralPublic = x25519.getPublicKey(ephemeralSecret);
+      const nonce = crypto.getRandomValues(new Uint8Array(NONCE_BYTES));
+      const { seal } = secretbox(
+        x25519.getSharedSecret(ephemeralSecret, publicKey),
         nonce,
-        key,
-        ephemeralKeyPair.secretKey,
       );
+      const ciphertext = seal(new TextEncoder().encode(message));
 
-      if (!ciphertext) {
-        throw new Error("Failed to encrypt message.");
-      }
-
-      return composePayload(ephemeralKeyPair.publicKey, nonce, ciphertext);
+      return composePayload(ephemeralPublic, nonce, ciphertext);
     },
   };
 };
 
 export const parseEncryptionKey = async (
   serializedKey: string,
-): Promise<EncryptionKey> => {
-  const decodedPublicKey = fromBase64(serializedKey);
-
-  return createEncryptionKey(decodedPublicKey);
-};
+): Promise<EncryptionKey> => createEncryptionKey(fromBase64(serializedKey));
 
 export const createDecryptionKey = async (
-  key: Uint8Array,
+  secretKey: Uint8Array,
 ): Promise<DecryptionKey> => {
-  const serializedSecretKey = toBase64(key);
+  const serializedSecretKey = toBase64(secretKey);
 
   return {
     toString: () => serializedSecretKey,
@@ -112,18 +97,12 @@ export const createDecryptionKey = async (
 
       const { ephemeralPublicKey, nonce, ciphertext }
         = decomposePayload(message);
-      const decrypted = nacl.box.open(
-        ciphertext,
+      const { open } = secretbox(
+        x25519.getSharedSecret(secretKey, ephemeralPublicKey),
         nonce,
-        ephemeralPublicKey,
-        key,
       );
 
-      if (!decrypted) {
-        throw new Error("Failed to decrypt message.");
-      }
-
-      return new TextDecoder().decode(decrypted);
+      return new TextDecoder().decode(open(ciphertext));
     },
   };
 };
@@ -134,17 +113,18 @@ export type EncKeypair = {
 };
 
 export const generateKeyPair = async (): Promise<EncKeypair> => {
-  const { publicKey, secretKey } = nacl.box.keyPair();
-  const encryptionKey = await createEncryptionKey(publicKey);
-  const decryptionKey = await createDecryptionKey(secretKey);
+  const secretKey = x25519.utils.randomSecretKey();
+  const publicKey = x25519.getPublicKey(secretKey);
 
-  return { encryptionKey, decryptionKey };
+  return {
+    encryptionKey: await createEncryptionKey(publicKey),
+    decryptionKey: await createDecryptionKey(secretKey),
+  };
 };
 
 export const initEncryptionKeys = async (
   initParameters?: SessionLinkParameters,
 ) => {
-  const keyPair = nacl.box.keyPair();
   const { encryptionKey, decryptionKey } = await generateKeyPair();
 
   if (
@@ -166,6 +146,6 @@ export const initEncryptionKeys = async (
   return {
     encryptionKey,
     decryptionKey,
-    relyingEncryptionKey: await createEncryptionKey(keyPair.publicKey),
+    relyingEncryptionKey: encryptionKey,
   };
 };

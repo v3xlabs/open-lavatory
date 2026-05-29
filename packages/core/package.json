@@ -50,8 +50,9 @@
     "test": "vitest"
   },
   "dependencies": {
-    "eventemitter3": "^5.0.1",
-    "tweetnacl": "^1.0.3"
+    "@noble/ciphers": "^1.3.0",
+    "@noble/curves": "^1.9.7",
+    "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
     "typescript": "^5",

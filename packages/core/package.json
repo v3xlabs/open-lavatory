@@ -31,8 +31,8 @@
       "default": "./dist/encryption/index.js"
     },
     "./errors": {
-      "types": "./dist/errors/index.d.ts",
-      "default": "./dist/errors/index.js"
+      "types": "./dist/errors.d.ts",
+      "default": "./dist/errors.js"
     },
     "./icons": {
       "types": "./dist/icons/index.d.ts",

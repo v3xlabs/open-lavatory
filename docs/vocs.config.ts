@@ -148,7 +148,7 @@ export default defineConfig({
   },
   ogImageUrl: "https://openlv.sh/openlv_banner.png",
   accentColor: "#fe7d37",
-  basePath: process.env.DOCS_BASE_PATH || "/",
+  basePath: "/",
   renderStrategy: "full-static",
   showAskAi: false,
   mcp: {

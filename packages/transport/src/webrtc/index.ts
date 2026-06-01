@@ -88,24 +88,17 @@ export const webrtc: CreateTransportLayerFn = (
       channel.addEventListener("message", onDataChannelMessage);
     };
 
-    const handle = async (message: TransportMessage) => {
-      console.log(ident, "webrtc handle", message);
+    const handle = async (message: TransportMessage): Promise<void> => {
+      log(ident, "webrtc handle", message);
 
       if (!connection) throw new Error("Connection not found");
 
-      match(message)
+      return match(message)
         .with({ type: "offer" }, async ({ payload }) => {
-          console.log("offer", payload);
-          // TODO: add zon schema?
           const offer = JSON.parse(payload) as RTCSessionDescriptionInit;
 
           await connection!.setRemoteDescription(
             new RTCSessionDescription(offer),
-          );
-          console.log(
-            ident,
-            "setRemoteDescriptionran",
-            connection!.remoteDescription,
           );
 
           const answer = await connection!.createAnswer();
@@ -116,7 +109,6 @@ export const webrtc: CreateTransportLayerFn = (
         .with({ type: "answer" }, async ({ payload }) => {
           if (!connection) throw new Error("Connection not found");
 
-          console.log(ident, "answer", payload);
           const answer = JSON.parse(payload) as RTCSessionDescriptionInit;
 
           await connection.setRemoteDescription(
@@ -128,14 +120,12 @@ export const webrtc: CreateTransportLayerFn = (
 
           if (!payload) return;
 
-          console.log(ident, "candidate", payload);
           const candidate = JSON.parse(payload) as RTCIceCandidateInit;
 
           await connection.addIceCandidate(new RTCIceCandidate(candidate));
         })
         .otherwise(() => {
-          // biome-ignore lint/suspicious/noConsole: <x>
-          console.warn("invalid message", message);
+          log(ident, "received unknown transport message type", message);
         });
     };
 

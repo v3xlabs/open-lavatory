@@ -1,9 +1,7 @@
 {
-  "name": "open-lavatory",
-  "version": "1.0.0",
-  "private": true,
   "license": "LGPL-3.0-only",
   "type": "module",
+  "private": true,
   "scripts": {
     "build": "pnpm -r --filter !@openlv/example-react-dapp --filter !@openlv/sandbox --filter !@openlv/example-react-wallet --filter !@openlv/extension --filter !docs build",
     "changeset": "changeset",
@@ -12,9 +10,6 @@
     "lint": "eslint",
     "lint:fix": "eslint --fix",
     "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test"
-  },
-  "dependencies": {
-    "@biomejs/biome": "^2.3.11"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",

@@ -2,11 +2,12 @@
 
 /* eslint-disable no-restricted-syntax */
 import { openlv } from "@openlv/connector";
+import { encodeConnectionURL } from "@openlv/core";
 import { connectSession, type Session } from "@openlv/session";
 import { webrtc } from "@openlv/transport/webrtc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { match } from "ts-pattern";
 import { type Address, type EIP1193Provider } from "viem";
 import {
@@ -18,7 +19,6 @@ import {
   useClient,
   useConnect,
   useConnections,
-  useConnectorClient,
   useDisconnect,
   useSignMessage,
   useVerifyMessage,
@@ -26,49 +26,21 @@ import {
 } from "wagmi";
 import { holesky, mainnet, sepolia } from "wagmi/chains";
 
+import {
+  attachTryItSession,
+  OpenLvDappMonitor,
+  peerInfoFromConnectionUrl,
+  shimWalletOnMessage,
+  TryItDebugProvider,
+  TryItSessionPanel,
+  useTryItDebug,
+} from "./TryItOutDebug.js";
+
 const queryClient = new QueryClient();
 
 const config = createConfig({
   chains: [mainnet, sepolia, holesky],
-  connectors: [
-    openlv({
-      // Optionally set app suggested defaults
-      // config: {
-      //   transport: {
-      //     p: "webrtc",
-      //     s: {
-      //       webrtc: {
-      //         iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
-      //       },
-      //     },
-      //   },
-      // },
-      // theme: {
-      //   theme: simpleTheme,
-      //   mode: "light",
-      // },
-      // theme: {
-      // Either a predefined theme like such
-      // theme: "simple",
-      // Or a custom theme:
-      // theme: {
-      //   dark: {
-      //     body: {
-      //       background: "orange",
-      //       color: "red",
-      //     },
-      //   },
-      //   light: {
-      //     body: {
-      //       background: "blue",
-      //       color: "white",
-      //     },
-      //   },
-      // },
-      // mode: "auto",
-      // },
-    }),
-  ],
+  connectors: [openlv()],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),
@@ -82,8 +54,6 @@ const trimAddress = (address: Address | undefined | null) => {
   return `${address.slice(0, 5)}...${address.slice(-4)}`;
 };
 
-let session: Session | undefined;
-
 const TestSign = () => {
   const {
     signMessage,
@@ -92,8 +62,11 @@ const TestSign = () => {
     isPending,
     reset: resetSignature,
   } = useSignMessage();
-  const { address } = useAccount();
+  const { address, connector } = useAccount();
   const chainId = useChainId();
+  const { phase } = useTryItDebug();
+  const sessionReady
+    = connector?.type !== "openLv" || phase === "connected";
 
   const {
     data: verificationResult,
@@ -113,18 +86,35 @@ const TestSign = () => {
           <div>Test a personal sign</div>
         </div>
         <button
+          type="button"
+          disabled={!sessionReady || isPending}
           onClick={() => {
             resetSignature();
             signMessage({ message: "Hello, world!" });
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1"
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1 disabled:opacity-50"
         >
           Sign Message
         </button>
       </div>
+      {connector?.type === "openLv" && !sessionReady && (
+        <p className="text-[var(--vocs-color_textSecondary)] text-sm">
+          Finish linking in the wallet tab (status must be Connected) before
+          signing.
+        </p>
+      )}
+      {connector?.type === "openLv" && sessionReady && (
+        <p className="text-[var(--vocs-color_textSecondary)] text-sm">
+          Sends
+          {" "}
+          <code className="text-xs">personal_sign</code>
+          {" "}
+          through OpenLV to your browser wallet in the other tab.
+        </p>
+      )}
       {isPending && (
         <div className="rounded-md vocs:border-primary vocs:bg-primary p-2 text-[var(--vocs-color_text)] text-sm">
-          ⏳ Waiting for signature... (Check your wallet)
+          Waiting for signature… (check your wallet)
         </div>
       )}
       {error && (
@@ -144,13 +134,12 @@ const TestSign = () => {
                 ? null
                 : (
                     <div
-                      className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${
-                        verificationResult
-                          ? "text-green-500"
-                          : "text-[var(--vocs-color_text)]"
+                      className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${verificationResult
+                        ? "text-green-500"
+                        : "text-[var(--vocs-color_text)]"
                       }`}
                     >
-                      {verificationResult ? "✓ Valid Signature" : "✗ Invalid Signature"}
+                      {verificationResult ? "Valid signature" : "Invalid signature"}
                     </div>
                   ))}
           {verificationError && (
@@ -170,90 +159,143 @@ const TestSign = () => {
 
 const ConnectComponent = () => {
   const walletClient = useClient();
-  const { data: connectorClient } = useConnectorClient();
   const connections = useConnections();
   const [url, setUrl] = useState<string | undefined>();
+  const [connecting, setConnecting] = useState(false);
+  const [walletSessionActive, setWalletSessionActive] = useState(false);
+  const debug = useTryItDebug();
+  const walletSessionRef = useRef<Session | undefined>(undefined);
+  const detachSessionRef = useRef<(() => void) | undefined>(undefined);
 
-  console.log("connectorClient", connectorClient);
-  console.log("connections", connections);
+  if (!walletClient) return <div>No wallet client found</div>;
 
-  if (!walletClient) return <div>No walletclient found</div>;
+  const disconnectWalletSession = async () => {
+    detachSessionRef.current?.();
+    detachSessionRef.current = undefined;
+    await walletSessionRef.current?.close();
+    walletSessionRef.current = undefined;
+    setWalletSessionActive(false);
+    debug.resetDebug();
+  };
 
   return (
     <div className="space-y-1 vocs:border-primary border-b pb-2">
       <div>
-        You can connect to a dApp by entering its connection URL and hitting
-        connect.
+        Connect as the wallet by pasting the dApp connection URL from the other
+        tab, then approve requests in your browser wallet.
       </div>
       <div className="flex items-center gap-2">
         <div className="grow">
           <input
             type="text"
             value={url}
-            className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1 placeholder:text-neutral-500"
+            className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border vocs:border-primary px-4 py-1 placeholder:text-neutral-500"
             onChange={e => setUrl(e.target.value)}
             placeholder="openlv://..."
+            disabled={connecting}
           />
         </div>
         <button
+          type="button"
+          disabled={connecting || !url}
           onClick={async () => {
             if (!url) return;
 
-            console.log("connecting to", url);
-            const client
-              = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
+            setConnecting(true);
+            await disconnectWalletSession();
 
-            session = await connectSession(
-              url,
-              async (message) => {
-                console.log("received message", message);
-                const { method } = message as { method: string; };
+            debug.setPhase("establishing");
+            debug.setPeer(peerInfoFromConnectionUrl("wallet", url));
+            debug.appendInfo("wallet", "Connecting to dApp session…", { url });
 
-                console.log("wc", walletClient);
+            try {
+              const client
+                = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
 
-                console.log("method", method);
+              const activeSession = await connectSession(
+                url,
+                shimWalletOnMessage(
+                  "wallet",
+                  async message =>
+                  // const { method } = message as { method: string; };
 
-                if (method === "eth_accounts") {
-                  const result = await client.request({
-                    method: "eth_accounts",
-                    params: [] as never,
-                  });
+                    client.request(message as never), // if (method === "eth_accounts") {
+                  //   return client.request({
+                  //     method: "eth_accounts",
+                  //     params: [] as never,
+                  //   });
+                  // }
 
-                  if (result) return result;
-                }
+                  // if (method === "eth_chainId") {
+                  //   return client.request({
+                  //     method: "eth_chainId",
+                  //     params: [] as never,
+                  //   });
+                  // }
 
-                if (method === "eth_chainId") {
-                  const result = await client.request({
-                    method: "eth_chainId",
-                    params: [] as never,
-                  });
+                  // if (method === "personal_sign") {
+                  //   return client.request(message as never);
+                  // }
 
-                  console.log("result from calling wallet", result);
+                  // return {
+                  //   error: {
+                  //     code: -32601,
+                  //     message: "Method not found",
+                  //   },
+                  // };
 
-                  return result;
-                }
+                  debug,
+                ),
+                webrtc(),
+              );
 
-                if (["personal_sign"].includes(method)) {
-                  const result = await client.request(message as never);
+              walletSessionRef.current = activeSession;
+              detachSessionRef.current = attachTryItSession(
+                activeSession,
+                "wallet",
+                debug,
+                { logRequests: false },
+              );
 
-                  console.log("result from calling wallet", result);
+              setWalletSessionActive(true);
 
-                  return result;
-                }
+              await activeSession.connect();
+              debug.setPhase("linked");
+              debug.appendInfo(
+                "wallet",
+                "Signaling handshake complete — waiting for WebRTC",
+              );
 
-                return { result: "success" };
-              },
-              webrtc(),
-            );
-            console.log("session", session);
-
-            await session.connect();
-            console.log("session connected", session);
+              await activeSession.waitForLink();
+              debug.setPhase("connected");
+            }
+            catch (error) {
+              debug.setPhase("error");
+              debug.appendInfo(
+                "wallet",
+                "Connection failed",
+                error instanceof Error
+                  ? { message: error.message }
+                  : error,
+              );
+            }
+            finally {
+              setConnecting(false);
+            }
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border border-[var(--vocs-color_codeInlineBorder)] px-4 py-1"
+          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border vocs:border-primary px-4 py-1 disabled:opacity-50"
         >
-          Connect
+          {connecting ? "Connecting…" : "Connect"}
         </button>
+        {walletSessionActive && (
+          <button
+            type="button"
+            onClick={() => disconnectWalletSession()}
+            className="rounded-lg border vocs:border-primary px-3 py-1 text-sm"
+          >
+            End session
+          </button>
+        )}
       </div>
     </div>
   );
@@ -262,6 +304,7 @@ const ConnectComponent = () => {
 const Connected = () => {
   const { disconnect } = useDisconnect();
   const { address, connector } = useAccount();
+  const debug = useTryItDebug();
 
   return (
     <div className="rounded-lg vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-4 py-4">
@@ -276,11 +319,14 @@ const Connected = () => {
           )}
           <div>
             Connected to
+            {" "}
             {trimAddress(address)}
           </div>
         </div>
         <button
+          type="button"
           onClick={() => {
+            debug.resetDebug();
             disconnect();
           }}
           className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1"
@@ -288,8 +334,15 @@ const Connected = () => {
           Disconnect
         </button>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-3">
+        <TryItSessionPanel />
         {connector?.type !== "openLv" && <ConnectComponent />}
+        {connector?.type === "openLv" && (
+          <p className="text-[var(--vocs-color_textSecondary)] text-sm">
+            dApp mode — connect a wallet in the other tab and paste your
+            connection URL there. Expand Wire log to trace JSON-RPC both ways.
+          </p>
+        )}
         <TestSign />
       </div>
     </div>
@@ -301,9 +354,10 @@ const ConnectorPreview = ({ connector }: { connector: Connector; }) => {
 
   return (
     <button
+      type="button"
       className="hover:!bg-[var(--vocs-color_codeHighlightBackground)] inline-flex translate-y-0.5 items-center gap-2 rounded-lg border vocs:border-primary px-2 py-0.5"
       onClick={() => {
-        connect({ connector: connector });
+        connect({ connector });
       }}
     >
       {connector.icon && (
@@ -333,10 +387,11 @@ const Connectors = () => {
       <div className="mt-4 space-y-2 p-2">
         <ul className="mx-auto w-full max-w-xs space-y-2">
           {connectors.map(connector => (
-            <li key={connector.id} className="">
+            <li key={connector.id}>
               <button
+                type="button"
                 onClick={() => {
-                  connect({ connector: connector });
+                  connect({ connector });
                 }}
                 className={classNames(
                   "!bg-[var(--vocs-color_codeBlockBackground)] flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm",
@@ -368,9 +423,8 @@ const Connectors = () => {
       </div>
       <div className="w-full rounded-b-md vocs:border-primary border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
         <div>
-          The above is a sample wagmi snippet. You can use it to test out openlv
-          right here!
-          {" "}
+          The above is a sample wagmi snippet. You can use it to test OpenLV
+          right here.
           <br />
           <div>
             <div>Steps:</div>
@@ -386,7 +440,7 @@ const Connectors = () => {
                   <ConnectorPreview connector={openLvConnector} />
                 )}
                 {" "}
-                on one and
+                on one tab and
                 {" "}
                 {firstNonOpenLvConnector
                   ? (
@@ -398,8 +452,9 @@ const Connectors = () => {
                 {" "}
                 on the other
               </li>
-              <li>Copy the connection URL</li>
-              <li>Watch the magic happen</li>
+              <li>Copy the connection URL from the dApp tab</li>
+              <li>Paste it on the wallet tab and connect</li>
+              <li>Expand the message log to inspect JSON-RPC in both directions</li>
             </ul>
           </div>
         </div>
@@ -408,11 +463,27 @@ const Connectors = () => {
   );
 };
 
-export const Inner = () => {
+const Inner = () => {
   const { isConnected } = useAccount();
+  const debug = useTryItDebug();
 
   return (
     <div className="space-y-2">
+      <OpenLvDappMonitor
+        onSessionBound={(activeSession) => {
+          const handshake = activeSession.getHandshakeParameters();
+          const connectionUrl = encodeConnectionURL(handshake);
+
+          debug.setPeer({
+            role: "dapp",
+            connectionUrl,
+            sessionId: handshake.sessionId,
+            protocol: handshake.p,
+            signalingServer: handshake.s,
+          });
+          debug.appendInfo("dapp", "Connection URL ready", { connectionUrl });
+        }}
+      />
       {match(isConnected)
         .with(true, () => <Connected />)
         .with(false, () => <Connectors />)
@@ -424,7 +495,9 @@ export const Inner = () => {
 export const Outter = () => (
   <QueryClientProvider client={queryClient}>
     <WagmiProvider config={config}>
-      <Inner />
+      <TryItDebugProvider>
+        <Inner />
+      </TryItDebugProvider>
     </WagmiProvider>
   </QueryClientProvider>
 );

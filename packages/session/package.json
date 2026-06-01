@@ -26,10 +26,10 @@
       "import": "./dist/index.js",
       "default": "./dist/index.js"
     },
-    "./provider": {
-      "types": "./dist/provider.d.ts",
-      "import": "./dist/provider.js",
-      "default": "./dist/provider.js"
+    "./wallet": {
+      "types": "./dist/wallet.d.ts",
+      "import": "./dist/wallet.js",
+      "default": "./dist/wallet.js"
     }
   },
   "main": "./dist/index.js",

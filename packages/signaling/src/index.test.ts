@@ -1,8 +1,8 @@
 import { generateKeyPair } from "@openlv/core/encryption";
 import { describe, expect, it } from "vitest";
 
-import type { CreateSignalLayerFn, SignalBaseProperties } from "./base.js";
 import { gundb } from "./gundb/index.js";
+import type { CreateSignalLayerFn, SignalBaseProperties } from "./index.js";
 import { mqtt } from "./mqtt/index.js";
 import { ntfy } from "./ntfy/index.js";
 import { log } from "./utils/log.js";

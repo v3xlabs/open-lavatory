@@ -83,9 +83,7 @@ export const decodeConnectionURL = (
 
     // Validate shared key format (32 hex characters)
     if (!/^[0-9a-f]{32}$/.test(k)) {
-      throw new Error(
-        `Invalid shared key format: must be 32 hex characters, received: ${k}`,
-      );
+      throw new Error("Invalid shared key format: must be 32 lowercase hex characters");
     }
 
     return {
@@ -102,8 +100,9 @@ export const decodeConnectionURL = (
     const errorMessage
       = error instanceof Error ? error.message : "Unknown error";
 
-    throw new Error(
-      `Failed to parse URL: ${url}. Original error: ${errorMessage}`,
-    );
+    // Strip query string so handshake secrets (k) are not exposed in error messages
+    const safeUrl = url.includes("?") ? url.slice(0, url.indexOf("?")) + "?[redacted]" : url;
+
+    throw new Error(`Failed to parse URL: ${safeUrl}. Original error: ${errorMessage}`);
   }
 };

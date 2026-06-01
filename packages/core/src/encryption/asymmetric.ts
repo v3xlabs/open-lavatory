@@ -92,7 +92,7 @@ export const createDecryptionKey = async (
     toString: () => serializedSecretKey,
     decrypt: async (message: string) => {
       if (!message) {
-        return "";
+        throw new Error("Cannot decrypt an empty payload");
       }
 
       const { ephemeralPublicKey, nonce, ciphertext }

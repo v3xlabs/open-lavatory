@@ -97,6 +97,14 @@ You can find the specification set in [docs/specs](./docs/specs), starting with 
 
 We accept contributions via pull requests. Please ensure to push changesets for your changes. Also see issues to comment on RFCs.
 
+```bash
+pnpm install
+pnpm build
+cd docs && pnpm dev
+```
+
+This will get you a build of all required packages, and load up a local development environment of the documentation site. The documentation site will be available at [localhost:5173](http://localhost:5173), and contains a working example of the Modal via the [TryItOut](./docs/components/TryItOut.tsx) component.
+
 ## Attribution
 
 The initial proof of concept was built in 48 hours at the [W3PN Hacks 2025](https://hackathon.web3privacy.info) hackathon in Berlin

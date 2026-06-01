@@ -2,7 +2,6 @@
 /** biome-ignore-all lint/performance/noBarrelFile: package entrypoint */
 
 export * from "./make.js";
-export * from "./messages/index.js";
+export * from "./messages.js";
 export * from "./session.js";
-export * from "./settings.js";
 export * from "./url/index.js";

@@ -1,7 +1,7 @@
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 
-import type { CreateSignalLayerFn } from "../base.js";
+import type { CreateSignalLayerFn } from "../index.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 import { parseNtfyUrl } from "./url.js";

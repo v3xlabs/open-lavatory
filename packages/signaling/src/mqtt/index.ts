@@ -1,7 +1,7 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
 import { createMqtt, type MqttClient } from "websocket-mqtt";
 
-import type { CreateSignalLayerFn, SignalBaseProperties } from "../base.js";
+import type { CreateSignalLayerFn, SignalBaseProperties } from "../index.js";
 import { createSignalingLayer } from "../index.js";
 import { log } from "../utils/log.js";
 

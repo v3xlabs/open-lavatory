@@ -2,7 +2,7 @@ import { generateKeyPair } from "@openlv/core/encryption";
 import { EventEmitter } from "eventemitter3";
 import { describe, expect, it } from "vitest";
 
-import { TRANSPORT_STATE } from "./layer.js";
+import { TRANSPORT_STATE } from "./index.js";
 import { webrtc } from "./webrtc/index.js";
 
 describe("Transport", () => {

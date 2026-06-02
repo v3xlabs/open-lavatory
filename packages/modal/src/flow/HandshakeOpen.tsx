@@ -5,11 +5,7 @@ import { copyToClipboard } from "../hooks/useClipboard.js";
 import { useSession } from "../hooks/useSession.js";
 import { useTranslation } from "../utils/i18n.js";
 
-const generateQRCode = (uriValue: string) => {
-  const x = encodeQR(uriValue, "svg", { optimize: true, encoding: "byte", border: 2 });
-
-  return x;
-};
+const generateQRCode = (uriValue: string) => encodeQR(uriValue, "svg", { optimize: true, encoding: "byte", border: 2 });
 
 export const HandshakeOpen = () => {
   const { t } = useTranslation();

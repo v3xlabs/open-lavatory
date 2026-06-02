@@ -55,7 +55,7 @@
     "eventemitter3": "^5.0.1",
     "lucide-solid": "^0.574.0",
     "ox": "^0.9.14",
-    "qrcode-generator": "^1.5.0",
+    "qr": "^0.6.0",
     "solid-element": "^1.9.1",
     "solid-icons": "^1.2.0",
     "solid-js": "^1.9.9",

@@ -64,27 +64,27 @@ Open Lavatory Protocol eliminates centralized relay servers by enabling direct p
 
 This repository includes the following packages:
 
-| Package                                         | Description                                               |
-| ----------------------------------------------- | --------------------------------------------------------- |
-| [@openlv/session](./packages/session)           | a session represents a connection between dApp and wallet |
-| [@openlv/signaling](./packages/signaling)       | Implementation of various signaling layers                |
-| [@openlv/transport](./packages/transport)       | Implementation of various transport layers                |
-| [@openlv/provider](./packages/provider)         | EIP-1193 compatible provider                              |
-| [@openlv/core](./packages/core)                 | shared types and utilities                                |
-| [@openlv/modal](./packages/modal)               | preact modal for dApp connection management               |
-| [@openlv/connector](./packages/connector)       | Wagmi connector for dApp integration                      |
-| [@openlv/react-native](./packages/react-native) | react-native compatibility                                |
-| [WIP] [extension](./packages/extension)         | Browser extension for improved dApp support               |
+| Package                                                                                                                                                             | Description                                               |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [@openlv/session](./packages/session) [![npm](https://img.shields.io/npm/v/@openlv/session.svg)](https://www.npmjs.com/package/@openlv/session)                     | a session represents a connection between dApp and wallet |
+| [@openlv/signaling](./packages/signaling) [![npm](https://img.shields.io/npm/v/@openlv/signaling.svg)](https://www.npmjs.com/package/@openlv/signaling)             | Implementation of various signaling layers                |
+| [@openlv/transport](./packages/transport) [![npm](https://img.shields.io/npm/v/@openlv/transport.svg)](https://www.npmjs.com/package/@openlv/transport)             | Implementation of various transport layers                |
+| [@openlv/provider](./packages/provider) [![npm](https://img.shields.io/npm/v/@openlv/provider.svg)](https://www.npmjs.com/package/@openlv/provider)                 | EIP-1193 compatible provider                              |
+| [@openlv/core](./packages/core) [![npm](https://img.shields.io/npm/v/@openlv/core.svg)](https://www.npmjs.com/package/@openlv/core)                                 | shared types and utilities                                |
+| [@openlv/modal](./packages/modal) [![npm](https://img.shields.io/npm/v/@openlv/modal.svg)](https://www.npmjs.com/package/@openlv/modal)                             | solid-js modal for dApp connection management               |
+| [@openlv/connector](./packages/connector) [![npm](https://img.shields.io/npm/v/@openlv/connector.svg)](https://www.npmjs.com/package/@openlv/connector)             | Wagmi connector for dApp integration                      |
+| [@openlv/react-native](./packages/react-native) [![npm](https://img.shields.io/npm/v/@openlv/react-native.svg)](https://www.npmjs.com/package/@openlv/react-native) | react-native compatibility                                |
+| [WIP] [extension](./packages/extension)                                                                                                                             | Browser extension for improved dApp support               |
 
-| Examples                                | Description                                               |
-| --------------------------------------- | --------------------------------------------------------- |
-| [sandbox](./examples/sandbox)           | Interactive testing environment with debug features       |
-| [wallet](./examples/react-wallet)       | Sample wallet implementation for testing                  |
-| [dapp](./examples/react-dapp)           | Wagmi-based dApp sandbox for end-to-end testing           |
-| [react-native](./examples/react-native) | React Native wallet implementation for end-to-end testing |
-| [Safe{Wallet} Web Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6954)     | Safe{Wallet} Web App open-lavatory implementation         |
-| [Safe{Wallet} Mobile Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6956)  | Safe{Wallet} Mobile App open-lavatory implementation      |
-| [docs](./docs)                          | Documentation includes a running wagmi demo               |
+| Examples                                                                                            | Description                                               |
+| --------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| [sandbox](./examples/sandbox)                                                                       | Interactive testing environment with debug features       |
+| [wallet](./examples/react-wallet)                                                                   | Sample wallet implementation for testing                  |
+| [dapp](./examples/react-dapp)                                                                       | Wagmi-based dApp sandbox for end-to-end testing           |
+| [react-native](./examples/react-native)                                                             | React Native wallet implementation for end-to-end testing |
+| [Safe{Wallet} Web Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6954)    | Safe{Wallet} Web App open-lavatory implementation         |
+| [Safe{Wallet} Mobile Implementation](https://github.com/safe-global/safe-wallet-monorepo/pull/6956) | Safe{Wallet} Mobile App open-lavatory implementation      |
+| [docs](./docs)                                                                                      | Documentation includes a running wagmi demo               |
 
 ## Specification
 

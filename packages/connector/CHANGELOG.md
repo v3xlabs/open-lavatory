@@ -1,5 +1,44 @@
 # @openlv/connector
 
+## 0.0.1
+
+### Patch Changes
+
+- f76e2bc: Update connector icon
+- f76e2bc: Migrate storage ownership from connector to provider
+- f76e2bc: Introduce webrtc transport, rework session & provider
+- f76e2bc: Reworked modal to solid-js
+- f76e2bc: Cleanup legacy encryption & icon files & restructure of modal connection flow.
+- f76e2bc: Removed @openlv/transport as dependency
+- f76e2bc: Initial package publish
+- f76e2bc: Cleanup package.json
+- f76e2bc: Update release
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+  - @openlv/core@0.0.1
+  - @openlv/modal@0.0.1
+  - @openlv/provider@0.0.1
+
 ## 0.0.1-beta.13
 
 ### Patch Changes

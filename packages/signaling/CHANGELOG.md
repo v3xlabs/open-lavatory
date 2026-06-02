@@ -1,5 +1,30 @@
 # @openlv/signaling
 
+## 0.0.1
+
+### Patch Changes
+
+- f76e2bc: Introduce webrtc transport, rework session & provider
+- f76e2bc: Update MQTT to not retry by default
+- f76e2bc: Linting
+- f76e2bc: Initial package publish
+- f76e2bc: Migrate mqtt.js to websocket-mqtt
+- f76e2bc: Introduce session linking stage
+- f76e2bc: Cleanup package.json
+- f76e2bc: Update release
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+  - @openlv/core@0.0.1
+
 ## 0.0.1-beta.9
 
 ### Patch Changes

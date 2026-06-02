@@ -1,5 +1,23 @@
 # @openlv/react-native
 
+## 0.0.1
+
+### Patch Changes
+
+- f76e2bc: Introduce react-native compatability
+- f76e2bc: Linting
+- f76e2bc: Upgrade get-random-values to version 2
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+  - @openlv/session@0.0.1
+
 ## 0.0.1-beta.5
 
 ### Patch Changes

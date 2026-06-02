@@ -1,5 +1,50 @@
 # @openlv/modal
 
+## 0.0.1
+
+### Patch Changes
+
+- f76e2bc: Move qrcode-generator to dependencies
+- f76e2bc: Migrate storage ownership from connector to provider
+- f76e2bc: Introduce webrtc transport, rework session & provider
+- f76e2bc: Update styling & ui components
+- f76e2bc: Reworked modal to solid-js
+- f76e2bc: Initial package publish
+- f76e2bc: Cleanup legacy encryption & icon files & restructure of modal connection flow.
+- f76e2bc: Update imports
+- f76e2bc: Update settings UI
+- f76e2bc: Introduce i18n for en, nl, se, fr, es, ar, fe, he
+- f76e2bc: Fix bug when resizing the window
+- f76e2bc: Added transport & signaling configs to the connector
+- f76e2bc: Introduce session linking stage
+- f76e2bc: Added custom font support to themes
+- f76e2bc: Update icons in modal
+- f76e2bc: Cleanup package.json
+- f76e2bc: Introduce user-configurable theme mode in the settings menu
+- f76e2bc: Update release
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+  - @openlv/core@0.0.1
+  - @openlv/provider@0.0.1
+  - @openlv/signaling@0.0.1
+  - @openlv/session@0.0.1
+
 ## 0.0.1-beta.12
 
 ### Patch Changes

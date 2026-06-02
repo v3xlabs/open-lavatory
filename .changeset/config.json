@@ -12,12 +12,10 @@
     "@openlv/example-*",
     "@openlv/extension",
     "@openlv/sandbox",
-    "@openlv/tests",
     "docs",
     "openlv"
   ],
   "initialVersions": {
-    "docs": "0.0.0",
     "@openlv/example-dapp": "0.0.0",
     "@openlv/sandbox": "0.0.0",
     "@openlv/example-wallet": "0.0.0",

@@ -1,5 +1,11 @@
 # @openlv/signaling
 
+## 0.0.2
+
+### Patch Changes
+
+- b491ecd: Refactor signaling type naming
+
 ## 0.0.1
 
 ### Patch Changes

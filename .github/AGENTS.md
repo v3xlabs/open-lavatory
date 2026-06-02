@@ -160,7 +160,7 @@ Behavioral constraints to respect:
 
 ### `@openlv/provider`
 - Provider wraps session and emits EIP-1193-compatible events
-- Settings persistence + migration handled in `src/storage/version.ts` (zod schemas + migration chain)
+- Settings persistence + migration handled in `src/storage/version.ts` (validation + migration chain)
 - Storage schema versioning is a compatibility boundary; migration changes require tests
 
 ### `@openlv/session`

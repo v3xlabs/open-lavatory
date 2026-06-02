@@ -1,7 +1,7 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
 import Gun, { type IGun, type IGunInstance } from "gun";
 
-import { createSignalingLayer, type CreateSignalLayerFn } from "../base.js";
+import { createSignalingLayer, type CreateSignalLayerFn } from "../index.js";
 import { log } from "../utils/log.js";
 
 /**

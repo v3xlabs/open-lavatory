@@ -1,0 +1,643 @@
+"use client";
+
+import {
+  type Session,
+  SESSION_STATE,
+  type SessionStateObject,
+} from "@openlv/session";
+import {
+  createContext,
+  type ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useId,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { useAccount } from "wagmi";
+
+export type TryItRole = "dapp" | "wallet";
+
+export type ConnectionPhase =
+  | "idle"
+  | "establishing"
+  | "linked"
+  | "connected"
+  | "error";
+
+export type DappPeerInfo = {
+  name?: string;
+  url?: string;
+  icon?: string;
+};
+
+export type TryItPeerInfo = {
+  role: TryItRole;
+  connectionUrl?: string;
+  sessionId?: string;
+  protocol?: string;
+  signalingServer?: string;
+  dapp?: DappPeerInfo;
+};
+
+export type TryItLogEntry = {
+  logId: string;
+  at: number;
+  role: TryItRole;
+  direction: "in" | "out";
+  kind: "rpc" | "session" | "info";
+  method?: string;
+  summary: string;
+  payload?: unknown;
+};
+
+export type TryItSessionActions = {
+  appendEntry: (entry: Omit<TryItLogEntry, "logId" | "at">) => void;
+  setPhase: (phase: ConnectionPhase) => void;
+  setPeer: (peer: TryItPeerInfo | null) => void;
+  clearLog: () => void;
+  resetSession: () => void;
+};
+
+type TryItSessionState = {
+  phase: ConnectionPhase;
+  peer: TryItPeerInfo | null;
+  entries: TryItLogEntry[];
+};
+
+type TryItSessionContextValue = TryItSessionState & TryItSessionActions;
+
+const ActionsContext = createContext<TryItSessionActions | null>(null);
+const StateContext = createContext<TryItSessionState | null>(null);
+
+const MAX_LOG_ENTRIES = 200;
+
+const nextLogId = () =>
+  `${Date.now().toString(36)}-${Math.random().toString(36)
+    .slice(2, 8)}`;
+
+const sessionStatusLabel = (status: SessionStateObject["status"]) => {
+  switch (status) {
+    case SESSION_STATE.CREATED: {
+      return "created";
+    }
+    case SESSION_STATE.SIGNALING: {
+      return "signaling";
+    }
+    case SESSION_STATE.READY: {
+      return "ready";
+    }
+    case SESSION_STATE.LINKING: {
+      return "linking";
+    }
+    case SESSION_STATE.CONNECTED: {
+      return "connected";
+    }
+    case SESSION_STATE.DISCONNECTED: {
+      return "disconnected";
+    }
+    default: {
+      return status;
+    }
+  }
+};
+
+const sessionToPhase = (
+  status: SessionStateObject["status"],
+): ConnectionPhase => {
+  if (status === SESSION_STATE.CONNECTED) return "connected";
+
+  if (status === SESSION_STATE.DISCONNECTED) return "error";
+
+  if (
+    status === SESSION_STATE.SIGNALING
+    || status === SESSION_STATE.READY
+    || status === SESSION_STATE.LINKING
+    || status === SESSION_STATE.CREATED
+  ) {
+    return "establishing";
+  }
+
+  return "idle";
+};
+
+const formatPayload = (payload: unknown) => {
+  try {
+    return JSON.stringify(payload, null, 2);
+  }
+  catch {
+    return String(payload);
+  }
+};
+
+export const TryItSessionProvider = ({ children }: { children: ReactNode; }) => {
+  const [phase, setPhase] = useState<ConnectionPhase>("idle");
+  const [peer, setPeer] = useState<TryItPeerInfo | null>(null);
+  const [entries, setEntries] = useState<TryItLogEntry[]>([]);
+
+  const appendEntry = useCallback(
+    (entry: Omit<TryItLogEntry, "logId" | "at">) => {
+      setEntries(prev => [
+        { ...entry, logId: nextLogId(), at: Date.now() },
+        ...prev,
+      ].slice(0, MAX_LOG_ENTRIES));
+    },
+    [],
+  );
+
+  const clearLog = useCallback(() => setEntries([]), []);
+
+  const resetSession = useCallback(() => {
+    setPhase("idle");
+    setPeer(null);
+    setEntries([]);
+  }, []);
+
+  const actions = useMemo(
+    () => ({ appendEntry, setPhase, setPeer, clearLog, resetSession }),
+    [appendEntry, clearLog, resetSession],
+  );
+
+  const state = useMemo(
+    () => ({ phase, peer, entries }),
+    [phase, peer, entries],
+  );
+
+  return (
+    <ActionsContext.Provider value={actions}>
+      <StateContext.Provider value={state}>{children}</StateContext.Provider>
+    </ActionsContext.Provider>
+  );
+};
+
+export const useTryItSessionActions = (): TryItSessionActions => {
+  const ctx = useContext(ActionsContext);
+
+  if (!ctx) {
+    throw new Error(
+      "useTryItSessionActions must be used within TryItSessionProvider",
+    );
+  }
+
+  return ctx;
+};
+
+export const useTryItSession = (): TryItSessionContextValue => {
+  const actions = useTryItSessionActions();
+  const state = useContext(StateContext);
+
+  if (!state) {
+    throw new Error("useTryItSession must be used within TryItSessionProvider");
+  }
+
+  return { ...state, ...actions };
+};
+
+const logRpc = (
+  actions: TryItSessionActions,
+  role: TryItRole,
+  direction: "in" | "out",
+  payload: unknown,
+  method?: string,
+  error?: boolean,
+) => {
+  const arrow = direction === "in" ? "←" : "→";
+  const suffix = error ? " (error)" : "";
+
+  actions.appendEntry({
+    role,
+    direction,
+    kind: "rpc",
+    method,
+    summary: method
+      ? `${arrow} ${method}${suffix}`
+      : `${arrow} ${error ? "error" : (direction === "in" ? "response" : "request")}`,
+    payload,
+  });
+};
+
+export const attachTryItSession = (
+  session: Session,
+  role: TryItRole,
+  actions: TryItSessionActions,
+  options?: { logRequests?: boolean; },
+) => {
+  let lastSessionLogKey = "";
+
+  const logSessionState = (state?: SessionStateObject) => {
+    if (!state) return;
+
+    actions.setPhase(sessionToPhase(state.status));
+
+    const signaling = state.signaling?.state;
+    const logKey = `${state.status}:${signaling ?? ""}`;
+
+    if (logKey === lastSessionLogKey) return;
+
+    lastSessionLogKey = logKey;
+
+    actions.appendEntry({
+      role,
+      direction: "in",
+      kind: "session",
+      summary: signaling
+        ? `Session ${sessionStatusLabel(state.status)} · ${signaling}`
+        : `Session ${sessionStatusLabel(state.status)}`,
+      payload: state,
+    });
+  };
+
+  const onState = (state?: SessionStateObject) => logSessionState(state);
+  const onRequest = (payload: object | string) => {
+    const req = payload as { method?: string; };
+
+    logRpc(actions, role, "in", payload, req.method);
+  };
+
+  session.emitter.on("state_change", onState);
+
+  if (options?.logRequests !== false) {
+    session.emitter.on("request", onRequest);
+  }
+
+  logSessionState(session.getState());
+
+  return () => {
+    session.emitter.off("state_change", onState);
+
+    if (options?.logRequests !== false) {
+      session.emitter.off("request", onRequest);
+    }
+  };
+};
+
+export const shimWalletOnMessage = (
+  role: TryItRole,
+  handler: (message: object) => Promise<object | string>,
+  actions: TryItSessionActions,
+) => async (message: object) => {
+  const req = message as { method?: string; };
+
+  logRpc(actions, role, "in", message, req.method);
+
+  try {
+    const response = await handler(message);
+
+    logRpc(actions, role, "out", response, req.method);
+
+    return response;
+  }
+  catch (error) {
+    logRpc(
+      actions,
+      role,
+      "out",
+      error instanceof Error ? { message: error.message } : error,
+      req.method,
+      true,
+    );
+    throw error;
+  }
+};
+
+export const peerInfoFromConnectionUrl = (
+  role: TryItRole,
+  connectionUrl: string,
+): TryItPeerInfo => {
+  try {
+    const parsed = new URL(connectionUrl);
+
+    return {
+      role,
+      connectionUrl,
+      sessionId: parsed.username || undefined,
+      protocol: parsed.searchParams.get("p") ?? undefined,
+      signalingServer: parsed.searchParams.get("s") ?? undefined,
+    };
+  }
+  catch {
+    return { role, connectionUrl };
+  }
+};
+
+export type DappProviderShim = {
+  getSession: () => Session | undefined;
+  on: (
+    event: "session_started",
+    handler: (session: Session) => void,
+  ) => void;
+  off: (
+    event: "session_started",
+    handler: (session: Session) => void,
+  ) => void;
+  request: (args: JsonRpcCall) => Promise<unknown>;
+};
+
+export type JsonRpcCall = { method: string; params?: unknown; };
+
+const phaseLabel: Record<ConnectionPhase, string> = {
+  idle: "Not connected",
+  establishing: "Connecting…",
+  linked: "Opening channel",
+  connected: "Connected",
+  error: "Failed",
+};
+
+const phaseDotClass: Record<ConnectionPhase, string> = {
+  idle: "bg-[var(--vocs-color_textSecondary)]",
+  establishing: "bg-[var(--vocs-color_textSecondary)] animate-pulse",
+  linked: "bg-[var(--vocs-color_textSecondary)] animate-pulse",
+  connected: "bg-[var(--vocs-color_text)]",
+  error: "bg-[var(--vocs-color_textSecondary)]",
+};
+
+const peerMetaLine = (peer: TryItPeerInfo) => {
+  const parts: string[] = [];
+
+  if (peer.sessionId) parts.push(peer.sessionId);
+
+  if (peer.protocol) parts.push(peer.protocol);
+
+  if (peer.dapp?.name) parts.push(peer.dapp.name);
+
+  return parts.join(" · ");
+};
+
+const ConnectionStatusBar = () => {
+  const { phase, peer } = useTryItSession();
+  const [copied, setCopied] = useState(false);
+
+  if (phase === "idle" && !peer) return null;
+
+  const connectionUrl
+    = peer?.role === "dapp" ? peer.connectionUrl : undefined;
+
+  const copyUrl = async () => {
+    if (!connectionUrl) return;
+
+    await navigator.clipboard.writeText(connectionUrl);
+    setCopied(true);
+    globalThis.setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="flex gap-3 rounded-lg border vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-3 py-2.5">
+      <span
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${phaseDotClass[phase]}`}
+        aria-hidden
+      />
+      <div className="min-w-0 flex-1">
+        <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+          <span className="font-medium">{phaseLabel[phase]}</span>
+          {peer && (
+            <span className="text-xs text-[var(--vocs-color_textSecondary)]">
+              {peer.role === "dapp" ? "dApp" : "Wallet"}
+            </span>
+          )}
+        </div>
+        {peer && peerMetaLine(peer) && (
+          <p className="mt-0.5 truncate font-mono text-xs text-[var(--vocs-color_textSecondary)]">
+            {peerMetaLine(peer)}
+          </p>
+        )}
+        {connectionUrl && (
+          <div className="mt-1.5 flex items-center gap-2">
+            <p
+              className="min-w-0 flex-1 truncate font-mono text-xs text-[var(--vocs-color_textSecondary)]"
+              title={connectionUrl}
+            >
+              {connectionUrl}
+            </p>
+            <button
+              type="button"
+              onClick={() => copyUrl()}
+              className="shrink-0 rounded-md border vocs:border-primary px-2 py-0.5 text-xs hover:bg-[var(--vocs-color_codeHighlightBackground)]"
+            >
+              {copied ? "Copied" : "Copy"}
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+const LogRow = ({
+  entry,
+  expanded,
+  onToggle,
+}: {
+  entry: TryItLogEntry;
+  expanded: boolean;
+  onToggle: () => void;
+}) => {
+  const hasPayload = entry.payload !== undefined;
+  const time = new Date(entry.at).toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  });
+
+  return (
+    <div className="text-xs">
+      <button
+        type="button"
+        disabled={!hasPayload}
+        onClick={onToggle}
+        className={[
+          "flex w-full items-baseline gap-2 px-3 py-2 text-left",
+          hasPayload && "hover:bg-[var(--vocs-color_codeHighlightBackground)]",
+        ].filter(Boolean).join(" ")}
+      >
+        <time className="shrink-0 tabular-nums text-[var(--vocs-color_textSecondary)]">
+          {time}
+        </time>
+        <span className="shrink-0 uppercase text-[var(--vocs-color_textSecondary)]">
+          {entry.role}
+        </span>
+        <span className="min-w-0 flex-1 truncate font-mono">{entry.summary}</span>
+        {hasPayload && (
+          <span className="text-[var(--vocs-color_textSecondary)]">
+            {expanded ? "−" : "+"}
+          </span>
+        )}
+      </button>
+      {expanded && hasPayload && (
+        <pre className="border-t vocs:border-primary bg-[var(--vocs-color_codeTitleBackground)] px-3 py-2 font-mono text-[11px] whitespace-pre-wrap break-all text-[var(--vocs-color_textSecondary)]">
+          {formatPayload(entry.payload)}
+        </pre>
+      )}
+    </div>
+  );
+};
+
+const MessageLogPanel = () => {
+  const listId = useId();
+  const { entries, clearLog } = useTryItSession();
+  const [open, setOpen] = useState(false);
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+
+  if (entries.length === 0) return null;
+
+  return (
+    <div className="overflow-hidden rounded-lg border vocs:border-primary">
+      <div className="flex items-center gap-2 bg-[var(--vocs-color_codeBlockBackground)] px-3 py-2">
+        <button
+          type="button"
+          onClick={() => setOpen(v => !v)}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm"
+        >
+          <span
+            className="text-[var(--vocs-color_textSecondary)]"
+            style={{ transform: open ? "rotate(90deg)" : undefined }}
+            aria-hidden
+          >
+            ›
+          </span>
+          <span className="font-medium">Wire log</span>
+          <span className="rounded-full border vocs:border-primary px-2 py-0.5 font-mono text-xs tabular-nums text-[var(--vocs-color_textSecondary)]">
+            {entries.length}
+          </span>
+        </button>
+        {open && (
+          <button
+            type="button"
+            onClick={clearLog}
+            className="text-xs text-[var(--vocs-color_textSecondary)] hover:text-[var(--vocs-color_text)]"
+          >
+            Clear
+          </button>
+        )}
+      </div>
+      {open && (
+        <ul
+          id={listId}
+          className="max-h-72 overflow-y-auto border-t vocs:border-primary"
+        >
+          {entries.map((entry, i) => (
+            <li
+              key={entry.logId}
+              className={
+                i < entries.length - 1 ? "border-b vocs:border-primary" : undefined
+              }
+            >
+              <LogRow
+                entry={entry}
+                expanded={expandedId === entry.logId}
+                onToggle={() =>
+                  setExpandedId(c =>
+                    (c === entry.logId ? null : entry.logId),
+                  )}
+              />
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+};
+
+export const TryItSessionPanel = () => {
+  const { phase, peer, entries } = useTryItSession();
+
+  if (phase === "idle" && !peer && entries.length === 0) return null;
+
+  return (
+    <div className="flex flex-col gap-2">
+      <ConnectionStatusBar />
+      <MessageLogPanel />
+    </div>
+  );
+};
+
+export const OpenLvDappMonitor = ({
+  onSessionBound,
+}: {
+  onSessionBound?: (session: Session) => void;
+}) => {
+  const { connector, isConnected } = useAccount();
+  const actions = useTryItSessionActions();
+  const onBoundRef = useRef(onSessionBound);
+
+  onBoundRef.current = onSessionBound;
+  const detachRef = useRef<(() => void) | undefined>(undefined);
+
+  useEffect(() => {
+    if (!isConnected || connector?.type !== "openLv") {
+      detachRef.current?.();
+      detachRef.current = undefined;
+
+      return;
+    }
+
+    let cancelled = false;
+    let restoreRequest: DappProviderShim["request"] | undefined;
+
+    const wire = async () => {
+      const provider = (await connector.getProvider()) as DappProviderShim;
+
+      if (cancelled) return;
+
+      const bindSession = (session: Session) => {
+        detachRef.current?.();
+        detachRef.current = attachTryItSession(session, "dapp", actions);
+        onBoundRef.current?.(session);
+      };
+
+      const onStarted = (session: Session) => {
+        actions.setPhase("establishing");
+        bindSession(session);
+      };
+
+      provider.on("session_started", onStarted);
+      const existing = provider.getSession();
+
+      if (existing) bindSession(existing);
+
+      restoreRequest = provider.request.bind(provider);
+      provider.request = async (args: JsonRpcCall) => {
+        logRpc(actions, "dapp", "out", args, args.method);
+
+        try {
+          const result = await restoreRequest!(args);
+
+          logRpc(actions, "dapp", "in", result, args.method);
+
+          return result;
+        }
+        catch (error) {
+          logRpc(
+            actions,
+            "dapp",
+            "in",
+            error instanceof Error ? { message: error.message } : error,
+            args.method,
+            true,
+          );
+          throw error;
+        }
+      };
+
+      return () => {
+        provider.off("session_started", onStarted);
+
+        if (restoreRequest) provider.request = restoreRequest;
+      };
+    };
+
+    let unwire: (() => void) | undefined;
+
+    wire().then((fn) => { unwire = fn; });
+
+    return () => {
+      cancelled = true;
+      unwire?.();
+      detachRef.current?.();
+      detachRef.current = undefined;
+    };
+  }, [isConnected, connector, actions]);
+
+  return null;
+};

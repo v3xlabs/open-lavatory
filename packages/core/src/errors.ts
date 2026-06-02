@@ -1,11 +1,11 @@
-import packageJson from "../../package.json" with { type: "json" };
+import packageJson from "../package.json" with { type: "json" };
 
 const version = `openlv@${packageJson.version}`;
 
 type ErrorConfig = {
   getDocsUrl?:
-        | ((args: BaseErrorParameters) => string | undefined)
-        | undefined;
+    | ((args: BaseErrorParameters) => string | undefined)
+    | undefined;
   version?: string | undefined;
 };
 
@@ -104,3 +104,9 @@ const walk = (
 
   return fn ? null : err;
 };
+
+export class SignalNoConnectionError extends BaseError {
+  constructor() {
+    super(["Hello", "World"].join("\n"), { name: "SignalConnectionError" });
+  }
+}

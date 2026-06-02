@@ -1,4 +1,5 @@
 node_modules
 dist
-docs/.vocs/cache
+docs/.vocs
 docs/.dist-static-staging
+.pnpm-store

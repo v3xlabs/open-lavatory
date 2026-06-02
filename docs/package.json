@@ -5,12 +5,13 @@
     "license": "LGPL-3.0-only",
     "type": "module",
     "scripts": {
-        "build": "vite build && node scripts/prepare-static-dist.mjs",
-        "dev": "vite",
-        "preview": "vite preview"
+        "build": "vocs build",
+        "dev": "vocs dev",
+        "preview": "vocs preview"
     },
     "dependencies": {
         "@openlv/connector": "workspace:*",
+        "@openlv/core": "workspace:*",
         "@openlv/modal": "workspace:*",
         "@openlv/session": "workspace:*",
         "@openlv/transport": "workspace:*",

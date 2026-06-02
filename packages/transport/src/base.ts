@@ -7,6 +7,7 @@ import {
   type TransportLayerParameters,
   type TransportState,
 } from "./layer.js";
+import { log } from "./utils/log.js";
 import type { WebRTCConfig } from "./webrtc/index.js";
 
 export type TransportMessage =
@@ -73,23 +74,23 @@ export const createTransportBase = (init: TransportLayerBaseInit): TLayer => ({ 
   };
 
   internalEmitter.on("offer", (offer) => {
-    console.log("onOffer", offer);
+    log("onOffer", offer);
     subsend({ type: "offer", payload: offer });
   });
   internalEmitter.on("answer", (answer) => {
-    console.log("onAnswer", answer);
+    log("onAnswer", answer);
     subsend({ type: "answer", payload: answer });
   });
   internalEmitter.on("candidate", (candidate) => {
-    console.log("onCandidate", candidate);
+    log("onCandidate", candidate);
     subsend({ type: "candidate", payload: candidate });
   });
   internalEmitter.on("connected", () => {
-    console.log("onConnected");
+    log("onConnected");
     setState(TRANSPORT_STATE.CONNECTED);
   });
   internalEmitter.on("message", async (message) => {
-    console.log("onMessage", message);
+    log("onMessage", message);
     const data = await decrypt(message);
 
     onmessage(JSON.parse(data) as { type: string; payload: object; messageId: string; });
@@ -115,13 +116,20 @@ export const createTransportBase = (init: TransportLayerBaseInit): TLayer => ({ 
     await sendLayer(payload);
   };
 
-  const waitFor = async (state: TransportState) => new Promise<void>((resolve) => {
-    emitter.on("state_change", (newState) => {
-      if (newState === state) {
-        resolve();
-      }
+  const waitFor = async (targetState: TransportState) => {
+    if (state === targetState) return;
+
+    return new Promise<void>((resolve) => {
+      const handler = (newState: TransportState) => {
+        if (newState === targetState) {
+          emitter.off("state_change", handler);
+          resolve();
+        }
+      };
+
+      emitter.on("state_change", handler);
     });
-  });
+  };
 
   return {
     type,

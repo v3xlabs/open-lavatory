@@ -25,12 +25,12 @@ export default defineConfig({
     target: "es2020",
     cssCodeSplit: false, // Disable CSS code splitting to bundle CSS with JS
     rollupOptions: {
-      external: [
-        "solid-js",
-        "solid-js/web",
-        "solid-js/jsx-runtime",
-        "qrcode-generator",
-      ],
+      // `@openlv/modal` ships as a self-contained browser web component, so we
+      // bundle solid-js into the output. Leaving `solid-js/web` external made
+      // the published dist import `use` from it, which only exists in solid's
+      // browser build — breaking any consumer that bundles the modal under
+      // server/SSR conditions (e.g. vocs' full-static docs build).
+      external: ["qrcode-generator"],
     },
   },
 });

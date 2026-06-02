@@ -3,7 +3,7 @@ import { ntfy } from "@openlv/signaling/ntfy";
 import { webrtc } from "@openlv/transport/webrtc";
 import { describe, expect, test } from "vitest";
 
-import { connectSession, createSession } from "./base.js";
+import { connectSession, createSession } from "./index.js";
 
 describe("Session", () => {
   test("Should be able to create a session", async () => {

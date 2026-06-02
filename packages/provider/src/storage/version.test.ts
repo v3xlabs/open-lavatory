@@ -3,6 +3,7 @@ import { describe, expect, test } from "vitest";
 import {
   convertProviderStorageV0ToV1,
   migrateStorageToLatest,
+  parseProviderStorage,
   type ProviderStorageV0,
   type ProviderStorageV1,
   type ProviderStorageV2,
@@ -110,4 +111,23 @@ describe("Storage Migrations", () => {
       expect(result).toEqual(testCase.output);
     });
   }
+
+  test("parseProviderStorage upgrades legacy V0 JSON without version key", () => {
+    const legacy = JSON.stringify({
+      autoReconnect: false,
+      retainHistory: false,
+      session: {
+        p: "mqtt",
+        s: "wss://test.mosquitto.org:8081/mqtt",
+      },
+    });
+
+    const result = parseProviderStorage(legacy);
+
+    expect(result.version).toBe(3);
+    expect(result.signaling).toEqual({
+      p: "mqtt",
+      s: { mqtt: "wss://test.mosquitto.org:8081/mqtt" },
+    });
+  });
 });

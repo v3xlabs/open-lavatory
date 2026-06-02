@@ -1,16 +1,16 @@
 import { generateKeyPair } from "@openlv/core/encryption";
 import { describe, expect, it } from "vitest";
 
-import type { CreateSignalLayerFn, SignalBaseProperties } from "./index.js";
 import { mqtt } from "./mqtt/index.js";
 import { ntfy } from "./ntfy/index.js";
+import type { SignalingProtocol, SignalingProtocolOptions } from "./protocol.js";
 import { log } from "./utils/log.js";
 
 const hKey = "test";
 
 const providersByType: readonly [
   string,
-  readonly [string, CreateSignalLayerFn, SignalBaseProperties][],
+  readonly [string, SignalingProtocol, SignalingProtocolOptions][],
 ][] = [
   [
     "mqtt",
@@ -78,8 +78,8 @@ const providersByType: readonly [
 ] as const;
 
 const testSignalingLayer = async (
-  layer: CreateSignalLayerFn,
-  props: SignalBaseProperties,
+  layer: SignalingProtocol,
+  props: SignalingProtocolOptions,
 ): Promise<void> => {
   const { encryptionKey: publicKey, decryptionKey } = await generateKeyPair();
   const h = hKey;
@@ -143,8 +143,8 @@ type ProviderResult =
   | { url: string; ok: false; error: string; };
 
 const testProvider = async (
-  layer: CreateSignalLayerFn,
-  props: SignalBaseProperties,
+  layer: SignalingProtocol,
+  props: SignalingProtocolOptions,
 ): Promise<ProviderResult> => {
   const timeout = new Promise<never>((_, reject) =>
     setTimeout(

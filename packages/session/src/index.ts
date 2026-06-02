@@ -14,9 +14,9 @@ import {
   parseEncryptionKey,
 } from "@openlv/core/encryption";
 import {
-  type CreateSignalLayerFn,
   SIGNAL_STATE,
   type SignalingLayer,
+  type SignalingProtocol,
   type SignalState,
 } from "@openlv/signaling";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
@@ -85,7 +85,7 @@ export type Session = {
  */
 export const createSession = async (
   initParameters: SessionLinkParameters,
-  signalLayer: CreateSignalLayerFn,
+  signalLayer: SignalingProtocol,
   transportLayer: TLayer,
   onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
@@ -338,6 +338,7 @@ export const createSession = async (
 
       return new Promise<unknown>((resolve, reject) => {
         let ackReceived = false;
+        // eslint-disable-next-line prefer-const
         let ackTimer: ReturnType<typeof setTimeout> | undefined;
         let responseTimer: ReturnType<typeof setTimeout> | undefined;
 

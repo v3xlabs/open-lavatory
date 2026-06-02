@@ -1,8 +1,8 @@
 import { SignalNoConnectionError } from "@openlv/core/errors";
 import { createMqtt, type MqttClient } from "websocket-mqtt";
 
-import type { CreateSignalLayerFn, SignalBaseProperties } from "../index.js";
 import { createSignalingLayer } from "../index.js";
+import type { SignalingProtocol } from "../protocol.js";
 import { log } from "../utils/log.js";
 
 /**
@@ -10,10 +10,10 @@ import { log } from "../utils/log.js";
  *
  * https://openlv.sh/api/signaling/mqtt
  */
-export const mqtt: CreateSignalLayerFn = ({
+export const mqtt: SignalingProtocol = ({
   url = "wss://test.mosquitto.org:8081/mqtt",
   topic,
-}: SignalBaseProperties) => {
+}) => {
   let connection: MqttClient | undefined;
 
   return createSignalingLayer({

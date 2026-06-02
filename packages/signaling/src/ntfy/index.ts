@@ -1,8 +1,8 @@
 import { EventEmitter } from "eventemitter3";
 import { match } from "ts-pattern";
 
-import type { CreateSignalLayerFn } from "../index.js";
 import { createSignalingLayer } from "../index.js";
+import type { SignalingProtocol } from "../protocol.js";
 import { log } from "../utils/log.js";
 import { parseNtfyUrl } from "./url.js";
 
@@ -32,7 +32,7 @@ export type NtfyMessage = {
  *
  * https://openlv.sh/api/signaling/ntfy
  */
-export const ntfy: CreateSignalLayerFn = ({ topic, url }) => {
+export const ntfy: SignalingProtocol = ({ topic, url }) => {
   let connection: WebSocket | undefined;
   const connectionInfo = parseNtfyUrl(url);
   const wsProtocol = match(connectionInfo.protocol)

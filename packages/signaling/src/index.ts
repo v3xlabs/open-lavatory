@@ -6,7 +6,10 @@ import { match } from "ts-pattern";
 import type { MaybePromise } from "viem";
 
 import type { SignalMessage } from "./messages.js";
+import type { SignalingChannel } from "./protocol.js";
 import { log } from "./utils/log.js";
+
+export * from "./protocol.js";
 
 export const SIGNAL_STATE = {
   STANDBY: "standby",
@@ -23,23 +26,6 @@ export type SignalEventMap = {
   state_change: (state: SignalState) => void;
   message: (message: object) => void;
 };
-
-export type SignalBaseProperties = {
-  topic: string;
-  url: string;
-};
-
-export type SignalingBaseLayer = {
-  type: string;
-  setup: () => MaybePromise<void>;
-  teardown: () => MaybePromise<void>;
-  publish: (payload: string) => MaybePromise<void>;
-  subscribe: (handler: (payload: string) => void) => MaybePromise<void>;
-};
-
-export type CreateSignalLayerFn = (
-  properties: SignalBaseProperties,
-) => MaybePromise<SignalingLayerFn>;
 
 export type SignalingProperties = {
   isHost: boolean;
@@ -83,7 +69,7 @@ export const XR_H_PREFIX = "h";
  * https://openlv.sh/api/signaling
  */
 export const createSignalingLayer = (
-  init: SignalingBaseLayer,
+  init: SignalingChannel,
 ): SignalingLayerFn => async ({
   canEncrypt,
   encrypt,

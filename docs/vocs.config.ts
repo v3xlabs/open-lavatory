@@ -120,10 +120,6 @@ export default defineConfig({
       match: path => !(path.startsWith("specs") || path === "/"),
     },
     {
-      text: "Specs",
-      link: "/specs",
-    },
-    {
       text: "GitHub",
       link: "https://github.com/v3xlabs/open-lavatory",
     },

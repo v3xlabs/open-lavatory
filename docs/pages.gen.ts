@@ -22,7 +22,6 @@ type Page =
   | { path: '/guides/theme'; render: 'static' }
   | { path: '/how'; render: 'static' }
   | { path: '/'; render: 'static' }
-  | { path: '/specs'; render: 'static' }
   | { path: '/try'; render: 'static' }
   | { path: '/wallets'; render: 'static' }
   | { path: '/wallets/migrate'; render: 'static' }

@@ -1,5 +1,11 @@
 # @openlv/core
 
+## 0.0.1-beta.10
+
+### Patch Changes
+
+- f76e2bc: Replace tweetnacl peer encryption with a noble-based X25519 and XSalsa20-Poly1305 implementation.
+
 ## 0.0.1-beta.9
 
 ### Patch Changes

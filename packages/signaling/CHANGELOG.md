@@ -1,5 +1,12 @@
 # @openlv/signaling
 
+## 0.0.1-beta.9
+
+### Patch Changes
+
+- Updated dependencies [f76e2bc]
+  - @openlv/core@0.0.1-beta.10
+
 ## 0.0.1-beta.8
 
 ### Patch Changes

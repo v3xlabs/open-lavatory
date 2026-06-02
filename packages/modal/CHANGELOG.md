@@ -1,5 +1,16 @@
 # @openlv/modal
 
+## 0.0.1-beta.12
+
+### Patch Changes
+
+- f76e2bc: Fix bug when resizing the window
+- Updated dependencies [f76e2bc]
+  - @openlv/core@0.0.1-beta.10
+  - @openlv/provider@0.0.1-beta.12
+  - @openlv/session@0.0.1-beta.12
+  - @openlv/signaling@0.0.1-beta.9
+
 ## 0.0.1-beta.11
 
 ### Patch Changes

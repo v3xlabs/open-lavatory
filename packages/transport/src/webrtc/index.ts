@@ -4,7 +4,7 @@ import {
   createTransportBase,
   type CreateTransportLayerFn,
   type TransportMessage,
-} from "../base.js";
+} from "../index.js";
 import { log } from "../utils/log.js";
 
 export type WebRTCConfig = {

@@ -250,7 +250,10 @@ export const createSignalingLayer = (
       await init.setup();
       await init.subscribe(handleReceive);
 
-      if (!canEncrypt()) {
+      if (canEncrypt()) {
+        setState(SIGNAL_STATE.ENCRYPTED);
+      }
+      else {
         if (isHost) {
           setState(SIGNAL_STATE.READY);
         }
@@ -263,9 +266,6 @@ export const createSignalingLayer = (
           });
           setState(SIGNAL_STATE.HANDSHAKE);
         }
-      }
-      else {
-        setState(SIGNAL_STATE.ENCRYPTED);
       }
     },
     async teardown() {

@@ -1,4 +1,4 @@
-import * as QRCode from "qrcode-generator";
+import { encodeQR } from "qr";
 import { Show } from "solid-js";
 
 import { copyToClipboard } from "../hooks/useClipboard.js";
@@ -6,16 +6,9 @@ import { useSession } from "../hooks/useSession.js";
 import { useTranslation } from "../utils/i18n.js";
 
 const generateQRCode = (uriValue: string) => {
-  // qrcode-generator ships a callable export as default, but its types are wrong
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const QR: any = (QRCode as any).default;
+  const x = encodeQR(uriValue, "svg", { optimize: true, encoding: "byte", border: 2 });
 
-  const qr = QR(0, "M");
-
-  qr.addData(uriValue);
-  qr.make();
-
-  return qr.createSvgTag({ cellSize: 5, margin: 0, scalable: true });
+  return x;
 };
 
 export const HandshakeOpen = () => {
@@ -35,7 +28,7 @@ export const HandshakeOpen = () => {
       <div class="w-full space-y-4 rounded-md border border-(--lv-control-button-secondary-border) bg-(--lv-card-background) p-4">
         <Show when={uri()}>
           {sessionUri => (
-            <div class="relative mx-auto flex w-fit items-center justify-center rounded-lg border border-(--lv-control-button-secondary-border) bg-(--lv-qr-background) p-4">
+            <div class="relative mx-auto flex w-fit items-center justify-center rounded-lg border border-(--lv-control-button-secondary-border) bg-(--lv-qr-background) p-2">
               <button
                 type="button"
                 class="h-[200px] w-[200px] cursor-pointer rounded bg-(--lv-qr-background) text-(--lv-qr-color)"

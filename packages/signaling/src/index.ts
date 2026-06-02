@@ -206,15 +206,15 @@ export const createSignalingLayer = (
               state: SIGNAL_STATE.HANDSHAKE_PARTIAL,
             },
             async () => {
+              if (!isHost) {
+                await send("encrypted", "h", {
+                  type: "ack",
+                  payload: undefined,
+                  timestamp: Date.now(),
+                });
+              }
+
               setState(SIGNAL_STATE.ENCRYPTED);
-
-              if (isHost) return;
-
-              return await send("encrypted", "h", {
-                type: "ack",
-                payload: undefined,
-                timestamp: Date.now(),
-              });
             },
           )
           .with({ msg: { type: "data" }, state: SIGNAL_STATE.ENCRYPTED }, async () => {

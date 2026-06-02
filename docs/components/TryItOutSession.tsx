@@ -53,55 +53,46 @@ export type TryItLogEntry = {
   payload?: unknown;
 };
 
-type TryItDebugActions = {
+export type TryItSessionActions = {
   appendEntry: (entry: Omit<TryItLogEntry, "logId" | "at">) => void;
-  appendInfo: (role: TryItRole, summary: string, payload?: unknown) => void;
   setPhase: (phase: ConnectionPhase) => void;
   setPeer: (peer: TryItPeerInfo | null) => void;
   clearLog: () => void;
-  resetDebug: () => void;
+  resetSession: () => void;
 };
 
-type TryItDebugState = {
+type TryItSessionState = {
   phase: ConnectionPhase;
   peer: TryItPeerInfo | null;
   entries: TryItLogEntry[];
 };
 
-type TryItDebugContextValue = TryItDebugState & TryItDebugActions;
+type TryItSessionContextValue = TryItSessionState & TryItSessionActions;
 
-const TryItDebugActionsContext = createContext<TryItDebugActions | null>(null);
-const TryItDebugStateContext = createContext<TryItDebugState | null>(null);
+const ActionsContext = createContext<TryItSessionActions | null>(null);
+const StateContext = createContext<TryItSessionState | null>(null);
 
 const MAX_LOG_ENTRIES = 200;
 
 const nextLogId = () =>
-  `${Date.now().toString(36)}-${Math.random().toString(36)
-    .slice(2, 8)}`;
+  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const sessionStatusLabel = (status: SessionStateObject["status"]) => {
   switch (status) {
-    case SESSION_STATE.CREATED: {
+    case SESSION_STATE.CREATED:
       return "created";
-    }
-    case SESSION_STATE.SIGNALING: {
+    case SESSION_STATE.SIGNALING:
       return "signaling";
-    }
-    case SESSION_STATE.READY: {
+    case SESSION_STATE.READY:
       return "ready";
-    }
-    case SESSION_STATE.LINKING: {
+    case SESSION_STATE.LINKING:
       return "linking";
-    }
-    case SESSION_STATE.CONNECTED: {
+    case SESSION_STATE.CONNECTED:
       return "connected";
-    }
-    case SESSION_STATE.DISCONNECTED: {
+    case SESSION_STATE.DISCONNECTED:
       return "disconnected";
-    }
-    default: {
+    default:
       return status;
-    }
   }
 };
 
@@ -109,9 +100,7 @@ const sessionToPhase = (
   status: SessionStateObject["status"],
 ): ConnectionPhase => {
   if (status === SESSION_STATE.CONNECTED) return "connected";
-
   if (status === SESSION_STATE.DISCONNECTED) return "error";
-
   if (
     status === SESSION_STATE.SIGNALING
     || status === SESSION_STATE.READY
@@ -120,7 +109,6 @@ const sessionToPhase = (
   ) {
     return "establishing";
   }
-
   return "idle";
 };
 
@@ -133,7 +121,7 @@ const formatPayload = (payload: unknown) => {
   }
 };
 
-export const TryItDebugProvider = ({ children }: { children: ReactNode; }) => {
+export const TryItSessionProvider = ({ children }: { children: ReactNode; }) => {
   const [phase, setPhase] = useState<ConnectionPhase>("idle");
   const [peer, setPeer] = useState<TryItPeerInfo | null>(null);
   const [entries, setEntries] = useState<TryItLogEntry[]>([]);
@@ -141,50 +129,24 @@ export const TryItDebugProvider = ({ children }: { children: ReactNode; }) => {
   const appendEntry = useCallback(
     (entry: Omit<TryItLogEntry, "logId" | "at">) => {
       setEntries(prev => [
-        {
-          ...entry,
-          logId: nextLogId(),
-          at: Date.now(),
-        },
+        { ...entry, logId: nextLogId(), at: Date.now() },
         ...prev,
       ].slice(0, MAX_LOG_ENTRIES));
     },
     [],
   );
 
-  const appendInfo = useCallback(
-    (role: TryItRole, summary: string, payload?: unknown) => {
-      appendEntry({
-        role,
-        direction: "in",
-        kind: "info",
-        summary,
-        payload,
-      });
-    },
-    [appendEntry],
-  );
+  const clearLog = useCallback(() => setEntries([]), []);
 
-  const clearLog = useCallback(() => {
-    setEntries([]);
-  }, []);
-
-  const resetDebug = useCallback(() => {
+  const resetSession = useCallback(() => {
     setPhase("idle");
     setPeer(null);
     setEntries([]);
   }, []);
 
   const actions = useMemo(
-    () => ({
-      appendEntry,
-      appendInfo,
-      setPhase,
-      setPeer,
-      clearLog,
-      resetDebug,
-    }),
-    [appendEntry, appendInfo, clearLog, resetDebug],
+    () => ({ appendEntry, setPhase, setPeer, clearLog, resetSession }),
+    [appendEntry, clearLog, resetSession],
   );
 
   const state = useMemo(
@@ -193,41 +155,57 @@ export const TryItDebugProvider = ({ children }: { children: ReactNode; }) => {
   );
 
   return (
-    <TryItDebugActionsContext.Provider value={actions}>
-      <TryItDebugStateContext.Provider value={state}>
-        {children}
-      </TryItDebugStateContext.Provider>
-    </TryItDebugActionsContext.Provider>
+    <ActionsContext.Provider value={actions}>
+      <StateContext.Provider value={state}>{children}</StateContext.Provider>
+    </ActionsContext.Provider>
   );
 };
 
-export const useTryItDebugActions = (): TryItDebugActions => {
-  const ctx = useContext(TryItDebugActionsContext);
-
+export const useTryItSessionActions = (): TryItSessionActions => {
+  const ctx = useContext(ActionsContext);
   if (!ctx) {
     throw new Error(
-      "useTryItDebugActions must be used within TryItDebugProvider",
+      "useTryItSessionActions must be used within TryItSessionProvider",
     );
   }
-
   return ctx;
 };
 
-export const useTryItDebug = (): TryItDebugContextValue => {
-  const actions = useTryItDebugActions();
-  const state = useContext(TryItDebugStateContext);
-
+export const useTryItSession = (): TryItSessionContextValue => {
+  const actions = useTryItSessionActions();
+  const state = useContext(StateContext);
   if (!state) {
-    throw new Error("useTryItDebug must be used within TryItDebugProvider");
+    throw new Error("useTryItSession must be used within TryItSessionProvider");
   }
-
   return { ...state, ...actions };
+};
+
+const logRpc = (
+  actions: TryItSessionActions,
+  role: TryItRole,
+  direction: "in" | "out",
+  payload: unknown,
+  method?: string,
+  error?: boolean,
+) => {
+  const arrow = direction === "in" ? "←" : "→";
+  const suffix = error ? " (error)" : "";
+  actions.appendEntry({
+    role,
+    direction,
+    kind: "rpc",
+    method,
+    summary: method
+      ? `${arrow} ${method}${suffix}`
+      : `${arrow} ${error ? "error" : direction === "in" ? "response" : "request"}`,
+    payload,
+  });
 };
 
 export const attachTryItSession = (
   session: Session,
   role: TryItRole,
-  debug: TryItDebugActions,
+  actions: TryItSessionActions,
   options?: { logRequests?: boolean; },
 ) => {
   let lastSessionLogKey = "";
@@ -235,57 +213,38 @@ export const attachTryItSession = (
   const logSessionState = (state?: SessionStateObject) => {
     if (!state) return;
 
-    debug.setPhase(sessionToPhase(state.status));
+    actions.setPhase(sessionToPhase(state.status));
 
     const signaling = state.signaling?.state;
     const logKey = `${state.status}:${signaling ?? ""}`;
-
     if (logKey === lastSessionLogKey) return;
-
     lastSessionLogKey = logKey;
 
-    debug.appendEntry({
+    actions.appendEntry({
       role,
       direction: "in",
       kind: "session",
       summary: signaling
-        ? `Session ${sessionStatusLabel(state.status)} · signaling ${signaling}`
+        ? `Session ${sessionStatusLabel(state.status)} · ${signaling}`
         : `Session ${sessionStatusLabel(state.status)}`,
       payload: state,
     });
-
-    if (state.status === SESSION_STATE.CONNECTED) {
-      debug.appendInfo(role, "Connection established — WebRTC channel open");
-    }
   };
 
   const onState = (state?: SessionStateObject) => logSessionState(state);
   const onRequest = (payload: object | string) => {
     const req = payload as { method?: string; };
-
-    debug.appendEntry({
-      role,
-      direction: "in",
-      kind: "rpc",
-      method: req.method,
-      summary: req.method
-        ? `← ${req.method}`
-        : "← request (no method)",
-      payload,
-    });
+    logRpc(actions, role, "in", payload, req.method);
   };
 
   session.emitter.on("state_change", onState);
-
   if (options?.logRequests !== false) {
     session.emitter.on("request", onRequest);
   }
-
   logSessionState(session.getState());
 
   return () => {
     session.emitter.off("state_change", onState);
-
     if (options?.logRequests !== false) {
       session.emitter.off("request", onRequest);
     }
@@ -295,45 +254,24 @@ export const attachTryItSession = (
 export const shimWalletOnMessage = (
   role: TryItRole,
   handler: (message: object) => Promise<object | string>,
-  debug: TryItDebugActions,
+  actions: TryItSessionActions,
 ) => async (message: object) => {
   const req = message as { method?: string; };
-
-  debug.appendEntry({
-    role,
-    direction: "in",
-    kind: "rpc",
-    method: req.method,
-    summary: req.method ? `← ${req.method}` : "← request",
-    payload: message,
-  });
-
+  logRpc(actions, role, "in", message, req.method);
   try {
     const response = await handler(message);
-
-    debug.appendEntry({
-      role,
-      direction: "out",
-      kind: "rpc",
-      method: req.method,
-      summary: req.method ? `→ ${req.method}` : "→ response",
-      payload: response,
-    });
-
+    logRpc(actions, role, "out", response, req.method);
     return response;
   }
   catch (error) {
-    debug.appendEntry({
+    logRpc(
+      actions,
       role,
-      direction: "out",
-      kind: "rpc",
-      method: req.method,
-      summary: req.method ? `→ ${req.method} (error)` : "→ error",
-      payload:
-                error instanceof Error
-                  ? { message: error.message }
-                  : error,
-    });
+      "out",
+      error instanceof Error ? { message: error.message } : error,
+      req.method,
+      true,
+    );
     throw error;
   }
 };
@@ -344,7 +282,6 @@ export const peerInfoFromConnectionUrl = (
 ): TryItPeerInfo => {
   try {
     const parsed = new URL(connectionUrl);
-
     return {
       role,
       connectionUrl,
@@ -371,17 +308,14 @@ export type DappProviderShim = {
   request: (args: JsonRpcCall) => Promise<unknown>;
 };
 
-export type JsonRpcCall = {
-  method: string;
-  params?: unknown;
-};
+export type JsonRpcCall = { method: string; params?: unknown; };
 
 const phaseLabel: Record<ConnectionPhase, string> = {
   idle: "Not connected",
-  establishing: "Establishing connection",
-  linked: "Opening WebRTC",
+  establishing: "Connecting…",
+  linked: "Opening channel",
   connected: "Connected",
-  error: "Connection failed",
+  error: "Failed",
 };
 
 const phaseDotClass: Record<ConnectionPhase, string> = {
@@ -392,38 +326,25 @@ const phaseDotClass: Record<ConnectionPhase, string> = {
   error: "bg-[var(--vocs-color_textSecondary)]",
 };
 
-const StatusDot = ({ phase }: { phase: ConnectionPhase; }) => (
-  <span
-    className={`mt-1.5 inline-block h-2 w-2 shrink-0 rounded-full ${phaseDotClass[phase]}`}
-    aria-hidden
-  />
-);
-
 const peerMetaLine = (peer: TryItPeerInfo) => {
   const parts: string[] = [];
-
   if (peer.sessionId) parts.push(peer.sessionId);
-
   if (peer.protocol) parts.push(peer.protocol);
-
   if (peer.dapp?.name) parts.push(peer.dapp.name);
-
   return parts.join(" · ");
 };
 
-export const ConnectionStatusBar = () => {
-  const { phase, peer } = useTryItDebug();
+const ConnectionStatusBar = () => {
+  const { phase, peer } = useTryItSession();
   const [copied, setCopied] = useState(false);
 
   if (phase === "idle" && !peer) return null;
 
-  const meta = peer ? peerMetaLine(peer) : "";
   const connectionUrl
-        = peer?.role === "dapp" ? peer.connectionUrl : undefined;
+    = peer?.role === "dapp" ? peer.connectionUrl : undefined;
 
-  const copyConnectionUrl = async () => {
+  const copyUrl = async () => {
     if (!connectionUrl) return;
-
     await navigator.clipboard.writeText(connectionUrl);
     setCopied(true);
     globalThis.setTimeout(() => setCopied(false), 2000);
@@ -431,24 +352,22 @@ export const ConnectionStatusBar = () => {
 
   return (
     <div className="flex gap-3 rounded-lg border vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-3 py-2.5">
-      <StatusDot phase={phase} />
+      <span
+        className={`mt-1.5 h-2 w-2 shrink-0 rounded-full ${phaseDotClass[phase]}`}
+        aria-hidden
+      />
       <div className="min-w-0 flex-1">
-        <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5 text-sm">
-          <span className="font-medium text-[var(--vocs-color_text)]">
-            {phaseLabel[phase]}
-          </span>
+        <div className="flex flex-wrap items-baseline gap-x-2 text-sm">
+          <span className="font-medium">{phaseLabel[phase]}</span>
           {peer && (
             <span className="text-xs text-[var(--vocs-color_textSecondary)]">
               {peer.role === "dapp" ? "dApp" : "Wallet"}
             </span>
           )}
         </div>
-        {meta && (
-          <p
-            className="mt-0.5 truncate font-mono text-xs text-[var(--vocs-color_textSecondary)]"
-            title={peer?.connectionUrl}
-          >
-            {meta}
+        {peer && peerMetaLine(peer) && (
+          <p className="mt-0.5 truncate font-mono text-xs text-[var(--vocs-color_textSecondary)]">
+            {peerMetaLine(peer)}
           </p>
         )}
         {connectionUrl && (
@@ -461,17 +380,12 @@ export const ConnectionStatusBar = () => {
             </p>
             <button
               type="button"
-              onClick={() => copyConnectionUrl()}
+              onClick={() => copyUrl()}
               className="shrink-0 rounded-md border vocs:border-primary px-2 py-0.5 text-xs hover:bg-[var(--vocs-color_codeHighlightBackground)]"
             >
-              {copied ? "Copied" : "Copy URL"}
+              {copied ? "Copied" : "Copy"}
             </button>
           </div>
-        )}
-        {peer?.dapp?.url && (
-          <p className="mt-0.5 truncate text-xs text-[var(--vocs-color_textSecondary)]">
-            {peer.dapp.url}
-          </p>
         )}
       </div>
     </div>
@@ -501,32 +415,25 @@ const LogRow = ({
         disabled={!hasPayload}
         onClick={onToggle}
         className={[
-          "flex w-full items-baseline gap-2 px-3 py-2 text-left transition-colors",
-          hasPayload
-            ? "hover:bg-[var(--vocs-color_codeHighlightBackground)]"
-            : "cursor-default",
-        ].join(" ")}
+          "flex w-full items-baseline gap-2 px-3 py-2 text-left",
+          hasPayload && "hover:bg-[var(--vocs-color_codeHighlightBackground)]",
+        ].filter(Boolean).join(" ")}
       >
-        <time
-          dateTime={new Date(entry.at).toISOString()}
-          className="shrink-0 tabular-nums text-[var(--vocs-color_textSecondary)]"
-        >
+        <time className="shrink-0 tabular-nums text-[var(--vocs-color_textSecondary)]">
           {time}
         </time>
-        <span className="shrink-0 uppercase tracking-wide text-[var(--vocs-color_textSecondary)]">
+        <span className="shrink-0 uppercase text-[var(--vocs-color_textSecondary)]">
           {entry.role}
         </span>
-        <span className="min-w-0 flex-1 truncate font-mono text-[var(--vocs-color_text)]">
-          {entry.summary}
-        </span>
+        <span className="min-w-0 flex-1 truncate font-mono">{entry.summary}</span>
         {hasPayload && (
-          <span className="shrink-0 text-[var(--vocs-color_textSecondary)]">
+          <span className="text-[var(--vocs-color_textSecondary)]">
             {expanded ? "−" : "+"}
           </span>
         )}
       </button>
       {expanded && hasPayload && (
-        <pre className="border-t vocs:border-primary bg-[var(--vocs-color_codeTitleBackground)] px-3 py-2 font-mono text-[11px] leading-relaxed whitespace-pre-wrap break-all text-[var(--vocs-color_textSecondary)]">
+        <pre className="border-t vocs:border-primary bg-[var(--vocs-color_codeTitleBackground)] px-3 py-2 font-mono text-[11px] whitespace-pre-wrap break-all text-[var(--vocs-color_textSecondary)]">
           {formatPayload(entry.payload)}
         </pre>
       )}
@@ -534,9 +441,9 @@ const LogRow = ({
   );
 };
 
-export const MessageLogPanel = () => {
+const MessageLogPanel = () => {
   const listId = useId();
-  const { entries, clearLog } = useTryItDebug();
+  const { entries, clearLog } = useTryItSession();
   const [open, setOpen] = useState(false);
   const [expandedId, setExpandedId] = useState<string | null>(null);
 
@@ -547,14 +454,12 @@ export const MessageLogPanel = () => {
       <div className="flex items-center gap-2 bg-[var(--vocs-color_codeBlockBackground)] px-3 py-2">
         <button
           type="button"
-          onClick={() => setOpen(value => !value)}
-          className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm text-[var(--vocs-color_text)]"
+          onClick={() => setOpen(v => !v)}
+          className="flex min-w-0 flex-1 items-center gap-2 text-left text-sm"
         >
           <span
-            className="text-[var(--vocs-color_textSecondary)] transition-transform"
-            style={{
-              transform: open ? "rotate(90deg)" : "rotate(0deg)",
-            }}
+            className="text-[var(--vocs-color_textSecondary)]"
+            style={{ transform: open ? "rotate(90deg)" : undefined }}
             aria-hidden
           >
             ›
@@ -568,7 +473,7 @@ export const MessageLogPanel = () => {
           <button
             type="button"
             onClick={clearLog}
-            className="shrink-0 rounded-md px-2 py-0.5 text-xs text-[var(--vocs-color_textSecondary)] hover:bg-[var(--vocs-color_codeHighlightBackground)] hover:text-[var(--vocs-color_text)]"
+            className="text-xs text-[var(--vocs-color_textSecondary)] hover:text-[var(--vocs-color_text)]"
           >
             Clear
           </button>
@@ -577,25 +482,21 @@ export const MessageLogPanel = () => {
       {open && (
         <ul
           id={listId}
-          className="max-h-72 overflow-y-auto border-t vocs:border-primary bg-[var(--vocs-color_codeTitleBackground)]"
+          className="max-h-72 overflow-y-auto border-t vocs:border-primary"
         >
-          {entries.map((entry, index) => (
+          {entries.map((entry, i) => (
             <li
               key={entry.logId}
               className={
-                index < entries.length - 1
-                  ? "border-b vocs:border-primary"
-                  : undefined
+                i < entries.length - 1 ? "border-b vocs:border-primary" : undefined
               }
             >
               <LogRow
                 entry={entry}
                 expanded={expandedId === entry.logId}
                 onToggle={() =>
-                  setExpandedId(current =>
-                    (current === entry.logId
-                      ? null
-                      : entry.logId),
+                  setExpandedId(c =>
+                    (c === entry.logId ? null : entry.logId),
                   )}
               />
             </li>
@@ -606,13 +507,9 @@ export const MessageLogPanel = () => {
   );
 };
 
-/** Connection status + collapsible wire log, shown when a session is active. */
 export const TryItSessionPanel = () => {
-  const { phase, peer, entries } = useTryItDebug();
-  const visible
-        = phase !== "idle" || peer !== null || entries.length > 0;
-
-  if (!visible) return null;
+  const { phase, peer, entries } = useTryItSession();
+  if (phase === "idle" && !peer && entries.length === 0) return null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -622,24 +519,21 @@ export const TryItSessionPanel = () => {
   );
 };
 
-/** Observes the OpenLV dApp provider and logs JSON-RPC + session events. */
 export const OpenLvDappMonitor = ({
   onSessionBound,
 }: {
   onSessionBound?: (session: Session) => void;
 }) => {
   const { connector, isConnected } = useAccount();
-  const debug = useTryItDebugActions();
-  const onSessionBoundRef = useRef(onSessionBound);
-
-  onSessionBoundRef.current = onSessionBound;
+  const actions = useTryItSessionActions();
+  const onBoundRef = useRef(onSessionBound);
+  onBoundRef.current = onSessionBound;
   const detachRef = useRef<(() => void) | undefined>(undefined);
 
   useEffect(() => {
     if (!isConnected || connector?.type !== "openLv") {
       detachRef.current?.();
       detachRef.current = undefined;
-
       return;
     }
 
@@ -648,101 +542,60 @@ export const OpenLvDappMonitor = ({
 
     const wire = async () => {
       const provider = (await connector.getProvider()) as DappProviderShim;
-
       if (cancelled) return;
 
-      const bindSession = (activeSession: Session) => {
+      const bindSession = (session: Session) => {
         detachRef.current?.();
-        detachRef.current = attachTryItSession(
-          activeSession,
-          "dapp",
-          debug,
-          { logRequests: true },
-        );
-
-        onSessionBoundRef.current?.(activeSession);
-        debug.appendInfo(
-          "dapp",
-          "Session started — copy the connection URL for the wallet tab",
-        );
+        detachRef.current = attachTryItSession(session, "dapp", actions);
+        onBoundRef.current?.(session);
       };
 
-      const onSessionStarted = (activeSession: Session) => {
-        debug.setPhase("establishing");
-        bindSession(activeSession);
+      const onStarted = (session: Session) => {
+        actions.setPhase("establishing");
+        bindSession(session);
       };
 
-      provider.on("session_started", onSessionStarted);
-
+      provider.on("session_started", onStarted);
       const existing = provider.getSession();
-
       if (existing) bindSession(existing);
 
       restoreRequest = provider.request.bind(provider);
       provider.request = async (args: JsonRpcCall) => {
-        debug.appendEntry({
-          role: "dapp",
-          direction: "out",
-          kind: "rpc",
-          method: args.method,
-          summary: `→ ${args.method}`,
-          payload: args,
-        });
-
+        logRpc(actions, "dapp", "out", args, args.method);
         try {
           const result = await restoreRequest!(args);
-
-          debug.appendEntry({
-            role: "dapp",
-            direction: "in",
-            kind: "rpc",
-            method: args.method,
-            summary: `← ${args.method}`,
-            payload: result,
-          });
-
+          logRpc(actions, "dapp", "in", result, args.method);
           return result;
         }
         catch (error) {
-          debug.appendEntry({
-            role: "dapp",
-            direction: "in",
-            kind: "rpc",
-            method: args.method,
-            summary: `← ${args.method} (error)`,
-            payload:
-                            error instanceof Error
-                              ? { message: error.message }
-                              : error,
-          });
+          logRpc(
+            actions,
+            "dapp",
+            "in",
+            error instanceof Error ? { message: error.message } : error,
+            args.method,
+            true,
+          );
           throw error;
         }
       };
 
       return () => {
-        provider.off("session_started", onSessionStarted);
-
-        if (restoreRequest) {
-          provider.request = restoreRequest;
-        }
+        provider.off("session_started", onStarted);
+        if (restoreRequest) provider.request = restoreRequest;
       };
     };
 
-    let unwireProvider: (() => void) | undefined;
-
-    wire().then((unwire) => {
-      unwireProvider = unwire;
-    });
+    let unwire: (() => void) | undefined;
+    wire().then(fn => { unwire = fn; });
 
     return () => {
       cancelled = true;
-      unwireProvider?.();
+      unwire?.();
       detachRef.current?.();
       detachRef.current = undefined;
     };
-  }, [isConnected, connector, debug]);
+  }, [isConnected, connector, actions]);
 
   return null;
 };
-
-export type { TryItDebugActions };

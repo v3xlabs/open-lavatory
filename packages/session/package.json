@@ -25,11 +25,6 @@
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "default": "./dist/index.js"
-    },
-    "./wallet": {
-      "types": "./dist/wallet.d.ts",
-      "import": "./dist/wallet.js",
-      "default": "./dist/wallet.js"
     }
   },
   "main": "./dist/index.js",

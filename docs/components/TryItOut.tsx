@@ -7,7 +7,7 @@ import { connectSession, type Session } from "@openlv/session";
 import { webrtc } from "@openlv/transport/webrtc";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import classNames from "classnames";
-import { useRef, useState } from "react";
+import { type ReactNode, useRef, useState } from "react";
 import { match } from "ts-pattern";
 import { type Address, type EIP1193Provider } from "viem";
 import {
@@ -31,10 +31,10 @@ import {
   OpenLvDappMonitor,
   peerInfoFromConnectionUrl,
   shimWalletOnMessage,
-  TryItDebugProvider,
   TryItSessionPanel,
-  useTryItDebug,
-} from "./TryItOutDebug.js";
+  TryItSessionProvider,
+  useTryItSession,
+} from "./TryItOutSession.js";
 
 const queryClient = new QueryClient();
 
@@ -49,251 +49,155 @@ const config = createConfig({
 });
 
 const trimAddress = (address: Address | undefined | null) => {
-  if (!(typeof address === "string")) return address;
-
+  if (typeof address !== "string") return address;
   return `${address.slice(0, 5)}...${address.slice(-4)}`;
 };
 
-const TestSign = () => {
-  const {
-    signMessage,
-    data: signedData,
-    error,
-    isPending,
-    reset: resetSignature,
-  } = useSignMessage();
+const btnClass =
+  "!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1 disabled:opacity-50";
+
+const PersonalSign = () => {
+  const { signMessage, data: signature, error, isPending, reset } = useSignMessage();
   const { address, connector } = useAccount();
   const chainId = useChainId();
-  const { phase } = useTryItDebug();
-  const sessionReady
-    = connector?.type !== "openLv" || phase === "connected";
+  const { phase } = useTryItSession();
+  const ready = connector?.type !== "openLv" || phase === "connected";
 
-  const {
-    data: verificationResult,
-    error: verificationError,
-    isLoading: isVerifying,
-  } = useVerifyMessage({
+  const { data: valid, isLoading: verifying } = useVerifyMessage({
     address,
     message: "Hello, world!",
-    signature: signedData,
+    signature,
     chainId,
   });
 
   return (
-    <div className="space-y-2">
-      <div className="flex justify-between">
-        <div className="flex items-center gap-2">
-          <div>Test a personal sign</div>
-        </div>
+    <div className="flex flex-col gap-2">
+      <div className="flex items-center justify-between gap-2">
+        <p className="text-sm text-(--vocs-color_textSecondary)">
+          <code className="text-xs">personal_sign</code>
+        </p>
         <button
           type="button"
-          disabled={!sessionReady || isPending}
+          disabled={!ready || isPending}
           onClick={() => {
-            resetSignature();
+            reset();
             signMessage({ message: "Hello, world!" });
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1 disabled:opacity-50"
+          className={btnClass}
         >
-          Sign Message
+          Sign
         </button>
       </div>
-      {connector?.type === "openLv" && !sessionReady && (
-        <p className="text-[var(--vocs-color_textSecondary)] text-sm">
-          Finish linking in the wallet tab (status must be Connected) before
-          signing.
-        </p>
-      )}
-      {connector?.type === "openLv" && sessionReady && (
-        <p className="text-[var(--vocs-color_textSecondary)] text-sm">
-          Sends
-          {" "}
-          <code className="text-xs">personal_sign</code>
-          {" "}
-          through OpenLV to your browser wallet in the other tab.
-        </p>
-      )}
       {isPending && (
-        <div className="rounded-md vocs:border-primary vocs:bg-primary p-2 text-[var(--vocs-color_text)] text-sm">
-          Waiting for signature… (check your wallet)
-        </div>
+        <p className="text-sm text-[var(--vocs-color_textSecondary)]">
+          Waiting for wallet…
+        </p>
       )}
       {error && (
-        <div className="rounded-md vocs:border-primary vocs:bg-primary p-2 text-[var(--vocs-color_text)] text-sm">
-          Signature request cancelled or failed
-        </div>
+        <p className="text-sm text-[var(--vocs-color_textSecondary)]">
+          Cancelled or failed
+        </p>
       )}
-      {signedData && (
-        <div className="space-y-2">
-          {isVerifying
-            ? (
-                <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
-                  Verifying signature...
-                </div>
-              )
-            : (verificationResult === undefined
-                ? null
-                : (
-                    <div
-                      className={`rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-sm ${verificationResult
-                        ? "text-green-500"
-                        : "text-[var(--vocs-color_text)]"
-                      }`}
-                    >
-                      {verificationResult ? "Valid signature" : "Invalid signature"}
-                    </div>
-                  ))}
-          {verificationError && (
-            <div className="rounded-md border border-[var(--vocs-color_codeInlineBorder)] bg-[var(--vocs-color_codeBlockBackground)] p-2 text-[var(--vocs-color_text)] text-sm">
-              Error:
-              {" "}
-              {verificationError instanceof Error
-                ? verificationError.message
-                : String(verificationError)}
-            </div>
-          )}
-        </div>
+      {signature && !verifying && valid !== undefined && (
+        <p className={`text-sm ${valid ? "text-green-500" : ""}`}>
+          {valid ? "Valid signature" : "Invalid signature"}
+        </p>
       )}
     </div>
   );
 };
 
-const ConnectComponent = () => {
+const PersonalSignCard = () => {
+  const { isConnected } = useAccount();
+  if (!isConnected) return null;
+
+  return (
+    <section className="rounded-lg border vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-4 py-3">
+      <h3 className="mb-2 text-sm font-medium">Playground</h3>
+      <PersonalSign />
+    </section>
+  );
+};
+
+const WalletUrlConnect = () => {
   const walletClient = useClient();
   const connections = useConnections();
-  const [url, setUrl] = useState<string | undefined>();
+  const [url, setUrl] = useState("");
   const [connecting, setConnecting] = useState(false);
-  const [walletSessionActive, setWalletSessionActive] = useState(false);
-  const debug = useTryItDebug();
+  const [active, setActive] = useState(false);
+  const session = useTryItSession();
   const walletSessionRef = useRef<Session | undefined>(undefined);
-  const detachSessionRef = useRef<(() => void) | undefined>(undefined);
+  const detachRef = useRef<(() => void) | undefined>(undefined);
 
-  if (!walletClient) return <div>No wallet client found</div>;
+  if (!walletClient) return null;
 
-  const disconnectWalletSession = async () => {
-    detachSessionRef.current?.();
-    detachSessionRef.current = undefined;
+  const endSession = async () => {
+    detachRef.current?.();
+    detachRef.current = undefined;
     await walletSessionRef.current?.close();
     walletSessionRef.current = undefined;
-    setWalletSessionActive(false);
-    debug.resetDebug();
+    setActive(false);
+    session.resetSession();
   };
 
   return (
-    <div className="space-y-1 vocs:border-primary border-b pb-2">
-      <div>
-        Connect as the wallet by pasting the dApp connection URL from the other
-        tab, then approve requests in your browser wallet.
-      </div>
-      <div className="flex items-center gap-2">
-        <div className="grow">
-          <input
-            type="text"
-            value={url}
-            className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] block w-full grow rounded-lg border vocs:border-primary px-4 py-1 placeholder:text-neutral-500"
-            onChange={e => setUrl(e.target.value)}
-            placeholder="openlv://..."
-            disabled={connecting}
-          />
-        </div>
+    <div className="flex flex-col gap-2 border-t vocs:border-primary pt-3">
+      <div className="flex gap-2">
+        <input
+          type="text"
+          value={url}
+          onChange={e => setUrl(e.target.value)}
+          placeholder="openlv://…"
+          disabled={connecting}
+          className={`${btnClass} block w-full grow border px-3 py-1 placeholder:text-neutral-500`}
+        />
         <button
           type="button"
-          disabled={connecting || !url}
+          disabled={connecting || !url.trim()}
           onClick={async () => {
-            if (!url) return;
-
             setConnecting(true);
-            await disconnectWalletSession();
-
-            debug.setPhase("establishing");
-            debug.setPeer(peerInfoFromConnectionUrl("wallet", url));
-            debug.appendInfo("wallet", "Connecting to dApp session…", { url });
+            await endSession();
+            session.setPhase("establishing");
+            session.setPeer(peerInfoFromConnectionUrl("wallet", url));
 
             try {
-              const client
-                = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
-
-              const activeSession = await connectSession(
+              const client = (await connections[0]?.connector?.getProvider()) as EIP1193Provider;
+              const s = await connectSession(
                 url,
-                shimWalletOnMessage(
-                  "wallet",
-                  async message =>
-                  // const { method } = message as { method: string; };
-
-                    client.request(message as never), // if (method === "eth_accounts") {
-                  //   return client.request({
-                  //     method: "eth_accounts",
-                  //     params: [] as never,
-                  //   });
-                  // }
-
-                  // if (method === "eth_chainId") {
-                  //   return client.request({
-                  //     method: "eth_chainId",
-                  //     params: [] as never,
-                  //   });
-                  // }
-
-                  // if (method === "personal_sign") {
-                  //   return client.request(message as never);
-                  // }
-
-                  // return {
-                  //   error: {
-                  //     code: -32601,
-                  //     message: "Method not found",
-                  //   },
-                  // };
-
-                  debug,
-                ),
+                shimWalletOnMessage("wallet", msg => client.request(msg as never), session),
                 webrtc(),
               );
-
-              walletSessionRef.current = activeSession;
-              detachSessionRef.current = attachTryItSession(
-                activeSession,
-                "wallet",
-                debug,
-                { logRequests: false },
-              );
-
-              setWalletSessionActive(true);
-
-              await activeSession.connect();
-              debug.setPhase("linked");
-              debug.appendInfo(
-                "wallet",
-                "Signaling handshake complete — waiting for WebRTC",
-              );
-
-              await activeSession.waitForLink();
-              debug.setPhase("connected");
+              walletSessionRef.current = s;
+              detachRef.current = attachTryItSession(s, "wallet", session, {
+                logRequests: false,
+              });
+              setActive(true);
+              await s.connect();
+              session.setPhase("linked");
+              await s.waitForLink();
+              session.setPhase("connected");
             }
-            catch (error) {
-              debug.setPhase("error");
-              debug.appendInfo(
-                "wallet",
-                "Connection failed",
-                error instanceof Error
-                  ? { message: error.message }
-                  : error,
-              );
+            catch (err) {
+              session.setPhase("error");
+              session.appendEntry({
+                role: "wallet",
+                direction: "in",
+                kind: "info",
+                summary: "Connection failed",
+                payload: err instanceof Error ? { message: err.message } : err,
+              });
             }
             finally {
               setConnecting(false);
             }
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg border vocs:border-primary px-4 py-1 disabled:opacity-50"
+          className={btnClass}
         >
-          {connecting ? "Connecting…" : "Connect"}
+          {connecting ? "…" : "Connect"}
         </button>
-        {walletSessionActive && (
-          <button
-            type="button"
-            onClick={() => disconnectWalletSession()}
-            className="rounded-lg border vocs:border-primary px-3 py-1 text-sm"
-          >
-            End session
+        {active && (
+          <button type="button" onClick={() => endSession()} className={btnClass}>
+            End
           </button>
         )}
       </div>
@@ -304,213 +208,142 @@ const ConnectComponent = () => {
 const Connected = () => {
   const { disconnect } = useDisconnect();
   const { address, connector } = useAccount();
-  const debug = useTryItDebug();
+  const session = useTryItSession();
 
   return (
-    <div className="rounded-lg vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-4 py-4">
-      <div className="mb-2 flex items-center justify-between gap-2 vocs:border-primary border-b pb-2">
+    <div className="px-4 py-4">
+      <div className="mb-3 flex items-center justify-between gap-2 border-b vocs:border-primary pb-3">
         <div className="flex items-center gap-2">
           {connector?.icon && (
-            <img
-              src={connector.icon}
-              alt={`${connector.name} icon`}
-              className="h-10 w-10 rounded-md"
-            />
+            <img src={connector.icon} alt="" className="h-8 w-8 rounded-md" />
           )}
-          <div>
-            Connected to
-            {" "}
-            {trimAddress(address)}
-          </div>
+          <span className="text-sm">{trimAddress(address)}</span>
         </div>
         <button
           type="button"
           onClick={() => {
-            debug.resetDebug();
+            session.resetSession();
             disconnect();
           }}
-          className="!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1"
+          className={btnClass}
         >
           Disconnect
         </button>
       </div>
-      <div className="space-y-3">
+      <div className="flex flex-col gap-3">
         <TryItSessionPanel />
-        {connector?.type !== "openLv" && <ConnectComponent />}
-        {connector?.type === "openLv" && (
-          <p className="text-[var(--vocs-color_textSecondary)] text-sm">
-            dApp mode — connect a wallet in the other tab and paste your
-            connection URL there. Expand Wire log to trace JSON-RPC both ways.
-          </p>
-        )}
-        <TestSign />
+        {connector?.type !== "openLv" && <WalletUrlConnect />}
       </div>
     </div>
   );
 };
 
-const ConnectorPreview = ({ connector }: { connector: Connector; }) => {
+const ConnectorChip = ({ connector }: { connector: Connector; }) => {
   const { connect } = useConnect();
-
   return (
     <button
       type="button"
-      className="hover:!bg-[var(--vocs-color_codeHighlightBackground)] inline-flex translate-y-0.5 items-center gap-2 rounded-lg border vocs:border-primary px-2 py-0.5"
-      onClick={() => {
-        connect({ connector });
-      }}
+      className="inline-flex items-center gap-1 rounded border vocs:border-primary px-1.5 py-0.5 text-sm hover:bg-[var(--vocs-color_codeHighlightBackground)]"
+      onClick={() => connect({ connector })}
     >
-      {connector.icon && (
-        <img
-          src={connector.icon}
-          alt={`${connector.name} icon`}
-          className="h-4 w-4 rounded-md"
-        />
-      )}
-      <span>{connector.name}</span>
+      {connector.icon && <img src={connector.icon} alt="" className="h-4 w-4" />}
+      {connector.name}
     </button>
   );
 };
 
 const Connectors = () => {
   const { connect, connectors } = useConnect();
-
-  const openLvConnector = connectors.find(
-    connector => connector.type === "openLv",
-  );
-  const firstNonOpenLvConnector = connectors.find(
-    connector => connector.type !== "openLv",
-  );
+  const openLv = connectors.find(c => c.type === "openLv");
+  const wallet = connectors.find(c => c.type !== "openLv");
 
   return (
     <>
-      <div className="mt-4 space-y-2 p-2">
-        <ul className="mx-auto w-full max-w-xs space-y-2">
-          {connectors.map(connector => (
-            <li key={connector.id}>
-              <button
-                type="button"
-                onClick={() => {
-                  connect({ connector });
-                }}
-                className={classNames(
-                  "!bg-[var(--vocs-color_codeBlockBackground)] flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm",
-                  connector.type === "openLv"
-                    ? "hover:!bg-[var(--vocs-color_backgroundAccent)]/10 border vocs:border-primary"
-                    : "hover:!bg-[var(--vocs-color_codeHighlightBackground)]",
-                )}
-              >
-                <span
-                  className={classNames(
-                    "font-bold text-sm",
-                    connector.type === "openLv"
-                    && "text-[var(--vocs-color_codeInlineText)]",
-                  )}
-                >
-                  {connector.name}
-                </span>
-                {connector.icon && (
-                  <img
-                    src={connector.icon}
-                    alt={`${connector.name} icon`}
-                    className="h-10 w-10 rounded-md"
-                  />
-                )}
-              </button>
-            </li>
-          ))}
-        </ul>
-      </div>
-      <div className="w-full rounded-b-md vocs:border-primary border-t bg-[var(--vocs-color_codeBlockBackground)] px-4 py-2">
-        <div>
-          The above is a sample wagmi snippet. You can use it to test OpenLV
-          right here.
-          <br />
-          <div>
-            <div>Steps:</div>
-            <ul className="list-inside list-disc">
-              <li>
-                Open this page in
-                {" "}
-                <span className="font-bold">a new tab</span>
-              </li>
-              <li>
-                Click
-                {openLvConnector && (
-                  <ConnectorPreview connector={openLvConnector} />
-                )}
-                {" "}
-                on one tab and
-                {" "}
-                {firstNonOpenLvConnector
-                  ? (
-                      <ConnectorPreview connector={firstNonOpenLvConnector} />
-                    )
-                  : (
-                      <span className="font-bold">your wallet</span>
-                    )}
-                {" "}
-                on the other
-              </li>
-              <li>Copy the connection URL from the dApp tab</li>
-              <li>Paste it on the wallet tab and connect</li>
-              <li>Expand the message log to inspect JSON-RPC in both directions</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+      <ul className="mx-auto max-w-xs space-y-2 p-4">
+        {connectors.map(connector => (
+          <li key={connector.id}>
+            <button
+              type="button"
+              onClick={() => connect({ connector })}
+              className={classNames(
+                "flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm",
+                connector.type === "openLv"
+                  ? "!bg-[var(--vocs-color_codeBlockBackground)] border vocs:border-primary hover:!bg-[var(--vocs-color_backgroundAccent)]/10 font-bold"
+                  : "hover:!bg-[var(--vocs-color_codeHighlightBackground)]",
+              )}
+            >
+              {connector.name}
+              {connector.icon && (
+                <img src={connector.icon} alt="" className="h-10 w-10 rounded-md" />
+              )}
+            </button>
+          </li>
+        ))}
+      </ul>
+      <p className="border-t vocs:border-primary bg-[var(--vocs-color_codeBlockBackground)] px-4 py-3 text-sm text-[var(--vocs-color_textSecondary)]">
+        Open two tabs: connect
+        {" "}
+        {openLv ? <ConnectorChip connector={openLv} /> : "OpenLV"}
+        {" "}
+        on one and
+        {" "}
+        {wallet ? <ConnectorChip connector={wallet} /> : "your wallet"}
+        {" "}
+        on the other, then paste the connection URL into the wallet tab.
+      </p>
     </>
   );
 };
 
-const Inner = () => {
+const TryItOutInner = () => {
   const { isConnected } = useAccount();
-  const debug = useTryItDebug();
+  const session = useTryItSession();
 
   return (
-    <div className="space-y-2">
+    <>
       <OpenLvDappMonitor
-        onSessionBound={(activeSession) => {
-          const handshake = activeSession.getHandshakeParameters();
-          const connectionUrl = encodeConnectionURL(handshake);
-
-          debug.setPeer({
+        onSessionBound={(s) => {
+          const h = s.getHandshakeParameters();
+          const connectionUrl = encodeConnectionURL(h);
+          session.setPeer({
             role: "dapp",
             connectionUrl,
-            sessionId: handshake.sessionId,
-            protocol: handshake.p,
-            signalingServer: handshake.s,
+            sessionId: h.sessionId,
+            protocol: h.p,
+            signalingServer: h.s,
           });
-          debug.appendInfo("dapp", "Connection URL ready", { connectionUrl });
         }}
       />
       {match(isConnected)
         .with(true, () => <Connected />)
         .with(false, () => <Connectors />)
         .exhaustive()}
-    </div>
+    </>
   );
 };
 
-export const Outter = () => (
+const TryItOutProviders = ({ children }: { children: ReactNode; }) => (
   <QueryClientProvider client={queryClient}>
     <WagmiProvider config={config}>
-      <TryItDebugProvider>
-        <Inner />
-      </TryItDebugProvider>
+      <TryItSessionProvider>{children}</TryItSessionProvider>
     </WagmiProvider>
   </QueryClientProvider>
 );
 
 export const TryItOut = () => {
   const inBrowser = globalThis.window !== undefined;
+  if (!inBrowser) {
+    return <div className="rounded-lg border vocs:border-primary" suppressHydrationWarning />;
+  }
 
   return (
-    <div
-      className="rounded-lg border vocs:border-primary"
-      suppressHydrationWarning
-    >
-      {inBrowser && <Outter />}
-    </div>
+    <TryItOutProviders>
+      <div className="space-y-3" suppressHydrationWarning>
+        <div className="rounded-lg border vocs:border-primary">
+          <TryItOutInner />
+        </div>
+        <PersonalSignCard />
+      </div>
+    </TryItOutProviders>
   );
 };

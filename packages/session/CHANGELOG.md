@@ -1,5 +1,14 @@
 # @openlv/session
 
+## 0.0.2
+
+### Patch Changes
+
+- Updated dependencies [7d1e36b]
+- Updated dependencies [b491ecd]
+  - @openlv/transport@0.0.2
+  - @openlv/signaling@0.0.2
+
 ## 0.0.1
 
 ### Patch Changes

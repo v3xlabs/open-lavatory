@@ -1,5 +1,15 @@
 # @openlv/modal
 
+## 0.0.2
+
+### Patch Changes
+
+- 923519e: Migrate from 'qrcode-generator' to 'qr'
+- Updated dependencies [b491ecd]
+  - @openlv/signaling@0.0.2
+  - @openlv/provider@0.0.2
+  - @openlv/session@0.0.2
+
 ## 0.0.1
 
 ### Patch Changes

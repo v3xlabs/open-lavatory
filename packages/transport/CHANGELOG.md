@@ -1,5 +1,11 @@
 # @openlv/transport
 
+## 0.0.2
+
+### Patch Changes
+
+- 7d1e36b: Restructure transport base.ts and layer.ts to index.ts
+
 ## 0.0.1
 
 ### Patch Changes

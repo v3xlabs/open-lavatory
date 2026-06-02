@@ -1,6 +1,6 @@
 {
     "name": "openlv",
-    "version": "0.0.1-beta.0",
+    "version": "0.0.1",
     "private": false,
     "license": "LGPL-3.0-only",
     "publishConfig": {

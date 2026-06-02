@@ -1,5 +1,36 @@
 # @openlv/session
 
+## 0.0.1
+
+### Patch Changes
+
+- f76e2bc: Introduce webrtc transport, rework session & provider
+- f76e2bc: Linting
+- f76e2bc: Introduce openlv version number parsing "@1"
+- f76e2bc: Initial package publish
+- f76e2bc: Added transport & signaling configs to the connector
+- f76e2bc: Introduce session linking stage
+- f76e2bc: Update transport type to allow for string or object
+- f76e2bc: Cleanup package.json
+- f76e2bc: Update release
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+- Updated dependencies [f76e2bc]
+  - @openlv/core@0.0.1
+  - @openlv/signaling@0.0.1
+  - @openlv/transport@0.0.1
+
 ## 0.0.1-beta.12
 
 ### Patch Changes

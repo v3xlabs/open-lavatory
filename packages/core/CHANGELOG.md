@@ -1,5 +1,21 @@
 # @openlv/core
 
+## 0.0.1
+
+### Patch Changes
+
+- f76e2bc: Update CI
+- f76e2bc: Migrate storage ownership from connector to provider
+- f76e2bc: Introduce webrtc transport, rework session & provider
+- f76e2bc: Replace tweetnacl peer encryption with a noble-based X25519 and XSalsa20-Poly1305 implementation.
+- f76e2bc: Linting
+- f76e2bc: Introduce openlv version number parsing "@1"
+- f76e2bc: Initial package publish
+- f76e2bc: Cleanup legacy encryption & icon files & restructure of modal connection flow.
+- f76e2bc: Introduce session linking stage
+- f76e2bc: Cleanup package.json
+- f76e2bc: Update release
+
 ## 0.0.1-beta.10
 
 ### Patch Changes

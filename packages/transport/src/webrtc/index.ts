@@ -3,13 +3,25 @@ import { match } from "ts-pattern";
 import {
   createTransportBase,
   type CreateTransportLayerFn,
-  type TransportMessage,
 } from "../index.js";
 import { log } from "../utils/log.js";
 
 export type WebRTCConfig = {
   iceServers?: RTCConfiguration["iceServers"];
 };
+type WebRTCSignalMessage =
+  | {
+    type: "offer";
+    payload: string;
+  }
+  | {
+    type: "answer";
+    payload: string;
+  }
+  | {
+    type: "candidate";
+    payload: string;
+  };
 
 // TODO: decide wether we want defaults, and if so what defaults
 const defaultConfig: WebRTCConfig = {
@@ -25,7 +37,7 @@ const defaultConfig: WebRTCConfig = {
   ],
 };
 
-export const webrtc: CreateTransportLayerFn = (
+export const webrtc: CreateTransportLayerFn<WebRTCConfig> = (
   config: WebRTCConfig = defaultConfig,
 ) => {
   const { iceServers = defaultConfig.iceServers } = config;
@@ -34,7 +46,7 @@ export const webrtc: CreateTransportLayerFn = (
   const ident = Math.random().toString(36)
     .slice(2, 4) + "#";
 
-  return createTransportBase(({ emitter, isHost }) => {
+  return createTransportBase<WebRTCSignalMessage>(({ emitter, isHost }) => {
     const rtcConfig: RTCConfiguration = { iceServers };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
@@ -57,7 +69,10 @@ export const webrtc: CreateTransportLayerFn = (
       if (channel?.readyState === "open") return;
 
       log(ident, "onIceCandidate", c.candidate);
-      emitter.emit("candidate", JSON.stringify(c.candidate?.toJSON()));
+      emitter.emit("signal", {
+        type: "candidate",
+        payload: JSON.stringify(c.candidate?.toJSON()),
+      });
     };
     const onDataChannel = (e: RTCDataChannelEvent) => {
       channel = e.channel;
@@ -78,8 +93,12 @@ export const webrtc: CreateTransportLayerFn = (
       if (isHost && connection) {
         await connection.setLocalDescription();
 
-        if (connection.localDescription)
-          emitter.emit("offer", JSON.stringify(connection.localDescription));
+        if (connection.localDescription) {
+          emitter.emit("signal", {
+            type: "offer",
+            payload: JSON.stringify(connection.localDescription),
+          });
+        }
       }
     };
 
@@ -88,12 +107,12 @@ export const webrtc: CreateTransportLayerFn = (
       channel.addEventListener("message", onDataChannelMessage);
     };
 
-    const handle = async (message: TransportMessage): Promise<void> => {
-      log(ident, "webrtc handle", message);
+    const handle = async (signal: WebRTCSignalMessage): Promise<void> => {
+      log(ident, "webrtc handle", signal);
 
       if (!connection) throw new Error("Connection not found");
 
-      return match(message)
+      return match(signal)
         .with({ type: "offer" }, async ({ payload }) => {
           const offer = JSON.parse(payload) as RTCSessionDescriptionInit;
 
@@ -104,7 +123,10 @@ export const webrtc: CreateTransportLayerFn = (
           const answer = await connection!.createAnswer();
 
           await connection!.setLocalDescription(answer);
-          emitter.emit("answer", JSON.stringify(answer));
+          emitter.emit("signal", {
+            type: "answer",
+            payload: JSON.stringify(answer),
+          });
         })
         .with({ type: "answer" }, async ({ payload }) => {
           if (!connection) throw new Error("Connection not found");
@@ -125,7 +147,7 @@ export const webrtc: CreateTransportLayerFn = (
           await connection.addIceCandidate(new RTCIceCandidate(candidate));
         })
         .otherwise(() => {
-          log(ident, "received unknown transport message type", message);
+          log(ident, "received unknown transport message type", signal);
         });
     };
 

@@ -4,7 +4,7 @@
   "commit": false,
   "fixed": [],
   "linked": [],
-  "tag": "beta",
+  "tag": "latest",
   "access": "public",
   "baseBranch": "master",
   "updateInternalDependencies": "patch",
@@ -24,7 +24,6 @@
     "@openlv/extension": "0.0.1-beta.1",
     "@openlv/modal": "0.0.1-beta.1",
     "@openlv/provider": "0.0.1-beta.1",
-    "openlv": "0.0.1-beta.0",
     "@openlv/session": "0.0.1-beta.1",
     "@openlv/signaling": "0.0.1-beta.1",
     "@openlv/transport": "0.0.1-beta.1"

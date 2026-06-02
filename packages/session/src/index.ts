@@ -25,8 +25,8 @@ import {
   TRANSPORT_STATE,
   type TransportLayer,
   type TransportMessage,
+  type TransportOfferMessage,
   type TransportProtocol,
-  type TransportSignalMessage,
 } from "@openlv/transport";
 import { EventEmitter } from "eventemitter3";
 
@@ -245,7 +245,7 @@ export const createSession = async (
       payload: {
         type: "transport-select",
         payload: { transport: chosenTransport },
-      } satisfies TransportSignalMessage,
+      } satisfies TransportOfferMessage,
     } satisfies SessionMessage);
     await startTransport();
   };
@@ -281,7 +281,7 @@ export const createSession = async (
     if (sessionMsg.type === "request") {
       log("Session: received request message", sessionMsg.payload);
 
-      const transportMessage = sessionMsg.payload as TransportSignalMessage;
+      const transportMessage = sessionMsg.payload as TransportOfferMessage;
 
       switch (transportMessage.type) {
         case "transport-options": {
@@ -342,7 +342,7 @@ export const createSession = async (
             payload: {
               type: "transport-options",
               payload: { transports: supportedTransports },
-            } satisfies TransportSignalMessage,
+            } satisfies TransportOfferMessage,
           } satisfies SessionMessage);
         }
 

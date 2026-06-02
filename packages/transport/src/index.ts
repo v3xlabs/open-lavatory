@@ -61,7 +61,7 @@ export type TransportLayer = {
   setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
   send: (message: object) => Promise<void>;
-  handle: (message: object | string) => Promise<void>;
+  handle: (message: TransportMessage) => Promise<void>;
   waitFor: (state: TransportState) => Promise<void>;
   emitter: EventEmitter<TLayerEventMap>;
 };
@@ -162,8 +162,14 @@ export const createTransportBase = <TSignalMessage extends object | string = obj
       setState(TRANSPORT_STATE.READY);
     },
     teardown,
-    handle(message) {
-      return handleSignal(message as TSignalMessage);
+    handle(message: TransportMessage) {
+      if (message.transport !== type) {
+        log("ignoring transport message for different transport", message.transport);
+
+        return Promise.resolve();
+      }
+
+      return handleSignal(message.payload as TSignalMessage);
     },
     send,
     waitFor,

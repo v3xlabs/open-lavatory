@@ -222,7 +222,7 @@ export const createSession = async (
     transportSetup ??= Promise.resolve(transport.setup())
       .then(async () => {
         for (const message of pendingTransportMessages.splice(0)) {
-          await transport.handle(message.payload);
+          await transport.handle(message);
         }
       });
 
@@ -265,7 +265,7 @@ export const createSession = async (
     }
 
     await transportSetup;
-    await transport.handle(message.payload);
+    await transport.handle(message);
   };
 
   const onSignalMessage = async (message: object) => {

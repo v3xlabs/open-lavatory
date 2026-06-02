@@ -264,6 +264,9 @@ export const createSignalingLayer = (
           setState(SIGNAL_STATE.HANDSHAKE);
         }
       }
+      else {
+        setState(SIGNAL_STATE.ENCRYPTED);
+      }
     },
     async teardown() {
       log("teardown");

@@ -50,11 +50,12 @@ const config = createConfig({
 
 const trimAddress = (address: Address | undefined | null) => {
   if (typeof address !== "string") return address;
+
   return `${address.slice(0, 5)}...${address.slice(-4)}`;
 };
 
-const btnClass =
-  "!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1 disabled:opacity-50";
+const btnClass
+  = "!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1 disabled:opacity-50";
 
 const PersonalSign = () => {
   const { signMessage, data: signature, error, isPending, reset } = useSignMessage();
@@ -109,6 +110,7 @@ const PersonalSign = () => {
 
 const PersonalSignCard = () => {
   const { isConnected } = useAccount();
+
   if (!isConnected) return null;
 
   return (
@@ -167,6 +169,7 @@ const WalletUrlConnect = () => {
                 shimWalletOnMessage("wallet", msg => client.request(msg as never), session),
                 webrtc(),
               );
+
               walletSessionRef.current = s;
               detachRef.current = attachTryItSession(s, "wallet", session, {
                 logRequests: false,
@@ -177,14 +180,14 @@ const WalletUrlConnect = () => {
               await s.waitForLink();
               session.setPhase("connected");
             }
-            catch (err) {
+            catch (error) {
               session.setPhase("error");
               session.appendEntry({
                 role: "wallet",
                 direction: "in",
                 kind: "info",
                 summary: "Connection failed",
-                payload: err instanceof Error ? { message: err.message } : err,
+                payload: error instanceof Error ? { message: error.message } : error,
               });
             }
             finally {
@@ -240,6 +243,7 @@ const Connected = () => {
 
 const ConnectorChip = ({ connector }: { connector: Connector; }) => {
   const { connect } = useConnect();
+
   return (
     <button
       type="button"
@@ -305,6 +309,7 @@ const TryItOutInner = () => {
         onSessionBound={(s) => {
           const h = s.getHandshakeParameters();
           const connectionUrl = encodeConnectionURL(h);
+
           session.setPeer({
             role: "dapp",
             connectionUrl,
@@ -332,6 +337,7 @@ const TryItOutProviders = ({ children }: { children: ReactNode; }) => (
 
 export const TryItOut = () => {
   const inBrowser = globalThis.window !== undefined;
+
   if (!inBrowser) {
     return <div className="rounded-lg border vocs:border-primary" suppressHydrationWarning />;
   }

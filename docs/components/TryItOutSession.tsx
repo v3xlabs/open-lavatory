@@ -75,24 +75,32 @@ const StateContext = createContext<TryItSessionState | null>(null);
 const MAX_LOG_ENTRIES = 200;
 
 const nextLogId = () =>
-  `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
+  `${Date.now().toString(36)}-${Math.random().toString(36)
+    .slice(2, 8)}`;
 
 const sessionStatusLabel = (status: SessionStateObject["status"]) => {
   switch (status) {
-    case SESSION_STATE.CREATED:
+    case SESSION_STATE.CREATED: {
       return "created";
-    case SESSION_STATE.SIGNALING:
+    }
+    case SESSION_STATE.SIGNALING: {
       return "signaling";
-    case SESSION_STATE.READY:
+    }
+    case SESSION_STATE.READY: {
       return "ready";
-    case SESSION_STATE.LINKING:
+    }
+    case SESSION_STATE.LINKING: {
       return "linking";
-    case SESSION_STATE.CONNECTED:
+    }
+    case SESSION_STATE.CONNECTED: {
       return "connected";
-    case SESSION_STATE.DISCONNECTED:
+    }
+    case SESSION_STATE.DISCONNECTED: {
       return "disconnected";
-    default:
+    }
+    default: {
       return status;
+    }
   }
 };
 
@@ -100,7 +108,9 @@ const sessionToPhase = (
   status: SessionStateObject["status"],
 ): ConnectionPhase => {
   if (status === SESSION_STATE.CONNECTED) return "connected";
+
   if (status === SESSION_STATE.DISCONNECTED) return "error";
+
   if (
     status === SESSION_STATE.SIGNALING
     || status === SESSION_STATE.READY
@@ -109,6 +119,7 @@ const sessionToPhase = (
   ) {
     return "establishing";
   }
+
   return "idle";
 };
 
@@ -163,20 +174,24 @@ export const TryItSessionProvider = ({ children }: { children: ReactNode; }) => 
 
 export const useTryItSessionActions = (): TryItSessionActions => {
   const ctx = useContext(ActionsContext);
+
   if (!ctx) {
     throw new Error(
       "useTryItSessionActions must be used within TryItSessionProvider",
     );
   }
+
   return ctx;
 };
 
 export const useTryItSession = (): TryItSessionContextValue => {
   const actions = useTryItSessionActions();
   const state = useContext(StateContext);
+
   if (!state) {
     throw new Error("useTryItSession must be used within TryItSessionProvider");
   }
+
   return { ...state, ...actions };
 };
 
@@ -190,6 +205,7 @@ const logRpc = (
 ) => {
   const arrow = direction === "in" ? "←" : "→";
   const suffix = error ? " (error)" : "";
+
   actions.appendEntry({
     role,
     direction,
@@ -197,7 +213,7 @@ const logRpc = (
     method,
     summary: method
       ? `${arrow} ${method}${suffix}`
-      : `${arrow} ${error ? "error" : direction === "in" ? "response" : "request"}`,
+      : `${arrow} ${error ? "error" : (direction === "in" ? "response" : "request")}`,
     payload,
   });
 };
@@ -217,7 +233,9 @@ export const attachTryItSession = (
 
     const signaling = state.signaling?.state;
     const logKey = `${state.status}:${signaling ?? ""}`;
+
     if (logKey === lastSessionLogKey) return;
+
     lastSessionLogKey = logKey;
 
     actions.appendEntry({
@@ -234,17 +252,21 @@ export const attachTryItSession = (
   const onState = (state?: SessionStateObject) => logSessionState(state);
   const onRequest = (payload: object | string) => {
     const req = payload as { method?: string; };
+
     logRpc(actions, role, "in", payload, req.method);
   };
 
   session.emitter.on("state_change", onState);
+
   if (options?.logRequests !== false) {
     session.emitter.on("request", onRequest);
   }
+
   logSessionState(session.getState());
 
   return () => {
     session.emitter.off("state_change", onState);
+
     if (options?.logRequests !== false) {
       session.emitter.off("request", onRequest);
     }
@@ -257,10 +279,14 @@ export const shimWalletOnMessage = (
   actions: TryItSessionActions,
 ) => async (message: object) => {
   const req = message as { method?: string; };
+
   logRpc(actions, role, "in", message, req.method);
+
   try {
     const response = await handler(message);
+
     logRpc(actions, role, "out", response, req.method);
+
     return response;
   }
   catch (error) {
@@ -282,6 +308,7 @@ export const peerInfoFromConnectionUrl = (
 ): TryItPeerInfo => {
   try {
     const parsed = new URL(connectionUrl);
+
     return {
       role,
       connectionUrl,
@@ -328,9 +355,13 @@ const phaseDotClass: Record<ConnectionPhase, string> = {
 
 const peerMetaLine = (peer: TryItPeerInfo) => {
   const parts: string[] = [];
+
   if (peer.sessionId) parts.push(peer.sessionId);
+
   if (peer.protocol) parts.push(peer.protocol);
+
   if (peer.dapp?.name) parts.push(peer.dapp.name);
+
   return parts.join(" · ");
 };
 
@@ -345,6 +376,7 @@ const ConnectionStatusBar = () => {
 
   const copyUrl = async () => {
     if (!connectionUrl) return;
+
     await navigator.clipboard.writeText(connectionUrl);
     setCopied(true);
     globalThis.setTimeout(() => setCopied(false), 2000);
@@ -509,6 +541,7 @@ const MessageLogPanel = () => {
 
 export const TryItSessionPanel = () => {
   const { phase, peer, entries } = useTryItSession();
+
   if (phase === "idle" && !peer && entries.length === 0) return null;
 
   return (
@@ -527,6 +560,7 @@ export const OpenLvDappMonitor = ({
   const { connector, isConnected } = useAccount();
   const actions = useTryItSessionActions();
   const onBoundRef = useRef(onSessionBound);
+
   onBoundRef.current = onSessionBound;
   const detachRef = useRef<(() => void) | undefined>(undefined);
 
@@ -534,6 +568,7 @@ export const OpenLvDappMonitor = ({
     if (!isConnected || connector?.type !== "openLv") {
       detachRef.current?.();
       detachRef.current = undefined;
+
       return;
     }
 
@@ -542,6 +577,7 @@ export const OpenLvDappMonitor = ({
 
     const wire = async () => {
       const provider = (await connector.getProvider()) as DappProviderShim;
+
       if (cancelled) return;
 
       const bindSession = (session: Session) => {
@@ -557,14 +593,18 @@ export const OpenLvDappMonitor = ({
 
       provider.on("session_started", onStarted);
       const existing = provider.getSession();
+
       if (existing) bindSession(existing);
 
       restoreRequest = provider.request.bind(provider);
       provider.request = async (args: JsonRpcCall) => {
         logRpc(actions, "dapp", "out", args, args.method);
+
         try {
           const result = await restoreRequest!(args);
+
           logRpc(actions, "dapp", "in", result, args.method);
+
           return result;
         }
         catch (error) {
@@ -582,12 +622,14 @@ export const OpenLvDappMonitor = ({
 
       return () => {
         provider.off("session_started", onStarted);
+
         if (restoreRequest) provider.request = restoreRequest;
       };
     };
 
     let unwire: (() => void) | undefined;
-    wire().then(fn => { unwire = fn; });
+
+    wire().then((fn) => { unwire = fn; });
 
     return () => {
       cancelled = true;

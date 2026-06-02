@@ -1,5 +1,11 @@
 # @openlv/react-native
 
+## 0.0.1-beta.5
+
+### Patch Changes
+
+- @openlv/session@0.0.1-beta.12
+
 ## 0.0.1-beta.4
 
 ### Patch Changes

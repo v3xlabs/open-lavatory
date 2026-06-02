@@ -10,6 +10,7 @@ export default defineConfig([
       "**/*.js",
       "**/.wxt/**",
       "**/.expo/**",
+      "**/*.gen.*",
     ],
   },
   ...v3xlint.configs.recommended,

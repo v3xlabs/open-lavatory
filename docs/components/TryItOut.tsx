@@ -167,7 +167,7 @@ const WalletUrlConnect = () => {
               const s = await connectSession(
                 url,
                 shimWalletOnMessage("wallet", msg => client.request(msg as never), session),
-                webrtc(),
+                [webrtc()],
               );
 
               walletSessionRef.current = s;

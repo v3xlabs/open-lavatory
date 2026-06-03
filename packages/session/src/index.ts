@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   decodeConnectionURL,
   OPENLV_PROTOCOL_VERSION,
@@ -25,6 +26,8 @@ import {
   TRANSPORT_STATE,
   type TransportLayer,
   type TransportMessage,
+  type TransportOfferMessage,
+  type TransportProtocol,
 } from "@openlv/transport";
 import { EventEmitter } from "eventemitter3";
 
@@ -74,7 +77,7 @@ export type Session = {
   emitter: EventEmitter<SessionEvents>;
   _internal: {
     signal: SignalingLayer;
-    transport: TransportLayer;
+    transports: TransportLayer[];
   };
 };
 
@@ -86,7 +89,7 @@ export type Session = {
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: SignalingProtocol,
-  transportLayer: TLayer,
+  transportLayers: TLayer[],
   onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
@@ -149,7 +152,8 @@ export const createSession = async (
     isHost,
   });
 
-  const transport = transportLayer({
+  let selectedTransport: TransportLayer | undefined;
+  const transportParameters = {
     encrypt(message) {
       if (!relyingPublicKey) {
         throw new Error("Relying party public key not found");
@@ -162,12 +166,16 @@ export const createSession = async (
     onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
       log("Session: received message from transport", message);
 
+      if (!selectedTransport) {
+        throw new Error("Transport has not been negotiated");
+      }
+
       if (message["type"] === "request") {
         const messageId = message["messageId"] as string;
 
         // Immediately acknowledge receipt so the sender's ack-timeout does
         // not fire while the handler (which may await user interaction) runs.
-        await transport.send({ type: "ack", messageId } satisfies SessionMessage);
+        await selectedTransport.send({ type: "ack", messageId } satisfies SessionMessage);
 
         // Notify observers before processing (e.g. wallet UI can show a
         // pending indicator before the handler resolves).
@@ -180,7 +188,7 @@ export const createSession = async (
           payload: data,
         };
 
-        await transport.send(response);
+        await selectedTransport.send(response);
       }
 
       if (message["type"] === "response" || message["type"] === "ack") {
@@ -198,21 +206,90 @@ export const createSession = async (
 
       await signal.send(sessionMessage);
     },
-  });
+  } satisfies Parameters<TLayer>[0];
+  const transports = transportLayers.map(transportLayer => transportLayer(transportParameters));
 
-  transport.emitter.on("state_change", (state) => {
-    log("transport state change", state);
+  if (transports.length === 0) {
+    throw new Error("At least one transport is required");
+  }
 
-    if (state === TRANSPORT_STATE.CONNECTED) {
-      updateStatus(SESSION_STATE.CONNECTED);
-    }
-  });
+  const supportedTransports = transports.map(transport => transport.type);
+  let selectedTransportProtocol: TransportProtocol | undefined;
+  let transportSetup: Promise<void> | undefined;
+  const pendingTransportMessages: TransportMessage[] = [];
+
+  for (const transport of transports) {
+    transport.emitter.on("state_change", (state) => {
+      log("transport state change", transport.type, state);
+
+      if (transport === selectedTransport && state === TRANSPORT_STATE.CONNECTED) {
+        updateStatus(SESSION_STATE.CONNECTED);
+      }
+    });
+  }
 
   const startTransport = async () => {
-    await transport.setup();
+    if (!selectedTransport) {
+      throw new Error("Transport has not been negotiated");
+    }
+
+    const transport = selectedTransport;
+
+    transportSetup ??= Promise.resolve(transport.setup())
+      .then(async () => {
+        for (const message of pendingTransportMessages.splice(0)) {
+          await transport.handle(message);
+        }
+      });
+
+    await transportSetup;
   };
 
-  // let transport: TransportLayer | undefined;
+  const selectTransport = async (remoteTransports: TransportProtocol[]) => {
+    const transport = transports.find(transport => remoteTransports.includes(transport.type));
+
+    if (!transport) {
+      updateStatus(SESSION_STATE.DISCONNECTED);
+      throw new Error(`No shared transport. Local: ${supportedTransports.join(", ")}; remote: ${remoteTransports.join(", ")}`);
+    }
+
+    selectedTransportProtocol = transport.type;
+    selectedTransport = transport;
+
+    await signal.send({
+      type: "request",
+      messageId: crypto.randomUUID(),
+      payload: {
+        type: "transport-select",
+        payload: { transport: transport.type },
+      } satisfies TransportOfferMessage,
+    } satisfies SessionMessage);
+    await startTransport();
+  };
+
+  const handleTransportMessage = async (message: TransportMessage) => {
+    if (selectedTransportProtocol && message.transport !== selectedTransportProtocol) {
+      log("ignoring transport message for unselected transport", message.transport);
+
+      return;
+    }
+
+    if (!transportSetup) {
+      pendingTransportMessages.push(message);
+      await startTransport();
+
+      return;
+    }
+
+    await transportSetup;
+
+    if (!selectedTransport) {
+      throw new Error("Transport has not been negotiated");
+    }
+
+    await selectedTransport.handle(message);
+  };
+
   const onSignalMessage = async (message: object) => {
     log("Session: received message from signaling", message);
 
@@ -226,7 +303,34 @@ export const createSession = async (
     if (sessionMsg.type === "request") {
       log("Session: received request message", sessionMsg.payload);
 
-      await transport.handle(sessionMsg.payload as TransportMessage);
+      const transportMessage = sessionMsg.payload as TransportOfferMessage;
+
+      switch (transportMessage.type) {
+        case "transport-options": {
+          if (isHost) await selectTransport(transportMessage.payload.transports);
+
+          break;
+        }
+        case "transport-select": {
+          if (isHost) break;
+
+          const transport = transports.find(transport => transport.type === transportMessage.payload.transport);
+
+          if (!transport) {
+            updateStatus(SESSION_STATE.DISCONNECTED);
+            throw new Error(`Unsupported selected transport: ${transportMessage.payload.transport}`);
+          }
+
+          selectedTransportProtocol = transportMessage.payload.transport;
+          selectedTransport = transport;
+          await startTransport();
+          break;
+        }
+        case "transport-data": {
+          await handleTransportMessage(transportMessage);
+          break;
+        }
+      }
     }
   };
 
@@ -234,7 +338,6 @@ export const createSession = async (
     connect: async () => {
       updateStatus(SESSION_STATE.SIGNALING);
       log("connecting to session, isHost:", isHost);
-      // TODO: implement
       log("connecting to session");
 
       signal.on("message", onSignalMessage);
@@ -257,8 +360,15 @@ export const createSession = async (
           updateStatus(SESSION_STATE.LINKING);
         }
 
-        if (state === SIGNAL_STATE.ENCRYPTED) {
-          startTransport();
+        if (state === SIGNAL_STATE.ENCRYPTED && !isHost) {
+          signal.send({
+            type: "request",
+            messageId: crypto.randomUUID(),
+            payload: {
+              type: "transport-options",
+              payload: { transports: supportedTransports },
+            } satisfies TransportOfferMessage,
+          } satisfies SessionMessage);
         }
 
         if (state === SIGNAL_STATE.ERROR) {
@@ -267,14 +377,13 @@ export const createSession = async (
         }
       });
 
-      // TODO: handle errors in setup nicely in modal UI
       await signal.setup();
     },
     async close() {
       log("session teardown");
       signal.off("message", onSignalMessage);
       await Promise.all([
-        transport.teardown(),
+        ...transports.map(transport => transport.teardown()),
         signal.teardown(),
       ]);
       updateStatus(SESSION_STATE.DISCONNECTED);
@@ -283,7 +392,6 @@ export const createSession = async (
       return {
         status,
         signaling: signal.getState(),
-        // transport: transport.getState(),
       };
     },
     getHandshakeParameters() {
@@ -334,13 +442,17 @@ export const createSession = async (
         payload: message,
       };
 
-      await transport.send(sessionMessage);
+      if (!selectedTransport) {
+        throw new Error("Transport has not been negotiated");
+      }
+
+      await selectedTransport.send(sessionMessage);
 
       return new Promise<unknown>((resolve, reject) => {
         let ackReceived = false;
+        let responseTimer: ReturnType<typeof setTimeout> | undefined;
         // eslint-disable-next-line prefer-const
         let ackTimer: ReturnType<typeof setTimeout> | undefined;
-        let responseTimer: ReturnType<typeof setTimeout> | undefined;
 
         const cleanup = () => {
           clearTimeout(ackTimer);
@@ -354,7 +466,6 @@ export const createSession = async (
           if (msg.type === "ack" && !ackReceived) {
             ackReceived = true;
             clearTimeout(ackTimer);
-            // The other side confirmed receipt; wait for the full response.
             responseTimer = setTimeout(() => {
               cleanup();
               reject(new Error("Request timed out: no response after acknowledgement"));
@@ -371,7 +482,6 @@ export const createSession = async (
 
         messages.on("message", handler);
 
-        // Short window for the ack — tells us the peer is alive and processing.
         ackTimer = setTimeout(() => {
           if (!ackReceived) {
             cleanup();
@@ -382,19 +492,16 @@ export const createSession = async (
     },
     _internal: {
       signal,
-      transport,
+      transports,
     },
     emitter,
   };
 };
 
-/**
- * Connect to a session from its openlv:// URL
- */
 export const connectSession = async (
   connectionUrl: string,
   onMessage: (message: object) => Promise<object | string>,
-  transport: TLayer,
+  transports: TLayer[],
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 
@@ -404,5 +511,5 @@ export const connectSession = async (
     throw new Error(`Invalid signaling protocol: ${initParameters.p}`);
   }
 
-  return createSession(initParameters, signaling, transport, onMessage);
+  return createSession(initParameters, signaling, transports, onMessage);
 };

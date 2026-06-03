@@ -37,11 +37,12 @@ Then use it like `@openlv/session` (no extra polyfill calls):
 
 ```ts
 import { connectSession } from "@openlv/react-native";
+import { webrtc } from "@openlv/transport/webrtc";
 
 const session = await connectSession("openlv://...", async (msg) => {
   // ...handle requests...
   return "ok";
-});
+}, [webrtc()]);
 
 await session.connect();
 ```

@@ -1,3 +1,4 @@
+/* eslint-disable max-lines */
 import {
   decodeConnectionURL,
   OPENLV_PROTOCOL_VERSION,
@@ -76,7 +77,7 @@ export type Session = {
   emitter: EventEmitter<SessionEvents>;
   _internal: {
     signal: SignalingLayer;
-    transport: TransportLayer;
+    transports: TransportLayer[];
   };
 };
 
@@ -88,7 +89,7 @@ export type Session = {
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: SignalingProtocol,
-  transportLayer: TLayer,
+  transportLayers: TLayer[],
   onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
@@ -151,7 +152,8 @@ export const createSession = async (
     isHost,
   });
 
-  const transport = transportLayer({
+  let selectedTransport: TransportLayer | undefined;
+  const transportParameters = {
     encrypt(message) {
       if (!relyingPublicKey) {
         throw new Error("Relying party public key not found");
@@ -164,12 +166,16 @@ export const createSession = async (
     onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
       log("Session: received message from transport", message);
 
+      if (!selectedTransport) {
+        throw new Error("Transport has not been negotiated");
+      }
+
       if (message["type"] === "request") {
         const messageId = message["messageId"] as string;
 
         // Immediately acknowledge receipt so the sender's ack-timeout does
         // not fire while the handler (which may await user interaction) runs.
-        await transport.send({ type: "ack", messageId } satisfies SessionMessage);
+        await selectedTransport.send({ type: "ack", messageId } satisfies SessionMessage);
 
         // Notify observers before processing (e.g. wallet UI can show a
         // pending indicator before the handler resolves).
@@ -182,7 +188,7 @@ export const createSession = async (
           payload: data,
         };
 
-        await transport.send(response);
+        await selectedTransport.send(response);
       }
 
       if (message["type"] === "response" || message["type"] === "ack") {
@@ -200,24 +206,34 @@ export const createSession = async (
 
       await signal.send(sessionMessage);
     },
-  });
-  const supportedTransports: TransportProtocol[] = [transport.type];
-  let selectedTransport: TransportProtocol | undefined;
+  } satisfies Parameters<TLayer>[0];
+  const transports = transportLayers.map(transportLayer => transportLayer(transportParameters));
+
+  if (transports.length === 0) {
+    throw new Error("At least one transport is required");
+  }
+
+  const supportedTransports = transports.map(transport => transport.type);
+  let selectedTransportProtocol: TransportProtocol | undefined;
   let transportSetup: Promise<void> | undefined;
   const pendingTransportMessages: TransportMessage[] = [];
 
-  transport.emitter.on("state_change", (state) => {
-    log("transport state change", state);
+  for (const transport of transports) {
+    transport.emitter.on("state_change", (state) => {
+      log("transport state change", transport.type, state);
 
-    if (state === TRANSPORT_STATE.CONNECTED) {
-      updateStatus(SESSION_STATE.CONNECTED);
-    }
-  });
+      if (transport === selectedTransport && state === TRANSPORT_STATE.CONNECTED) {
+        updateStatus(SESSION_STATE.CONNECTED);
+      }
+    });
+  }
 
   const startTransport = async () => {
     if (!selectedTransport) {
       throw new Error("Transport has not been negotiated");
     }
+
+    const transport = selectedTransport;
 
     transportSetup ??= Promise.resolve(transport.setup())
       .then(async () => {
@@ -230,28 +246,29 @@ export const createSession = async (
   };
 
   const selectTransport = async (remoteTransports: TransportProtocol[]) => {
-    const chosenTransport = supportedTransports.find(transport => remoteTransports.includes(transport));
+    const transport = transports.find(transport => remoteTransports.includes(transport.type));
 
-    if (!chosenTransport) {
+    if (!transport) {
       updateStatus(SESSION_STATE.DISCONNECTED);
       throw new Error(`No shared transport. Local: ${supportedTransports.join(", ")}; remote: ${remoteTransports.join(", ")}`);
     }
 
-    selectedTransport = chosenTransport;
+    selectedTransportProtocol = transport.type;
+    selectedTransport = transport;
 
     await signal.send({
       type: "request",
       messageId: crypto.randomUUID(),
       payload: {
         type: "transport-select",
-        payload: { transport: chosenTransport },
+        payload: { transport: transport.type },
       } satisfies TransportOfferMessage,
     } satisfies SessionMessage);
     await startTransport();
   };
 
   const handleTransportMessage = async (message: TransportMessage) => {
-    if (selectedTransport && message.transport !== selectedTransport) {
+    if (selectedTransportProtocol && message.transport !== selectedTransportProtocol) {
       log("ignoring transport message for unselected transport", message.transport);
 
       return;
@@ -265,7 +282,12 @@ export const createSession = async (
     }
 
     await transportSetup;
-    await transport.handle(message);
+
+    if (!selectedTransport) {
+      throw new Error("Transport has not been negotiated");
+    }
+
+    await selectedTransport.handle(message);
   };
 
   const onSignalMessage = async (message: object) => {
@@ -292,12 +314,15 @@ export const createSession = async (
         case "transport-select": {
           if (isHost) break;
 
-          if (!supportedTransports.includes(transportMessage.payload.transport)) {
+          const transport = transports.find(transport => transport.type === transportMessage.payload.transport);
+
+          if (!transport) {
             updateStatus(SESSION_STATE.DISCONNECTED);
             throw new Error(`Unsupported selected transport: ${transportMessage.payload.transport}`);
           }
 
-          selectedTransport = transportMessage.payload.transport;
+          selectedTransportProtocol = transportMessage.payload.transport;
+          selectedTransport = transport;
           await startTransport();
           break;
         }
@@ -358,7 +383,7 @@ export const createSession = async (
       log("session teardown");
       signal.off("message", onSignalMessage);
       await Promise.all([
-        transport.teardown(),
+        ...transports.map(transport => transport.teardown()),
         signal.teardown(),
       ]);
       updateStatus(SESSION_STATE.DISCONNECTED);
@@ -417,7 +442,11 @@ export const createSession = async (
         payload: message,
       };
 
-      await transport.send(sessionMessage);
+      if (!selectedTransport) {
+        throw new Error("Transport has not been negotiated");
+      }
+
+      await selectedTransport.send(sessionMessage);
 
       return new Promise<unknown>((resolve, reject) => {
         let ackReceived = false;
@@ -463,7 +492,7 @@ export const createSession = async (
     },
     _internal: {
       signal,
-      transport,
+      transports,
     },
     emitter,
   };
@@ -472,7 +501,7 @@ export const createSession = async (
 export const connectSession = async (
   connectionUrl: string,
   onMessage: (message: object) => Promise<object | string>,
-  transport: TLayer,
+  transports: TLayer[],
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 
@@ -482,5 +511,5 @@ export const connectSession = async (
     throw new Error(`Invalid signaling protocol: ${initParameters.p}`);
   }
 
-  return createSession(initParameters, signaling, transport, onMessage);
+  return createSession(initParameters, signaling, transports, onMessage);
 };

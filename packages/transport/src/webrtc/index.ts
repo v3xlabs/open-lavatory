@@ -2,7 +2,7 @@ import { match } from "ts-pattern";
 
 import {
   createTransportBase,
-  type CreateTransportLayerFn,
+  type Transport,
   type TransportMessage,
 } from "../index.js";
 import { log } from "../utils/log.js";
@@ -25,7 +25,7 @@ const defaultConfig: WebRTCConfig = {
   ],
 };
 
-export const webrtc: CreateTransportLayerFn = (
+export const webrtc: Transport = (
   config: WebRTCConfig = defaultConfig,
 ) => {
   const { iceServers = defaultConfig.iceServers } = config;

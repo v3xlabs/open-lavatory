@@ -198,7 +198,7 @@ export const createProvider = (
     session = await createSession(
       linkParameters,
       await dynamicSignalingLayer(linkParameters.p),
-      webrtc(transportOptions),
+      [webrtc(transportOptions)],
       onMessage,
     );
     updateStatus(PROVIDER_STATUS.CONNECTING);

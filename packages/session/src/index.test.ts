@@ -14,7 +14,7 @@ describe("Session", () => {
         s: "https://ntfy.sh/",
       },
       ntfy,
-      webrtc(),
+      [webrtc()],
       async (message) => {
         console.log("sessionA received message", message);
 
@@ -48,7 +48,7 @@ describe("Session", () => {
 
         return { result: "success" };
       },
-      webrtc(),
+      [webrtc()],
     );
 
     console.log(sessionB.getState());

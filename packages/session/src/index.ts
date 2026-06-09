@@ -21,9 +21,9 @@ import {
 } from "@openlv/signaling";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
 import {
-  type TLayer,
   TRANSPORT_STATE,
   type TransportLayer,
+  type TransportLayerFn,
   type TransportMessage,
 } from "@openlv/transport";
 import { EventEmitter } from "eventemitter3";
@@ -86,7 +86,7 @@ export type Session = {
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: SignalingProtocol,
-  transportLayer: TLayer,
+  transportLayer: TransportLayerFn[],
   onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
@@ -149,7 +149,7 @@ export const createSession = async (
     isHost,
   });
 
-  const transport = transportLayer({
+  const transport = transportLayer[0]({
     encrypt(message) {
       if (!relyingPublicKey) {
         throw new Error("Relying party public key not found");
@@ -234,8 +234,6 @@ export const createSession = async (
     connect: async () => {
       updateStatus(SESSION_STATE.SIGNALING);
       log("connecting to session, isHost:", isHost);
-      // TODO: implement
-      log("connecting to session");
 
       signal.on("message", onSignalMessage);
 
@@ -267,7 +265,6 @@ export const createSession = async (
         }
       });
 
-      // TODO: handle errors in setup nicely in modal UI
       await signal.setup();
     },
     async close() {
@@ -394,7 +391,7 @@ export const createSession = async (
 export const connectSession = async (
   connectionUrl: string,
   onMessage: (message: object) => Promise<object | string>,
-  transport: TLayer,
+  transport: TransportLayerFn[],
 ): Promise<Session> => {
   const initParameters = decodeConnectionURL(connectionUrl);
 

@@ -1,4 +1,4 @@
-import { type Connector, type CreateConnectorFn, useAccount, useConnect } from "wagmi";
+import { type Connector, type CreateConnectorFn, useConnect, useConnection } from "wagmi";
 
 export const ConnectorCard = ({
   connector,
@@ -7,8 +7,8 @@ export const ConnectorCard = ({
   connector: Connector<CreateConnectorFn>;
   refreshKey: number;
 }) => {
-  const { connect, isPending } = useConnect();
-  const { isConnected } = useAccount();
+  const connect = useConnect();
+  const { isConnected } = useConnection();
 
   return (
     <div
@@ -57,11 +57,11 @@ export const ConnectorCard = ({
       </div>
 
       <button
-        onClick={() => connect({ connector: connector })}
-        disabled={isPending || isConnected}
+        onClick={() => connect.mutate({ connector })}
+        disabled={connect.isPending || isConnected}
         className="w-full rounded-md bg-blue-500 py-2 font-medium text-sm text-white transition-colors duration-200 hover:bg-blue-600 disabled:bg-gray-300"
       >
-        {isPending ? "Connecting..." : "Connect"}
+        {connect.isPending ? "Connecting..." : "Connect"}
       </button>
     </div>
   );

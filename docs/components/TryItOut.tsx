@@ -14,11 +14,12 @@ import {
   type Connector,
   createConfig,
   http,
-  useAccount,
   useChainId,
   useClient,
   useConnect,
+  useConnection,
   useConnections,
+  useConnectors,
   useDisconnect,
   useSignMessage,
   useVerifyMessage,
@@ -58,8 +59,9 @@ const btnClass
   = "!bg-[var(--vocs-color_codeTitleBackground)] hover:!bg-[var(--vocs-color_codeBlockBackground)] rounded-lg vocs:border-primary px-4 py-1 disabled:opacity-50";
 
 const PersonalSign = () => {
-  const { signMessage, data: signature, error, isPending, reset } = useSignMessage();
-  const { address, connector } = useAccount();
+  const signMessage = useSignMessage();
+  const { address, connector } = useConnection();
+  const { data: signature, error, isPending, reset } = signMessage;
   const chainId = useChainId();
   const { phase } = useTryItSession();
   const ready = connector?.type !== "openLv" || phase === "connected";
@@ -82,7 +84,7 @@ const PersonalSign = () => {
           disabled={!ready || isPending}
           onClick={() => {
             reset();
-            signMessage({ message: "Hello, world!" });
+            signMessage.mutate({ message: "Hello, world!" });
           }}
           className={btnClass}
         >
@@ -109,7 +111,7 @@ const PersonalSign = () => {
 };
 
 const PersonalSignCard = () => {
-  const { isConnected } = useAccount();
+  const { isConnected } = useConnection();
 
   if (!isConnected) return null;
 
@@ -209,8 +211,8 @@ const WalletUrlConnect = () => {
 };
 
 const Connected = () => {
-  const { disconnect } = useDisconnect();
-  const { address, connector } = useAccount();
+  const disconnect = useDisconnect();
+  const { address, connector } = useConnection();
   const session = useTryItSession();
 
   return (
@@ -226,7 +228,7 @@ const Connected = () => {
           type="button"
           onClick={() => {
             session.resetSession();
-            disconnect();
+            disconnect.mutate();
           }}
           className={btnClass}
         >
@@ -242,13 +244,13 @@ const Connected = () => {
 };
 
 const ConnectorChip = ({ connector }: { connector: Connector; }) => {
-  const { connect } = useConnect();
+  const connect = useConnect();
 
   return (
     <button
       type="button"
       className="inline-flex items-center gap-1 rounded border vocs:border-primary px-1.5 py-0.5 text-sm hover:bg-[var(--vocs-color_codeHighlightBackground)]"
-      onClick={() => connect({ connector })}
+      onClick={() => connect.mutate({ connector })}
     >
       {connector.icon && <img src={connector.icon} alt="" className="h-4 w-4" />}
       {connector.name}
@@ -257,7 +259,8 @@ const ConnectorChip = ({ connector }: { connector: Connector; }) => {
 };
 
 const Connectors = () => {
-  const { connect, connectors } = useConnect();
+  const connect = useConnect();
+  const connectors = useConnectors();
   const openLv = connectors.find(c => c.type === "openLv");
   const wallet = connectors.find(c => c.type !== "openLv");
 
@@ -268,7 +271,7 @@ const Connectors = () => {
           <li key={connector.id}>
             <button
               type="button"
-              onClick={() => connect({ connector })}
+              onClick={() => connect.mutate({ connector })}
               className={classNames(
                 "flex w-full items-center justify-between rounded-lg px-4 py-2 text-sm",
                 connector.type === "openLv"
@@ -300,7 +303,7 @@ const Connectors = () => {
 };
 
 const TryItOutInner = () => {
-  const { isConnected } = useAccount();
+  const { isConnected } = useConnection();
   const session = useTryItSession();
 
   return (

@@ -19,7 +19,9 @@
     "@tanstack/router-plugin": "^1.121.9",
     "@types/react": "^19.1.8",
     "@vitejs/plugin-react": "^4.5.2",
-    "@wagmi/connectors": "6",
+    "@wagmi/connectors": "^8.0.15",
+    "viem": "^2.44.1",
+    "wagmi": "^3.6.16",
     "autoprefixer": "^10.4.21",
     "globals": "^16.0.0",
     "mqtt": "^5.13.1",
@@ -36,12 +38,7 @@
   },
   "devDependencies": {
     "@types/react-dom": "^19.1.6",
-    "typescript": "^5",
+    "typescript": "^5.9.3",
     "vite": "^7"
-  },
-  "peerDependencies": {
-    "@wagmi/core": "2",
-    "viem": "2",
-    "wagmi": "2"
   }
 }

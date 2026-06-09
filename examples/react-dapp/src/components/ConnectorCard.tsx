@@ -1,4 +1,4 @@
-import { type Connector, type CreateConnectorFn, useConnection, useConnect } from "wagmi";
+import { type Connector, type CreateConnectorFn, useConnect, useConnection } from "wagmi";
 
 export const ConnectorCard = ({
   connector,

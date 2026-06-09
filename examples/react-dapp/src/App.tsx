@@ -1,10 +1,12 @@
 /* eslint-disable no-restricted-syntax */
 import { useEffect, useState } from "react";
 import {
-  useAccount,
   useBalance,
   useChainId,
+  useChains,
+  useConnection,
   useConnect,
+  useConnectors,
   useDisconnect,
   useSwitchChain,
 } from "wagmi";
@@ -22,10 +24,13 @@ interface WalletInfo {
 
 const App = () => {
   const [refreshKey, setRefreshKey] = useState(0);
-  const { address, isConnected, connector } = useAccount();
-  const { connectors, error: connectError } = useConnect();
-  const { disconnect } = useDisconnect();
-  const { switchChain, chains } = useSwitchChain();
+  const { address, isConnected, connector } = useConnection();
+  const connect = useConnect();
+  const connectors = useConnectors();
+  const disconnect = useDisconnect();
+  const switchChain = useSwitchChain();
+  const chains = useChains();
+  const connectError = connect.error;
   const chainId = useChainId();
   const { data: balance, isLoading: balanceLoading } = useBalance({
     address,
@@ -257,7 +262,7 @@ const App = () => {
 
                 {/* Disconnect Button */}
                 <button
-                  onClick={() => disconnect()}
+                  onClick={() => disconnect.mutate()}
                   className="w-full rounded-lg bg-red-500 py-3 font-medium text-white transition-colors duration-200 hover:bg-red-600"
                 >
                   Disconnect Wallet
@@ -351,7 +356,7 @@ const App = () => {
                   </p>
                   {chain.id !== chainId && (
                     <button
-                      onClick={() => switchChain({ chainId: chain.id })}
+                      onClick={() => switchChain.mutate({ chainId: chain.id })}
                       className="w-full rounded-lg bg-gray-200 py-2 font-medium text-gray-700 text-sm transition-colors duration-200 hover:bg-slate-300"
                     >
                       Switch to

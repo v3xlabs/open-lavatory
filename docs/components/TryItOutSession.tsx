@@ -16,7 +16,7 @@ import {
   useRef,
   useState,
 } from "react";
-import { useAccount } from "wagmi";
+import { useConnection } from "wagmi";
 
 export type TryItRole = "dapp" | "wallet";
 
@@ -557,7 +557,7 @@ export const OpenLvDappMonitor = ({
 }: {
   onSessionBound?: (session: Session) => void;
 }) => {
-  const { connector, isConnected } = useAccount();
+  const { connector, isConnected } = useConnection();
   const actions = useTryItSessionActions();
   const onBoundRef = useRef(onSessionBound);
 

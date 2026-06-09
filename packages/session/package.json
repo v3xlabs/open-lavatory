@@ -51,11 +51,6 @@
     "typescript": "^5",
     "vitest": "^4"
   },
-  "peerDependencies": {
-    "@wagmi/core": "2",
-    "viem": "2",
-    "wagmi": "2"
-  },
   "packageManager": "pnpm@10.10.0",
   "publishConfig": {
     "access": "public"

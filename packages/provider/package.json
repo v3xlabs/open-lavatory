@@ -53,14 +53,9 @@
     "ts-pattern": "^5.9.0"
   },
   "devDependencies": {
-    "@wagmi/core": "2",
     "globals": "^16.2.0",
     "typescript": "^5",
     "vitest": "^4.0.3"
-  },
-  "peerDependencies": {
-    "@wagmi/core": "2",
-    "viem": "2"
   },
   "packageManager": "pnpm@10.10.0",
   "publishConfig": {

@@ -44,13 +44,13 @@
     "eventemitter3": "^5.0.1"
   },
   "devDependencies": {
-    "@wagmi/core": "2",
+    "@wagmi/core": "3",
     "globals": "^16.2.0",
-    "typescript": "^5",
+    "typescript": "^5.9.3",
     "vitest": "^4"
   },
   "peerDependencies": {
-    "@wagmi/core": "2",
+    "@wagmi/core": "3",
     "viem": "2"
   },
   "packageManager": "pnpm@10.10.0",

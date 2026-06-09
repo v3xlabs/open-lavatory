@@ -19,13 +19,13 @@ export const TRANSPORT_STATE = {
   ERROR: "error",
 } as const;
 export type TransportState =
-    (typeof TRANSPORT_STATE)[keyof typeof TRANSPORT_STATE];
+  (typeof TRANSPORT_STATE)[keyof typeof TRANSPORT_STATE];
 
 export type TLayerEventMap = {
   state_change: (state: TransportState) => void;
 };
 
-export type TransportLayerParameters = {
+export type TransportLayerSetupParameters = {
   isHost: boolean;
   encrypt: EncryptionKey["encrypt"];
   decrypt: DecryptionKey["decrypt"];
@@ -47,7 +47,7 @@ export type TransportMessage =
     payload: string;
   };
 export type TransportLayer = {
-  type: string;
+  type: TransportProtocol;
   setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
   send: (message: object) => Promise<void>;
@@ -55,10 +55,12 @@ export type TransportLayer = {
   waitFor: (state: TransportState) => Promise<void>;
   emitter: EventEmitter<TLayerEventMap>;
 };
-export type TLayer = (parameters: TransportLayerParameters) => TransportLayer;
-export type CreateTransportLayerFn = (config?: WebRTCConfig) => TLayer;
-export type TransportLayerBase = {
-  type: string;
+export type TransportProtocol = "webrtc" | string;
+export type TransportLayerFn = (parameters: TransportLayerSetupParameters) => TransportLayer;
+export type Transport = (config?: WebRTCConfig) => TransportLayerFn;
+
+export type TransportLayerImpl = {
+  type: TransportProtocol;
   setup: () => MaybePromise<void>;
   teardown: () => MaybePromise<void>;
   handle: (message: TransportMessage) => Promise<void>;
@@ -72,21 +74,21 @@ export type TransportLayerBaseEventMap = {
   message: (message: string) => void;
 };
 export type TransportLayerBaseEmitter =
-    EventEmitter<TransportLayerBaseEventMap>;
+  EventEmitter<TransportLayerBaseEventMap>;
 export type TransportLayerBaseParameters = {
   emitter: TransportLayerBaseEmitter;
   isHost: boolean;
 };
-export type TransportLayerBaseInit = (
+export type TransportLayerImplFn = (
   parameters: TransportLayerBaseParameters,
-) => TransportLayerBase;
+) => TransportLayerImpl;
 
 /**
  * Base Transport Layer implementation
  *
  * https://openlv.sh/api/transport
  */
-export const createTransportBase = (init: TransportLayerBaseInit): TLayer => ({ encrypt, decrypt, subsend, isHost, onmessage }) => {
+export const createTransportBase = (init: TransportLayerImplFn): TransportLayerFn => ({ encrypt, decrypt, subsend, isHost, onmessage }) => {
   const emitter = new EventEmitter<TLayerEventMap>();
   const internalEmitter = new EventEmitter<TransportLayerBaseEventMap>();
   let state: TransportState = TRANSPORT_STATE.STANDBY;

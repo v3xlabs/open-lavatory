@@ -46,7 +46,7 @@ export default function App() {
         // Handle incoming RPC-like requests from dApp peer // [!code ++]
         return { result: 'ok' } // [!code ++]
       }, // [!code ++]
-      webrtc(), // [!code ++]
+      [webrtc()], // [!code ++]
     ); // [!code ++]
 
     await session.connect();

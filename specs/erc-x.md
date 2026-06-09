@@ -284,7 +284,7 @@ const session = await connectSession(
   async (message) => {
     return { result: "ok" };
   },
-  webrtc(),
+  [webrtc()],
 );
 ```
 

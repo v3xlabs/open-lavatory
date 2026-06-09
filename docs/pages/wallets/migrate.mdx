@@ -2,27 +2,7 @@
 
 So you are intrigued 🤔, lets get you started.
 
-## dApp migration checklist
-
-1. Add OpenLV connector:
-
-```sh
-pnpm install @openlv/connector wagmi
-```
-
-2. Include it in Wagmi config:
-
-```ts
-import { openlv } from '@openlv/connector'
-
-connectors: [openlv()]
-```
-
-4. Keep other connectors, heck, even WalletConnect if you'd like.
-
-5. Adjust the settings to your liking, see [configuration](/guides/configuration) for more details.
-
-## Wallet-side migration checklist
+## Checklist
 
 1. Accept `openlv://...` URIs in your QR code or deep link flow.
 2. Use `connectSession(uri, onMessage, webrtc())` to start a connection.
@@ -34,4 +14,4 @@ connectors: [openlv()]
 - You won't need an API key.
 - You don't need to agree to any aggressive licensing or terms of service.
 - You won't need to run any infrastructure (tho you can).
-- There are no rate-limits
+- There are no built-in rate-limits, just public use

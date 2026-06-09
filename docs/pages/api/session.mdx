@@ -1,10 +1,12 @@
 # Session
 
-:::info
-TODO: This page has not been written yet.
-:::
+In openlv, a session is the part that maintains the lifecycle of the connection.
+A session is created from either side as the QR code is scanned or URL is copied.
+And signaling and transport layers handle everything behind the scenes.
 
 ## Creating a session
+
+You can create a session for example in a dApp as follows:
 
 ```typescript
 import { createSession } from "@openlv/session";
@@ -19,6 +21,8 @@ await session.connect();
 ```
 
 ## Connecting to a session
+
+You can connect to a session using the url as follows:
 
 ```typescript
 import { connectSession } from "@openlv/session";

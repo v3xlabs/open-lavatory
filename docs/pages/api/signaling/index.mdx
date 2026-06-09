@@ -1,5 +1,15 @@
 # Signaling
 
-:::info
-TODO: This page has not been written yet.
-:::
+In openlv, signaling is the initial phase of the connection process.
+It occurs on public infrastructure and involves a cryptographic handshake to establish a secure connection.
+Once this is done transport negotiation can occur, and signaling can be disconnected.
+
+## Supported Protocols
+
+In the current implementation we support the following three protocols:
+
+- [MQTT](/api/signaling/mqtt)
+- [Ntfy](/api/signaling/ntfy)
+- [Gun](/api/signaling/gun)
+
+All of which have public infrastructure available for use, but also allow for self-hosting.

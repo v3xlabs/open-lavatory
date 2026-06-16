@@ -187,9 +187,6 @@ Behavioral constraints to respect:
 - Defensive runtime checks (crypto/web APIs) are part of contract
 - Keep casts and global writes isolated and documented
 
-### `@openlv/extension`
-- Marked WIP; do not treat it as strict architecture/style template for core libs
-
 ## Changeset/Release Policy
 For changes in publishable packages under `packages/*`:
 - Add a changeset (`pnpm changeset`) unless explicitly doing non-release internal work

@@ -10,7 +10,6 @@
   "updateInternalDependencies": "patch",
   "ignore": [
     "@openlv/example-*",
-    "@openlv/extension",
     "@openlv/sandbox",
     "docs",
     "openlv"
@@ -21,7 +20,6 @@
     "@openlv/example-wallet": "0.0.0",
     "@openlv/connector": "0.0.1-beta.1",
     "@openlv/core": "0.0.1-beta.1",
-    "@openlv/extension": "0.0.1-beta.1",
     "@openlv/modal": "0.0.1-beta.1",
     "@openlv/provider": "0.0.1-beta.1",
     "@openlv/session": "0.0.1-beta.1",

@@ -3,13 +3,13 @@
   "type": "module",
   "private": true,
   "scripts": {
-    "build": "pnpm -r --filter !@openlv/example-react-dapp --filter !@openlv/sandbox --filter !@openlv/example-react-wallet --filter !@openlv/extension --filter !docs build",
+    "build": "pnpm -r --filter !@openlv/example-react-dapp --filter !@openlv/sandbox --filter !@openlv/example-react-wallet --filter !docs build",
     "changeset": "changeset",
     "changeset:publish": "changeset publish",
     "changeset:version": "changeset version && pnpm install --ignore-scripts",
     "lint": "eslint",
     "lint:fix": "eslint --fix",
-    "test": "pnpm -r --filter !@openlv/tests --filter !@openlv/extension test"
+    "test": "pnpm -r test"
   },
   "devDependencies": {
     "@changesets/cli": "^2.29.8",

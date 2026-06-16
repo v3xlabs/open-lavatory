@@ -1,5 +1,16 @@
 # @openlv/connector
 
+## 0.0.3
+
+### Patch Changes
+
+- 72221ed: Migrate wagmi v2 to wagmi v3
+- Updated dependencies [72221ed]
+- Updated dependencies [d823c31]
+  - @openlv/provider@0.0.3
+  - @openlv/core@0.0.2
+  - @openlv/modal@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes

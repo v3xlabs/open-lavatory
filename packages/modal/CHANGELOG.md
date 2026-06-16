@@ -1,5 +1,16 @@
 # @openlv/modal
 
+## 0.0.3
+
+### Patch Changes
+
+- Updated dependencies [72221ed]
+- Updated dependencies [d823c31]
+  - @openlv/signaling@0.0.3
+  - @openlv/provider@0.0.3
+  - @openlv/session@0.0.3
+  - @openlv/core@0.0.2
+
 ## 0.0.2
 
 ### Patch Changes

@@ -1,7 +1,9 @@
-import type { TurnServer } from "@openlv/provider/storage";
+import {
+  type TurnServer,
+} from "@openlv/provider/storage";
 import { LucidePlus, LucideTrash2 } from "lucide-solid";
 import type { JSX } from "solid-js";
-import { createSignal, For } from "solid-js";
+import { createMemo, For } from "solid-js";
 
 import { useSettings } from "../../../hooks/useSettings.js";
 import { Button } from "../../../ui/Button.js";
@@ -40,6 +42,90 @@ const AddServerButton = (props: {
   </button>
 );
 
+const StunSettings = (props: {
+  servers: string[];
+  onChange: (servers: string[]) => void;
+}) => {
+  const { t } = useTranslation();
+
+  return (
+    <MenuGroup title={t("settings.transport.iceServers.stun")}>
+      <div class="flex flex-col gap-2 p-2">
+        <For each={props.servers}>
+          {(server, index) => (
+            <ServerListItem
+              onRemove={() => props.onChange(props.servers.filter((_, i) => i !== index()))}
+            >
+              <Input
+                value={server}
+                onChange={value => props.onChange(props.servers.map((item, i) =>
+                  (i === index() ? value : item)))}
+                placeholder="stun:stun.l.google.com:19302"
+                readOnly={false}
+              />
+            </ServerListItem>
+          )}
+        </For>
+        <AddServerButton
+          label={t("settings.transport.iceServers.addStun")}
+          onClick={() => props.onChange([...props.servers, ""])}
+        />
+      </div>
+    </MenuGroup>
+  );
+};
+
+const TurnSettings = (props: {
+  servers: TurnServer[];
+  onChange: (servers: TurnServer[]) => void;
+}) => {
+  const { t } = useTranslation();
+  const update = (index: number, field: keyof TurnServer, value: string) =>
+    props.onChange(props.servers.map((server, i) =>
+      (i === index ? { ...server, [field]: value } : server)));
+
+  return (
+    <MenuGroup title={t("settings.transport.iceServers.turn")}>
+      <div class="flex flex-col gap-3 p-2">
+        <For each={props.servers}>
+          {(server, index) => (
+            <div class="flex flex-col gap-2 rounded-md border border-(--lv-control-input-border) p-2">
+              <ServerListItem
+                onRemove={() => props.onChange(props.servers.filter((_, i) => i !== index()))}
+              >
+                <Input
+                  value={server.urls}
+                  onChange={value => update(index(), "urls", value)}
+                  placeholder="turn:relay.example.com:443"
+                  readOnly={false}
+                />
+              </ServerListItem>
+              <div class="grid grid-cols-2 gap-2">
+                <Input
+                  value={server.username ?? ""}
+                  onChange={value => update(index(), "username", value)}
+                  placeholder="Username"
+                  readOnly={false}
+                />
+                <Input
+                  value={server.credential ?? ""}
+                  onChange={value => update(index(), "credential", value)}
+                  placeholder="Password"
+                  readOnly={false}
+                />
+              </div>
+            </div>
+          )}
+        </For>
+        <AddServerButton
+          label={t("settings.transport.iceServers.addTurn")}
+          onClick={() => props.onChange([...props.servers, { urls: "" }])}
+        />
+      </div>
+    </MenuGroup>
+  );
+};
+
 export const TransportSettings = () => {
   const { t } = useTranslation();
   const {
@@ -47,109 +133,34 @@ export const TransportSettings = () => {
     setSettings,
   } = useSettings();
 
-  const [turnServers, setTurnServers] = createSignal<TurnServer[]>([]);
-  const [stunServers, setStunServers] = createSignal<string[]>([]);
+  const webRTCSettings = createMemo(() => settings().transport?.s?.webrtc ?? {});
+  const turnServers = createMemo(() => webRTCSettings().turn ?? []);
+  const stunServers = createMemo(() => webRTCSettings().stun ?? []);
 
-  const handleAddStun = () => {
-    setStunServers([...stunServers(), ""]);
+  const setWebRTCSettings = (next: { stun?: string[]; turn?: TurnServer[]; }) => {
+    setSettings({
+      ...settings(),
+      transport: {
+        ...settings().transport,
+        p: "webrtc",
+        s: {
+          ...settings().transport?.s,
+          webrtc: next,
+        },
+      },
+    });
   };
-
-  const handleRemoveStun = (index: number) => {
-    setStunServers(stunServers().filter((_, i) => i !== index));
-  };
-
-  const handleStunChange = (index: number, value: string) => {
-    setStunServers(stunServers().map((server, i) => (i === index ? value : server)));
-  };
-
-  const handleAddTurn = () => {
-    setTurnServers([...turnServers(), { urls: "" }]);
-  };
-
-  const handleRemoveTurn = (index: number) => {
-    setTurnServers(turnServers().filter((_, i) => i !== index));
-  };
-
-  const handleTurnChange = (index: number, field: keyof TurnServer, value: string) => {
-    setTurnServers(turnServers().map((server, i) => (i === index ? { ...server, [field]: value } : server)));
-  };
-
-  // createEffect(() => {
-  //   setSettings({
-  //     ...settings(), transport: {
-  //       p: "webrtc",
-  //       s: {
-  //         webrtc: {
-  //           stun: stunServers(),
-  //           turn: turnServers(),
-  //         },
-  //       },
-  //     },
-  //   });
-  // });
 
   return (
     <>
-      <MenuGroup title={t("settings.transport.iceServers.stun")}>
-        <div class="flex flex-col gap-2 p-2">
-          <For each={stunServers()}>
-            {(server, index) => (
-              <ServerListItem onRemove={() => handleRemoveStun(index())}>
-                <Input
-                  value={server}
-                  onChange={value => handleStunChange(index(), value)}
-                  placeholder="stun:stun.l.google.com:19302"
-                  readOnly={false}
-                />
-              </ServerListItem>
-            )}
-          </For>
-          <AddServerButton
-            label={t("settings.transport.iceServers.addStun")}
-            onClick={handleAddStun}
-          />
-        </div>
-      </MenuGroup>
-
-      <MenuGroup title={t("settings.transport.iceServers.turn")}>
-        <div class="flex flex-col gap-3 p-2">
-          <For each={turnServers()}>
-            {(server, index) => (
-              <div class="flex flex-col gap-2 rounded-md border border-(--lv-control-input-border) p-2">
-                <ServerListItem onRemove={() => handleRemoveTurn(index())}>
-                  <Input
-                    value={server.urls}
-                    onChange={value =>
-                      handleTurnChange(index(), "urls", value)}
-                    placeholder="turn:relay.example.com:443"
-                    readOnly={false}
-                  />
-                </ServerListItem>
-                <div class="grid grid-cols-2 gap-2">
-                  <Input
-                    value={server.username ?? ""}
-                    onChange={value =>
-                      handleTurnChange(index(), "username", value)}
-                    placeholder="Username"
-                    readOnly={false}
-                  />
-                  <Input
-                    value={server.credential ?? ""}
-                    onChange={value =>
-                      handleTurnChange(index(), "credential", value)}
-                    placeholder="Password"
-                    readOnly={false}
-                  />
-                </div>
-              </div>
-            )}
-          </For>
-          <AddServerButton
-            label={t("settings.transport.iceServers.addTurn")}
-            onClick={handleAddTurn}
-          />
-        </div>
-      </MenuGroup>
+      <StunSettings
+        servers={stunServers()}
+        onChange={stun => setWebRTCSettings({ ...webRTCSettings(), stun })}
+      />
+      <TurnSettings
+        servers={turnServers()}
+        onChange={turn => setWebRTCSettings({ ...webRTCSettings(), turn })}
+      />
       <div class="p-2 text-sm text-(--lv-text-secondary) text-start">
         {t("settings.transport.description")}
       </div>

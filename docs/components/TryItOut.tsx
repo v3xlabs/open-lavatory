@@ -41,7 +41,15 @@ const queryClient = new QueryClient();
 
 const config = createConfig({
   chains: [mainnet, sepolia, holesky],
-  connectors: [openlv()],
+  connectors: [
+    openlv({
+      // This needs to be an accessor because we can't access document because of SSR until runtime.
+      theme: () => ({
+        theme: "openlv",
+        mode: document.querySelector("html")!.style.colorScheme as "light" | "dark",
+      }),
+    }),
+  ],
   transports: {
     [mainnet.id]: http(),
     [sepolia.id]: http(),

@@ -1,5 +1,14 @@
 # @openlv/transport
 
+## 0.0.3
+
+### Patch Changes
+
+- 72221ed: Migrate wagmi v2 to wagmi v3
+- d823c31: Update transport type names & session transport initialization api
+- Updated dependencies [72221ed]
+  - @openlv/core@0.0.2
+
 ## 0.0.2
 
 ### Patch Changes

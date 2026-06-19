@@ -1,5 +1,11 @@
 # @openlv/core
 
+## 0.0.2
+
+### Patch Changes
+
+- 72221ed: Migrate wagmi v2 to wagmi v3
+
 ## 0.0.1
 
 ### Patch Changes

@@ -52,6 +52,7 @@
   },
   "dependencies": {
     "@openlv/session": "workspace:*",
+    "@openlv/transport": "workspace:*",
     "base-64": "^1.0.0",
     "fast-text-encoding": "^1.0.6",
     "react-native-get-random-values": "^2.0.0",

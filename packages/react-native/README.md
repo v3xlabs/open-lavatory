@@ -36,12 +36,12 @@ export function App() {
 Then use it like `@openlv/session` (no extra polyfill calls):
 
 ```ts
-import { connectSession } from "@openlv/react-native";
+import { connectSession, webrtc } from "@openlv/react-native";
 
 const session = await connectSession("openlv://...", async (msg) => {
   // ...handle requests...
   return "ok";
-});
+}, [webrtc()]);
 
 await session.connect();
 ```

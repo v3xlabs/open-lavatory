@@ -128,19 +128,24 @@ const WalletUrlConnect = () => {
   const connections = useConnections();
   const [url, setUrl] = useState("");
   const [connecting, setConnecting] = useState(false);
-  const [active, setActive] = useState(false);
   const session = useTryItSession();
   const walletSessionRef = useRef<Session | undefined>(undefined);
   const detachRef = useRef<(() => void) | undefined>(undefined);
+  const active = !connecting && session.phase === "connected";
 
   if (!walletClient) return null;
 
-  const endSession = async () => {
+  const cleanupWalletSession = async () => {
+    const walletSession = walletSessionRef.current;
+
     detachRef.current?.();
     detachRef.current = undefined;
-    await walletSessionRef.current?.close();
+    await walletSession?.close();
     walletSessionRef.current = undefined;
-    setActive(false);
+  };
+
+  const endSession = async () => {
+    await cleanupWalletSession();
     session.resetSession();
   };
 
@@ -161,6 +166,7 @@ const WalletUrlConnect = () => {
           onClick={async () => {
             setConnecting(true);
             await endSession();
+
             session.setPhase("establishing");
             session.setPeer(peerInfoFromConnectionUrl("wallet", url));
 
@@ -176,13 +182,13 @@ const WalletUrlConnect = () => {
               detachRef.current = attachTryItSession(s, "wallet", session, {
                 logRequests: false,
               });
-              setActive(true);
               await s.connect();
               session.setPhase("linked");
               await s.waitForLink();
               session.setPhase("connected");
             }
             catch (error) {
+              await cleanupWalletSession();
               session.setPhase("error");
               session.appendEntry({
                 role: "wallet",

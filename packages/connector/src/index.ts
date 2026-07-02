@@ -37,11 +37,6 @@ export const openlv = ({
     config,
   });
 
-  const onDisconnect = async () => {
-    log("onDisconnect called");
-    await provider.closeSession();
-  };
-
   const getAccounts = async () => {
     log("getAccounts");
 
@@ -54,6 +49,17 @@ export const openlv = ({
 
   return createConnector<OpenLVProvider>((wagmiConfig) => {
     const { chains } = wagmiConfig;
+    let disconnect: ((error?: Error | undefined) => void) | undefined;
+
+    const onDisconnect = () => {
+      log("onDisconnect called");
+      wagmiConfig.emitter.emit("disconnect");
+
+      if (disconnect) {
+        provider.off("disconnect", disconnect);
+        disconnect = undefined;
+      }
+    };
 
     const connect = async (
       { withCapabilities = false },
@@ -66,13 +72,19 @@ export const openlv = ({
         modal?.({ theme, provider, onClose: () => resolve() });
       });
 
-      const connectionCompleted = new Promise<void>((resolve) => {
+      let cleanupConnectionCompleted = () => {};
+      const connectionCompleted = new Promise<void>((resolve, reject) => {
         const onStatus = (providerStatus: typeof PROVIDER_STATUS[keyof typeof PROVIDER_STATUS]) => {
           log("provider_status_change", providerStatus);
 
           if (providerStatus === PROVIDER_STATUS.CONNECTED) {
             cleanup();
             resolve();
+          }
+
+          if (providerStatus === PROVIDER_STATUS.ERROR) {
+            cleanup();
+            reject(new Error("OpenLV session failed to connect"));
           }
         };
 
@@ -85,17 +97,19 @@ export const openlv = ({
           provider.off("accountsChanged", onAccounts);
         };
 
+        cleanupConnectionCompleted = cleanup;
         provider.on("status_change", onStatus);
         provider.on("accountsChanged", onAccounts);
       });
 
       await Promise.race([modalDismissed, connectionCompleted]);
+      cleanupConnectionCompleted();
 
       if (
         !provider.getSession()
         || provider.getState().status !== "connected"
       ) {
-        provider.closeSession();
+        await provider.closeSession();
 
         throw new UserRejectedRequestError(new Error("User closed modal"));
       }
@@ -106,6 +120,11 @@ export const openlv = ({
       const chainId = Number.parseInt(chainIdHex as string, 16);
 
       log("completing connect() call with chainId", chainId);
+
+      if (!disconnect) {
+        disconnect = onDisconnect;
+        provider.on("disconnect", disconnect);
+      }
 
       return {
         accounts: (withCapabilities
@@ -124,7 +143,13 @@ export const openlv = ({
       connect,
       async disconnect() {
         log("disconnect");
-        await onDisconnect();
+
+        if (disconnect) {
+          provider.off("disconnect", disconnect);
+          disconnect = undefined;
+        }
+
+        await provider.closeSession();
       },
       getAccounts,
       /**

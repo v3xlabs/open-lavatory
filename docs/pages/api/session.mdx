@@ -10,12 +10,21 @@ You can create a session for example in a dApp as follows:
 
 ```typescript
 import { createSession } from "@openlv/session";
+import { ntfy } from "@openlv/signaling/ntfy";
+import { webrtc } from "@openlv/transport/webrtc";
 
-const session = await createSession({
-  sessionId: "mytestsession111",
-  p: "ntfy",
-  s: "https://ntfy.sh/",
-});
+const session = await createSession(
+  {
+    sessionId: "mytestsession111",
+    p: "ntfy",
+    s: "https://ntfy.sh/",
+  },
+  ntfy,
+  [webrtc()],
+  async (message) => {
+    return { result: "ok" };
+  },
+);
 
 await session.connect();
 ```
@@ -26,8 +35,11 @@ You can connect to a session using the url as follows:
 
 ```typescript
 import { connectSession } from "@openlv/session";
+import { webrtc } from "@openlv/transport/webrtc";
 
-const session = await connectSession("openlv://...");
+const session = await connectSession("openlv://...", async (message) => {
+  return { result: "ok" };
+}, [webrtc()]);
 
 await session.connect();
 ```

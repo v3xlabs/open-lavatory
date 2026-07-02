@@ -25,6 +25,7 @@ import {
   type TransportLayer,
   type TransportLayerFn,
   type TransportMessage,
+  type TransportState,
 } from "@openlv/transport";
 import { EventEmitter } from "eventemitter3";
 
@@ -86,7 +87,7 @@ export type Session = {
 export const createSession = async (
   initParameters: SessionLinkParameters,
   signalLayer: SignalingProtocol,
-  transportLayer: TransportLayerFn[],
+  transportLayers: TransportLayerFn[],
   onMessage: (message: object) => Promise<object | string>,
 ): Promise<Session> => {
   const emitter = new EventEmitter<SessionEvents>();
@@ -111,11 +112,23 @@ export const createSession = async (
   let status: SessionState = SESSION_STATE.CREATED;
   const protocol = initParameters.p;
   const server = initParameters.s;
+  let disconnecting = false;
+  const pendingRequestRejects = new Set<(error: Error) => void>();
+  let detachSignalState: (() => void) | undefined;
+  let detachTransportState: (() => void) | undefined;
 
   const updateStatus = (newStatus: SessionState) => {
     log("updateStatus", newStatus);
     status = newStatus;
     emitter.emit("state_change", { status, signaling: signal.getState() });
+  };
+
+  const rejectPendingRequests = (error: Error) => {
+    for (const reject of pendingRequestRejects) {
+      reject(error);
+    }
+
+    pendingRequestRejects.clear();
   };
 
   const signaling = await signalLayer({
@@ -149,7 +162,11 @@ export const createSession = async (
     isHost,
   });
 
-  const transport = transportLayer[0]({
+  const [createTransport] = transportLayers;
+
+  if (!createTransport) throw new Error("At least one transport layer must be provided");
+
+  const transport = createTransport({
     encrypt(message) {
       if (!relyingPublicKey) {
         throw new Error("Relying party public key not found");
@@ -159,8 +176,14 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
+    onmessage: async (message: { type: string; payload?: object | string; messageId: string; }) => {
       log("Session: received message from transport", message);
+
+      if (message["type"] === "close") {
+        await disconnect(false);
+
+        return;
+      }
 
       if (message["type"] === "request") {
         const messageId = message["messageId"] as string;
@@ -200,19 +223,60 @@ export const createSession = async (
     },
   });
 
-  transport.emitter.on("state_change", (state) => {
+  const disconnect = async (notify: boolean = true) => {
+    log("session teardown");
+
+    if (status === SESSION_STATE.DISCONNECTED || disconnecting) return;
+
+    disconnecting = true;
+    rejectPendingRequests(new Error("Session disconnected"));
+
+    if (notify) {
+      try {
+        await transport.send(
+          { type: "close", messageId: crypto.randomUUID() } satisfies SessionMessage,
+          { allowReady: true },
+        );
+      }
+      catch (error) {
+        log("session close notification failed", error);
+      }
+    }
+
+    signal.off("message", onSignalMessage);
+    detachSignalState?.();
+    detachSignalState = undefined;
+    detachTransportState?.();
+    detachTransportState = undefined;
+
+    try {
+      await Promise.all([transport.teardown(), signal.teardown()]);
+    }
+    catch (error) {
+      log("session teardown failed", error);
+    }
+
+    updateStatus(SESSION_STATE.DISCONNECTED);
+  };
+
+  const onTransportState = (state: TransportState) => {
     log("transport state change", state);
 
     if (state === TRANSPORT_STATE.CONNECTED) {
       updateStatus(SESSION_STATE.CONNECTED);
     }
-  });
 
-  const startTransport = async () => {
-    await transport.setup();
+    if (
+      state === TRANSPORT_STATE.DISCONNECTED
+      || state === TRANSPORT_STATE.ERROR
+    ) {
+      void disconnect(false);
+    }
   };
 
-  // let transport: TransportLayer | undefined;
+  transport.emitter.on("state_change", onTransportState);
+  detachTransportState = () => transport.emitter.off("state_change", onTransportState);
+
   const onSignalMessage = async (message: object) => {
     log("Session: received message from signaling", message);
 
@@ -230,52 +294,49 @@ export const createSession = async (
     }
   };
 
+  const onSignalState = (state: SignalState) => {
+    log("signal state change", state);
+
+    if (state === SIGNAL_STATE.READY) {
+      updateStatus(SESSION_STATE.READY);
+    }
+
+    if (
+      (
+        [
+          SIGNAL_STATE.HANDSHAKE,
+          SIGNAL_STATE.HANDSHAKE_PARTIAL,
+        ] as SignalState[]
+      ).includes(state)
+    ) {
+      updateStatus(SESSION_STATE.LINKING);
+    }
+
+    if (state === SIGNAL_STATE.ENCRYPTED) {
+      void transport.setup().catch((error) => {
+        log("transport setup failed", error);
+        void disconnect(false);
+      });
+    }
+
+    if (state === SIGNAL_STATE.ERROR) {
+      log("signaling error - marking session disconnected");
+      void disconnect(false);
+    }
+  };
+
   return {
     connect: async () => {
       updateStatus(SESSION_STATE.SIGNALING);
       log("connecting to session, isHost:", isHost);
 
       signal.on("message", onSignalMessage);
-
-      signal.on("state_change", (state) => {
-        log("signal state change", state);
-
-        if (state === SIGNAL_STATE.READY) {
-          updateStatus(SESSION_STATE.READY);
-        }
-
-        if (
-          (
-            [
-              SIGNAL_STATE.HANDSHAKE,
-              SIGNAL_STATE.HANDSHAKE_PARTIAL,
-            ] as SignalState[]
-          ).includes(state)
-        ) {
-          updateStatus(SESSION_STATE.LINKING);
-        }
-
-        if (state === SIGNAL_STATE.ENCRYPTED) {
-          startTransport();
-        }
-
-        if (state === SIGNAL_STATE.ERROR) {
-          log("signaling error — marking session disconnected");
-          updateStatus(SESSION_STATE.DISCONNECTED);
-        }
-      });
+      signal.on("state_change", onSignalState);
+      detachSignalState = () => signal.off("state_change", onSignalState);
 
       await signal.setup();
     },
-    async close() {
-      log("session teardown");
-      signal.off("message", onSignalMessage);
-      await Promise.all([
-        transport.teardown(),
-        signal.teardown(),
-      ]);
-      updateStatus(SESSION_STATE.DISCONNECTED);
-    },
+    close: disconnect,
     getState() {
       return {
         status,
@@ -331,18 +392,19 @@ export const createSession = async (
         payload: message,
       };
 
-      await transport.send(sessionMessage);
-
       return new Promise<unknown>((resolve, reject) => {
         let ackReceived = false;
-        // eslint-disable-next-line prefer-const
-        let ackTimer: ReturnType<typeof setTimeout> | undefined;
         let responseTimer: ReturnType<typeof setTimeout> | undefined;
+        const fail = (error: Error) => {
+          cleanup();
+          reject(error);
+        };
 
         const cleanup = () => {
           clearTimeout(ackTimer);
           clearTimeout(responseTimer);
           messages.off("message", handler);
+          pendingRequestRejects.delete(fail);
         };
 
         const handler = (msg: SessionMessage) => {
@@ -367,14 +429,17 @@ export const createSession = async (
         };
 
         messages.on("message", handler);
+        pendingRequestRejects.add(fail);
 
         // Short window for the ack — tells us the peer is alive and processing.
-        ackTimer = setTimeout(() => {
+        const ackTimer = setTimeout(() => {
           if (!ackReceived) {
             cleanup();
             reject(new Error("Request timed out: remote peer did not acknowledge"));
           }
         }, ackTimeout);
+
+        void transport.send(sessionMessage).catch(fail);
       });
     },
     _internal: {

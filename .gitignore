@@ -2,3 +2,6 @@ node_modules
 dist
 docs/.vocs
 .pnpm-store
+.direnv
+.envrc
+

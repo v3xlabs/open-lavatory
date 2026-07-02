@@ -114,7 +114,14 @@ type transportInput =
   }
   | undefined;
 
-const convertTempV1 = (transport: transportInput): WebRTCConfig => {
+/**
+ * Convert stored WebRTC settings to a transport config. Returns undefined
+ * when nothing is configured so the transport falls back to its own
+ * defaults — an empty iceServers array would silently disable STUN/TURN.
+ */
+const convertStoredWebRTCSettings = (
+  transport: transportInput,
+): WebRTCConfig | undefined => {
   const stun = transport?.stun?.map(url => ({ urls: url })) || [];
   const turn
     = transport?.turn?.map(server => ({
@@ -122,10 +129,9 @@ const convertTempV1 = (transport: transportInput): WebRTCConfig => {
       username: server.username,
       credential: server.credential,
     })) || [];
+  const iceServers = [...stun, ...turn];
 
-  return {
-    iceServers: [...stun, ...turn],
-  };
+  return iceServers.length > 0 ? { iceServers } : undefined;
 };
 
 /**
@@ -183,17 +189,28 @@ export const createProvider = (
     throw new Error("No session");
   };
 
+  /** Derive default link parameters from stored signaling settings. */
+  const defaultLinkParameters = (): SessionLinkParameters | undefined => {
+    const signaling = storage.getSettings().signaling ?? config?.signaling;
+    const p = signaling?.p;
+    const s = p ? signaling?.s?.[p] : undefined;
+
+    return p && s ? { p, s } : undefined;
+  };
+
   const start = async (parameters?: SessionLinkParameters) => {
     updateStatus(PROVIDER_STATUS.CREATING);
-    const linkParameters = parameters;
+    const linkParameters = parameters ?? defaultLinkParameters();
 
     if (!linkParameters) {
-      throw new Error("No link parameters");
+      throw new Error("No link parameters provided and no signaling defaults configured");
     }
 
+    // Stored user settings win over constructor config; both fall back to
+    // the transport's built-in defaults when absent.
     const transportOptions
-      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
-        || config?.transport?.s?.webrtc;
+      = convertStoredWebRTCSettings(storage.getSettings().transport?.s?.webrtc)
+        ?? config?.transport?.s?.webrtc;
 
     session = await createSession(
       linkParameters,
@@ -258,12 +275,6 @@ export const createProvider = (
         })
         .with({ method: "wallet_requestPermissions" }, () => {
           throw new Error("Not implemented");
-          // console.log("wallet_requestPermissions", v.params);
-
-          // return [] as ExtractReturnType<
-          //   RpcSchema,
-          //   "wallet_requestPermissions"
-          // >;
         })
         .with({ method: "wallet_revokePermissions" }, async () => {
           await closeSession();
@@ -304,9 +315,7 @@ export const createProvider = (
             return await getAccounts();
           }
 
-          const x = await start();
-
-          log("x", x);
+          await start();
 
           return await getAccounts();
         })

@@ -11,17 +11,13 @@ export type WebRTCConfig = {
   iceServers?: RTCConfiguration["iceServers"];
 };
 
-// TODO: decide wether we want defaults, and if so what defaults
+// Deliberately STUN-only: TURN relays all traffic through a third party, so
+// operators should opt in explicitly with their own infrastructure.
+// (The previously bundled openrelay.metered.ca TURN service is discontinued.)
 const defaultConfig: WebRTCConfig = {
   iceServers: [
     { urls: "stun:stun.l.google.com:19302" },
     { urls: "stun:stun1.l.google.com:19302" },
-    { urls: "stun:stun.services.mozilla.com:3478" },
-    {
-      urls: ["turn:openrelay.metered.ca:80", "turn:openrelay.metered.ca:443"],
-      username: "openrelayproject",
-      credential: "openrelayproject",
-    },
   ],
 };
 
@@ -30,50 +26,63 @@ export const webrtc: Transport = (
 ) => {
   const { iceServers = defaultConfig.iceServers } = config;
 
-  console.log("WEBRTC ICE CONFIG", config);
-  const ident = Math.random().toString(36)
-    .slice(2, 4) + "#";
-
   return createTransportBase(({ emitter, isHost }) => {
     const rtcConfig: RTCConfiguration = { iceServers };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
+    // Candidates can arrive over signaling before the offer/answer has been
+    // applied; addIceCandidate would reject, so they are buffered until a
+    // remote description exists.
+    let pendingCandidates: RTCIceCandidateInit[] = [];
+
+    const flushPendingCandidates = async () => {
+      const queued = pendingCandidates;
+
+      pendingCandidates = [];
+
+      for (const candidate of queued) {
+        await connection?.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    };
 
     const onConnectionStateChange = () => {
-      log(ident, "onConnectionStateChange", connection?.connectionState);
-
       const state = connection?.connectionState;
 
+      log("onConnectionStateChange", state);
+
       match(state)
-        .with("disconnected", () => {
-          // TODO: implement
-        })
-        .with("failed", () => {})
-        .otherwise(() => {
-          log(ident, "onConnectionStateChangeUnknown", state);
-        });
+        // "disconnected" is transient and may recover on its own; only
+        // "failed"/"closed" are terminal.
+        .with("failed", () => emitter.emit("error", "WebRTC connection failed"))
+        .with("closed", () => emitter.emit("error", "WebRTC connection closed"))
+        .otherwise(() => {});
     };
     const onIceCandidate = (c: RTCPeerConnectionIceEvent) => {
       if (channel?.readyState === "open") return;
 
-      log(ident, "onIceCandidate", c.candidate);
-      emitter.emit("candidate", JSON.stringify(c.candidate?.toJSON()));
+      // End-of-candidates (null) needs no relay; the peer simply stops
+      // receiving candidates.
+      if (!c.candidate) return;
+
+      emitter.emit("candidate", JSON.stringify(c.candidate.toJSON()));
     };
     const onDataChannel = (e: RTCDataChannelEvent) => {
       channel = e.channel;
       hookChannel(channel);
-      log(ident, "onDataChannel", channel);
+      log("onDataChannel");
     };
     const onDataChannelOpen = () => {
-      log(ident, "onDataChannelOpen");
+      log("onDataChannelOpen");
       emitter.emit("connected");
     };
     const onDataChannelMessage = (e: MessageEvent<string>) => {
-      log(ident, "onDataChannelMessage", e.data);
       emitter.emit("message", e.data);
     };
+    const onDataChannelClose = () => {
+      emitter.emit("error", "Data channel closed");
+    };
     const onNegotiationNeeded = async () => {
-      log(ident, "onNegotiationNeeded");
+      log("onNegotiationNeeded");
 
       if (isHost && connection) {
         await connection.setLocalDescription();
@@ -86,10 +95,11 @@ export const webrtc: Transport = (
     const hookChannel = (channel: RTCDataChannel) => {
       channel.addEventListener("open", onDataChannelOpen);
       channel.addEventListener("message", onDataChannelMessage);
+      channel.addEventListener("close", onDataChannelClose);
     };
 
     const handle = async (message: TransportMessage): Promise<void> => {
-      log(ident, "webrtc handle", message);
+      log("webrtc handle", message.type);
 
       if (!connection) throw new Error("Connection not found");
 
@@ -100,6 +110,7 @@ export const webrtc: Transport = (
           await connection!.setRemoteDescription(
             new RTCSessionDescription(offer),
           );
+          await flushPendingCandidates();
 
           const answer = await connection!.createAnswer();
 
@@ -107,25 +118,28 @@ export const webrtc: Transport = (
           emitter.emit("answer", JSON.stringify(answer));
         })
         .with({ type: "answer" }, async ({ payload }) => {
-          if (!connection) throw new Error("Connection not found");
-
           const answer = JSON.parse(payload) as RTCSessionDescriptionInit;
 
-          await connection.setRemoteDescription(
+          await connection!.setRemoteDescription(
             new RTCSessionDescription(answer),
           );
+          await flushPendingCandidates();
         })
         .with({ type: "candidate" }, async ({ payload }) => {
-          if (!connection) throw new Error("Connection not found");
-
           if (!payload) return;
 
           const candidate = JSON.parse(payload) as RTCIceCandidateInit;
 
-          await connection.addIceCandidate(new RTCIceCandidate(candidate));
+          if (!connection!.remoteDescription) {
+            pendingCandidates.push(candidate);
+
+            return;
+          }
+
+          await connection!.addIceCandidate(new RTCIceCandidate(candidate));
         })
         .otherwise(() => {
-          log(ident, "received unknown transport message type", message);
+          log("received unknown transport message type", message);
         });
     };
 
@@ -138,7 +152,7 @@ export const webrtc: Transport = (
     return {
       type: "webrtc",
       async setup() {
-        log("webrtc setupz", rtcConfig);
+        log("webrtc setup");
 
         connection = new RTCPeerConnection(rtcConfig);
         connection.onconnectionstatechange = onConnectionStateChange;
@@ -153,13 +167,18 @@ export const webrtc: Transport = (
       },
       teardown() {
         log("webrtc teardown");
+        pendingCandidates = [];
 
         if (channel) {
+          // Detach the close listener first: a deliberate teardown must not
+          // surface as a transport error.
+          channel.removeEventListener("close", onDataChannelClose);
           channel.close();
           channel = undefined;
         }
 
         if (connection) {
+          connection.onconnectionstatechange = null;
           connection.close();
           connection = undefined;
         }

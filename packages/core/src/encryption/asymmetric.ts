@@ -130,7 +130,7 @@ export const generateKeyPair = async (): Promise<EncKeypair> => {
 
 export const initEncryptionKeys = async (
   initParameters?: SessionLinkParameters,
-): Promise<EncKeypair & { relyingEncryptionKey?: EncryptionKey }> => {
+): Promise<EncKeypair & { relyingEncryptionKey?: EncryptionKey; }> => {
   const { encryptionKey, decryptionKey } = await generateKeyPair();
 
   // Note: the peer key is deliberately left undefined until discovered —

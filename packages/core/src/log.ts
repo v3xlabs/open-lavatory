@@ -11,7 +11,7 @@ const isDebugEnabled = (): boolean => {
     const g = globalThis as {
       OPENLV_DEBUG?: unknown;
       localStorage?: Storage;
-      process?: { env?: Record<string, string | undefined> };
+      process?: { env?: Record<string, string | undefined>; };
     };
 
     return Boolean(

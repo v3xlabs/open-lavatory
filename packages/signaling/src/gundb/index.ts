@@ -9,10 +9,9 @@ import { log } from "../utils/log.js";
  * GunDB Signaling Layer
  * https://openlv.sh/api/signaling/gun
  */
-export const gundb: SignalingProtocol = ({
-  topic,
-  url = "wss://try.axe.eco/gun",
-}) => {
+export const gundb: SignalingProtocol = ({ topic, url }) => {
+  // `url` may be an empty string when the session URI omits `s`.
+  const endpoint = url || "wss://try.axe.eco/gun";
   let connection: IGunInstance | undefined;
 
   return createSignalingLayer({
@@ -20,7 +19,7 @@ export const gundb: SignalingProtocol = ({
     async setup() {
       log("GUNDB: Setting up");
       const x = new (Gun as unknown as IGun)({
-        peers: [url],
+        peers: [endpoint],
         file: undefined,
         localStorage: undefined,
       });
@@ -30,7 +29,8 @@ export const gundb: SignalingProtocol = ({
       await connection?.get(topic);
     },
     teardown() {
-      // connection?.();
+      // Unhook the topic listener so a torn-down session stops receiving.
+      connection?.get(topic).off();
       connection = undefined;
     },
     async publish(payload) {

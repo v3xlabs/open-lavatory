@@ -3,6 +3,7 @@ import { encodeConnectionURL, type SessionLinkParameters } from "@openlv/core";
 import {
   createSession,
   type Session,
+  SESSION_STATE,
   type SessionStateObject,
 } from "@openlv/session";
 import { dynamicSignalingLayer } from "@openlv/signaling/dynamic";
@@ -140,13 +141,39 @@ export const createProvider = (
   let session: Session | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
   let accounts: Address[] = [];
+  let detachSessionState: (() => void) | undefined;
+  let localCloseSession: Session | undefined;
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
 
   const updateStatus = (newStatus: ProviderStatus) => {
+    if (status === newStatus) return;
+
     status = newStatus;
     log("updateStatus", status);
     oxEmitter.emit("status_change", newStatus);
+  };
+
+  const clearSession = (emitDisconnect: boolean) => {
+    const hadSession = session !== undefined;
+    const hadAccounts = accounts.length > 0;
+
+    detachSessionState?.();
+    detachSessionState = undefined;
+    session = undefined;
+    accounts = [];
+    updateStatus(PROVIDER_STATUS.STANDBY);
+
+    if (hadAccounts) {
+      oxEmitter.emit("accountsChanged", accounts);
+    }
+
+    if (emitDisconnect && hadSession) {
+      oxEmitter.emit(
+        "disconnect",
+        new OxProvider.DisconnectedError(),
+      );
+    }
   };
 
   /**
@@ -188,49 +215,109 @@ export const createProvider = (
     const linkParameters = parameters;
 
     if (!linkParameters) {
+      updateStatus(PROVIDER_STATUS.STANDBY);
+
       throw new Error("No link parameters");
     }
 
-    const transportOptions
-      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
-        || config?.transport?.s?.webrtc;
+    try {
+      const transportOptions
+        = convertTempV1(storage.getSettings().transport?.s?.webrtc)
+          || config?.transport?.s?.webrtc;
 
-    session = await createSession(
-      linkParameters,
-      await dynamicSignalingLayer(linkParameters.p),
-      [webrtc(transportOptions)],
-      onMessage,
-    );
-    updateStatus(PROVIDER_STATUS.CONNECTING);
+      session = await createSession(
+        linkParameters,
+        await dynamicSignalingLayer(linkParameters.p),
+        [webrtc(transportOptions)],
+        onMessage,
+      );
+      const createdSession = session;
+      const onSessionState = (state?: SessionStateObject) => {
+        if (
+          state?.status === SESSION_STATE.DISCONNECTED
+          && session === createdSession
+        ) {
+          clearSession(localCloseSession !== createdSession);
+        }
+      };
 
-    log("session created");
-    await session.connect();
-    log("session connected");
-    const handshakeParameters = session.getHandshakeParameters();
-    const url = encodeConnectionURL(handshakeParameters);
+      detachSessionState?.();
+      detachSessionState = () => createdSession.emitter.off("state_change", onSessionState);
+      createdSession.emitter.on("state_change", onSessionState);
+      updateStatus(PROVIDER_STATUS.CONNECTING);
 
-    log("session url", url);
-    oxEmitter.emit("session_started", session);
+      log("session created");
+      await createdSession.connect();
+      log("session connected");
+      const handshakeParameters = createdSession.getHandshakeParameters();
+      const url = encodeConnectionURL(handshakeParameters);
 
-    await session.waitForLink();
-    log("session linked");
+      log("session url", url);
+      oxEmitter.emit("session_started", createdSession);
 
-    accounts = await getAccounts();
+      await createdSession.waitForLink();
+      log("session linked");
 
-    const chainIdHex = unwrapSessionResponse(
-      await session.send({ method: "eth_chainId", params: [] }),
-    ) as string;
+      accounts = await getAccounts();
 
-    updateStatus(PROVIDER_STATUS.CONNECTED);
-    oxEmitter.emit("connect", { chainId: chainIdHex });
-    oxEmitter.emit("accountsChanged", accounts);
+      const chainIdHex = unwrapSessionResponse(
+        await createdSession.send({ method: "eth_chainId", params: [] }),
+      ) as string;
 
-    return session;
+      updateStatus(PROVIDER_STATUS.CONNECTED);
+      oxEmitter.emit("connect", { chainId: chainIdHex });
+      oxEmitter.emit("accountsChanged", accounts);
+
+      return createdSession;
+    }
+    catch (error) {
+      log("session start failed", error);
+      const failedSession = session;
+
+      if (failedSession) {
+        localCloseSession = failedSession;
+
+        try {
+          await failedSession.close();
+        }
+        catch (closeError) {
+          log("failed session cleanup failed", closeError);
+        }
+        finally {
+          if (localCloseSession === failedSession) {
+            localCloseSession = undefined;
+          }
+        }
+      }
+
+      if (session === failedSession) {
+        clearSession(false);
+      }
+
+      updateStatus(PROVIDER_STATUS.ERROR);
+
+      throw error;
+    }
   };
   const closeSession = async () => {
-    await session?.close();
-    session = undefined;
-    updateStatus(PROVIDER_STATUS.STANDBY);
+    const currentSession = session;
+
+    if (currentSession) {
+      localCloseSession = currentSession;
+
+      try {
+        await currentSession.close();
+      }
+      finally {
+        if (localCloseSession === currentSession) {
+          localCloseSession = undefined;
+        }
+      }
+    }
+
+    if (session === currentSession) {
+      clearSession(false);
+    }
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (

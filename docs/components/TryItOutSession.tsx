@@ -109,7 +109,7 @@ const sessionToPhase = (
 ): ConnectionPhase => {
   if (status === SESSION_STATE.CONNECTED) return "connected";
 
-  if (status === SESSION_STATE.DISCONNECTED) return "error";
+  if (status === SESSION_STATE.DISCONNECTED) return "idle";
 
   if (
     status === SESSION_STATE.SIGNALING
@@ -225,6 +225,18 @@ export const attachTryItSession = (
   options?: { logRequests?: boolean; },
 ) => {
   let lastSessionLogKey = "";
+  let detached = false;
+
+  const detach = () => {
+    if (detached) return;
+
+    detached = true;
+    session.emitter.off("state_change", onState);
+
+    if (options?.logRequests !== false) {
+      session.emitter.off("request", onRequest);
+    }
+  };
 
   const logSessionState = (state?: SessionStateObject) => {
     if (!state) return;
@@ -249,7 +261,13 @@ export const attachTryItSession = (
     });
   };
 
-  const onState = (state?: SessionStateObject) => logSessionState(state);
+  const onState = (state?: SessionStateObject) => {
+    logSessionState(state);
+
+    if (state?.status === SESSION_STATE.DISCONNECTED) {
+      detach();
+    }
+  };
   const onRequest = (payload: object | string) => {
     const req = payload as { method?: string; };
 
@@ -264,13 +282,7 @@ export const attachTryItSession = (
 
   logSessionState(session.getState());
 
-  return () => {
-    session.emitter.off("state_change", onState);
-
-    if (options?.logRequests !== false) {
-      session.emitter.off("request", onRequest);
-    }
-  };
+  return detach;
 };
 
 export const shimWalletOnMessage = (
@@ -369,7 +381,7 @@ const ConnectionStatusBar = () => {
   const { phase, peer } = useTryItSession();
   const [copied, setCopied] = useState(false);
 
-  if (phase === "idle" && !peer) return null;
+  if (phase === "idle") return null;
 
   const connectionUrl
     = peer?.role === "dapp" ? peer.connectionUrl : undefined;
@@ -540,9 +552,9 @@ const MessageLogPanel = () => {
 };
 
 export const TryItSessionPanel = () => {
-  const { phase, peer, entries } = useTryItSession();
+  const { phase } = useTryItSession();
 
-  if (phase === "idle" && !peer && entries.length === 0) return null;
+  if (phase === "idle") return null;
 
   return (
     <div className="flex flex-col gap-2">
@@ -568,6 +580,7 @@ export const OpenLvDappMonitor = ({
     if (!isConnected || connector?.type !== "openLv") {
       detachRef.current?.();
       detachRef.current = undefined;
+      actions.resetSession();
 
       return;
     }

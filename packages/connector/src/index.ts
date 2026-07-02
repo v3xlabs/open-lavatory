@@ -14,7 +14,9 @@ import { getTriggerModal } from "./modal.js";
 
 export type OpenLVConnectorParameters = Prettify<
   Pick<OpenLVProviderParameters, "config" | "storage"> &
-  Pick<OpenLVModalElementProps, "theme">
+  {
+    theme?: OpenLVModalElementProps["theme"] | (() => OpenLVModalElementProps["theme"]);
+  }
 >;
 
 export type OpenLVConnector = CreateConnectorFn<
@@ -61,9 +63,10 @@ export const openlv = ({
       log("connect");
 
       const modal = await getTriggerModal();
+      const resolvedTheme = typeof theme === "function" ? theme() : theme;
 
       const modalDismissed = new Promise<void>((resolve) => {
-        modal?.({ theme, provider, onClose: () => resolve() });
+        modal?.({ theme: resolvedTheme, provider, onClose: () => resolve() });
       });
 
       const connectionCompleted = new Promise<void>((resolve) => {

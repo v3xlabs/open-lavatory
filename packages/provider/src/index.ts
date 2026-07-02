@@ -20,7 +20,7 @@ import {
   type ProviderStorageParameters,
   type ProviderStorageR,
 } from "./storage/index.js";
-import type { SignalingProtocol } from "./storage/version.js";
+import type { SignalingProtocol, WebRTCSettings } from "./storage/version.js";
 import { log } from "./utils/log.js";
 
 /** Unwrap `{ result }` / `{ error }` envelopes from wallet session handlers. */
@@ -101,27 +101,21 @@ export type OpenLVProvider = OxProvider.Provider<
 > &
 ProviderBase;
 
-type transportInput =
-  | {
-    stun?: string[] | undefined;
-    turn?:
-      | {
-        urls: string;
-        username?: string | undefined;
-        credential?: string | undefined;
-      }[]
-      | undefined;
-  }
-  | undefined;
+const toWebRTCConfig = (transport?: WebRTCSettings): WebRTCConfig | undefined => {
+  if (!transport) return undefined;
 
-const convertTempV1 = (transport: transportInput): WebRTCConfig => {
-  const stun = transport?.stun?.map(url => ({ urls: url })) || [];
+  const stun = transport?.stun
+    ?.map(url => url.trim())
+    .filter(Boolean)
+    .map(url => ({ urls: url })) || [];
   const turn
-    = transport?.turn?.map(server => ({
-      urls: server.urls,
-      username: server.username,
-      credential: server.credential,
-    })) || [];
+    = transport?.turn
+      ?.filter(server => server.urls.trim())
+      .map(server => ({
+        urls: server.urls.trim(),
+        username: server.username,
+        credential: server.credential,
+      })) || [];
 
   return {
     iceServers: [...stun, ...turn],
@@ -192,8 +186,8 @@ export const createProvider = (
     }
 
     const transportOptions
-      = convertTempV1(storage.getSettings().transport?.s?.webrtc)
-        || config?.transport?.s?.webrtc;
+      = toWebRTCConfig(storage.getSettings().transport?.s?.webrtc)
+        ?? config?.transport?.s?.webrtc;
 
     session = await createSession(
       linkParameters,

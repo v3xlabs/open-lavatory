@@ -52,7 +52,7 @@ export const decodeConnectionURL = (
     const k = urlObj.searchParams.get("k") || "";
     const s = urlObj.searchParams.get("s") || undefined;
 
-    const p
+    const p = urlObj.searchParams.get("p") || "mqtt";
       = (urlObj.searchParams.get("p") as "mqtt" | "waku" | "nostr") || "mqtt";
 
     if (!sessionId) {
@@ -91,7 +91,7 @@ export const decodeConnectionURL = (
       sessionId,
       h,
       k,
-      // TODO: figure out why '' empty string and not undefined
+      s: s ?? "",
       s: s ? decodeURIComponent(s) : "",
       p,
     };

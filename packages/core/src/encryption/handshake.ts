@@ -10,7 +10,6 @@ const HANDSHAKE_KEY_BYTES = 16;
 const IV_BYTES = 12;
 
 export const deriveSymmetricKey = async (k: string): Promise<SymmetricKey> => {
-  const baseKey = decodeHex(k);
   const baseKey = Uint8Array.from(hexToBytes(k));
 
   if (baseKey.length !== HANDSHAKE_KEY_BYTES) {

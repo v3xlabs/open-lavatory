@@ -10,9 +10,7 @@ import { log } from "../utils/log.js";
  * https://openlv.sh/api/signaling/gun
  */
 export const gundb: SignalingProtocol = ({ topic, url }) => {
-  topic,
   const endpoint = url || "wss://try.axe.eco/gun";
-}) => {
   let connection: IGunInstance | undefined;
 
   return createSignalingLayer({
@@ -30,7 +28,6 @@ export const gundb: SignalingProtocol = ({ topic, url }) => {
       await connection?.get(topic);
     },
     teardown() {
-      // connection?.();
       connection?.get(topic).off();
       connection = undefined;
     },

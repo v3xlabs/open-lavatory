@@ -205,14 +205,27 @@ export const createSession = async (
     },
   });
 
+  // Once both peers are present (signaling encrypted) the transport should
+  // connect promptly; if it cannot (e.g. no ICE candidates on a restricted
+  // network) fail loudly instead of sitting in "linking" forever.
+  const TRANSPORT_LINK_TIMEOUT_MS = 45_000;
+  let linkDeadline: ReturnType<typeof setTimeout> | undefined;
+
+  const clearLinkDeadline = () => {
+    clearTimeout(linkDeadline);
+    linkDeadline = undefined;
+  };
+
   const onTransportStateChange = (state: string) => {
     log("transport state change", state);
 
     if (state === TRANSPORT_STATE.CONNECTED) {
+      clearLinkDeadline();
       updateStatus(SESSION_STATE.CONNECTED);
     }
 
     if (state === TRANSPORT_STATE.ERROR) {
+      clearLinkDeadline();
       updateStatus(SESSION_STATE.DISCONNECTED);
     }
   };
@@ -220,8 +233,16 @@ export const createSession = async (
   transport.emitter.on("state_change", onTransportStateChange);
 
   const startTransport = () => {
+    linkDeadline ??= setTimeout(() => {
+      if (status === SESSION_STATE.CONNECTED) return;
+
+      log("transport failed to connect in time");
+      updateStatus(SESSION_STATE.DISCONNECTED);
+    }, TRANSPORT_LINK_TIMEOUT_MS);
+
     Promise.resolve(transport.setup()).catch((error) => {
       log("transport setup failed", error);
+      clearLinkDeadline();
       updateStatus(SESSION_STATE.DISCONNECTED);
     });
   };
@@ -287,6 +308,7 @@ export const createSession = async (
     },
     async close() {
       log("session teardown");
+      clearLinkDeadline();
       signal.off("message", onSignalMessage);
       signal.off("state_change", onSignalStateChange);
       transport.emitter.off("state_change", onTransportStateChange);

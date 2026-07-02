@@ -47,6 +47,8 @@ export type SessionStateObject = {
   signaling?: {
     state: SignalState;
   };
+  /** Human-readable reason for the last disconnect/failure, if any. */
+  error?: string;
 };
 
 /**
@@ -109,13 +111,18 @@ export const createSession = async (
     encryptionKey,
   );
   let status: SessionState = SESSION_STATE.CREATED;
+  let lastError: string | undefined;
   const protocol = initParameters.p;
   const server = initParameters.s;
 
   const updateStatus = (newStatus: SessionState) => {
     log("updateStatus", newStatus);
     status = newStatus;
-    emitter.emit("state_change", { status, signaling: signal.getState() });
+    emitter.emit("state_change", {
+      status,
+      signaling: signal.getState(),
+      error: lastError,
+    });
   };
 
   const signaling = await signalLayer({
@@ -221,28 +228,37 @@ export const createSession = async (
 
     if (state === TRANSPORT_STATE.CONNECTED) {
       clearLinkDeadline();
+      lastError = undefined;
       updateStatus(SESSION_STATE.CONNECTED);
     }
 
     if (state === TRANSPORT_STATE.ERROR) {
       clearLinkDeadline();
+      lastError ??= "Peer-to-peer transport failed";
       updateStatus(SESSION_STATE.DISCONNECTED);
     }
   };
 
+  const onTransportError = (reason?: string) => {
+    if (reason) lastError = reason;
+  };
+
   transport.emitter.on("state_change", onTransportStateChange);
+  transport.emitter.on("error", onTransportError);
 
   const startTransport = () => {
     linkDeadline ??= setTimeout(() => {
       if (status === SESSION_STATE.CONNECTED) return;
 
       log("transport failed to connect in time");
+      lastError ??= "Timed out establishing the peer-to-peer connection";
       updateStatus(SESSION_STATE.DISCONNECTED);
     }, TRANSPORT_LINK_TIMEOUT_MS);
 
     Promise.resolve(transport.setup()).catch((error) => {
       log("transport setup failed", error);
       clearLinkDeadline();
+      lastError ??= error instanceof Error ? error.message : "Transport setup failed";
       updateStatus(SESSION_STATE.DISCONNECTED);
     });
   };
@@ -292,6 +308,7 @@ export const createSession = async (
 
     if (state === SIGNAL_STATE.ERROR) {
       log("signaling error — marking session disconnected");
+      lastError ??= "Signaling failed or timed out";
       updateStatus(SESSION_STATE.DISCONNECTED);
     }
   };
@@ -312,6 +329,7 @@ export const createSession = async (
       signal.off("message", onSignalMessage);
       signal.off("state_change", onSignalStateChange);
       transport.emitter.off("state_change", onTransportStateChange);
+      transport.emitter.off("error", onTransportError);
       await Promise.all([
         transport.teardown(),
         signal.teardown(),
@@ -322,7 +340,7 @@ export const createSession = async (
       return {
         status,
         signaling: signal.getState(),
-        // transport: transport.getState(),
+        error: lastError,
       };
     },
     getHandshakeParameters() {
@@ -343,7 +361,7 @@ export const createSession = async (
         }
         else if (state?.status === SESSION_STATE.DISCONNECTED) {
           emitter.off("state_change", handler);
-          reject(new Error("Session failed to connect"));
+          reject(new Error(lastError ?? "Session failed to connect"));
         }
       };
 

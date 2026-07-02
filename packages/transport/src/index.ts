@@ -23,6 +23,7 @@ export type TransportState =
 
 export type TLayerEventMap = {
   state_change: (state: TransportState) => void;
+  error: (reason?: string) => void;
 };
 
 export type TransportLayerSetupParameters = {
@@ -112,6 +113,9 @@ export const createTransportBase = (init: TransportLayerImplFn): TransportLayerF
   });
   internalEmitter.on("error", (reason) => {
     log("transport error", reason);
+    // Surface the reason before the state flips so listeners reading
+    // state on state_change already see it.
+    emitter.emit("error", reason);
     setState(TRANSPORT_STATE.ERROR);
   });
   internalEmitter.on("message", async (message) => {

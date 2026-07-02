@@ -80,6 +80,8 @@ export type ProviderStatus =
 export type ProviderState = {
   status: ProviderStatus;
   session?: SessionStateObject;
+  /** Human-readable reason for the last connection failure, if any. */
+  error?: string;
 };
 
 export type ProviderConfig = {
@@ -145,6 +147,7 @@ export const createProvider = (
   const oxEmitter = OxProvider.createEmitter<ProviderEvents & EventMap>();
   let session: Session | undefined;
   let status: ProviderStatus = PROVIDER_STATUS.STANDBY;
+  let lastError: string | undefined;
   let accounts: Address[] = [];
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
@@ -210,6 +213,7 @@ export const createProvider = (
   }
 
   const start = async (parameters?: SessionLinkParameters) => {
+    lastError = undefined;
     updateStatus(PROVIDER_STATUS.CREATING);
     const linkParameters = parameters ?? defaultLinkParameters();
 
@@ -223,41 +227,53 @@ export const createProvider = (
       = convertStoredWebRTCSettings(storage.getSettings().transport?.s?.webrtc)
         ?? config?.transport?.s?.webrtc;
 
-    session = await createSession(
-      linkParameters,
-      await dynamicSignalingLayer(linkParameters.p),
-      [webrtc(transportOptions)],
-      onMessage,
-    );
-    updateStatus(PROVIDER_STATUS.CONNECTING);
+    try {
+      session = await createSession(
+        linkParameters,
+        await dynamicSignalingLayer(linkParameters.p),
+        [webrtc(transportOptions)],
+        onMessage,
+      );
+      updateStatus(PROVIDER_STATUS.CONNECTING);
 
-    log("session created");
-    await session.connect();
-    log("session connected");
-    const handshakeParameters = session.getHandshakeParameters();
-    const url = encodeConnectionURL(handshakeParameters);
+      log("session created");
+      await session.connect();
+      log("session connected");
+      const handshakeParameters = session.getHandshakeParameters();
+      const url = encodeConnectionURL(handshakeParameters);
 
-    log("session url", url);
-    oxEmitter.emit("session_started", session);
+      log("session url", url);
+      oxEmitter.emit("session_started", session);
 
-    await session.waitForLink();
-    log("session linked");
+      await session.waitForLink();
+      log("session linked");
 
-    accounts = await getAccounts();
+      accounts = await getAccounts();
 
-    const chainIdHex = unwrapSessionResponse(
-      await session.send({ method: "eth_chainId", params: [] }),
-    ) as string;
+      const chainIdHex = unwrapSessionResponse(
+        await session.send({ method: "eth_chainId", params: [] }),
+      ) as string;
 
-    updateStatus(PROVIDER_STATUS.CONNECTED);
-    oxEmitter.emit("connect", { chainId: chainIdHex });
-    oxEmitter.emit("accountsChanged", accounts);
+      updateStatus(PROVIDER_STATUS.CONNECTED);
+      oxEmitter.emit("connect", { chainId: chainIdHex });
+      oxEmitter.emit("accountsChanged", accounts);
 
-    return session;
+      return session;
+    }
+    catch (error) {
+      // Surface the failure to UI consumers (e.g. the modal) instead of
+      // leaving the provider stuck in "connecting".
+      lastError
+        = session?.getState().error
+          ?? (error instanceof Error ? error.message : "Connection failed");
+      updateStatus(PROVIDER_STATUS.ERROR);
+      throw error;
+    }
   };
   const closeSession = async () => {
     await session?.close();
     session = undefined;
+    lastError = undefined;
     updateStatus(PROVIDER_STATUS.STANDBY);
   };
 
@@ -364,7 +380,11 @@ export const createProvider = (
     getAccounts,
     createSession: start,
     closeSession,
-    getState: () => ({ status, session: session?.getState() ?? undefined }),
+    getState: () => ({
+      status,
+      session: session?.getState() ?? undefined,
+      error: lastError,
+    }),
   });
 
   return oxProvider as OpenLVProvider;

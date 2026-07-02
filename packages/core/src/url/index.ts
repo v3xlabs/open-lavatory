@@ -50,10 +50,11 @@ export const decodeConnectionURL = (
 
     const h = urlObj.searchParams.get("h") || "";
     const k = urlObj.searchParams.get("k") || "";
+    // URLSearchParams already percent-decodes values; decoding again would
+    // corrupt server URLs containing literal "%" sequences.
     const s = urlObj.searchParams.get("s") || undefined;
 
-    const p
-      = (urlObj.searchParams.get("p") as "mqtt" | "waku" | "nostr") || "mqtt";
+    const p = urlObj.searchParams.get("p") || "mqtt";
 
     if (!sessionId) {
       throw new Error("Session ID is required in URL");
@@ -91,8 +92,7 @@ export const decodeConnectionURL = (
       sessionId,
       h,
       k,
-      // TODO: figure out why '' empty string and not undefined
-      s: s ? decodeURIComponent(s) : "",
+      s: s ?? "",
       p,
     };
   }

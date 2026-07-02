@@ -33,6 +33,19 @@ export default defineConfig(async () => {
     build: {
       outDir: config.outDir,
     },
+    // Signaling backends (and the modal) are loaded via dynamic import on
+    // first connect. Without pre-bundling, Vite discovers them mid-handshake
+    // and hard-reloads the page, killing the session. Keep this list in sync
+    // with the dynamic imports in @openlv/signaling and @openlv/connector.
+    optimizeDeps: {
+      include: [
+        "websocket-mqtt",
+        "gun",
+        "solid-js",
+        "solid-js/store",
+        "lucide-solid",
+      ],
+    },
     server: {
       fs: { allow: [path.resolve(rootDir, "..")] },
     },

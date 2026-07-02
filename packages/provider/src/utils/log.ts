@@ -1,3 +1,3 @@
 import { createLogger } from "@openlv/core";
 
-export const log = createLogger("provider");
+export const log = createLogger("provider", "green");

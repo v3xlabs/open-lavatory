@@ -345,6 +345,9 @@ export const TryItOut = () => {
     return <div className="rounded-lg border vocs:border-primary" suppressHydrationWarning />;
   }
 
+  // The demo is a debugging playground: surface the protocol logs by default.
+  (globalThis as { OPENLV_DEBUG?: boolean; }).OPENLV_DEBUG ??= true;
+
   return (
     <TryItOutProviders>
       <div className="space-y-3" suppressHydrationWarning>

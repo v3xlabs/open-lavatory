@@ -57,6 +57,8 @@ export const webrtc: Transport = (
         .with("closed", () => emitter.emit("error", "WebRTC connection closed"))
         .otherwise(() => {});
     };
+    let localCandidates = 0;
+
     const onIceCandidate = (c: RTCPeerConnectionIceEvent) => {
       if (channel?.readyState === "open") return;
 
@@ -64,7 +66,24 @@ export const webrtc: Transport = (
       // receiving candidates.
       if (!c.candidate) return;
 
+      localCandidates += 1;
+      log("local ICE candidate", c.candidate.type, c.candidate.protocol);
       emitter.emit("candidate", JSON.stringify(c.candidate.toJSON()));
+    };
+    const onIceGatheringStateChange = () => {
+      log("iceGatheringState", connection?.iceGatheringState);
+
+      if (connection?.iceGatheringState === "complete" && localCandidates === 0) {
+        // Deliberately not debug-gated: without a single local candidate the
+        // connection can never establish, and the cause is environmental
+        // (blocked UDP, no usable interface, unreachable STUN/TURN).
+        console.warn(
+          "[openlv] WebRTC gathered zero local ICE candidates — "
+          + "the peer-to-peer connection cannot establish. "
+          + "Check network/UDP access or configure reachable STUN/TURN servers.",
+        );
+        emitter.emit("error", "no local ICE candidates");
+      }
     };
     const onDataChannel = (e: RTCDataChannelEvent) => {
       channel = e.channel;
@@ -131,11 +150,13 @@ export const webrtc: Transport = (
           const candidate = JSON.parse(payload) as RTCIceCandidateInit;
 
           if (!connection!.remoteDescription) {
+            log("buffering remote ICE candidate until remote description is set");
             pendingCandidates.push(candidate);
 
             return;
           }
 
+          log("applying remote ICE candidate");
           await connection!.addIceCandidate(new RTCIceCandidate(candidate));
         })
         .otherwise(() => {
@@ -157,6 +178,7 @@ export const webrtc: Transport = (
         connection = new RTCPeerConnection(rtcConfig);
         connection.onconnectionstatechange = onConnectionStateChange;
         connection.onicecandidate = onIceCandidate;
+        connection.onicegatheringstatechange = onIceGatheringStateChange;
         connection.ondatachannel = onDataChannel;
         connection.onnegotiationneeded = onNegotiationNeeded;
 

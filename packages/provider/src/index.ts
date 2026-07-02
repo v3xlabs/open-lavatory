@@ -198,6 +198,17 @@ export const createProvider = (
     return p && s ? { p, s } : undefined;
   };
 
+  // Warm up the signaling module for the configured protocol. Backends are
+  // loaded via dynamic import; in dev servers (Vite) the first import can
+  // trigger a dependency re-optimization page reload — better at page load
+  // than mid-handshake.
+  const prefetchProtocol
+    = (storage.getSettings().signaling ?? config?.signaling)?.p;
+
+  if (prefetchProtocol) {
+    void dynamicSignalingLayer(prefetchProtocol).catch(() => {});
+  }
+
   const start = async (parameters?: SessionLinkParameters) => {
     updateStatus(PROVIDER_STATUS.CREATING);
     const linkParameters = parameters ?? defaultLinkParameters();

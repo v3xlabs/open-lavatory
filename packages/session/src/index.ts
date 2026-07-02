@@ -159,7 +159,7 @@ export const createSession = async (
     },
     decrypt,
     isHost,
-    onmessage: async (message: { type: string; payload: object; messageId: string; }) => {
+    onmessage: async (message: { type: string; payload?: object | string; messageId: string; }) => {
       log("Session: received message from transport", message);
 
       if (message["type"] === "request") {

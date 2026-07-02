@@ -3,13 +3,14 @@ import { match } from "ts-pattern";
 import {
   createTransportBase,
   type Transport,
+  type TransportLivenessConfig,
   type TransportMessage,
 } from "../index.js";
 import { log } from "../utils/log.js";
 
 export type WebRTCConfig = {
   iceServers?: RTCConfiguration["iceServers"];
-};
+} & TransportLivenessConfig;
 
 // TODO: decide wether we want defaults, and if so what defaults
 const defaultConfig: WebRTCConfig = {
@@ -28,9 +29,13 @@ const defaultConfig: WebRTCConfig = {
 export const webrtc: Transport = (
   config: WebRTCConfig = defaultConfig,
 ) => {
-  const { iceServers = defaultConfig.iceServers } = config;
+  const {
+    iceServers = defaultConfig.iceServers,
+    probeInterval,
+    heartbeatInterval,
+    heartbeatTimeout,
+  } = config;
 
-  console.log("WEBRTC ICE CONFIG", config);
   const ident = Math.random().toString(36)
     .slice(2, 4) + "#";
 
@@ -38,6 +43,37 @@ export const webrtc: Transport = (
     const rtcConfig: RTCConfiguration = { iceServers };
     let connection: RTCPeerConnection | undefined;
     let channel: RTCDataChannel | undefined;
+    let isReady = false;
+    const pendingCandidates: RTCIceCandidateInit[] = [];
+
+    const markReadyIfOpen = () => {
+      if (isReady || channel?.readyState !== "open") return;
+
+      isReady = true;
+      emitter.emit("ready");
+    };
+
+    const addCandidate = async (candidate: RTCIceCandidateInit) => {
+      if (!connection) throw new Error("Connection not found");
+
+      if (!connection.remoteDescription) {
+        pendingCandidates.push(candidate);
+
+        return;
+      }
+
+      await connection.addIceCandidate(new RTCIceCandidate(candidate));
+    };
+
+    const flushPendingCandidates = async () => {
+      if (!connection?.remoteDescription) return;
+
+      while (pendingCandidates.length > 0) {
+        const candidate = pendingCandidates.shift();
+
+        if (candidate) await connection.addIceCandidate(new RTCIceCandidate(candidate));
+      }
+    };
 
     const onConnectionStateChange = () => {
       log(ident, "onConnectionStateChange", connection?.connectionState);
@@ -45,31 +81,95 @@ export const webrtc: Transport = (
       const state = connection?.connectionState;
 
       match(state)
-        .with("disconnected", () => {
-          // TODO: implement
+        .with("connected", () => {
+          markReadyIfOpen();
         })
-        .with("failed", () => {})
+        .with("disconnected", () => {
+          log(ident, "onConnectionStateDisconnected");
+        })
+        .with("closed", () => {
+          isReady = false;
+          emitter.emit("close");
+        })
+        .with("failed", () => {
+          isReady = false;
+          emitter.emit("error", new Error("WebRTC connection failed"));
+        })
         .otherwise(() => {
           log(ident, "onConnectionStateChangeUnknown", state);
+        });
+    };
+    const onIceConnectionStateChange = () => {
+      log(ident, "onIceConnectionStateChange", connection?.iceConnectionState);
+
+      const state = connection?.iceConnectionState;
+
+      match(state)
+        .with("connected", "completed", () => {
+          markReadyIfOpen();
+        })
+        .with("disconnected", () => {
+          log(ident, "onIceConnectionStateDisconnected");
+        })
+        .with("closed", () => {
+          isReady = false;
+          emitter.emit("close");
+        })
+        .with("failed", () => {
+          isReady = false;
+          emitter.emit("error", new Error("WebRTC ICE connection failed"));
+        })
+        .otherwise(() => {
+          log(ident, "onIceConnectionStateChangeUnknown", state);
         });
     };
     const onIceCandidate = (c: RTCPeerConnectionIceEvent) => {
       if (channel?.readyState === "open") return;
 
       log(ident, "onIceCandidate", c.candidate);
-      emitter.emit("candidate", JSON.stringify(c.candidate?.toJSON()));
+      if (!c.candidate) return;
+
+      emitter.emit("candidate", JSON.stringify(c.candidate.toJSON()));
     };
     const onDataChannel = (e: RTCDataChannelEvent) => {
+      if (channel) {
+        unhookChannel(channel);
+        channel.close();
+      }
+
       channel = e.channel;
+      isReady = false;
       hookChannel(channel);
       log(ident, "onDataChannel", channel);
     };
     const onDataChannelOpen = () => {
       log(ident, "onDataChannelOpen");
-      emitter.emit("connected");
+      markReadyIfOpen();
+    };
+    const onDataChannelClose = (e: Event) => {
+      log(ident, "onDataChannelClose");
+      const closedChannel = e.currentTarget as RTCDataChannel;
+
+      unhookChannel(closedChannel);
+
+      if (channel === closedChannel) {
+        channel = undefined;
+        isReady = false;
+        emitter.emit("close");
+      }
+    };
+    const onDataChannelError = (e: Event) => {
+      log(ident, "onDataChannelError", e);
+
+      if (e.currentTarget !== channel) return;
+
+      isReady = false;
+      emitter.emit("error", new Error("WebRTC data channel error"));
     };
     const onDataChannelMessage = (e: MessageEvent<string>) => {
       log(ident, "onDataChannelMessage", e.data);
+
+      markReadyIfOpen();
       emitter.emit("message", e.data);
     };
     const onNegotiationNeeded = async () => {
@@ -85,7 +185,17 @@ export const webrtc: Transport = (
 
     const hookChannel = (channel: RTCDataChannel) => {
       channel.addEventListener("open", onDataChannelOpen);
+      channel.addEventListener("close", onDataChannelClose);
+      channel.addEventListener("error", onDataChannelError);
       channel.addEventListener("message", onDataChannelMessage);
+      markReadyIfOpen();
+    };
+
+    const unhookChannel = (channel: RTCDataChannel) => {
+      channel.removeEventListener("open", onDataChannelOpen);
+      channel.removeEventListener("close", onDataChannelClose);
+      channel.removeEventListener("error", onDataChannelError);
+      channel.removeEventListener("message", onDataChannelMessage);
     };
 
     const handle = async (message: TransportMessage): Promise<void> => {
@@ -100,6 +210,7 @@ export const webrtc: Transport = (
           await connection!.setRemoteDescription(
             new RTCSessionDescription(offer),
           );
+          await flushPendingCandidates();
 
           const answer = await connection!.createAnswer();
 
@@ -114,6 +225,7 @@ export const webrtc: Transport = (
           await connection.setRemoteDescription(
             new RTCSessionDescription(answer),
           );
+          await flushPendingCandidates();
         })
         .with({ type: "candidate" }, async ({ payload }) => {
           if (!connection) throw new Error("Connection not found");
@@ -122,7 +234,7 @@ export const webrtc: Transport = (
 
           const candidate = JSON.parse(payload) as RTCIceCandidateInit;
 
-          await connection.addIceCandidate(new RTCIceCandidate(candidate));
+          await addCandidate(candidate);
         })
         .otherwise(() => {
           log(ident, "received unknown transport message type", message);
@@ -132,16 +244,19 @@ export const webrtc: Transport = (
     const send = async (message: string) => {
       if (!channel) throw new Error("Channel not found");
 
+      if (channel.readyState !== "open") throw new Error("Channel not open");
+
       channel.send(message);
     };
 
     return {
       type: "webrtc",
       async setup() {
-        log("webrtc setupz", rtcConfig);
+        log("webrtc setup", rtcConfig);
 
         connection = new RTCPeerConnection(rtcConfig);
         connection.onconnectionstatechange = onConnectionStateChange;
+        connection.oniceconnectionstatechange = onIceConnectionStateChange;
         connection.onicecandidate = onIceCandidate;
         connection.ondatachannel = onDataChannel;
         connection.onnegotiationneeded = onNegotiationNeeded;
@@ -154,7 +269,11 @@ export const webrtc: Transport = (
       teardown() {
         log("webrtc teardown");
 
+        isReady = false;
+        pendingCandidates.length = 0;
+
         if (channel) {
+          unhookChannel(channel);
           channel.close();
           channel = undefined;
         }
@@ -167,5 +286,5 @@ export const webrtc: Transport = (
       handle,
       send,
     };
-  });
+  }, { probeInterval, heartbeatInterval, heartbeatTimeout });
 };

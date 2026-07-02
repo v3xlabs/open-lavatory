@@ -11,6 +11,7 @@ export {
   installWebRTCPolyfills,
   type InstallWebRTCPolyfillsOptions,
 } from "./webrtc.js";
+export { webrtc, type WebRTCConfig } from "@openlv/transport/webrtc";
 export type {
   Session,
   SessionState,
@@ -21,6 +22,7 @@ export const SESSION_STATE = {
   CREATED: "created",
   SIGNALING: "signaling",
   READY: "ready",
+  LINKING: "linking",
   CONNECTED: "connected",
   DISCONNECTED: "disconnected",
 } as const;

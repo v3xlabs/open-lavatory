@@ -116,10 +116,35 @@ export const createProvider = (
   const [error, setError] = observable<string | undefined>(undefined);
 
   let accounts: Address[] = [];
+  let detachSessionState: (() => void) | undefined;
   const storage = createProviderStorage({ storage: parameters.storage });
   const { openModal, config } = parameters;
 
   status.subscribe(current => log("status", current));
+  const clearSession = () => {
+    const hasAccounts = accounts.length > 0;
+
+    detachSessionState?.();
+    detachSessionState = undefined;
+    setSession(undefined);
+    accounts = [];
+    setStatus(ProviderStatus.STANDBY);
+
+    if (hasAccounts) oxEmitter.emit("accountsChanged", accounts);
+  };
+  const watchSession = (createdSession: Session) => {
+    const onSessionState = (state: SessionStatus) => {
+      if (session.get() !== createdSession
+        || status.get() !== ProviderStatus.CONNECTED
+        || state !== SessionStatus.DISCONNECTED) return;
+
+      clearSession();
+      oxEmitter.emit("disconnect", new OxProvider.DisconnectedError());
+    };
+
+    detachSessionState?.();
+    detachSessionState = createdSession.status.subscribe(onSessionState);
+  };
 
   /**
    * Called when the remote peer (wallet) sends a request to the dApp.
@@ -200,13 +225,14 @@ export const createProvider = (
       ];
       const transportOptions = iceServers.length > 0 ? { iceServers } : config?.transport?.s?.webrtc;
 
-      next = await createSession(
+      const createdSession = next = await createSession(
         linkParameters,
         [webrtc(transportOptions)],
         onMessage,
         { info: config?.info },
       );
 
+      watchSession(createdSession);
       if (status.get() === ProviderStatus.STANDBY) {
         await next.close();
 
@@ -217,20 +243,18 @@ export const createProvider = (
       setStatus(ProviderStatus.CONNECTING);
 
       log("session created");
-      await next.connect();
+      await createdSession.connect();
       log("session connected");
-      const handshakeParameters = next.getHandshakeParameters();
+      const handshakeParameters = createdSession.getHandshakeParameters();
       const url = encodeConnectionURL(handshakeParameters);
 
       log("session url", url);
-
-      const settled = await next.status.until(
-        state => state === SessionStatus.CONNECTED
-          || state === SessionStatus.DISCONNECTED,
+      const settled = await createdSession.status.until(
+        state => state === SessionStatus.CONNECTED || state === SessionStatus.DISCONNECTED,
       );
 
       if (settled !== SessionStatus.CONNECTED) {
-        throw new Error(next.error.get() ?? "Session failed to connect");
+        throw new Error(createdSession.error.get() ?? "Session failed to connect");
       }
 
       log("session linked");
@@ -238,20 +262,22 @@ export const createProvider = (
       accounts = await getAccounts();
 
       const chainIdHex = unwrapSessionResponse(
-        await next.send({ method: "eth_chainId", params: [] }),
+        await createdSession.send({ method: "eth_chainId", params: [] }),
       ) as string;
 
       setStatus(ProviderStatus.CONNECTED);
       oxEmitter.emit("connect", { chainId: chainIdHex });
       oxEmitter.emit("accountsChanged", accounts);
 
-      return next;
+      return createdSession;
     }
     catch (error_) {
       if (next && session.get() !== next) return next;
 
       // Surface the failure to UI consumers (e.g. the modal) instead of
       // leaving the provider stuck in "connecting".
+      detachSessionState?.();
+      detachSessionState = undefined;
       setSession(undefined);
       setError(
         next?.error.get()
@@ -270,13 +296,15 @@ export const createProvider = (
     }
   };
   const closeSession = async () => {
-    const current = session.get();
+    const currentSession = session.get();
 
-    setSession(undefined);
+    detachSessionState?.();
+    detachSessionState = undefined;
+    await currentSession?.close();
+
+    if (session.get() === currentSession) clearSession();
+
     setError(undefined);
-    setStatus(ProviderStatus.STANDBY);
-
-    await current?.close();
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (

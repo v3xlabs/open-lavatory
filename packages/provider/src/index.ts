@@ -207,6 +207,12 @@ export const createProvider = (
         { info: config?.info },
       );
 
+      if (status.get() === ProviderStatus.STANDBY) {
+        await next.close();
+
+        return next;
+      }
+
       setSession(next);
       setStatus(ProviderStatus.CONNECTING);
 
@@ -242,6 +248,8 @@ export const createProvider = (
       return next;
     }
     catch (error_) {
+      if (next && session.get() !== next) return next;
+
       // Surface the failure to UI consumers (e.g. the modal) instead of
       // leaving the provider stuck in "connecting".
       setSession(undefined);
@@ -262,10 +270,13 @@ export const createProvider = (
     }
   };
   const closeSession = async () => {
-    await session.get()?.close();
+    const current = session.get();
+
     setSession(undefined);
     setError(undefined);
     setStatus(ProviderStatus.STANDBY);
+
+    await current?.close();
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (

@@ -304,14 +304,6 @@ export const createProvider = (
 
           return "0x1";
         })
-        .with({ method: "wallet_requestPermissions" }, () => {
-          throw new Error("Not implemented");
-        })
-        .with({ method: "wallet_revokePermissions" }, async () => {
-          await closeSession();
-
-          return;
-        })
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 

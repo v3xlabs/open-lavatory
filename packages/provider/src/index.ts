@@ -1,5 +1,6 @@
 
 import {
+  createScope,
   encodeConnectionURL,
   type Observable,
   observable,
@@ -166,33 +167,51 @@ export const createProvider = (
   };
 
   const start = async (parameters?: SessionLinkParameters) => {
-    setError(undefined);
-    setStatus(ProviderStatus.CREATING);
-    const linkParameters = parameters ?? defaultLinkParameters();
-
-    if (!linkParameters) {
-      throw new Error("No link parameters provided and no signaling defaults configured");
+    if (
+      status.get() === ProviderStatus.CREATING
+      || status.get() === ProviderStatus.CONNECTING
+    ) {
+      throw new Error("Session is already starting");
     }
 
-    // Stored user settings win over constructor config; both fall back to the
-    // transport's built-in defaults, so an empty list must stay undefined
-    // rather than become an empty iceServers array.
-    const stored = storage.getSettings().transport?.s?.webrtc;
-    const iceServers = [
-      ...stored?.stun?.map(urls => ({ urls })) ?? [],
-      ...stored?.turn ?? [],
-    ];
-    const transportOptions = iceServers.length > 0
-      ? { iceServers }
-      : config?.transport?.s?.webrtc;
+    let next: Session | undefined;
 
     try {
-      const next = await createSession(
+      setError(undefined);
+      setStatus(ProviderStatus.CREATING);
+      const current = session.get();
+
+      setSession(undefined);
+      await current?.close();
+
+      const linkParameters = parameters ?? defaultLinkParameters();
+
+      if (!linkParameters) {
+        throw new Error("No link parameters provided and no signaling defaults configured");
+      }
+
+      // Stored user settings win over constructor config; both fall back to the
+      // transport's built-in defaults, so an empty list must stay undefined
+      // rather than become an empty iceServers array.
+      const stored = storage.getSettings().transport?.s?.webrtc;
+      const iceServers = [
+        ...(stored?.stun?.map(url => ({ urls: url })) ?? []),
+        ...(stored?.turn ?? []),
+      ];
+      const transportOptions = iceServers.length > 0 ? { iceServers } : config?.transport?.s?.webrtc;
+
+      next = await createSession(
         linkParameters,
         [webrtc(transportOptions)],
         onMessage,
         { info: config?.info },
       );
+
+      if (status.get() === ProviderStatus.STANDBY) {
+        await next.close();
+
+        return next;
+      }
 
       setSession(next);
       setStatus(ProviderStatus.CONNECTING);
@@ -229,21 +248,35 @@ export const createProvider = (
       return next;
     }
     catch (error_) {
+      if (next && session.get() !== next) return next;
+
       // Surface the failure to UI consumers (e.g. the modal) instead of
       // leaving the provider stuck in "connecting".
+      setSession(undefined);
       setError(
-        session.get()?.error.get()
+        next?.error.get()
         ?? (error_ instanceof Error ? error_.message : "Connection failed"),
       );
+
+      try {
+        await next?.close();
+      }
+      catch (cleanupError) {
+        log("failed to clean up unsuccessful session", cleanupError);
+      }
+
       setStatus(ProviderStatus.ERROR);
       throw error_;
     }
   };
   const closeSession = async () => {
-    await session.get()?.close();
+    const current = session.get();
+
     setSession(undefined);
     setError(undefined);
     setStatus(ProviderStatus.STANDBY);
+
+    await current?.close();
   };
 
   const request: OxProvider.from.Value<ProviderConfig>["request"] = async (
@@ -271,14 +304,6 @@ export const createProvider = (
 
           return "0x1";
         })
-        .with({ method: "wallet_requestPermissions" }, () => {
-          throw new Error("Not implemented");
-        })
-        .with({ method: "wallet_revokePermissions" }, async () => {
-          await closeSession();
-
-          return;
-        })
         .with({ method: "eth_requestAccounts" }, async () => {
           log("eth_requestAccounts");
 
@@ -289,24 +314,18 @@ export const createProvider = (
           }
 
           if (openModal && provider) {
-            await openModal(provider);
-
             await new Promise<void>((resolve) => {
-              const onConnect = () => {
-                cleanup();
-                resolve();
-              };
-              const onDisconnect = () => {
-                cleanup();
-                resolve();
-              };
-              const cleanup = () => {
-                provider?.off("connect", onConnect);
-                provider?.off("disconnect", onDisconnect);
+              const scope = createScope();
+              const finish = () => {
+                void scope.close()
+                  .then(resolve)
+                  .catch(resolve);
               };
 
-              provider?.on("connect", onConnect);
-              provider?.on("disconnect", onDisconnect);
+              scope.listen(provider, "connect", finish);
+              scope.listen(provider, "disconnect", finish);
+
+              void openModal(provider).catch(finish);
             });
 
             return await getAccounts();

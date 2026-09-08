@@ -163,7 +163,6 @@ export const createSession = async (
   });
 
   const scope = createScope();
-  let connectionScope: ReturnType<typeof createScope> | undefined;
 
   scope.add(signal.teardown);
   scope.add(signal.peerKey.subscribe((key) => {
@@ -379,27 +378,25 @@ export const createSession = async (
       updateStatus(SessionStatus.SIGNALING);
       log("connecting to session, isHost:", isHost);
 
-      connectionScope ??= createScope();
-      connectionScope.listen(signal, "message", onSignalMessage);
-      connectionScope.add(signal.status.subscribe(onSignalStateChange));
+      scope.listen(signal, "message", onSignalMessage);
+      scope.add(signal.status.subscribe(onSignalStateChange));
 
       try {
         await signal.setup();
       }
       catch (error) {
-        await connectionScope.close();
-        connectionScope = undefined;
+        await scope.close();
         throw error;
       }
     },
     async close() {
       log("session teardown");
-      await Promise.allSettled([
-        scope.close(),
-        connectionScope?.close() ?? Promise.resolve(),
-      ]);
-
-      updateStatus(SessionStatus.DISCONNECTED);
+      try {
+        await scope.close();
+      }
+      finally {
+        updateStatus(SessionStatus.DISCONNECTED);
+      }
     },
     status,
     signalStatus: signal.status,
